@@ -3,7 +3,7 @@
 {% set release = '.'.join(version.split('.')[:2]) %}
 
 package:
-  name: q2-plugin-name
+  name: q2-moshpit
   version: {{ version }}
 
 source:
@@ -22,10 +22,10 @@ requirements:
 
 test:
   imports:
-    - q2_plugin_name
-    - qiime2.plugins.plugin_name
+    - q2_moshpit
+    - qiime2.plugins.moshpit
 
 about:
-  home: https://github.com/bokulich-lab/q2-plugin-name
+  home: https://github.com/bokulich-lab/q2-moshpit
   license: BSD-3-Clause
   license_family: BSD

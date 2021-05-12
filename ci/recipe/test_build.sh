@@ -33,10 +33,10 @@ conda build -c "https://packages.qiime2.org/qiime2/${Q2V}/staged" -c conda-forge
 echo "${COL}Testing the build...${NC}"
 wget -O env.yml "https://raw.githubusercontent.com/qiime2/environment-files/master/${Q2V}/staging/qiime2-${Q2V}-py38-${OSV}-conda.yml"
 conda env create -q -p "./testing-${Q2V}" --file env.yml
-conda install -p "./testing-${Q2V}" -q -y -c "$CONDA_ENVS/qiime2-${Q2V}-buildtest/conda-bld/${OSV}-64" -c conda-forge -c bioconda -c defaults --override-channels --strict-channel-priority q2-plugin-name
+conda install -p "./testing-${Q2V}" -q -y -c "$CONDA_ENVS/qiime2-${Q2V}-buildtest/conda-bld/${OSV}-64" -c conda-forge -c bioconda -c defaults --override-channels --strict-channel-priority q2-moshpit
 
 conda activate "./testing-${Q2V}"
-pytest --pyargs q2_plugin_name
+pytest --pyargs q2_moshpit
 conda deactivate
 
 # clean up previous build tests

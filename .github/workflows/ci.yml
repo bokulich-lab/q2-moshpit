@@ -44,8 +44,8 @@ jobs:
     # TODO: update this to @v1 when it lands
     - uses: qiime2/action-library-packaging@alpha1
       with:
-        package-name: q2-plugin-name
-        additional-tests: pytest --pyargs q2_plugin_name
+        package-name: q2-moshpit
+        additional-tests: pytest --pyargs q2_moshpit
         # TODO: update this to `release` when tagging release
         build-target: staged
         library-token: ${{ secrets.LIBRARY_TOKEN }}

@@ -13,7 +13,8 @@ import tempfile
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
 from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
 
-from q2_moshpit._utils import run_command
+from q2_moshpit._utils import run_command, _process_common_input_params
+from q2_moshpit.metabat2.utils import _process_metabat2_arg
 
 
 def _get_sample_name_from_path(fp):
@@ -50,8 +51,17 @@ def _rename_bin(bin_fp, new_location):
 
 def bin_contigs_metabat(
     contigs: ContigSequencesDirFmt, alignment_maps: BAMDirFmt,
-    num_threads: int, sort: bool = True,
+    min_contig: int = None, max_p: int = None, min_s: int = None,
+    max_edges: int = None, p_tnf: int = None, no_add: bool = None,
+    min_cv: int = None, min_cv_sum: int = None, min_cls_size: int = None,
+    num_threads: int = None, seed: int = None, debug: bool = None,
+    verbose: bool = None
 ) -> MultiFASTADirectoryFormat:
+    kwargs = {k: v for k, v in locals().items()
+              if k not in ['contigs', 'alignment_maps']}
+    common_args = _process_common_input_params(
+        processing_func=_process_metabat2_arg, params=kwargs
+    )
 
     contigs_fps = sorted(glob.glob(os.path.join(str(contigs), '*.fa')))
     maps_fps = sorted(glob.glob(os.path.join(str(alignment_maps), '*.bam')))
@@ -60,14 +70,13 @@ def bin_contigs_metabat(
     result = MultiFASTADirectoryFormat()
     with tempfile.TemporaryDirectory() as tmp:
         for samp, props in sample_set.items():
-            # sort if desired
-            if sort:
-                sorted_bam = os.path.join(tmp, f'{samp}_alignment_sorted.bam')
-                run_command(
-                    ['samtools', 'sort', props['map'], '-o', sorted_bam],
-                    verbose=True
-                )
-                props['map'] = sorted_bam
+            # sort alignment map
+            sorted_bam = os.path.join(tmp, f'{samp}_alignment_sorted.bam')
+            run_command(
+                ['samtools', 'sort', props['map'], '-o', sorted_bam],
+                verbose=True
+            )
+            props['map'] = sorted_bam
 
             # calculate depth
             depth_fp = os.path.join(str(tmp), f'{samp}_depth.txt')
@@ -82,7 +91,8 @@ def bin_contigs_metabat(
             bins_prefix = os.path.join(bins_dp, 'bin')
             os.makedirs(bins_dp)
             cmd = ['metabat2', '-i', props['contigs'], '-a', depth_fp,
-                   '-o', bins_prefix, '-numThreads', str(num_threads)]
+                   '-o', bins_prefix]
+            cmd.extend(common_args)
             run_command(cmd, verbose=True)
 
             all_bins = glob.glob(os.path.join(bins_dp, '*.fa'))

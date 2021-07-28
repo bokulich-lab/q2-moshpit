@@ -49,7 +49,8 @@ def _process_common_input_params(processing_func, params: dict) -> List[str]:
     """
     processed_args = []
     for arg_key, arg_val in params.items():
-        if not isinstance(arg_val, int) and not arg_val:
+        # bool is a subclass of int so to only reject ints we need to do:
+        if type(arg_val) != int and not arg_val:
             continue
         else:
             processed_args.extend(processing_func(arg_key, arg_val))

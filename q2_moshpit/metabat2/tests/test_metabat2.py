@@ -32,7 +32,8 @@ class TestMetabat2(TestPluginBase):
         maps = ['/a/b/s3_aln.bam', '/a/b/s2_aln.bam', '/a/b/s1_aln.bam']
 
         with self.assertRaisesRegex(
-            Exception, 'provided contigs for 2 samples.*maps for 3 samples.'
+            Exception,
+            'contigs for samples: s1,s3 but maps for samples: s1,s2,s3'
         ):
             _assert_samples(contigs, maps)
 

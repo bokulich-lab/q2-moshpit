@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2021, QIIME 2 development team.
+# Copyright (c) 2022, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -9,6 +9,7 @@ import glob
 import os.path
 import shutil
 import tempfile
+from copy import deepcopy
 
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
 from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
@@ -18,7 +19,7 @@ from q2_moshpit.metabat2.utils import _process_metabat2_arg
 
 
 def _get_sample_name_from_path(fp):
-    return os.path.basename(fp).split('_')[0]
+    return os.path.splitext(os.path.basename(fp))[0].split('_')[0]
 
 
 def _assert_samples(contigs_fps, maps_fps) -> dict:
@@ -37,12 +38,13 @@ def _assert_samples(contigs_fps, maps_fps) -> dict:
 
 def _sort_bams(samp_name, samp_props, loc):
     sorted_bam = os.path.join(loc, f'{samp_name}_alignment_sorted.bam')
+    new_props = deepcopy(samp_props)
     run_command(
-        ['samtools', 'sort', samp_props['map'], '-o', sorted_bam],
+        ['samtools', 'sort', new_props['map'], '-o', sorted_bam],
         verbose=True
     )
-    samp_props['map'] = sorted_bam
-    return samp_props
+    new_props['map'] = sorted_bam
+    return new_props
 
 
 def _estimate_depth(samp_name, samp_props, loc):

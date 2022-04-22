@@ -1,4 +1,10 @@
+hmmer
+matplotlib
 metabat2
+numpy
+prodigal
+pysam
+samtools
 q2-types
 q2-types-genomics
 q2cli

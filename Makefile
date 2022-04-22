@@ -16,10 +16,13 @@ test-cov: all
 	coverage xml
 
 install: all
+	bash install-pplacer.sh
+	pip install git+https://github.com/Ecogenomics/CheckM.git@d74bb68d48b2318542eb7137343196d8e12b4fac
 	$(PYTHON) setup.py install
 
 dev: all
-	pip install coverage
+	bash install-pplacer.sh
+	pip install git+https://github.com/Ecogenomics/CheckM.git@d74bb68d48b2318542eb7137343196d8e12b4fac coverage
 	pip install -e .
 
 clean: distclean

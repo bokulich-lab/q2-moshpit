@@ -46,7 +46,7 @@ jobs:
       run: |
         mamba install -c https://packages.qiime2.org/qiime2/2022.4/tested -c conda-forge -c bioconda -c defaults -y --file requirements.txt
         # https://github.com/merenlab/anvio/issues/1479
-        mamba uninstall samtools -y
+        mamba uninstall samtools -y --force
         mamba install -c bioconda samtools -y
         make dev
         qiime dev refresh-cache

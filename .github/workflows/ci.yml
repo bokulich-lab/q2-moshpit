@@ -29,8 +29,32 @@ jobs:
         pip install -q flake8
         flake8
 
-  build-and-test:
+  coverage:
     needs: lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: q2-shotgun-test
+        mamba-version: "*"
+        channels: conda-forge
+    - name: Run tests with coverage
+      run: |
+        mamba install -c https://packages.qiime2.org/qiime2/2022.4/tested -c conda-forge -c bioconda -c defaults -y --file requirements.txt
+        make dev
+        qiime dev refresh-cache
+        make test-cov
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        fail_ci_if_error: true
+
+  build-and-test:
+    needs: coverage
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -46,6 +70,5 @@ jobs:
       with:
         package-name: q2-moshpit
         additional-tests: pytest --pyargs q2_moshpit
-        # TODO: update this to `release` when tagging release
-        build-target: staged
+        build-target: dev
         library-token: ${{ secrets.LIBRARY_TOKEN }}

@@ -12,12 +12,14 @@ test: all
 	py.test
 
 test-cov: all
-	py.test --cov=q2_fondue
+	coverage run -m pytest
+	coverage xml
 
 install: all
 	$(PYTHON) setup.py install
 
 dev: all
+	pip install coverage
 	pip install -e .
 
 clean: distclean

@@ -18,7 +18,13 @@ requirements:
     - setuptools
 
   run:
+    - hmmer
+    - matplotlib
     - metabat2
+    - numpy
+    - prodigal
+    - pysam
+    - samtools
     - qiime2 {{ release }}.*
     - q2-types-genomics {{ release }}.*
     - q2templates {{ release }}.*

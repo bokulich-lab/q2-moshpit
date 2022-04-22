@@ -69,6 +69,13 @@ jobs:
         # necessary for versioneer
         fetch-depth: 0
 
+    - name: Update missing libs
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install gsl
+        ln -s $HOME/homebrew/Cellar/gsl/2.7.1/lib/libgsl.27.dylib  /usr/local/lib/libgsl.0.dylib
+        if [[ ! -f /usr/local/lib/libgslcblas.0.dylib ]]; then ln -s $HOME/homebrew/Cellar/gsl/2.7.1/lib/libgslcblas.0.dylib  /usr/local/lib/libgslcblas.0.dylib; fi
+
     # TODO: update this to @v1 when it lands
     - uses: qiime2/action-library-packaging@alpha1
       with:

@@ -150,12 +150,12 @@ class TestMetabat2(TestPluginBase):
             _process_sample('samp1', fake_props, fake_args, fake_loc)
 
             # find the newly formed bins
-            obs_bins = [
+            obs_bins = set([
                 x.split('/')[-1] for x in
                 glob.glob(os.path.join(fake_loc, 'samp1', '*.fasta'))
-            ]
-            exp_bins = ['bin1.fasta', 'bin2.fasta']
-            self.assertListEqual(exp_bins, obs_bins)
+            ])
+            exp_bins = {'bin1.fasta', 'bin2.fasta'}
+            self.assertSetEqual(exp_bins, obs_bins)
 
             p3.assert_called_once_with('samp1', fake_props, ANY)
             p2.assert_called_once_with('samp1', fake_props_mod, ANY)
@@ -177,10 +177,10 @@ class TestMetabat2(TestPluginBase):
         self.assertIsInstance(obs, MultiFASTADirectoryFormat)
 
         # find the newly formed bins
-        obs_bins = [[
+        obs_bins = sorted([sorted([
             '/'.join(x.split('/')[-2:]) for x in
             glob.glob(os.path.join(str(obs), f'samp{y}', '*.fasta'))
-        ] for y in (1, 2)]
+        ]) for y in (1, 2)])
         exp_bins = [
             ['samp1/bin1.fasta', 'samp1/bin2.fasta'],
             ['samp2/bin1.fasta', 'samp2/bin2.fasta']

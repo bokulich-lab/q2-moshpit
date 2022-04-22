@@ -5,17 +5,24 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import glob
+
+import shutil
+
 import os
 import tempfile
 import unittest
-from unittest.mock import patch
+from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
+from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
+from unittest.mock import patch, ANY
 
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_moshpit.metabat2.metabat2 import (_assert_samples,
                                           _get_sample_name_from_path,
                                           _sort_bams, _estimate_depth,
-                                          _run_metabat2)
+                                          _run_metabat2, _process_sample,
+                                          _bin_contigs_metabat)
 
 
 class TestMetabat2(TestPluginBase):
@@ -95,7 +102,7 @@ class TestMetabat2(TestPluginBase):
     @patch('subprocess.run')
     def test_run_metabat2_ok(self, p1):
         fake_props = {'map': '/some/where/map.bam', 'contigs': '/a/b/co.fa'}
-        fake_args = ['--verbose', '--pTNF', '85', '--min-contig', '2500']
+        fake_args = ['--verbose', '--pTNF', '85', '--minContig', '2500']
 
         with tempfile.TemporaryDirectory() as fake_loc:
             obs_fp = _run_metabat2('samp1', fake_props, fake_loc,
@@ -111,6 +118,74 @@ class TestMetabat2(TestPluginBase):
             ]
             exp_cmd.extend(fake_args)
             p1.assert_called_once_with(exp_cmd, check=True)
+
+    @patch('q2_moshpit.metabat2._sort_bams')
+    @patch('q2_moshpit.metabat2._estimate_depth')
+    @patch('q2_moshpit.metabat2._run_metabat2')
+    def test_process_sample(self, p1, p2, p3):
+        fake_props = {
+            'map': 'some/where/samp1_alignment.bam',
+            'contigs': 'some/where/samp1_contigs.fa'
+        }
+        fake_props_mod = {
+            'map': 'some/where/samp1_alignment_sorted.bam',
+            'contigs': 'some/where/samp1_contigs.fa'
+        }
+        fake_args = ['--verbose', '--minContig', '1500', '--minClsSize',
+                     '10000']
+
+        p3.return_value = fake_props_mod
+        p2.return_value = 'some/where/samp1_depth.txt'
+
+        with tempfile.TemporaryDirectory() as fake_loc:
+            p1.return_value = os.path.join(fake_loc, 'bins', 'samp1')
+
+            # copy two expected bins to the new location
+            samp1_bins_fp = self.get_data_path('bins/samp1')
+            shutil.copytree(
+                samp1_bins_fp, os.path.join(fake_loc, 'bins', 'samp1'),
+                dirs_exist_ok=True
+            )
+
+            _process_sample('samp1', fake_props, fake_args, fake_loc)
+
+            # find the newly formed bins
+            obs_bins = [
+                x.split('/')[-1] for x in
+                glob.glob(os.path.join(fake_loc, 'samp1', '*.fasta'))
+            ]
+            exp_bins = ['bin1.fasta', 'bin2.fasta']
+            self.assertListEqual(exp_bins, obs_bins)
+
+            p3.assert_called_once_with('samp1', fake_props, ANY)
+            p2.assert_called_once_with('samp1', fake_props_mod, ANY)
+            p1.assert_called_once_with(
+                'samp1', fake_props_mod, ANY,
+                'some/where/samp1_depth.txt', fake_args
+            )
+
+    def test_bin_contigs_metabat(self):
+        input_contigs = self.get_data_path('contigs')
+        input_maps = self.get_data_path('maps')
+        contigs = ContigSequencesDirFmt(input_contigs, mode='r')
+        maps = BAMDirFmt(input_maps, mode='r')
+
+        args = ['--verbose', '--minContig', '1500', '--minClsSize', '10000']
+
+        obs = _bin_contigs_metabat(contigs, maps, args)
+
+        self.assertIsInstance(obs, MultiFASTADirectoryFormat)
+
+        # find the newly formed bins
+        obs_bins = [[
+            '/'.join(x.split('/')[-2:]) for x in
+            glob.glob(os.path.join(str(obs), f'samp{y}', '*.fasta'))
+        ] for y in (1, 2)]
+        exp_bins = [
+            ['samp1/bin1.fasta', 'samp1/bin2.fasta'],
+            ['samp2/bin1.fasta', 'samp2/bin2.fasta']
+        ]
+        self.assertListEqual(exp_bins, obs_bins)
 
 
 if __name__ == '__main__':

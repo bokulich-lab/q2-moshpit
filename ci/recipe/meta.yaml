@@ -18,6 +18,7 @@ requirements:
     - setuptools
 
   run:
+    - metabat2
     - qiime2 {{ release }}.*
     - q2-types-genomics {{ release }}.*
     - q2templates {{ release }}.*

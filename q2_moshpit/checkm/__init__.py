@@ -6,11 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .checkm import checkm
-from .metabat2 import metabat2
+from .checkm import evaluate_bins
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
-
-__all__ = ['checkm', 'metabat2']
+__all__ = ['evaluate_bins']

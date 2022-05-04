@@ -6,9 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from qiime2.core.type import Bool, Int, Range, Float
+from qiime2.core.type import Bool, Int, Range, Float, Str
 
 checkm_params = {
+    'db_path': Str,
     'reduced_tree': Bool,
     'unique': Int % Range(1, None),
     'multi': Int % Range(1, None),
@@ -21,10 +22,14 @@ checkm_params = {
     'ignore_thresholds': Bool,
     'e_value': Float % Range(0, 1),
     'length': Float % Range(0, 1),
-    'threads': Int % Range(0, None)
+    'threads': Int % Range(1, None),
+    'pplacer_threads': Int % Range(1, None)
 }
 
 checkm_param_descriptions = {
+    'db_path': 'Path to the database required by CheckM. For more '
+               'details see: https://github.com/Ecogenomics/CheckM/'
+               'wiki/Installation#required-reference-data.',
     'reduced_tree': 'Use reduced tree (requires <16GB of memory) for '
                     'determining lineage of each bin.',
     'unique': 'Minimum number of unique phylogenetic markers required to use '
@@ -44,5 +49,8 @@ checkm_param_descriptions = {
     'ignore_thresholds': 'Ignore model-specific score thresholds.',
     'e_value': 'E-value cut off. Default: 1e-10.',
     'length': 'Percent overlap between target and query. Default: 0.7.',
-    'threads': 'Number of threads. Default: 1.'
+    'threads': 'Number of threads. Default: 1.',
+    'pplacer_threads': 'Number of threads used by pplacer (memory usage '
+                       'increases linearly with additional threads). '
+                       'Default: 1.'
 }

@@ -1,0 +1,5 @@
+sample_id	bin_id	marker_lineage	marker_lineage_uid	genomes	markers	marker_sets	count0	count1	count2	count3	count4	count5_or_more	completeness	contamination	strain_heterogeneity
+samp1	bin1	g__Mycobacterium	UID1816	100	693	300	0	693	0	0	0	0	100.00	0.00	0.00
+samp1	bin2	o__Pseudomonadales	UID4488	185	813	308	97	707	9	0	0	0	93.87	1.31	0.00
+samp2	bin1	c__Alphaproteobacteria	UID3305	564	337	221	0	337	0	0	0	0	100.00	0.00	0.00
+samp2	bin2	f__Enterobacteriaceae	UID5103	157	1005	324	9	995	1	0	0	0	99.38	0.08	0.00

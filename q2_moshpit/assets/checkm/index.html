@@ -1,0 +1,80 @@
+{% extends 'tabbed.html' %}
+
+{% block tabcontent %}
+
+  <div class="row">
+    <div class="col-lg-12">
+      <h3>Downloads</h3>
+    </div>
+  </div>
+
+  <div class="row">
+      <div class="col-lg-6">
+          <div class="btn-group">
+              <a href="quast_data/report.pdf" class="btn btn-success"> Full report (pdf) </a>
+              <a href="quast_data/basic_stats/cumulative_plot.pdf" class="btn btn-default"> Cumulative plot </a>
+              <a href="quast_data/basic_stats/GC_content_plot.pdf" class="btn btn-default"> GC content plot </a>
+              <a href="quast_data/basic_stats/Nx_plot.pdf" class="btn btn-default"> Nx plot </a>
+              <a href="quast_data/report.tsv" class="btn btn-default"> Stats table (tsv) </a>
+          </div>
+      </div>
+  </div>
+  <br>
+
+  <div class="row">
+      <div class="col-lg-6" style="display: flex; align-items: center">
+          <label style="white-space:nowrap; margin-right:10px">Sample ID: </label>
+          <select class="form-control" id="sample-id" style="margin-right:7px" onchange="updateReportLink()">
+          </select>
+          <a href="" class="btn btn-default" id="sample-gc-btn"> GC content plot </a>
+      </div>
+  </div>
+  <br>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <h3>Quality assesment report</h3>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <iframe src="quast_data/report.html" style="width:100%; height:1500px; border:none;" id="iReport"></iframe>
+    </div>
+  </div>
+
+  <script id="sample-names" type="application/json">
+      {{ samples }}
+  </script>
+
+  <script type="text/javascript">
+      var updateReportLink = function() {
+          var currentSample = document.getElementById("sample-id").value
+          var reportBtn = document.getElementById("sample-gc-btn")
+          reportBtn.setAttribute("href", `quast_data/basic_stats/${currentSample}_contigs_GC_content_plot.pdf`)
+      }
+
+      var populateSampleNames = function() {
+          var sampleNames = JSON.parse(document.getElementById("sample-names").innerHTML)
+          var selectElement = document.getElementById("sample-id")
+          sampleNames.forEach(sn => {
+              var option = document.createElement("option")
+              option.text = sn
+              option.value = sn
+              selectElement.add(option)
+          })
+          updateReportLink()
+      }
+
+      $(document).ready(function() {
+          populateSampleNames()
+      })
+  </script>
+
+{% endblock %}
+
+{% block footer %}
+{% set loading_selector = '#loading' %}
+{% include 'js-error-handler.html' %}
+
+{% endblock %}

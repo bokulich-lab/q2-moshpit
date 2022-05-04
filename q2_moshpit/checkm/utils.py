@@ -13,8 +13,7 @@ from typing import List, Type, Union
 import pandas as pd
 
 
-# TODO: make it frozen to prevent modification
-@dataclass
+@dataclass(frozen=True)
 class MarkerCounts:
     count0: int
     count1: int
@@ -28,7 +27,7 @@ class MarkerCounts:
         return pd.Series([getattr(self, k) for k in index], index=index)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BinStatistics:
     """Class for storing MAG statistics calculated by CheckM"""
     bin_id: str = None
@@ -43,6 +42,14 @@ class BinStatistics:
     strain_heterogeneity: float = None
 
     # TODO: add __post_init__ to validate number ranges
+    def __post_init__(self):
+        for attr in ['completeness', 'contamination', 'strain_heterogeneity']:
+            val = getattr(self, attr)
+            if not 0 <= val <= 100.0:
+                raise ValueError(
+                    f'Value of "{attr}" for bin "{self.bin_id}" is out '
+                    f'of range ({val} should be between 0 and 100).'
+                )
 
     def to_series(self) -> pd.Series:
         index = get_attrs(self, ('marker_counts',))
@@ -60,7 +67,7 @@ class BinStatistics:
             )
 
 
-@dataclass
+@dataclass(frozen=True)
 class SampleStatistics:
     """Class for storing CheckM statistics of all the bins
         belonging to one sample"""

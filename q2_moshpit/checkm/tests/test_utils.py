@@ -92,6 +92,18 @@ class TestCheckMUtils(TestPluginBase):
         exp = [('bin_1', 'g__Strain_ales', 'UID18')]
         self.assertListEqual(exp, obs)
 
+    def test_create_bin_stats_with_error(self):
+        with self.assertRaisesRegexp(
+            ValueError, r'Value of "completeness" for bin "bin1" is .*'
+        ):
+            BinStatistics(
+                bin_id='bin1', marker_lineage='g__Mycobacterium',
+                marker_lineage_uid='UID1816',
+                genomes=100, markers=693, marker_sets=300,
+                marker_counts=MarkerCounts(0, 693, 0, 0, 0, 0),
+                completeness=101.1, contamination=0.0, strain_heterogeneity=0.0
+            )
+
     def test_extract_all(self):
         obs = _extract_checkm_stats(self.report_line1)
         exp = BinStatistics(

@@ -32,42 +32,30 @@ def _draw_final_plot(df: pd.DataFrame) -> dict:
         init={'sample_id': sample_ids[0]}
     )
 
-    opacity_selection = alt.selection_single(
-        fields=['opacity'],
-        bind=alt.binding_range(
-            min=0.1, max=1, name='Opacity: other samples  '
-        ),
-        init={'opacity': 0.15}
-    )
-
-    base = alt.Chart(df).transform_calculate(
-        opacity=opacity_selection.opacity
-    ).transform_fold(
-        list(col_names.values())
-    )
+    base = alt.Chart(df).transform_fold(list(col_names.values()))
 
     # prep and concatenate all plots
     final_plot = _concatenate_plots(
         completeness_plot=_prep_scatter_plot(
             base, 'completeness', 'contamination', 'Completeness [%]',
-            'Contamination [%]', opacity_selection, sample_selection,
+            'Contamination [%]', sample_selection, interactive=True,
             more_tooltips=[
                 alt.Tooltip('marker_lineage:N', title='Marker lineage')
             ]
         ),
         gc_plot=_prep_scatter_plot(
             base, 'gc', 'coding_density', 'GC content', 'Coding density',
-            opacity_selection, sample_selection
+            sample_selection, interactive=True
         ),
         marker_plot=_prep_markers_plot(base, sample_selection),
         contig_plots=_prep_contig_plots(base, sample_selection),
         genes_plot=_prep_scatter_plot(
             base, 'genome_size', 'predicted_genes', 'Genome size [Mbp]',
-            'Predicted genes', opacity_selection, sample_selection
+            'Predicted genes', sample_selection, interactive=True
         ),
         contig_count_plot=_prep_scatter_plot(
             base, 'contigs', 'genome_size', 'Contigs', 'Genome size [Mbp]',
-            opacity_selection, sample_selection
+            sample_selection, interactive=True
         )
     )
 
@@ -123,8 +111,8 @@ def _prep_contig_plots(base_plot, sample_selection):
 
 def _prep_scatter_plot(
         base_plot, x_col: str, y_col: str, x_title: str, y_title: str,
-        opacity_selection, sample_selection, more_tooltips=None,
-        color_map='tableau20'
+        sample_selection, more_tooltips=None, color_map='tableau10',
+        interactive=True
 ):
     more_tooltips = [] if more_tooltips is None else more_tooltips
     plot = base_plot.mark_point(
@@ -134,9 +122,9 @@ def _prep_scatter_plot(
         x=alt.X(f'{x_col}:Q', title=x_title),
         y=alt.Y(f'{y_col}:Q', title=y_title),
         color=alt.Color(
-            'sample_id:N',
+            'bin_id:N',
             scale=alt.Scale(scheme=color_map),
-            legend=alt.Legend(title='Sample ID')
+            legend=alt.Legend(title='Bin ID')
         ),
         tooltip=[
             alt.Tooltip('sample_id:N', title='Sample ID'),
@@ -145,16 +133,15 @@ def _prep_scatter_plot(
             alt.Tooltip(f'{y_col}:Q', title=y_title),
             *more_tooltips
         ],
-        opacity=alt.condition(
-            sample_selection, alt.value(1),
-            alt.Opacity('opacity:Q', scale=None)
-        )
+        opacity=alt.value(0.75)
     ).add_selection(
-        sample_selection, opacity_selection
+        sample_selection
+    ).transform_filter(
+        sample_selection
     ).properties(
         width=400, height=400
-    ).interactive()
-    return plot
+    )
+    return plot.interactive() if interactive else plot
 
 
 def _prep_markers_plot(base_plot, sample_selection):

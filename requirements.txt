@@ -1,3 +1,4 @@
+altair
 hmmer
 matplotlib
 metabat2

@@ -1,6 +1,21 @@
-{% extends 'tabbed.html' %}
+{% extends 'base.html' %}
 
-{% block tabcontent %}
+{% block head %}
+  <title>Embedding Vega-Lite</title>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega@5"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega-lite@4.17.0"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega-embed@6"></script>
+{% endblock %}
+
+{% block content %}
+  <style>
+  #plot {
+    margin-top: 50px;
+  }
+  #plot-controls {
+    margin-top: 50px;
+  }
+  </style>
 
   <div class="row">
     <div class="col-lg-12">
@@ -8,68 +23,76 @@
     </div>
   </div>
 
-  <div class="row">
-      <div class="col-lg-6">
-          <div class="btn-group">
-              <a href="quast_data/report.pdf" class="btn btn-success"> Full report (pdf) </a>
-              <a href="quast_data/basic_stats/cumulative_plot.pdf" class="btn btn-default"> Cumulative plot </a>
-              <a href="quast_data/basic_stats/GC_content_plot.pdf" class="btn btn-default"> GC content plot </a>
-              <a href="quast_data/basic_stats/Nx_plot.pdf" class="btn btn-default"> Nx plot </a>
-              <a href="quast_data/report.tsv" class="btn btn-default"> Stats table (tsv) </a>
-          </div>
-      </div>
-  </div>
-  <br>
-
-  <div class="row">
-      <div class="col-lg-6" style="display: flex; align-items: center">
-          <label style="white-space:nowrap; margin-right:10px">Sample ID: </label>
-          <select class="form-control" id="sample-id" style="margin-right:7px" onchange="updateReportLink()">
-          </select>
-          <a href="" class="btn btn-default" id="sample-gc-btn"> GC content plot </a>
-      </div>
-  </div>
-  <br>
-
-  <div class="row">
+  <div class="row" id="toolbar-top">
     <div class="col-lg-12">
-      <h3>Quality assesment report</h3>
+      <div class="btn-group">
+        <a href="results.tsv" class="btn btn-default"> CheckM report (tsv) </a>
+        <a href="checkm_plots.zip" class="btn btn-default"> CheckM plots (zip) </a>
+        <a href="checkm_report.pdf" class="btn btn-default"> CheckM full report (pdf) </a>
+      </div>
     </div>
   </div>
 
   <div class="row">
-    <div class="col-lg-12">
-      <iframe src="quast_data/report.html" style="width:100%; height:1500px; border:none;" id="iReport"></iframe>
+    <div class="col-lg-2" id="plot-controls">
+      <h3>Plot controls</h3>
     </div>
   </div>
 
-  <script id="sample-names" type="application/json">
-      {{ samples }}
+  <div class="row">
+    {% if vega_plots is defined %}
+    <div class="col-lg-6">
+      <div id="plot"></div>
+    </div>
+    {% else %}
+    <p>Unable to generate the completeness plot</p>
+    {% endif %}
+  </div>
+
+{% if vega_plots is defined %}
+  <script id="spec" type="application/json">
+    {{ vega_plots }}
   </script>
 
-  <script type="text/javascript">
-      var updateReportLink = function() {
-          var currentSample = document.getElementById("sample-id").value
-          var reportBtn = document.getElementById("sample-gc-btn")
-          reportBtn.setAttribute("href", `quast_data/basic_stats/${currentSample}_contigs_GC_content_plot.pdf`)
-      }
+<script type="text/javascript">
+  $(document).ready(function() {
+    const spec = JSON.parse(document.getElementById('spec').innerHTML);
+    const dim = $('#plot').width() / 2;
+    const opts = { width: 1.1 * dim, height: dim };
 
-      var populateSampleNames = function() {
-          var sampleNames = JSON.parse(document.getElementById("sample-names").innerHTML)
-          var selectElement = document.getElementById("sample-id")
-          sampleNames.forEach(sn => {
-              var option = document.createElement("option")
-              option.text = sn
-              option.value = sn
-              selectElement.add(option)
-          })
-          updateReportLink()
-      }
+    vegaEmbed('#plot', spec).then(function(result) {
+      result.view.logLevel(vega.Warn);
+      // Stash the view object in global namespace for debugging purposes.
+      // Check out https://vega.github.io/vega/docs/api/debugging/
+      // for more details.
+      window.v = result.view;
 
-      $(document).ready(function() {
-          populateSampleNames()
-      })
-  </script>
+      // move the sliders to the right
+      const controls = document.getElementsByClassName('vega-bindings');
+      document.getElementById('plot-controls').appendChild(controls[0])
+
+    }).catch(function(error) {
+      // From 'js-error-handler.html'
+      handleErrors([error], $('#plot'));
+    });
+
+    // // Clean up the vega-embed toolbar
+    // let toolbar = $('div .vega-actions').detach();
+    // toolbar.addClass('btn-group');
+    // toolbar.children('a').each(function() {
+    //   $(this).addClass('btn btn-default');
+    // });
+    // $('<a href="data.tsv" target="_blank" rel="noopener noreferrer" class="btn btn-default">Export as TSV</a>')
+    //   .prependTo(toolbar);
+    // toolbar.appendTo('#toolbar');
+    //
+    // let plotControls = $('#plot-controls')
+    // $(plotControls).append(toolbar)
+
+  });
+</script>
+
+{% endif %}
 
 {% endblock %}
 

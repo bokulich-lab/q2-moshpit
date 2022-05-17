@@ -32,30 +32,35 @@ def _draw_final_plot(df: pd.DataFrame) -> dict:
         init={'sample_id': sample_ids[0]}
     )
 
+    bin_selection = alt.selection_interval()
+
     base = alt.Chart(df).transform_fold(list(col_names.values()))
 
     # prep and concatenate all plots
     final_plot = _concatenate_plots(
         completeness_plot=_prep_scatter_plot(
             base, 'completeness', 'contamination', 'Completeness [%]',
-            'Contamination [%]', sample_selection, interactive=True,
+            'Contamination [%]', sample_selection, bin_selection,
+            interactive=False,
             more_tooltips=[
                 alt.Tooltip('marker_lineage:N', title='Marker lineage')
-            ]
+            ],
+            reverse_y=True
         ),
         gc_plot=_prep_scatter_plot(
             base, 'gc', 'coding_density', 'GC content', 'Coding density',
-            sample_selection, interactive=True
+            sample_selection, bin_selection, interactive=False
         ),
-        marker_plot=_prep_markers_plot(base, sample_selection),
-        contig_plots=_prep_contig_plots(base, sample_selection),
+        marker_plot=_prep_markers_plot(base, sample_selection, bin_selection),
+        contig_plots=_prep_contig_plots(base, sample_selection, bin_selection),
         genes_plot=_prep_scatter_plot(
             base, 'genome_size', 'predicted_genes', 'Genome size [Mbp]',
-            'Predicted genes', sample_selection, interactive=True
+            'Predicted genes', sample_selection, bin_selection,
+            interactive=False
         ),
         contig_count_plot=_prep_scatter_plot(
             base, 'contigs', 'genome_size', 'Contigs', 'Genome size [Mbp]',
-            sample_selection, interactive=True
+            sample_selection, bin_selection, interactive=False
         )
     )
 
@@ -86,7 +91,7 @@ def _concatenate_plots(
     return plot
 
 
-def _prep_contig_plots(base_plot, sample_selection):
+def _prep_contig_plots(base_plot, sample_selection, bin_selection):
     contig_plots = {}
     contig_cols = {
         'longest_contig': 'Longest contig length [bp]',
@@ -99,10 +104,10 @@ def _prep_contig_plots(base_plot, sample_selection):
             base_plot.mark_bar().encode(
                 x=alt.X('bin_id:N', title='Bin'),
                 y=alt.Y(f'{y}:Q', title=title),
-            ).add_selection(
-                sample_selection
             ).transform_filter(
                 sample_selection
+            ).transform_filter(
+                bin_selection
             ).properties(
                 width=880, height=250
             )
@@ -111,31 +116,40 @@ def _prep_contig_plots(base_plot, sample_selection):
 
 def _prep_scatter_plot(
         base_plot, x_col: str, y_col: str, x_title: str, y_title: str,
-        sample_selection, more_tooltips=None, color_map='tableau10',
-        interactive=True
+        sample_selection, bin_selection, more_tooltips=None,
+        color_map='tableau10', interactive=True, reverse_x=False,
+        reverse_y=False
 ):
     more_tooltips = [] if more_tooltips is None else more_tooltips
     plot = base_plot.mark_point(
         size=80, filled=True, opacity=0.7,
         strokeWidth=0.2, strokeOpacity=0.8, stroke='lightgrey'
     ).encode(
-        x=alt.X(f'{x_col}:Q', title=x_title),
-        y=alt.Y(f'{y_col}:Q', title=y_title),
-        color=alt.Color(
-            'bin_id:N',
-            scale=alt.Scale(scheme=color_map),
-            legend=alt.Legend(title='Bin ID')
+        x=alt.X(
+            f'{x_col}:Q', title=x_title, scale=alt.Scale(reverse=reverse_x)
+        ),
+        y=alt.Y(
+            f'{y_col}:Q', title=y_title, scale=alt.Scale(reverse=reverse_y)
+        ),
+        color=alt.condition(
+            bin_selection,
+            alt.Color(
+                'bin_id:N',
+                scale=alt.Scale(scheme=color_map),
+                legend=alt.Legend(title='Bin ID')
+            ),
+            alt.value('lightgray')
         ),
         tooltip=[
             alt.Tooltip('sample_id:N', title='Sample ID'),
             alt.Tooltip('bin_id:N', title='Bin ID'),
-            alt.Tooltip(f'{x_col}:Q', title=x_title),
-            alt.Tooltip(f'{y_col}:Q', title=y_title),
+            alt.Tooltip(f'{x_col}:Q', title=x_title, format='.2'),
+            alt.Tooltip(f'{y_col}:Q', title=y_title, format='.2'),
             *more_tooltips
         ],
         opacity=alt.value(0.75)
     ).add_selection(
-        sample_selection
+        sample_selection, bin_selection
     ).transform_filter(
         sample_selection
     ).properties(
@@ -144,7 +158,7 @@ def _prep_scatter_plot(
     return plot.interactive() if interactive else plot
 
 
-def _prep_markers_plot(base_plot, sample_selection):
+def _prep_markers_plot(base_plot, sample_selection, bin_selection):
     plot_markers = base_plot.mark_bar().encode(
         x=alt.X('bin_id', title='Bin'),
         y=alt.Y('sum(value):Q', title='Marker count'),
@@ -154,10 +168,10 @@ def _prep_markers_plot(base_plot, sample_selection):
             scale=alt.Scale(scheme='blues'),
             sort='ascending'
         )
-    ).add_selection(
-        sample_selection
     ).transform_filter(
         sample_selection
+    ).transform_filter(
+        bin_selection
     ).properties(
         width=880, height=250
     )

@@ -9,7 +9,7 @@ import altair as alt
 import pandas as pd
 
 
-def _draw_final_plot(df: pd.DataFrame) -> dict:
+def _draw_detailed_plots(df: pd.DataFrame) -> dict:
     # rename columns for better plot labels
     col_names = {
         'count0': '0', 'count1': '1', 'count2': '2',
@@ -37,11 +37,11 @@ def _draw_final_plot(df: pd.DataFrame) -> dict:
     base = alt.Chart(df).transform_fold(list(col_names.values()))
 
     # prep and concatenate all plots
-    final_plot = _concatenate_plots(
+    final_plot = _concatenate_detailed_plots(
         completeness_plot=_prep_scatter_plot(
             base, 'completeness', 'contamination', 'Completeness [%]',
-            'Contamination [%]', sample_selection, bin_selection,
-            interactive=False,
+            'Contamination [%]', primary_selection=bin_selection,
+            primary_filter=sample_selection, interactive=False,
             more_tooltips=[
                 alt.Tooltip('marker_lineage:N', title='Marker lineage')
             ],
@@ -49,25 +49,77 @@ def _draw_final_plot(df: pd.DataFrame) -> dict:
         ),
         gc_plot=_prep_scatter_plot(
             base, 'gc', 'coding_density', 'GC content', 'Coding density',
-            sample_selection, bin_selection, interactive=False
+            primary_selection=bin_selection, primary_filter=sample_selection,
+            interactive=False
         ),
-        marker_plot=_prep_markers_plot(base, sample_selection, bin_selection),
+        marker_plot=_prep_bar_plot(
+            base, sample_selection, x_col='bin_id', y_col='sum(value):Q',
+            x_title='Bin ID', y_title='Marker count', color_shorthand='key:N',
+            color_title='Markers', color_map='blues', sort='ascending',
+            bin_selection=bin_selection, width=880, height=250
+        ),
         contig_plots=_prep_contig_plots(base, sample_selection, bin_selection),
         genes_plot=_prep_scatter_plot(
             base, 'genome_size', 'predicted_genes', 'Genome size [Mbp]',
-            'Predicted genes', sample_selection, bin_selection,
-            interactive=False
+            'Predicted genes', primary_selection=bin_selection,
+            primary_filter=sample_selection, interactive=False
         ),
         contig_count_plot=_prep_scatter_plot(
             base, 'contigs', 'genome_size', 'Contigs', 'Genome size [Mbp]',
-            sample_selection, bin_selection, interactive=False
+            primary_selection=bin_selection, primary_filter=sample_selection,
+            interactive=False
         )
     )
 
     return final_plot.to_dict()
 
 
-def _concatenate_plots(
+def _draw_overview_plots(df: pd.DataFrame) -> dict:
+    # rename columns for better plot labels
+    col_names = {
+        'count0': '0', 'count1': '1', 'count2': '2',
+        'count3': '3', 'count4': '4', 'count5_or_more': '5+'
+    }
+    df = df.rename(columns=col_names, inplace=False)
+
+    # convert genome size to Mbp
+    df['genome_size'] = df['genome_size'] / 10**6
+
+    # prepare required selectors
+    sample_selection = alt.selection_interval()
+
+    base = alt.Chart(df).transform_fold(list(col_names.values()))
+
+    # prep and concatenate all plots
+    final_plot = _concatenate_overview_plots(
+        completeness_samples_plot=_prep_scatter_plot(
+            base, 'completeness', 'contamination', 'Completeness [%]',
+            'Contamination [%]', primary_selection=sample_selection,
+            selection_col='sample_id:N', selection_title='Sample ID',
+            primary_filter=None, interactive=False, reverse_y=True
+        ),
+        completeness_contigs_plot=_prep_scatter_plot(
+            base, 'completeness', 'contamination', 'Completeness [%]',
+            'Contamination [%]', primary_selection=sample_selection,
+            selection_col='sum(contigs):Q', selection_title='Contig count',
+            color_map='blues', primary_filter=None, interactive=False,
+            reverse_y=True, more_tooltips=[
+                alt.Tooltip('sum(contigs):Q', title='Contigs')
+            ]
+        ),
+        completeness_summary_plot=_prep_bar_plot(
+            base, sample_selection, x_col='sample_id', y_col='count(bin_id):Q',
+            x_title='Sample ID', y_title='Bin count',
+            color_shorthand='qc_category:N', color_title='Genome completeness',
+            color_map='blues', sort='ascending', bin_selection=None,
+            width=900, height=350
+        )
+    )
+
+    return final_plot.to_dict()
+
+
+def _concatenate_detailed_plots(
         completeness_plot, gc_plot, marker_plot, contig_plots,
         genes_plot, contig_count_plot
 ):
@@ -80,6 +132,30 @@ def _concatenate_plots(
         ),
         marker_plot,
         *contig_plots.values(),
+        spacing=40
+    ).resolve_scale(
+        color='independent'
+    ).configure_axis(
+        labelFontSize=12, titleFontSize=15
+    ).configure_legend(
+        labelFontSize=12, titleFontSize=14
+    )
+    return plot
+
+
+def _concatenate_overview_plots(
+        completeness_samples_plot, completeness_contigs_plot,
+        # coverage_plot,
+        completeness_summary_plot
+):
+    plot = alt.vconcat(
+        alt.hconcat(
+            completeness_samples_plot, completeness_contigs_plot, spacing=40
+        ).resolve_scale(color='independent'),
+        # alt.hconcat(
+        #     coverage_plot, completeness_summary_plot, spacing=40
+        # ),
+        completeness_summary_plot,
         spacing=40
     ).resolve_scale(
         color='independent'
@@ -116,9 +192,10 @@ def _prep_contig_plots(base_plot, sample_selection, bin_selection):
 
 def _prep_scatter_plot(
         base_plot, x_col: str, y_col: str, x_title: str, y_title: str,
-        sample_selection, bin_selection, more_tooltips=None,
-        color_map='tableau10', interactive=True, reverse_x=False,
-        reverse_y=False
+        primary_selection, selection_col: str = 'bin_id:N',
+        selection_title: str = 'Bin ID', primary_filter=None,
+        more_tooltips=None, color_map='tableau10', interactive=True,
+        reverse_x=False, reverse_y=False
 ):
     more_tooltips = [] if more_tooltips is None else more_tooltips
     plot = base_plot.mark_point(
@@ -132,13 +209,13 @@ def _prep_scatter_plot(
             f'{y_col}:Q', title=y_title, scale=alt.Scale(reverse=reverse_y)
         ),
         color=alt.condition(
-            bin_selection,
+            primary_selection,
             alt.Color(
-                'bin_id:N',
+                selection_col,
                 scale=alt.Scale(scheme=color_map),
-                legend=alt.Legend(title='Bin ID')
+                legend=alt.Legend(title=selection_title)
             ),
-            alt.value('lightgray')
+            alt.value('gainsboro')
         ),
         tooltip=[
             alt.Tooltip('sample_id:N', title='Sample ID'),
@@ -149,30 +226,41 @@ def _prep_scatter_plot(
         ],
         opacity=alt.value(0.75)
     ).add_selection(
-        sample_selection, bin_selection
-    ).transform_filter(
-        sample_selection
-    ).properties(
-        width=400, height=400
+        primary_selection
     )
+
+    if primary_filter:
+        plot = plot.add_selection(
+            primary_filter
+        ).transform_filter(
+            primary_filter
+        )
+
+    plot = plot.properties(width=400, height=400)
     return plot.interactive() if interactive else plot
 
 
-def _prep_markers_plot(base_plot, sample_selection, bin_selection):
+def _prep_bar_plot(
+        base_plot, sample_selection, x_col: str, y_col: str, x_title: str,
+        y_title: str, color_shorthand: str, color_title: str, color_map: str,
+        sort: str = 'ascending', bin_selection=None, width=880, height=250
+):
     plot_markers = base_plot.mark_bar().encode(
-        x=alt.X('bin_id', title='Bin'),
-        y=alt.Y('sum(value):Q', title='Marker count'),
+        x=alt.X(x_col, title=x_title),
+        y=alt.Y(y_col, title=y_title),
         color=alt.Color(
-            'key:N',
-            title='Markers',
-            scale=alt.Scale(scheme='blues'),
-            sort='ascending'
+            color_shorthand,
+            title=color_title,
+            scale=alt.Scale(scheme=color_map),
+            sort=sort
         )
     ).transform_filter(
         sample_selection
-    ).transform_filter(
-        bin_selection
-    ).properties(
-        width=880, height=250
     )
-    return plot_markers
+
+    if bin_selection:
+        plot_markers = plot_markers.transform_filter(
+            bin_selection
+        )
+
+    return plot_markers.properties(width=width, height=height)

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'tabbed.html' %}
 
 {% block head %}
   <title>Embedding Vega-Lite</title>
@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
 {% endblock %}
 
-{% block content %}
+{% block tabcontent %}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
 
   <style>
@@ -23,7 +23,7 @@
 
   <div class="row">
     <div class="col-lg-3">
-      <div class="card">
+      <div class="card mt-3">
         <h5 class="card-header">CheckM plots</h5>
         <div class="card-body">
           <h5 class="card-title">Plot controls</h5>
@@ -42,45 +42,9 @@
       </div>
     </div>
   </div>
-<!--  <div class="d-flex p-3">-->
-<!--    <div class="dropdown">-->
-<!--      <button class="btn btn-light btn-lg dropdown-toggle" id="controls-dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">-->
-<!--        Plot controls-->
-<!--      </button>-->
-<!--      <form class="dropdown-menu p-4">-->
-<!--        <div class="mb-3 mr-3" id="plot-controls">-->
-<!--        </div>-->
-<!--      </form>-->
-<!--    </div>-->
-<!--    <div class="dropdown ml-3">-->
-<!--      <button class="btn btn-success btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">-->
-<!--        Download-->
-<!--      </button>-->
-<!--      <ul class="dropdown-menu" aria-labelledby="download-dropdown">-->
-<!--        <li><a class="dropdown-item" href="results.tsv">CheckM report (tsv)</a></li>-->
-<!--        <li><a class="dropdown-item" href="checkm_plots.zip">CheckM plots (zip)</a></li>-->
-<!--        <li><a class="dropdown-item" href="checkm_report.pdf">CheckM full report (pdf)</a></li>-->
-<!--      </ul>-->
-<!--    </div>-->
-<!--  </div>-->
-
-<!--  <div class="d-flex p-3 align-items-center">-->
-<!--    <div class="dropdown ml-3">-->
-<!--      <button class="btn btn-outline-success btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">-->
-<!--        Download-->
-<!--      </button>-->
-<!--      <ul class="dropdown-menu" aria-labelledby="download-dropdown">-->
-<!--        <li><a class="dropdown-item" href="results.tsv">CheckM report (tsv)</a></li>-->
-<!--        <li><a class="dropdown-item" href="checkm_plots.zip">CheckM plots (zip)</a></li>-->
-<!--        <li><a class="dropdown-item" href="checkm_report.pdf">CheckM full report (pdf)</a></li>-->
-<!--      </ul>-->
-<!--    </div>-->
-<!--&lt;!&ndash;      <div id="plot-controls">&ndash;&gt;-->
-<!--&lt;!&ndash;      </div>&ndash;&gt;-->
-<!--  </div>-->
 
   <div class="row">
-    {% if vega_plots is defined %}
+    {% if vega_plots_overview is defined %}
     <div class="col-lg-6">
       <div id="plot"></div>
     </div>
@@ -89,9 +53,9 @@
     {% endif %}
   </div>
 
-{% if vega_plots is defined %}
+{% if vega_plots_overview is defined %}
   <script id="spec" type="application/json">
-    {{ vega_plots }}
+    {{ vega_plots_overview }}
   </script>
 
 <script type="text/javascript">
@@ -102,33 +66,16 @@
 
     vegaEmbed('#plot', spec).then(function(result) {
       result.view.logLevel(vega.Warn);
-      // Stash the view object in global namespace for debugging purposes.
-      // Check out https://vega.github.io/vega/docs/api/debugging/
-      // for more details.
       window.v = result.view;
 
       // move the sliders to the right
       const controls = document.getElementsByClassName('vega-bindings');
-      // document.getElementById('plot-controls').appendChild(controls[0])
       document.getElementById('plot-controls').appendChild(controls[0])
 
     }).catch(function(error) {
       // From 'js-error-handler.html'
       handleErrors([error], $('#plot'));
     });
-
-    // // Clean up the vega-embed toolbar
-    // let toolbar = $('div .vega-actions').detach();
-    // toolbar.addClass('btn-group');
-    // toolbar.children('a').each(function() {
-    //   $(this).addClass('btn btn-default');
-    // });
-    // $('<a href="data.tsv" target="_blank" rel="noopener noreferrer" class="btn btn-default">Export as TSV</a>')
-    //   .prependTo(toolbar);
-    // toolbar.appendTo('#toolbar');
-    //
-    // let plotControls = $('#plot-controls')
-    // $(plotControls).append(toolbar)
 
   });
 </script>
@@ -140,5 +87,4 @@
 {% block footer %}
 {% set loading_selector = '#loading' %}
 {% include 'js-error-handler.html' %}
-
 {% endblock %}

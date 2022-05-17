@@ -18,7 +18,7 @@ import pkg_resources
 import q2templates
 
 from q2_moshpit._utils import _process_common_input_params, run_command
-from q2_moshpit.checkm.plots import _draw_final_plot
+from q2_moshpit.checkm.plots import _draw_detailed_plots, _draw_overview_plots
 from q2_moshpit.checkm.utils import _process_checkm_arg, _get_plots_per_sample
 
 from q2_types_genomics.per_sample_data._format import \
@@ -142,6 +142,17 @@ def _parse_single_checkm_report(
     return df
 
 
+def _classify_completeness(completeness: float) -> str:
+    if completeness >= 90.0:
+        return 'near'
+    elif 90.0 > completeness >= 70.0:
+        return 'substantial'
+    elif 70.0 > completeness >= 50.0:
+        return 'moderate'
+    else:
+        return 'partial'
+
+
 def evaluate_bins(
     output_dir: str, bins: MultiMAGSequencesDirFmt,
     db_path: str, reduced_tree: bool = None, unique: int = None,
@@ -196,16 +207,30 @@ def evaluate_bins(
             sep='\t', index=False,
         )
 
+        # classify based on completeness
+        checkm_results['qc_category'] = checkm_results['completeness'].apply(
+            _classify_completeness
+        )
+
         context = {
+            'tabs': [
+                {'title': 'QC overview', 'url': 'index.html'},
+                {'title': 'Sample details', 'url': 'sample_details.html'}
+            ],
             'samples': json.dumps(list(reports.keys())),
-            'vega_plots': json.dumps(
-                _draw_final_plot(checkm_results)
+            'vega_plots_detailed': json.dumps(
+                _draw_detailed_plots(checkm_results)
+            ),
+            'vega_plots_overview': json.dumps(
+                _draw_overview_plots(checkm_results)
             ),
             **{k: json.dumps(v) for k, v in all_plots.items()}
         }
 
         index = os.path.join(TEMPLATES, 'checkm', 'index.html')
-        gc_plots = os.path.join(TEMPLATES, 'checkm', 'gc_plots.html')
+        sample_details = os.path.join(
+            TEMPLATES, 'checkm', 'sample_details.html'
+        )
 
         copy_tree(os.path.join(TEMPLATES, 'checkm'), output_dir)
         copy_tree(
@@ -213,5 +238,5 @@ def evaluate_bins(
             os.path.join(output_dir, 'plots')
         )
 
-        templates = [index, gc_plots]
+        templates = [index, sample_details]
         q2templates.render(templates, output_dir, context=context)

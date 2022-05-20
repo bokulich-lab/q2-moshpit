@@ -240,3 +240,16 @@ def evaluate_bins(
 
         templates = [index, sample_details]
         q2templates.render(templates, output_dir, context=context)
+
+        # until Bootstrap 3 is replaced with v5, remove the v3 scripts as
+        # the HTML files are adjusted to work with v5
+        os.remove(
+            os.path.join(
+                output_dir, 'q2templateassets', 'css', 'bootstrap.min.css'
+            )
+        )
+        os.remove(
+            os.path.join(
+                output_dir, 'q2templateassets', 'js', 'bootstrap.min.js'
+            )
+        )

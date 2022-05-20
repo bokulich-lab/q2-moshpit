@@ -1,93 +1,104 @@
 {% extends 'tabbed.html' %}
 
 {% block head %}
-  <title>Embedding Vega-Lite</title>
-  <script type="text/javascript" src="./js/bootstrapMagic.js"></script>
-  <script type="text/javascript">
+<title>Embedding Vega-Lite</title>
+<script src="./js/bootstrapMagic.js" type="text/javascript"></script>
+<script type="text/javascript">
     // temporary hack to make it look good with Bootstrap 5
     removeBS3refs()
-    // end of hacking
-  </script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega@5"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega-lite@4.17.0"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm//vega-embed@6"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+</script>
+<script src="https://cdn.jsdelivr.net/npm//vega@5"
+        type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm//vega-lite@4.17.0"
+        type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm//vega-embed@6"
+        type="text/javascript"></script>
+<link crossorigin="anonymous"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+      integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor"
+      rel="stylesheet">
 {% endblock %}
 
 {% block tabcontent %}
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+<script crossorigin="anonymous"
+        integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
 
-  <style>
-  #plot {
-    margin-top: 50px;
-  }
-  .vega-bind {
-    margin-left: 20px;
-    margin-bottom: 0;
-  }
-  </style>
+<style>
+    #plot {
+        margin-top: 50px;
+    }
 
-  <div class="row">
+    .vega-bind {
+        margin-left: 20px;
+        margin-bottom: 0;
+    }
+</style>
+
+<div class="row">
     <div class="col-lg-3">
-      <div class="card mt-3">
-        <h5 class="card-header">CheckM plots</h5>
-        <div class="card-body">
-          <h5 class="card-title">Plot controls</h5>
-          <div id="plot-controls"></div>
-          <div class="dropdown ml-3 mt-3">
-            <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Download
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="download-dropdown">
-              <li><a class="dropdown-item" href="results.tsv">CheckM report (tsv)</a></li>
-              <li><a class="dropdown-item" href="checkm_plots.zip">CheckM plots (zip)</a></li>
-              <li><a class="dropdown-item" href="checkm_report.pdf">CheckM full report (pdf)</a></li>
-            </ul>
-          </div>
+        <div class="card mt-3">
+            <h5 class="card-header">CheckM plots</h5>
+            <div class="card-body">
+                <h5 class="card-title">Plot controls</h5>
+                <div id="plot-controls"></div>
+                <div class="dropdown ml-3 mt-3">
+                    <button aria-expanded="false"
+                            class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown"
+                            type="button">
+                        Download
+                    </button>
+                    <ul aria-labelledby="download-dropdown"
+                        class="dropdown-menu">
+                        <li><a class="dropdown-item" href="results.tsv">CheckM
+                            report (tsv)</a></li>
+                        <li><a class="dropdown-item" href="checkm_plots.zip">CheckM
+                            plots (zip)</a></li>
+                        <li><a class="dropdown-item" href="checkm_report.pdf">CheckM
+                            full report (pdf)</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <div class="row">
+<div class="row">
     {% if vega_plots_detailed is defined %}
     <div class="col-lg-6">
-      <div id="plot"></div>
+        <div id="plot"></div>
     </div>
     {% else %}
     <p>Unable to generate the completeness plot</p>
     {% endif %}
-  </div>
+</div>
 
 {% if vega_plots_detailed is defined %}
-  <script id="spec" type="application/json">
+<script id="spec" type="application/json">
     {{ vega_plots_detailed }}
-  </script>
+</script>
 
 <script type="text/javascript">
-  $(document).ready(function() {
-    // temporary hack to make it look good with Bootstrap 5
-    adjustTagsToBS3()
-    // end of hacking
+    $(document).ready(function () {
+        // temporary hack to make it look good with Bootstrap 5
+        adjustTagsToBS3()
 
-    const spec = JSON.parse(document.getElementById('spec').innerHTML);
-    const dim = $('#plot').width() / 2;
-    const opts = { width: 1.1 * dim, height: dim };
+        const spec = JSON.parse(document.getElementById('spec').innerHTML);
 
-    vegaEmbed('#plot', spec).then(function(result) {
-      result.view.logLevel(vega.Warn);
-      window.v = result.view;
+        vegaEmbed('#plot', spec).then(function (result) {
+            result.view.logLevel(vega.Warn);
+            window.v = result.view;
 
-      // move the sliders to the right
-      const controls = document.getElementsByClassName('vega-bindings');
-      document.getElementById('plot-controls').appendChild(controls[0])
+            // move the sliders to the right
+            const controls = document.getElementsByClassName('vega-bindings');
+            document.getElementById('plot-controls').appendChild(controls[0])
 
-    }).catch(function(error) {
-      handleErrors([error], $('#plot'));
+        }).catch(function (error) {
+            handleErrors([error], $('#plot'));
+        });
+
+
     });
-
-
-  });
 </script>
 
 {% endif %}

@@ -32,6 +32,10 @@ setup(
         'q2_moshpit.metabat2.tests': [
             'data/*', 'data/bins/samp1/*', 'data/contigs/*',
             'data/depth/*', 'data/maps/*'
+        ],
+        'q2_moshpit.checkm.tests': [
+            'data/*', 'data/bins/*', 'data/bins/*/*',
+            'data/checkm_reports/*/*/*', 'data/plots/*/*/*'
         ]
     },
     zip_safe=False,

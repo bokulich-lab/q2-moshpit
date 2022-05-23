@@ -11,6 +11,7 @@ import os
 import tempfile
 from copy import deepcopy
 from distutils.dir_util import copy_tree
+from typing import Mapping
 from zipfile import ZipFile
 
 import pandas as pd
@@ -31,6 +32,17 @@ def _evaluate_bins(
         results_dir: str, bins: MultiMAGSequencesDirFmt,
         db_path: str, common_args: list
 ) -> dict:
+    """Evaluates bins for all samples using CheckM.
+
+    Args:
+        results_dir (str): Location where the final results should be stored.
+        bins (MultiMAGSequencesDirFmt): The bins to be analyzed.
+        db_path (str): Path to the CheckM database.
+        common_args (list): List of common arguments to be passed to CheckM.
+
+    Returns:
+        dict: Dictionary containing the paths to the generated reports.
+    """
     base_cmd = ['checkm', 'lineage_wf', *common_args]
     stats_fps = {}
 
@@ -62,15 +74,24 @@ def _draw_checkm_plots(
         results_dir: str, bins: MultiMAGSequencesDirFmt,
         db_path: str, plot_type: str = 'gc'
 ) -> dict:
+    """Draws CheckM plots for all samples.
+
+    Args:
+        results_dir (str): Location where the plots should be stored.
+        bins (MultiMAGSequencesDirFmt): The bins to be analyzed.
+        db_path (str): The path to the CheckM database.
+        plot_type (str): The type of plot to be drawn (one of: gc/nx/coding).
+
+    Returns:
+        dict: A dictionary containing the paths to the generated plots in a
+            form: {sample_id: plot_dir}.
+    """
     base_cmd = [
         'checkm', f'{plot_type}_plot', '-x', 'fasta', '--image_type', 'svg',
         '--font_size', '10'
     ]
     # TODO: the numbers should probably be configurable
     dist_values = [] if plot_type == 'nx' else ['50', '75', '90']
-    # width = '6.5' if plot_type == 'nx' else '6.5'
-    # height = '6.5' if plot_type == 'nx' else '3.5'
-    # base_cmd.extend(['--width', width, '--height', height])
     plots = {}
 
     manifest: pd.DataFrame = bins.manifest.view(pd.DataFrame)
@@ -91,7 +112,15 @@ def _draw_checkm_plots(
     return plots
 
 
-def _parse_checkm_reports(reports: dict) -> pd.DataFrame:
+def _parse_checkm_reports(reports: Mapping[str, str]) -> pd.DataFrame:
+    """Combines CheckM's reports from all samples into one pandas DataFrame.
+
+    Args:
+        reports (Mapping[str, str]): A dictionary containing report paths.
+
+    Returns:
+        pd.DataFrame: A pandas DataFrame containing the parsed CheckM metrics.
+    """
     dfs = [
         _parse_single_checkm_report(_id, fp) for _id, fp in reports.items()
     ]
@@ -103,6 +132,16 @@ def _parse_checkm_reports(reports: dict) -> pd.DataFrame:
 def _parse_single_checkm_report(
         sample_id: str, report_fp: str
 ) -> pd.DataFrame:
+    """Parses a single CheckM report into a pandas DataFrame.
+
+    Args:
+        sample_id (str): The sample ID.
+        report_fp (str): The path to the CheckM report file.
+
+    Returns:
+        pd.DataFrame: A pandas DataFrame containing the parsed CheckM
+            metrics for a single sample.
+    """
     # read the raw CheckM report
     with open(report_fp, 'r') as fh:
         stats = {
@@ -143,6 +182,15 @@ def _parse_single_checkm_report(
 
 
 def _classify_completeness(completeness: float) -> str:
+    """Converts CheckM's completeness score into one of four
+        completeness categories.
+
+    Args:
+        completeness (float): CheckM's completeness score (0-100).
+
+    Returns:
+        str: One of four completeness categories.
+    """
     if completeness >= 90.0:
         return 'near'
     elif 90.0 > completeness >= 70.0:
@@ -153,7 +201,17 @@ def _classify_completeness(completeness: float) -> str:
         return 'partial'
 
 
-def _zip_checkm_plots(plots_per_sample, zip_path):
+def _zip_checkm_plots(
+        plots_per_sample: Mapping[str, Mapping[str, str]], zip_path: str
+):
+    """Creates a single zip archive containing all plots produced by CheckM
+        for all the samples.
+
+    Args:
+        plots_per_sample (Mapping[str, Mapping[str, str]]): Dictionary
+            containing the mapping of plot paths per plot type per sample.
+        zip_path (str): The path to the zip archive.
+    """
     with ZipFile(zip_path, 'w') as zf:
         for sample_id in plots_per_sample.keys():
             plot_fps = [
@@ -200,8 +258,10 @@ def evaluate_bins(
 
         plots_per_sample = _get_plots_per_sample(all_plots)
 
-        zip_path = os.path.join(TEMPLATES, 'checkm', 'checkm_plots.zip')
-        _zip_checkm_plots(plots_per_sample, zip_path)
+        _zip_checkm_plots(
+            plots_per_sample,
+            os.path.join(TEMPLATES, 'checkm', 'checkm_plots.zip')
+        )
 
         # TODO: calculate bin coverage and add one more plot
         #  (depth vs. genome size)

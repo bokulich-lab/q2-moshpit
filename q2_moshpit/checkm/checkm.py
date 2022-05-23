@@ -153,6 +153,20 @@ def _classify_completeness(completeness: float) -> str:
         return 'partial'
 
 
+def _zip_checkm_plots(plots_per_sample, zip_path):
+    with ZipFile(zip_path, 'w') as zf:
+        for sample_id in plots_per_sample.keys():
+            plot_fps = [
+                glob.glob(os.path.join(v, '*.svg'))
+                for k, v in plots_per_sample[sample_id].items()
+            ]
+            plot_fps = [x for sublist in plot_fps for x in sublist]
+            common_path = os.path.commonpath(plot_fps)
+            for plot_fp in plot_fps:
+                arcname = os.path.relpath(plot_fp, common_path)
+                zf.write(plot_fp, arcname=arcname)
+
+
 def evaluate_bins(
     output_dir: str, bins: MultiMAGSequencesDirFmt,
     db_path: str, reduced_tree: bool = None, unique: int = None,
@@ -174,7 +188,8 @@ def evaluate_bins(
     with tempfile.TemporaryDirectory() as tmp:
         results_dir = os.path.join(tmp, 'results')
 
-        # run CheckM's lineage_wf pipeline and draw all the QC plots
+        # run CheckM's lineage_wf pipeline, draw all the QC plots and zip
+        # them into a single archive for download
         reports = _evaluate_bins(results_dir, bins, db_path, common_args)
         all_plots = {}
         for plot_type in ['gc', 'nx', 'coding']:
@@ -183,35 +198,25 @@ def evaluate_bins(
             )
             all_plots[f'plots_{plot_type}'] = plot_dirs
 
-        # TODO: move this to a new function and test
         plots_per_sample = _get_plots_per_sample(all_plots)
 
-        # TODO: instead of displaying the ugly plots directly in the viz
-        #  only provide a link to the zipped plots for download - zip them here
         zip_path = os.path.join(TEMPLATES, 'checkm', 'checkm_plots.zip')
-        with ZipFile(zip_path, 'w') as zf:
-            for sample_id in plots_per_sample.keys():
-                plot_fps = [
-                    glob.glob(os.path.join(v, '*.svg'))
-                    for k, v in plots_per_sample[sample_id].items()
-                ]
-                plot_fps = [x for sublist in plot_fps for x in sublist]
-                common_path = os.path.commonpath(plot_fps)
-                for plot_fp in plot_fps:
-                    arcname = os.path.relpath(plot_fp, common_path)
-                    zf.write(plot_fp, arcname=arcname)
+        _zip_checkm_plots(plots_per_sample, zip_path)
 
+        # TODO: calculate bin coverage and add one more plot
+        #  (depth vs. genome size)
+
+        # convert CheckM reports into a DataFrame and add completeness info
         checkm_results = _parse_checkm_reports(reports)
         checkm_results.to_csv(
             os.path.join(TEMPLATES, 'checkm', 'results.tsv'),
             sep='\t', index=False,
         )
-
-        # classify based on completeness
         checkm_results['qc_category'] = checkm_results['completeness'].apply(
             _classify_completeness
         )
 
+        # prepare viz templates and copy all the required files
         context = {
             'tabs': [
                 {'title': 'QC overview', 'url': 'index.html'},
@@ -224,7 +229,6 @@ def evaluate_bins(
             'vega_plots_overview': json.dumps(
                 _draw_overview_plots(checkm_results)
             ),
-            **{k: json.dumps(v) for k, v in all_plots.items()}
         }
 
         index = os.path.join(TEMPLATES, 'checkm', 'index.html')

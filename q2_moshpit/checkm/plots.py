@@ -10,7 +10,7 @@ import pandas as pd
 from altair import Chart
 
 
-def _draw_detailed_plots(df: pd.DataFrame) -> dict:
+def _draw_detailed_plots(df: pd.DataFrame) -> dict:  # pragma: no cover
     # rename columns for better plot labels
     col_names = {
         'count0': '0', 'count1': '1', 'count2': '2',
@@ -75,7 +75,7 @@ def _draw_detailed_plots(df: pd.DataFrame) -> dict:
     return final_plot.to_dict()
 
 
-def _draw_overview_plots(df: pd.DataFrame) -> dict:
+def _draw_overview_plots(df: pd.DataFrame) -> dict:  # pragma: no cover
     # rename columns for better plot labels
     col_names = {
         'count0': '0', 'count1': '1', 'count2': '2',
@@ -123,7 +123,7 @@ def _draw_overview_plots(df: pd.DataFrame) -> dict:
 def _concatenate_detailed_plots(
         completeness_plot, gc_plot, marker_plot, contig_plots,
         genes_plot, contig_count_plot
-):
+):  # pragma: no cover
     plot = alt.vconcat(
         alt.hconcat(
             completeness_plot, gc_plot, spacing=40
@@ -148,7 +148,7 @@ def _concatenate_overview_plots(
         completeness_samples_plot, completeness_contigs_plot,
         # coverage_plot,
         completeness_summary_plot
-):
+):  # pragma: no cover
     plot = alt.vconcat(
         alt.hconcat(
             completeness_samples_plot, completeness_contigs_plot, spacing=40

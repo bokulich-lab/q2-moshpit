@@ -9,11 +9,21 @@ import unittest
 
 from qiime2.plugin.testing import TestPluginBase
 
-from q2_moshpit.checkm.utils import _get_plots_per_sample
+from q2_moshpit.checkm.utils import _get_plots_per_sample, _process_checkm_arg
 
 
 class TestCheckMUtils(TestPluginBase):
     package = 'q2_moshpit.checkm.tests'
+
+    def test_process_arg_bool(self):
+        obs = _process_checkm_arg('reduced_tree', True)
+        exp = ['--reduced_tree']
+        self.assertListEqual(exp, obs)
+
+    def test_process_arg_non_bool(self):
+        obs = _process_checkm_arg('threads', 2)
+        exp = ['--threads', '2']
+        self.assertListEqual(exp, obs)
 
     def test_get_plots_per_sample(self):
         obs = _get_plots_per_sample({

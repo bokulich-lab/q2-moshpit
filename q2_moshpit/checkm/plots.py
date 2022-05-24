@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 import altair as alt
 import pandas as pd
+from altair import Chart
 
 
 def _draw_detailed_plots(df: pd.DataFrame) -> dict:
@@ -244,7 +245,7 @@ def _prep_bar_plot(
         base_plot, sample_selection, x_col: str, y_col: str, x_title: str,
         y_title: str, color_shorthand: str, color_title: str, color_map: str,
         sort: str = 'ascending', bin_selection=None, width=880, height=250
-):
+) -> Chart:
     plot_markers = base_plot.mark_bar().encode(
         x=alt.X(x_col, title=x_title),
         y=alt.Y(y_col, title=y_title),

@@ -21,7 +21,6 @@ import q2templates
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_moshpit.checkm.plots import _draw_detailed_plots, _draw_overview_plots
 from q2_moshpit.checkm.utils import _process_checkm_arg, _get_plots_per_sample
-
 from q2_types_genomics.per_sample_data._format import \
     (MultiMAGSequencesDirFmt)
 

@@ -27,7 +27,7 @@ setup(
     package_data={
         'q2_moshpit': [
             'citations.bib', 'assets/checkm/*', 'assets/checkm/vega/*/*',
-            'assets/checkm/data/*', 'assets/checkm/js/*'
+            'assets/checkm/data/*', 'assets/checkm/js/*', 'assets/checkm/css/*'
         ],
         'q2_moshpit.metabat2.tests': [
             'data/*', 'data/bins/samp1/*', 'data/contigs/*',

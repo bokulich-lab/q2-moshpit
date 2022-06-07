@@ -9,7 +9,7 @@ import subprocess
 from typing import List
 
 
-def run_command(cmd, verbose=True):
+def run_command(cmd, env=None, verbose=True):
     if verbose:
         print("Running external command line application(s). This may print "
               "messages to stdout and/or stderr.")
@@ -19,7 +19,10 @@ def run_command(cmd, verbose=True):
     if verbose:
         print("\nCommand:", end=' ')
         print(" ".join(cmd), end='\n\n')
-    subprocess.run(cmd, check=True)
+    if env:
+        subprocess.run(cmd, env=env, check=True)
+    else:
+        subprocess.run(cmd, check=True)
 
 
 def _construct_param(arg_name):

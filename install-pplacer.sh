@@ -17,6 +17,7 @@ unzip pplacer.zip
 rm pplacer.zip
 
 if [[ "$PREFIX" == "" ]]; then
+  echo "Setting PREFIX=$CONDA_PREFIX"
   PREFIX="$CONDA_PREFIX"
 fi
 

@@ -16,6 +16,10 @@ echo "Extracting..."
 unzip pplacer.zip
 rm pplacer.zip
 
+if [[ "$PREFIX" == "" ]]; then
+  PREFIX="$CONDA_PREFIX"
+fi
+
 echo "Installing pplacer in $PREFIX..."
 if [[ ! -d "$PREFIX/bin/" ]]; then
   mkdir $PREFIX/bin/

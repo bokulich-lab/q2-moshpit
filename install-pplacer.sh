@@ -16,20 +16,25 @@ echo "Extracting..."
 unzip pplacer.zip
 rm pplacer.zip
 
-echo "Installing pplacer in $CONDA_PREFIX..."
-if [[ ! -d "$CONDA_PREFIX/bin/" ]]; then
-  mkdir $CONDA_PREFIX/bin/
+if [[ "$PREFIX" == "" ]]; then
+  echo "Setting PREFIX=$CONDA_PREFIX"
+  PREFIX="$CONDA_PREFIX"
 fi
-mv pplacer*/guppy $CONDA_PREFIX/bin/
-mv pplacer*/pplacer $CONDA_PREFIX/bin/
-mv pplacer*/rppr $CONDA_PREFIX/bin/
 
-mkdir $CONDA_PREFIX/bin/scripts/
-mv pplacer*/scripts/* $CONDA_PREFIX/bin/scripts/
+echo "Installing pplacer in $PREFIX..."
+if [[ ! -d "$PREFIX/bin/" ]]; then
+  mkdir $PREFIX/bin/
+fi
+mv pplacer*/guppy $PREFIX/bin/
+mv pplacer*/pplacer $PREFIX/bin/
+mv pplacer*/rppr $PREFIX/bin/
+
+mkdir $PREFIX/bin/scripts/
+mv pplacer*/scripts/* $PREFIX/bin/scripts/
 rm -r pplacer*
 
 echo "Testing installation..."
-if [[ $(which pplacer) == "$CONDA_PREFIX/bin"* ]]; then
+if [[ $(which pplacer) == "$PREFIX/bin"* ]]; then
   echo "Success!"
 # TODO: make sure later that this really is not necessary (try to install with conda on macOS and Ubuntu)
 #  pplacer --version

@@ -1,6 +1,5 @@
 {% set data = load_setup_py_data() %}
 {% set version = data.get('version') or 'placehold' %}
-{% set release = '.'.join(version.split('.')[:2]) %}
 
 package:
   name: q2-moshpit
@@ -12,7 +11,7 @@ source:
 build:
   script: |
     make VERBOSE=1
-    make install    
+    make install
 
 requirements:
   host:
@@ -28,14 +27,21 @@ requirements:
     - prodigal
     - pysam
     - samtools
-    - qiime2 {{ release }}.*
-    - q2-types-genomics {{ release }}.*
-    - q2templates {{ release }}.*
+    - qiime2 {{ qiime2_epoch }}.*
+    - q2-types-genomics {{ qiime2_epoch }}.*
+    - q2templates {{ qiime2_epoch }}.*
 
 test:
+  requires:
+    - coverage
+    - pytest-cov
+
   imports:
     - q2_moshpit
     - qiime2.plugins.moshpit
+
+  commands:
+    - pytest --cov q2_moshpit --pyargs q2_moshpit
 
 about:
   home: https://github.com/bokulich-lab/q2-moshpit

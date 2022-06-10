@@ -22,7 +22,7 @@ install: all
 
 dev: all
 	bash install-pplacer.sh
-	pip install git+https://github.com/Ecogenomics/CheckM.git@d74bb68d48b2318542eb7137343196d8e12b4fac coverage
+	pip install git+https://github.com/Ecogenomics/CheckM.git@d74bb68d48b2318542eb7137343196d8e12b4fac
 	pip install -e .
 
 clean: distclean

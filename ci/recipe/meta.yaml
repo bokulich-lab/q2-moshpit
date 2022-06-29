@@ -9,9 +9,7 @@ source:
   path: ../..
 
 build:
-  script: |
-    make VERBOSE=1
-    make install
+  script: make install
 
 requirements:
   host:
@@ -19,27 +17,18 @@ requirements:
     - setuptools
 
   run:
-    - altair
-    - hmmer
-    - matplotlib
     - metabat2
-    - numpy
-    - prodigal
-    - pysam
     - samtools
     - qiime2 {{ qiime2_epoch }}.*
     - q2-types-genomics {{ qiime2_epoch }}.*
-    - q2templates {{ qiime2_epoch }}.*
 
 test:
   requires:
     - coverage
     - pytest-cov
-
   imports:
     - q2_moshpit
     - qiime2.plugins.moshpit
-
   commands:
     - pytest --cov q2_moshpit --pyargs q2_moshpit
 

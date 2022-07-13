@@ -16,7 +16,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     license='BSD-3-Clause',
     packages=find_packages(),
-    author="Michal Ziemski",
+    author="Michal Ziemski, Keegan Evans",
     author_email="ziemski.michal@gmail.com",
     description="QIIME 2 plugin for metagenome analysis.",
     url="https://github.com/bokulich-lab/q2-moshpit",
@@ -36,7 +36,13 @@ setup(
         'q2_moshpit.checkm.tests': [
             'data/*', 'data/bins/*', 'data/bins/*/*',
             'data/checkm_reports/*/*/*', 'data/plots/*/*/*'
-        ]
+        ],
+        'q2_moshpit.eggnog': [
+            'citations.bib', 'data/*', 'tests/data/*',
+        ],
     },
     zip_safe=False,
+    install_requires=[
+        'eggnog-mapper',
+    ],
 )

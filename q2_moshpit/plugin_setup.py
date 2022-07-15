@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 from q2_types.sample_data import SampleData
 
-from q2_moshpit._action_params import checkm_params, checkm_param_descriptions
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.core.type import Bool, Range, Int
@@ -83,21 +82,4 @@ plugin.methods.register_function(
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',
     citations=[]
-)
-
-plugin.visualizers.register_function(
-    function=q2_moshpit.checkm.evaluate_bins,
-    inputs={
-        'bins': SampleData[MAGs],
-    },
-    parameters=checkm_params,
-    input_descriptions={
-        'bins': 'MAGs to be analyzed.',
-    },
-    parameter_descriptions=checkm_param_descriptions,
-    name='Evaluate quality of the generated MAGs using CheckM.',
-    description='This method uses CheckM to assess the quality of '
-                'assembled MAGs.',
-    citations=[citations['matsen2010'], citations['hyatt2012'],
-               citations['parks2015b'], citations['hmmer2022']]
 )

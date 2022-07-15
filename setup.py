@@ -42,7 +42,4 @@ setup(
         ],
     },
     zip_safe=False,
-    install_requires=[
-        'eggnog-mapper',
-    ],
 )

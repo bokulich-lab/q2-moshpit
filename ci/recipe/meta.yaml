@@ -23,6 +23,7 @@ requirements:
     - q2-types-genomics {{ qiime2_epoch }}.*
     - q2templates {{ qiime2_epoch }}.*
     - eggnog-mapper
+    - click
 
 test:
   requires:

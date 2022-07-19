@@ -7,12 +7,13 @@
 # ----------------------------------------------------------------------------
 
 
+from eggnogmapper.emapper import Emapper
 from q2_moshpit.plugin_setup import plugin
 from q2_types.feature_data import FeatureData
 from q2_types_genomics.eggnog import NOG, KEGG, OG
 from q2_types_genomics.genome_data import GenomeData, Loci, Genes, Proteins
 
-def annotate_eggnog(self, data: GenomeData[Loci | Genes | Proteins]) ->
+def annotate_eggnog(self, data: GenomeData[Loci | Genes | Proteins], ) ->
 FeatueData[NOG | OG | KEGG]:
     pass
 

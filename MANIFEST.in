@@ -1,2 +1,3 @@
 include versioneer.py
+include eggnog-mapper
 include q2_moshpit/_version.py

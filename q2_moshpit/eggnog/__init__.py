@@ -5,3 +5,10 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+
+
+from .db_downloader import ( create_reference_db
+                           )
+
+__all__ = [ 'create_reference_db',
+          ]

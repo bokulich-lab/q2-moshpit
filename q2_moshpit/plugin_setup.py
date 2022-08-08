@@ -6,20 +6,24 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 from q2_types.sample_data import SampleData
+from q2_types.feature_data import FeatureData
 
+from q2_types_genomics.feature_data import DiamondDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.core.type import Bool, Range, Int
+from qiime2.core.type import Bool, Range, Int, Str, Choices, List
+#from qiime2.core.type.primitive import Choices
 from qiime2.plugin import (Plugin, Citations)
 
 import q2_moshpit
-from q2_moshpit import __version__
+#from q2_moshpit import __version__
+
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
 
 plugin = Plugin(
     name='moshpit',
-    version=__version__,
+    version=q2_moshpit.__version__,
     website="https://github.com/bokulich-lab/q2-moshpit",
     package='q2_moshpit',
     description=(
@@ -83,3 +87,34 @@ plugin.methods.register_function(
                 'into MAGs.',
     citations=[]
 )
+
+_mode_choices = {'diamond', 'mmseqs'}
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.create_reference_db,
+    inputs={},
+    parameters={'mode': Str,
+                # OK clearly need to make this compliant, but mostly want list
+                # that is formed out of strings or ints, for taxa names or
+                # ids.
+                'target_taxa': Str,
+                'name': Str,
+    },
+    outputs=[('DiamondDB', FeatureData[DiamondDB])],
+    name='download_diamond_db',
+    description='Uses EggnogMapper\'s built in utility to download'
+                'a Diamond reference database',
+)
+
+#plugin.methods.register_function(
+#        function=annotate_eggnog,
+#        inputs={
+#            'data': GenomeData[Loci | Genes | Proteins],
+#            },
+#        parameters={
+#            },
+#        outputs={
+#            },
+#        name='annotate_eggnog',
+#        description=('Uses http://eggnog-mapper.embl.de/ to annotate'
+#                     'sequences')
+#        )

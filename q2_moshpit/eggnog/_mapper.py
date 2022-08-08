@@ -36,16 +36,3 @@ def run_commands(cmds, verbose=True):
         subprocess.run(cmd, check=True)
 
 
-plugin.methods.register_function(
-        function=annotate_eggnog,
-        inputs={
-            'data': GenomeData[Loci | Genes | Proteins],
-            },
-        parameters={
-            },
-        outputs={
-            },
-        name='annotate_eggnog',
-        description=('Uses http://eggnog-mapper.embl.de/ to annotate'
-                     'sequences')
-        )

@@ -34,8 +34,9 @@ setup(
             'data/*', 'data/bins/*', 'data/bins/*/*',
             'data/checkm_reports/*/*/*', 'data/plots/*/*/*'
         ],
-        'q2_moshpit.eggnog': [
-            'citations.bib', 'data/*', 'tests/data/*',
+        'q2_moshpit.eggnog.tests': [
+            'data/*',
+            #'citations.bib', 'data/*', 'tests/data/*',
         ],
     },
     zip_safe=False,

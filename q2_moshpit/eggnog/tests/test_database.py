@@ -8,11 +8,14 @@
 
 
 
-from q2_moshpit.eggnog import create_reference_db
+from q2_moshpit.eggnog import create_reference_db, _check_taxa
 from q2_types_genomics.feature_data import DiamondDB, MMseq2DB
 from  q2_types.feature_data import FeatureData
 
 from qiime2.plugin.testing import TestPluginBase
+
+# set temp data directory up...
+
 
 class TestEggnogDatabases(TestPluginBase):
     package = "q2_moshpit.tests"
@@ -37,11 +40,11 @@ class TestCreateDB(TestPluginBase):
     def test_db_downloader_registered(self):
         #with self.assertRaises():
         create_reference_db(mode='diamond', target_taxa="bacteria",
-                name="download_tester")
+                name="download_tester", simulate=True)
 
     def test_raises_taxa_parsing_error_with_taxids(self):
         # arrange
-        bad_taxa_string = "72274,1123487" # TODO switch taxa values so they
+        bad_taxa_string = "72274,1123487,wombat" # TODO switch taxa values so they
         # will not work/raise the value error in `_check_taxa`
 
         # act
@@ -51,6 +54,16 @@ class TestCreateDB(TestPluginBase):
         # assert
         with self.assertRaisesRegex(ValueError, "Unable to parse provided"
                 " `Taxa` values"):
-            create_reference_db("bad_taxa_test", )
+            create_reference_db(mode='diamond', target_taxa=bad_taxa_string,
+                    simulate=True)
 
-
+class TestDButils(TestPluginBase):
+    package = 'q2_moshpit.eggnog'
+    def testraise_on_mixed_numeric(self):
+        pass
+    def test_raise_on_mixed_string(self):
+        pass
+    def test_successful_numeric(self):
+        pass
+    def test_successful_string(self):
+        pass

@@ -8,12 +8,12 @@
 from q2_types.sample_data import SampleData
 from q2_types.feature_data import FeatureData
 
-from q2_types_genomics.feature_data import DiamondDB
+from q2_types_genomics.feature_data import DiamondDB, MMseq2DB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.core.type import Bool, Range, Int, Str, Choices, List
 #from qiime2.core.type.primitive import Choices
-from qiime2.plugin import (Plugin, Citations)
+from qiime2.plugin import (Plugin, Citations, TypeMap)
 
 import q2_moshpit
 #from q2_moshpit import __version__
@@ -32,6 +32,12 @@ plugin = Plugin(
         'tools for genome binning and functional annotation.'),
     short_description='QIIME 2 plugin for metagenome analysis.',
 )
+
+
+T_mode, T_OUT_fmt = TypeMap({
+    Str % Choices("diamond"): FeatureData[DiamondDB],
+    Str % Choices("mmseqs"): FeatureData[MMseq2DB],
+})
 
 plugin.methods.register_function(
     function=q2_moshpit.metabat2.bin_contigs_metabat,
@@ -88,18 +94,18 @@ plugin.methods.register_function(
     citations=[]
 )
 
-_mode_choices = {'diamond', 'mmseqs'}
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.create_reference_db,
     inputs={},
-    parameters={'mode': Str,
+    parameters={'mode': T_mode,
                 # OK clearly need to make this compliant, but mostly want list
                 # that is formed out of strings or ints, for taxa names or
                 # ids.
                 'target_taxa': Str,
                 'name': Str,
+                'simulate': Bool,
     },
-    outputs=[('DiamondDB', FeatureData[DiamondDB])],
+    outputs=[('RefDB', T_OUT_fmt)],
     name='download_diamond_db',
     description='Uses EggnogMapper\'s built in utility to download'
                 'a Diamond reference database',

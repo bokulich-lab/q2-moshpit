@@ -11,59 +11,100 @@ import os
 import subprocess
 import tempfile
 from itertools import chain as chain
+import pathlib
+import shutil
 
 from q2_types_genomics.feature_data import DiamondDB, ArbitraryHeaderTSVDirFmt
 from q2_types.feature_data import FeatureData
 from qiime2.core.type.primitive import Bool, Str
 
 def create_reference_db(mode: Str, target_taxa: Str, name: Str = None,
-        simulate: Bool = False) -> FeatureData[DiamondDB]:
-
-    #setup working directory
+        simulate: Bool = False) -> ArbitraryHeaderTSVDirFmt:
+    #temp directory to download into & generate filepath
     test_dir = tempfile.TemporaryDirectory()
-    test_dir_path = test_dir.name
-    os.environ["DATA_PATH"] = test_dir_path
+    test_dir_path = pathlib.Path(test_dir.name)
+    os.environ["DATA_PATH"] = test_dir_path.as_posix()
 
-    # setup defaults
+    # arrange parameters
     if not name:
-        name = str(mode) + "_DB"
+        name = "{}RefDB".format(mode)
 
     flags = ['-y']
-    if simulate:
-        flags.append('-s')
+    if simulate: flags.append('-s')
 
-    # instantiate artifact
-    db_to_return = ArbitraryHeaderTSVDirFmt()
-    output_path = str(db_to_return)
-    print(output_path)
+    taxa_type, taxa_vals = _check_taxa(target_taxa)
 
-    # parse/check taxa inputs....
-    try:
-        taxa_type, taxa_vals = _check_taxa(target_taxa)
-    except Exception as e:
-        raise e
-    print("Taxa type: {}, taxa_vals: {}".format(taxa_type, taxa_vals))
-    print("flags: {}".format(flags))
-    # setup call inputs for call to script
-    #cmd_str = r'create_dbs.py --dbname {} {} {} -y'.format(name,
-    #        taxa_type, taxa_vals)
-    #cmds = cmd_str.split(" ")
-    cmds = list(chain(['create_dbs.py', '--dbname', name, taxa_type, taxa_vals,
+    cmds = list(chain(['create_dbs.py', '-m', mode, '--dbname', name, taxa_type, taxa_vals,
             '--data_dir', test_dir_path], flags))
-    print("commands chain: {}".format(cmds))
-    # actual download
-    local_db = subprocess.run(cmds, capture_output=True)
-            #stderr=subprocess.STDOUT)
-    # we could use the following regex to get the path to the downloaded data
-    # file: re.search("(?<=\-\-db)\s.*\s", <output-from our subprocess run>
-    # or better yet because we know the directory and the name of the database
-    # file and we could create a path from that information to the file that
-    # we can use to instantiate an artifact object to to feed into our Format
-    # object to creat our Artifact.
+
+    # filepath of download target
+    download_log_fp = pathlib.Path(test_dir_path, "download_log")
+    downloaded_db_fp = pathlib.Path(test_dir_path, "{}.dmnd".format(name))
+
+    # do the actual downloading
+    with open(download_log_fp, "w") as dl_fp_log:
+        # Have sub-process write its own actual log file.
+        subprocess.run(cmds, stdout=dl_fp_log, stderr=dl_fp_log)
+
+    # instantiate format object
+    download_db = ArbitraryHeaderTSVDirFmt()
+
+    # we need a return either way, but if not simulate want the downloaded
+    # data actually written into the object
+
+    if not simulate:
+        shutil.copy(downloaded_db_fp, download_db.path / "eggnog.tsv")
 
 
-    # framework saves as correct dirfmt up return...
-    return local_db
+
+    # return
+    return download_db
+
+#def create_reference_db(mode: Str, target_taxa: Str, name: Str = None,
+#        simulate: Bool = False) -> FeatureData[DiamondDB]:
+#
+#    #setup working directory
+#    test_dir = tempfile.TemporaryDirectory()
+#    test_dir_path = test_dir.name
+#    os.environ["DATA_PATH"] = test_dir_path
+#
+#    # setup defaults
+#    if not name:
+#        name = str(mode) + "_DB"
+#
+#    flags = ['-y']
+#    if simulate:
+#        flags.append('-s')
+#
+#    # instantiate artifact
+#    db_to_return = ArbitraryHeaderTSVDirFmt()
+#    output_path = str(db_to_return)
+#    print(output_path)
+#
+#    # parse/check taxa inputs....
+#    try:
+#        taxa_type, taxa_vals = _check_taxa(target_taxa)
+#    except Exception as e:
+#        raise e
+#    # setup call inputs for call to script
+#    #cmd_str = r'create_dbs.py --dbname {} {} {} -y'.format(name,
+#    #        taxa_type, taxa_vals)
+#    #cmds = cmd_str.split(" ")
+#    cmds = list(chain(['create_dbs.py', '--dbname', name, taxa_type, taxa_vals,
+#            '--data_dir', test_dir_path], flags))
+#    # actual download
+#    local_db = subprocess.run(cmds, capture_output=True)
+#            #stderr=subprocess.STDOUT)
+#    # we could use the following regex to get the path to the downloaded data
+#    # file: re.search("(?<=\-\-db)\s.*\s", <output-from our subprocess run>
+#    # or better yet because we know the directory and the name of the database
+#    # file and we could create a path from that information to the file that
+#    # we can use to instantiate an artifact object to to feed into our Format
+#    # object to creat our Artifact.
+#
+#
+#    # framework saves as correct dirfmt up return...
+#    return local_db
 
 def _check_taxa(taxa: Str) -> (str, str):
     try:

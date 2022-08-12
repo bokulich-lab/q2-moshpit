@@ -37,7 +37,13 @@ class TestEggnogDatabases(TestPluginBase):
 class TestCreateDB(TestPluginBase):
     package = 'q2_moshpit.eggnog'
 
-    def test_db_downloader_registered(self):
+    def test_db_downloader_runs(self):
+        exp = """Parsing taxa table ...
+Total taxa selected: 0
+Parsing fasta file ...
+Total sequences selected: 0
+Total sequences discarded: 0"""
+
         #with self.assertRaises():
         create_reference_db(mode='diamond', target_taxa="bacteria",
                 name="download_tester", simulate=True)

@@ -98,14 +98,11 @@ plugin.methods.register_function(
     function=q2_moshpit.eggnog.create_reference_db,
     inputs={},
     parameters={'mode': T_mode,
-                # OK clearly need to make this compliant, but mostly want list
-                # that is formed out of strings or ints, for taxa names or
-                # ids.
                 'target_taxa': Str,
                 'name': Str,
                 'simulate': Bool,
     },
-    outputs=[('RefDB', T_OUT_fmt)],
+    outputs=[('ref_db', T_OUT_fmt),],
     name='download_diamond_db',
     description='Uses EggnogMapper\'s built in utility to download'
                 'a Diamond reference database',

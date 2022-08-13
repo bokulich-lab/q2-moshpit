@@ -7,8 +7,7 @@
 # ----------------------------------------------------------------------------
 
 
-from .db_downloader import ( create_reference_db
-                           )
+from .db_downloader import create_reference_db
 
-__all__ = [ 'create_reference_db',
-          ]
+__all__ = ['create_reference_db',
+           ]

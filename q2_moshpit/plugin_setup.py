@@ -11,13 +11,10 @@ from q2_types.feature_data import FeatureData
 from q2_types_genomics.feature_data import DiamondDB, MMseq2DB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.core.type import Bool, Range, Int, Str, Choices, List
-#from qiime2.core.type.primitive import Choices
+from qiime2.core.type import Bool, Range, Int, Str, Choices
 from qiime2.plugin import (Plugin, Citations, TypeMap)
 
 import q2_moshpit
-#from q2_moshpit import __version__
-
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
 
@@ -101,23 +98,10 @@ plugin.methods.register_function(
                 'target_taxa': Str,
                 'name': Str,
                 'simulate': Bool,
-    },
-    outputs=[('ref_db', T_OUT_fmt),],
+                },
+    outputs=[('ref_db', T_OUT_fmt),
+             ],
     name='download_diamond_db',
     description='Uses EggnogMapper\'s built in utility to download'
                 'a Diamond reference database',
 )
-
-#plugin.methods.register_function(
-#        function=annotate_eggnog,
-#        inputs={
-#            'data': GenomeData[Loci | Genes | Proteins],
-#            },
-#        parameters={
-#            },
-#        outputs={
-#            },
-#        name='annotate_eggnog',
-#        description=('Uses http://eggnog-mapper.embl.de/ to annotate'
-#                     'sequences')
-#        )

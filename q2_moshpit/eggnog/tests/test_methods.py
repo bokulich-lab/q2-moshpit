@@ -7,4 +7,4 @@
 # ----------------------------------------------------------------------------
 
 
-#from q2_moshpit.eggnog import annotate_eggnog
+# from q2_moshpit.eggnog import annotate_eggnog

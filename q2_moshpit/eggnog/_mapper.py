@@ -7,21 +7,23 @@
 # ----------------------------------------------------------------------------
 
 
-from eggnogmapper.emapper import Emapper
-from q2_moshpit.plugin_setup import plugin
-from q2_types.feature_data import FeatureData
-from q2_types_genomics.eggnog import NOG, KEGG, OG
-from q2_types_genomics.genome_data import GenomeData, Loci, Genes, Proteins
-
-def annotate_eggnog(self, data: GenomeData[Loci | Genes | Proteins], ) ->
-FeatueData[NOG | OG | KEGG]:
-    pass
-
-def get_eggnog_db(self, target_database) -> None:
-    pass
-
-
+# from eggnogmapper.emapper import Emapper
+# from q2_moshpit.plugin_setup import plugin
 import subprocess
+# from q2_types.feature_data import FeatureData
+# from q2_types_genomics.eggnog import NOG, KEGG, OG
+# from q2_types_genomics.genome_data import GenomeData, Loci, Genes, Proteins
+
+
+# def annotate_eggnog(self, data: GenomeData[Loci | Genes | Proteins],
+#                     ) -> FeatueData[NOG | OG | KEGG]:
+#     pass
+
+
+# def get_eggnog_db(self, target_database) -> None:
+#     pass
+
+
 def run_commands(cmds, verbose=True):
     if verbose:
         print("Running external command line application(s). This may print "
@@ -34,5 +36,3 @@ def run_commands(cmds, verbose=True):
             print("\nCommand:", end=' ')
             print(" ".join(cmd), end='\n\n')
         subprocess.run(cmd, check=True)
-
-

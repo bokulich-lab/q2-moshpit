@@ -36,7 +36,6 @@ setup(
         ],
         'q2_moshpit.eggnog.tests': [
             'data/*',
-            #'citations.bib', 'data/*', 'tests/data/*',
         ],
     },
     zip_safe=False,

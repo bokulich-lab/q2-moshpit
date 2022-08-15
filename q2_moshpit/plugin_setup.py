@@ -11,7 +11,7 @@ from q2_types.feature_data import FeatureData
 from q2_types_genomics.feature_data import DiamondDB, MMseq2DB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.core.type import Bool, Range, Int, Str, Choices
+from qiime2.plugin import Bool, Range, Int, Str, Choices, List
 from qiime2.plugin import (Plugin, Citations, TypeMap)
 
 import q2_moshpit
@@ -95,7 +95,7 @@ plugin.methods.register_function(
     function=q2_moshpit.eggnog.create_reference_db,
     inputs={},
     parameters={'mode': T_mode,
-                'target_taxa': Str,
+                'target_taxa': List[Str],
                 'name': Str,
                 'simulate': Bool,
                 },

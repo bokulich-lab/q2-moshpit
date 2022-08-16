@@ -14,6 +14,7 @@ from itertools import chain as chain
 import pathlib
 import shutil
 
+from ._utils import _check_taxa
 from q2_types_genomics.feature_data import BinaryReferenceDBFmt
 
 
@@ -26,8 +27,18 @@ def create_reference_db(mode: str, target_taxa: str, name: str = None,
     os.environ["DATA_PATH"] = test_dir_path.as_posix()
 
     # arrange parameters
+    if mode == 'diamond':
+        file_ext = 'dmnd'
+    elif mode == 'mmseqs':
+        file_ext = 'mmseqs'
+    else:
+        raise ValueError("Please supply a valid mode")
+
     if not name:
         name = "{}RefDB".format(mode)
+
+    saved_file_name = "{}.{}".format(name, file_ext)
+    print(saved_file_name)
 
     flags = ['-y']
     if simulate:
@@ -35,18 +46,20 @@ def create_reference_db(mode: str, target_taxa: str, name: str = None,
 
     taxa_type, taxa_vals = _check_taxa(target_taxa)
 
+    # filepath of download target
+    downloaded_db_fp = pathlib.Path(test_dir_path, saved_file_name)
+    print(downloaded_db_fp)
+
+    # raise Exception("temp directory: {}\n-----\nfilename:"
+    #     " {}\n-----\ndownloaded db: {}".format(test_dir_path,
+    #             saved_file_name, downloaded_db_fp))
+
     cmds = list(chain(['create_dbs.py', '-m', mode, '--dbname', name,
                        taxa_type, taxa_vals, '--data_dir', test_dir_path],
                       flags))
 
-    # filepath of download target
-    download_log_fp = pathlib.Path(test_dir_path, "download_log")
-    downloaded_db_fp = pathlib.Path(test_dir_path, "{}.dmnd".format(name))
-
     # do the actual downloading
-    with open(download_log_fp, "w") as dl_fp_log:
-        # Have sub-process write its own actual log file.
-        subprocess.run(cmds, stdout=dl_fp_log, stderr=dl_fp_log)
+    subprocess.run(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # instantiate format object
     download_db = BinaryReferenceDBFmt()
@@ -55,26 +68,6 @@ def create_reference_db(mode: str, target_taxa: str, name: str = None,
     # data actually written into the object
 
     if not simulate:
-        shutil.copy(downloaded_db_fp, download_db.path / "eggnog.tsv")
+        shutil.copy(downloaded_db_fp, download_db.path / "reference_database")
 
     return download_db
-
-
-def _check_taxa(target_taxa: list):
-    if target_taxa[0].isnumeric():
-        taxa_type = "--taxids"
-        for taxon in target_taxa:
-            if not taxon.isnumeric():
-                raise ValueError("All taxa inputs must be the same type,"
-                                 " either all taxids as integers or all"
-                                 " string labels.")
-
-    else:
-        taxa_type = "--taxa"
-        for taxon in target_taxa:
-            if taxon.isnumeric():
-                raise ValueError(
-                    "All taxa inputs must be the same type,"
-                    " either all taxids as integers or all string labels.")
-
-    return taxa_type, ",".join(target_taxa)

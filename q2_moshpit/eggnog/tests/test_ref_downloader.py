@@ -8,7 +8,6 @@
 
 
 from q2_moshpit.eggnog import create_reference_db
-# from q2_types_genomics.feature_data import DiamondDB
 
 from qiime2.plugin.testing import TestPluginBase
 
@@ -48,18 +47,16 @@ class TestCreateDB(TestPluginBase):
             create_reference_db(mode='diamond', target_taxa=bad_taxa_string,
                                 simulate=True)
 
+    def test_diamond_passes_all_numeric(self):
+        numeric_taxa = ['123', '879', '5598777']
+        create_reference_db(mode='diamond', target_taxa=numeric_taxa,
+                            simulate=True)
 
-class TestDButils(TestPluginBase):
-    package = 'q2_moshpit.eggnog'
+    def test_diamond_passes_all_named(self):
+        named_taxa = ['Gammaproteobacteria', 'Aquificae', 'Persephonella']
+        create_reference_db(mode='diamond', target_taxa=named_taxa,
+                            simulate=True)
 
-    def testraise_on_mixed_numeric(self):
-        pass
-
-    def test_raise_on_mixed_string(self):
-        pass
-
-    def test_successful_numeric(self):
-        pass
-
-    def test_successful_string(self):
-        pass
+    def test_bad_mode_failing(self):
+        create_reference_db(mode='pancacke', target_taxa="bacteria",
+                            name="bad_mode", simulate=True)

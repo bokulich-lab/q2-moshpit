@@ -58,5 +58,6 @@ class TestCreateDB(TestPluginBase):
                             simulate=True)
 
     def test_bad_mode_failing(self):
-        create_reference_db(mode='pancacke', target_taxa="bacteria",
-                            name="bad_mode", simulate=True)
+        with self.assertRaisesRegex(ValueError, "Please supply a valid mode"):
+            create_reference_db(mode='pancake', target_taxa="bacteria",
+                                name="bad_mode", simulate=True)

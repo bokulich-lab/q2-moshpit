@@ -68,9 +68,7 @@ class TestCreateDB(TestPluginBase):
         create_reference_db(mode="diamond", target_taxa="85004",
                             name="real_download")
 
-
     @mark.skip(reason="stupendously slow for some reason....")
     def test_actual_download_mmseqs(self):
         create_reference_db(mode="mmseqs", target_taxa="85004",
                             name="real_download")
-

@@ -9,6 +9,7 @@
 
 from q2_moshpit.eggnog import create_reference_db
 
+from pytest import mark
 from qiime2.plugin.testing import TestPluginBase
 
 # set temp data directory up...
@@ -61,3 +62,15 @@ class TestCreateDB(TestPluginBase):
         with self.assertRaisesRegex(ValueError, "Please supply a valid mode"):
             create_reference_db(mode='pancake', target_taxa="bacteria",
                                 name="bad_mode", simulate=True)
+
+    @mark.skip(reason="stupendously slow for some reason....")
+    def test_actual_download_diamond(self):
+        create_reference_db(mode="diamond", target_taxa="85004",
+                            name="real_download")
+
+
+    @mark.skip(reason="stupendously slow for some reason....")
+    def test_actual_download_mmseqs(self):
+        create_reference_db(mode="mmseqs", target_taxa="85004",
+                            name="real_download")
+

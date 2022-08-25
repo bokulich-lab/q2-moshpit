@@ -7,32 +7,46 @@
 # ----------------------------------------------------------------------------
 
 
-# from eggnogmapper.emapper import Emapper
-# from q2_moshpit.plugin_setup import plugin
+import pathlib
+import tempfile
+
 import subprocess
-# from q2_types.feature_data import FeatureData
-# from q2_types_genomics.eggnog import NOG, KEGG, OG
-# from q2_types_genomics.genome_data import GenomeData, Loci, Genes, Proteins
+
+from q2_types.feature_data import DNAFASTAFormat
+from q2_types_genomics.feature_data import (
+    BinaryReferenceDBDirFmt, ArbitraryHeaderTSVDirFmt
+    )
 
 
-# def annotate_eggnog(self, data: GenomeData[Loci | Genes | Proteins],
-#                     ) -> FeatueData[NOG | OG | KEGG]:
-#     pass
+def e_mapper(main_db: BinaryReferenceDBDirFmt,
+             query_sequences: DNAFASTAFormat,
+             ancillary_db: BinaryReferenceDBDirFmt = None,
+             itype: str = None,
+             result_name: str = "egg_output",
+             mode: str = None,
+             ) -> ArbitraryHeaderTSVDirFmt:
 
+    working_dir = tempfile.TemporaryDirectory()
+    working_dir_path = pathlib.Path(working_dir.name)
 
-# def get_eggnog_db(self, target_database) -> None:
-#     pass
+    cmds = ['emapper.py', "--data_dir", str(main_db), '-i',
+            str(query_sequences), '-o', result_name, "--output_dir",
+            working_dir.name,
+            ]
 
+    if mode is not None:
+        cmds.extend(["-m", mode])
 
-def run_commands(cmds, verbose=True):
-    if verbose:
-        print("Running external command line application(s). This may print "
-              "messages to stdout and/or stderr.")
-        print("The command(s) being run are below. These commands cannot "
-              "be manually re-run as they will depend on temporary files that "
-              "no longer exist.")
-    for cmd in cmds:
-        if verbose:
-            print("\nCommand:", end=' ')
-            print(" ".join(cmd), end='\n\n')
-        subprocess.run(cmd, check=True)
+    if itype is not None:
+        cmds.extend(["--itype", itype])
+
+    subprocess.run(cmds, check=True)
+
+    # annotation_fps =
+    print("*" * 13, sorted(working_dir_path.glob('*')), "*" * 13)
+    assert False
+
+    # anno_out = ArbitraryHeaderTSVDirFmt()
+    # shutil.copy(src=annotation_fps[0], dst=anno_out.path)
+    # return performed_annotations
+    # return anno_out

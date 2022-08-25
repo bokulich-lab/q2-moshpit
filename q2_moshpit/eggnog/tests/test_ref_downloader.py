@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 
-from q2_moshpit.eggnog import create_reference_db
+from q2_moshpit.eggnog import create_reference_db, download_references
 
 from pytest import mark
 from qiime2.plugin.testing import TestPluginBase
@@ -16,7 +16,7 @@ from qiime2.plugin.testing import TestPluginBase
 
 
 class TestEggnogDatabases(TestPluginBase):
-    package = "q2_moshpit.tests"
+    package = "q2_moshpit.eggnog.tests"
 
     # TODO implement underlying functionality
     def test_detects_existing(self):
@@ -31,10 +31,17 @@ class TestEggnogDatabases(TestPluginBase):
         pass
 
 
-class TestCreateDB(TestPluginBase):
-    package = 'q2_moshpit.eggnog'
+class TestDownloadDatabases(TestPluginBase):
+    package = 'q2_moshpit.eggnog.tests'
 
-    def test_db_downloader_basic(self):
+    def test_all_download(self):
+        download_references()
+
+
+class TestCreateDB(TestPluginBase):
+    package = 'q2_moshpit.eggnog.tests'
+
+    def test_db_downloader_diamond_basic(self):
         # with self.assertRaises():
         create_reference_db(mode='diamond', target_taxa="bacteria",
                             name="download_tester", simulate=True)

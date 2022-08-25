@@ -6,9 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 from q2_types.sample_data import SampleData
-from q2_types.feature_data import FeatureData
+from q2_types.feature_data import FeatureData, Sequence
 
-from q2_types_genomics.feature_data import DiamondDB, MMseq2DB
+from q2_types_genomics.feature_data import (
+    DiamondDB, MMseq2DB, NOG, EggnogDB,
+    )
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Bool, Range, Int, Str, Choices, List
@@ -105,3 +107,33 @@ plugin.methods.register_function(
     description='Uses EggnogMapper\'s built in utility to download'
                 'a Diamond reference database',
 )
+
+plugin.methods.register_function(
+        function=q2_moshpit.eggnog.e_mapper,
+        inputs={'main_db': EggnogDB,
+                'ancillary_db': FeatureData[DiamondDB | MMseq2DB],
+                'query_sequences': FeatureData[Sequence],
+                },
+        parameters={'itype': Str % Choices(["metagenome", "genome", "CDS",
+                                            "proteins",
+                                            ]),
+                    'result_name': Str,
+                    'mode': Str % Choices(["diamond", "mmseqs"]),
+                    },
+        outputs=[('annotation_file', FeatureData[NOG]),
+                 ],
+        name='Create annotation mappings',
+        description='Annotatates target features with taxonomic data',
+)
+
+plugin.methods.register_function(
+        function=q2_moshpit.eggnog.download_references,
+        inputs={},
+        parameters={'simulate': Bool,
+                    },
+        outputs=[('references', EggnogDB),
+                 ],
+        name='download_references',
+        description='Downloads required reference databases for performing'
+                    'annotations using eggnog.'
+        )

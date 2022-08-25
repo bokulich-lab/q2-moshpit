@@ -7,10 +7,10 @@
 # ----------------------------------------------------------------------------
 
 from .metabat2 import metabat2
-from .eggnog import db_downloader
+from .eggnog import db_fetcher
 
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-__all__ = ['metabat2', 'db_downloader']
+__all__ = ['metabat2', 'db_fetcher']

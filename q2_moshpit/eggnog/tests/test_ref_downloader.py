@@ -31,7 +31,7 @@ class TestEggnogDatabases(TestPluginBase):
         pass
 
 
-class TestDownloadDatabases(TestPluginBase):
+class TestRefDownload(TestPluginBase):
     package = 'q2_moshpit.eggnog.tests'
 
     def test_all_download(self):

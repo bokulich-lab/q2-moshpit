@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 
-from .db_fetcher import create_reference_db, download_references
+from .download_reference_dbs import create_reference_db, download_references
 from ._mapper import e_mapper
 
 __all__ = ['create_reference_db', 'e_mapper', 'download_references'

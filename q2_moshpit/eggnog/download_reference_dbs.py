@@ -73,7 +73,8 @@ def create_reference_db(mode: str, target_taxa: str, name: str = None,
     return download_db
 
 
-def download_references(simulate: bool = False) -> EggnogRefDirFmt:
+def download_references(target_taxa: str = None,
+                        simulate: bool = False) -> EggnogRefDirFmt:
     working_dir = tempfile.TemporaryDirectory()
 
     # setup download commands
@@ -82,6 +83,10 @@ def download_references(simulate: bool = False) -> EggnogRefDirFmt:
             ]
     if simulate:
         cmds.extend(["-s"])
+
+    if target_taxa is not None:
+        taxa_type, taxa_vals = _check_taxa(target_taxa)
+        cmds.extend([taxa_type, taxa_vals])
 
     # do the actual downloading
     subprocess.run(cmds, check=True)

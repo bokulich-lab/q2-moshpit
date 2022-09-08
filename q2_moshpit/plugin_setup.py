@@ -9,8 +9,9 @@ from q2_types.sample_data import SampleData
 from q2_types.feature_data import FeatureData, Sequence
 
 from q2_types_genomics.feature_data import (
-    DiamondDB, MMseq2DB, NOG, EggnogDB,
+    DiamondDB, MMseq2DB, NOG
     )
+from q2_types_genomics.eggnog import ReferenceDB, Eggnog
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Bool, Range, Int, Str, Choices, List
@@ -110,7 +111,7 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
         function=q2_moshpit.eggnog.e_mapper,
-        inputs={'main_db': EggnogDB,
+        inputs={'main_db': ReferenceDB[Eggnog],
                 'ancillary_db': FeatureData[DiamondDB | MMseq2DB],
                 'query_sequences': FeatureData[Sequence],
                 },
@@ -130,10 +131,28 @@ plugin.methods.register_function(
         function=q2_moshpit.eggnog.download_references,
         inputs={},
         parameters={'simulate': Bool,
+                    'target_taxa': List[Str],
                     },
-        outputs=[('references', EggnogDB),
+        outputs=[('references', ReferenceDB[Eggnog]),
                  ],
         name='download_references',
         description='Downloads required reference databases for performing'
                     'annotations using eggnog.'
+        )
+
+plugin.methods.register_function(
+        function=q2_moshpit.eggnog.get_references,
+        inputs={},
+        parameters={'mode': Str,
+                    'target_taxa': List[Str],
+                    'name': Str,
+                    'simulate': Bool,
+                    },
+        outputs=[('references', ReferenceDB[Eggnog]),
+                 ],
+        name='get_references',
+        description='Retreives necessary reference database material for'
+        ' running annotations using EggnogMapper. This function will both'
+        ' retrieve a complete Eggnog reference database or a specifically'
+        ' selected subset of it'
         )

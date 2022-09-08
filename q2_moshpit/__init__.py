@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from .metabat2 import metabat2
-from .eggnog import eggnog
+from .eggnog import *
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions

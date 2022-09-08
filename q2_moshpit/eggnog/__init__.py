@@ -7,8 +7,11 @@
 # ----------------------------------------------------------------------------
 
 
-from .download_reference_dbs import create_reference_db, download_references
+from .download_reference_dbs import (
+        create_reference_db, download_references, get_references,
+        )
 from ._mapper import e_mapper
 
-__all__ = ['create_reference_db', 'e_mapper', 'download_references'
+__all__ = ['create_reference_db', 'e_mapper', 'download_references',
+           'get_references',
            ]

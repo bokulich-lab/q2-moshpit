@@ -6,11 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .kraken2 import kraken2
-from .metabat2 import metabat2
+from .kraken2 import classify_kraken
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
-
-__all__ = ['kraken2', 'metabat2']
+__all__ = ['classify_kraken']

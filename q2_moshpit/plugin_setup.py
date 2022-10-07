@@ -5,11 +5,13 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+from q2_types.feature_data import FeatureData, Taxonomy
+from q2_types.feature_table import Frequency, FeatureTable
 from q2_types.sample_data import SampleData
 
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.core.type import Bool, Range, Int
+from qiime2.core.type import Bool, Range, Int, Str, Float
 from qiime2.plugin import (Plugin, Citations)
 
 import q2_moshpit
@@ -81,5 +83,47 @@ plugin.methods.register_function(
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',
+    citations=[]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.classify_kraken,
+    inputs={
+        "seqs": SampleData[MAGs]
+    },
+    parameters={
+        'db': Str,
+        'threads': Int % Range(1, None),
+        'confidence': Float % Range(0, 1),
+        'minimum_base_quality': Int % Range(0, None),
+        'memory_mapping': Bool,
+        'minimum_hit_groups': Int % Range(1, None),
+        'quick': Bool
+    },
+    outputs=[
+        ('table', FeatureTable[Frequency]),
+        ('taxonomy', FeatureData[Taxonomy])
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified."
+    },
+    parameter_descriptions={
+        'db': 'Path to the Kraken 2 database.',
+        'threads': 'Number of threads',
+        'confidence': 'Confidence score threshold.',
+        'minimum_base_quality': 'Minimum base quality used in classification. '
+                                'Only applies when reads are used as input.',
+        'memory_mapping': 'Avoids loading the database into RAM.',
+        'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
+                              'k-mers sharing the same minimizer).',
+        'quick': 'Quick operation (use first hit or hits).'
+    },
+    output_descriptions={
+        'table': 'Abundance table',
+        'taxonomy': 'Assigned taxonomy.'
+    },
+    name='Perform taxonomic classification of bins or reads using Kraken 2.',
+    description='This method uses Kraken 2 to classify provided NGS reads '
+                'or MAGs into taxonomic groups.',
     citations=[]
 )

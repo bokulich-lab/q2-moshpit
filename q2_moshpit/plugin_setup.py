@@ -8,10 +8,9 @@
 from q2_types.sample_data import SampleData
 from q2_types.feature_data import FeatureData, Sequence
 
-from q2_types_genomics.feature_data import (
-    DiamondDB, MMseq2DB, NOG
+from q2_types_genomics.eggnog import (
+    Diamond, MMseq2, NOG, ReferenceDB, Eggnog 
     )
-from q2_types_genomics.eggnog import ReferenceDB, Eggnog
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Bool, Range, Int, Str, Choices, List
@@ -35,8 +34,8 @@ plugin = Plugin(
 
 
 T_mode, T_OUT_fmt = TypeMap({
-    Str % Choices("diamond"): FeatureData[DiamondDB],
-    Str % Choices("mmseqs"): FeatureData[MMseq2DB],
+    Str % Choices("diamond"): ReferenceDB[Diamond],
+    Str % Choices("mmseqs"): ReferenceDB[MMseq2],
 })
 
 plugin.methods.register_function(
@@ -93,6 +92,20 @@ plugin.methods.register_function(
                 'into MAGs.',
     citations=[]
 )
+
+# diamond_search
+
+plugin.methods.register_function(
+        function=q2_moshpit.eggnog.diamond_search,
+        inputs={input_sequences: SampleData[Contigs],
+                diamond_db: ReferenceDB[Diamond],
+                eggnog_db: ReferenceDB[Eggnog],
+               },
+        parameters={},
+        outputs=[(seed_orthlogs, Ortholog[Seed])],
+        name='diamond_search',
+        description="This method performs the steps by which we find our possible target sequences to annotate using the diamond search functionality from the eggnog `emapper.py` script"
+        )
 
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.create_reference_db,

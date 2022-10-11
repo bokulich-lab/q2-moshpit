@@ -13,7 +13,7 @@ import tempfile
 import subprocess
 
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types_genomics.feature_data import (
+from q2_types_genomics.eggnog import (
     BinaryReferenceDBDirFmt, ArbitraryHeaderTSVDirFmt
     )
 

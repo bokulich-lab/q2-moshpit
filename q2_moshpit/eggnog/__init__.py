@@ -15,5 +15,5 @@ from ._mapper import e_mapper
 from ._method import diamond_search
 
 __all__ = ['create_reference_db', 'e_mapper', 'download_references',
-           'get_references',
+           'get_references', 'diamond_search',
            ]

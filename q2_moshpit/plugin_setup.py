@@ -9,8 +9,9 @@ from q2_types.sample_data import SampleData
 from q2_types.feature_data import FeatureData, Sequence
 
 from q2_types_genomics.eggnog import (
-    Diamond, MMseq2, NOG, ReferenceDB, Eggnog 
+    Diamond, MMseq2, NOG, ReferenceDB, Eggnog, Ortholog, Seed, Annotation
     )
+
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Bool, Range, Int, Str, Choices, List
@@ -97,12 +98,12 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
         function=q2_moshpit.eggnog.diamond_search,
-        inputs={input_sequences: SampleData[Contigs],
-                diamond_db: ReferenceDB[Diamond],
-                eggnog_db: ReferenceDB[Eggnog],
+        inputs={'input_sequences': SampleData[Contigs],
+                'diamond_db': ReferenceDB[Diamond],
+                'eggnog_db': ReferenceDB[Eggnog],
                },
         parameters={},
-        outputs=[(seed_orthlogs, Ortholog[Seed])],
+        outputs=[('seed_orthologs', Ortholog[Seed])],
         name='diamond_search',
         description="This method performs the steps by which we find our possible target sequences to annotate using the diamond search functionality from the eggnog `emapper.py` script"
         )
@@ -125,8 +126,8 @@ plugin.methods.register_function(
 plugin.methods.register_function(
         function=q2_moshpit.eggnog.e_mapper,
         inputs={'main_db': ReferenceDB[Eggnog],
-                'ancillary_db': FeatureData[DiamondDB | MMseq2DB],
-                'query_sequences': FeatureData[Sequence],
+                'ancillary_db': ReferenceDB[Diamond | MMseq2],
+                'query_sequences': SampleData[Contigs],
                 },
         parameters={'itype': Str % Choices(["metagenome", "genome", "CDS",
                                             "proteins",
@@ -134,7 +135,7 @@ plugin.methods.register_function(
                     'result_name': Str,
                     'mode': Str % Choices(["diamond", "mmseqs"]),
                     },
-        outputs=[('annotation_file', FeatureData[NOG]),
+        outputs=[('annotation_file', Annotation[NOG]),
                  ],
         name='Create annotation mappings',
         description='Annotatates target features with taxonomic data',

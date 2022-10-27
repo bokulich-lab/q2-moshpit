@@ -1,0 +1,1 @@
+from q2_moshpit.diamond._method import eggnog_search_diamond

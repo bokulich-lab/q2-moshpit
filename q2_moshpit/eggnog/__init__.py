@@ -7,13 +7,17 @@
 # ----------------------------------------------------------------------------
 
 
-from .download_reference_dbs import (
-        create_reference_db, download_references, get_references,
-        )
-from ._mapper import e_mapper
+#from .download_reference_dbs import (
+#                                     download_eggnog,
+#                                     #download_diamond,
+#                                     #download_novel_diamond,
+#                                     #download_mmseqs2,
+#                                     )
 
-from ._method import diamond_search
+# from ._mapper import e_mapper
 
-__all__ = ['create_reference_db', 'e_mapper', 'download_references',
-           'get_references', 'diamond_search',
-           ]
+#from q2_moshpit.diamond._method import diamond_search
+#
+#__all__ = [
+#           'diamond_search',
+#           ]

@@ -5,12 +5,14 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import importlib
 from q2_types.sample_data import SampleData
 from q2_types.feature_data import FeatureData, Sequence
 
-from q2_types_genomics.eggnog import (
-    Diamond, MMseq2, NOG, ReferenceDB, Eggnog, Ortholog, Seed, Annotation
+from q2_types_genomics.reference_db import (
+    ReferenceDB, Eggnog, Diamond, 
     )
+from q2_types_genomics.ortholog import Ortholog, Seed
 
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
@@ -33,11 +35,15 @@ plugin = Plugin(
     short_description='QIIME 2 plugin for metagenome analysis.',
 )
 
+importlib.import_module('q2_moshpit.eggnog')
+importlib.import_module('q2_moshpit.diamond')
+importlib.import_module('q2_moshpit.metabat2')
 
-T_mode, T_OUT_fmt = TypeMap({
-    Str % Choices("diamond"): ReferenceDB[Diamond],
-    Str % Choices("mmseqs"): ReferenceDB[MMseq2],
-})
+
+#T_mode, T_OUT_fmt = TypeMap({
+#    Str % Choices("diamond"): ReferenceDB[Diamond],
+#    Str % Choices("mmseqs"): ReferenceDB[MMseq2],
+#})
 
 plugin.methods.register_function(
     function=q2_moshpit.metabat2.bin_contigs_metabat,
@@ -93,80 +99,93 @@ plugin.methods.register_function(
                 'into MAGs.',
     citations=[]
 )
-
 # diamond_search
-
 plugin.methods.register_function(
-        function=q2_moshpit.eggnog.diamond_search,
+        function=q2_moshpit.diamond.eggnog_search_diamond,
         inputs={'input_sequences': SampleData[Contigs],
-                'diamond_db': ReferenceDB[Diamond],
                 'eggnog_db': ReferenceDB[Eggnog],
+                'diamond_db': ReferenceDB[Diamond],
                },
         parameters={},
-        outputs=[('seed_orthologs', Ortholog[Seed])],
-        name='diamond_search',
+        outputs=[('seed_ortholog', Ortholog[Seed])],
+        name='eggnog_diamond_search',
         description="This method performs the steps by which we find our possible target sequences to annotate using the diamond search functionality from the eggnog `emapper.py` script"
         )
 
-plugin.methods.register_function(
-    function=q2_moshpit.eggnog.create_reference_db,
-    inputs={},
-    parameters={'mode': T_mode,
-                'target_taxa': List[Str],
-                'name': Str,
-                'simulate': Bool,
-                },
-    outputs=[('ref_db', T_OUT_fmt),
-             ],
-    name='download_diamond_db',
-    description='Uses EggnogMapper\'s built in utility to download'
-                'a Diamond reference database',
-)
 
-plugin.methods.register_function(
-        function=q2_moshpit.eggnog.e_mapper,
-        inputs={'main_db': ReferenceDB[Eggnog],
-                'ancillary_db': ReferenceDB[Diamond | MMseq2],
-                'query_sequences': SampleData[Contigs],
-                },
-        parameters={'itype': Str % Choices(["metagenome", "genome", "CDS",
-                                            "proteins",
-                                            ]),
-                    'result_name': Str,
-                    'mode': Str % Choices(["diamond", "mmseqs"]),
-                    },
-        outputs=[('annotation_file', Annotation[NOG]),
-                 ],
-        name='Create annotation mappings',
-        description='Annotatates target features with taxonomic data',
-)
+# diamond_search
 
-plugin.methods.register_function(
-        function=q2_moshpit.eggnog.download_references,
-        inputs={},
-        parameters={'simulate': Bool,
-                    'target_taxa': List[Str],
-                    },
-        outputs=[('references', ReferenceDB[Eggnog]),
-                 ],
-        name='download_references',
-        description='Downloads required reference databases for performing'
-                    'annotations using eggnog.'
-        )
+#plugin.methods.register_function(
+#        function=q2_moshpit.eggnog.diamond_search,
+#        inputs={'input_sequences': SampleData[Contigs],
+#                'eggnog_db': ReferenceDB[Eggnog],
+#                'diamond_db': ReferenceDB[Diamond],
+#               },
+#        parameters={},
+#        outputs=[('seed_orthologs', Ortholog[Seed])],
+#        name='diamond_search',
+#        description="This method performs the steps by which we find our possible target sequences to annotate using the diamond search functionality from the eggnog `emapper.py` script"
+#        )
 
-plugin.methods.register_function(
-        function=q2_moshpit.eggnog.get_references,
-        inputs={},
-        parameters={'mode': Str,
-                    'target_taxa': List[Str],
-                    'name': Str,
-                    'simulate': Bool,
-                    },
-        outputs=[('references', ReferenceDB[Eggnog]),
-                 ],
-        name='get_references',
-        description='Retreives necessary reference database material for'
-        ' running annotations using EggnogMapper. This function will both'
-        ' retrieve a complete Eggnog reference database or a specifically'
-        ' selected subset of it'
-        )
+#plugin.methods.register_function(
+#    function=q2_moshpit.eggnog.create_reference_db,
+#    inputs={},
+#    parameters={'mode': T_mode,
+#                'target_taxa': List[Str],
+#                'name': Str,
+#                'simulate': Bool,
+#                },
+#    outputs=[('ref_db', T_OUT_fmt),
+#             ],
+#    name='download_diamond_db',
+#    description='Uses EggnogMapper\'s built in utility to download'
+#                'a Diamond reference database',
+#)
+#
+#plugin.methods.register_function(
+#        function=q2_moshpit.eggnog.e_mapper,
+#        inputs={'main_db': ReferenceDB[Eggnog],
+#                'ancillary_db': ReferenceDB[Diamond | MMseq2],
+#                'query_sequences': SampleData[Contigs],
+#                },
+#        parameters={'itype': Str % Choices(["metagenome", "genome", "CDS",
+#                                            "proteins",
+#                                            ]),
+#                    'result_name': Str,
+#                    'mode': Str % Choices(["diamond", "mmseqs"]),
+#                    },
+#        outputs=[('annotation_file', Annotation[NOG]),
+#                 ],
+#        name='Create annotation mappings',
+#        description='Annotatates target features with taxonomic data',
+#)
+#
+#plugin.methods.register_function(
+#        function=q2_moshpit.eggnog.download_references,
+#        inputs={},
+#        parameters={'simulate': Bool,
+#                    'target_taxa': List[Str],
+#                    },
+#        outputs=[('references', ReferenceDB[Eggnog]),
+#                 ],
+#        name='download_references',
+#        description='Downloads required reference databases for performing'
+#                    'annotations using eggnog.'
+#        )
+#
+#plugin.methods.register_function(
+#        function=q2_moshpit.eggnog.get_references,
+#        inputs={},
+#        parameters={'mode': Str,
+#                    'target_taxa': List[Str],
+#                    'name': Str,
+#                    'simulate': Bool,
+#                    },
+#        outputs=[('references', ReferenceDB[Eggnog]),
+#                 ],
+#        name='get_references',
+#        description='Retreives necessary reference database material for'
+#        ' running annotations using EggnogMapper. This function will both'
+#        ' retrieve a complete Eggnog reference database or a specifically'
+#        ' selected subset of it'
+#        )

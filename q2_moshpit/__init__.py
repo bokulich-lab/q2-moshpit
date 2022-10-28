@@ -8,14 +8,10 @@
 
 
 import importlib
-#from .metabat2 import metabat2
-#from .eggnog import *
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-#__all__ = ['metabat2', 'eggnog']
 
-#importlib.import_module('q2_moshpit/metabat2')
-#importlib.import_module('q2_moshpit/eggnog/')
-
+importlib.import_module('q2_moshpit.metabat2')
+importlib.import_module('q2_moshpit.eggnog')

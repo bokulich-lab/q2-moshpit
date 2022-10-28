@@ -25,10 +25,9 @@ from q2_types_genomics.per_sample_data import Contigs
 
 
 # diamond search
-def diamond_search(input_sequences: ContigSequencesDirFmt,
-                   diamond_db:DiamondRefDirFmt,
-                   eggnog_db:EggnogRefDirFmt,
-                   )-> OrthologDirFmt:
+def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
+                          diamond_db:DiamondRefDirFmt,
+                          )-> SeedOrthologDirFmt:
 
     # TODO: wire up where to write results....
     #tmp = tempfile.TemporaryDirectory()
@@ -36,8 +35,8 @@ def diamond_search(input_sequences: ContigSequencesDirFmt,
     # Instantiate an directory format object to which our processed data can be written
     # temp_result = tempfile.TemporaryDirectory()
 
-    result = OrthologDirFmt()
-    diamond_db_fp = diamond_db.path / 'eggnog_proteins.dmnd'
+    result = SeedOrthologDirFmt()
+    diamond_db_fp = diamond_db.path / 'ref_db.dmnd'
 
     for relpath, obj_path in input_sequences.sequences.iter_views(DNAFASTAFormat):
         sample_label = str(relpath).rsplit(r'\.', 2)[0] #+ '_seed_ortholog'
@@ -45,10 +44,9 @@ def diamond_search(input_sequences: ContigSequencesDirFmt,
 
 
         _diamond_search_runner(input_path=obj_path,
-                               eggnog_db=eggnog_db,
                                diamond_db=diamond_db_fp,
                                sample_label=sample_label,
-                               output=str(result))
+                               output_loc=str(result))
 
     #if not os.path.isdir(os.path.join(result.path, 'data')):
     #    os.mkdir(os.path.join(result.path, 'data'))
@@ -87,38 +85,33 @@ def diamond_search(input_sequences: ContigSequencesDirFmt,
 #@
 # apply emapper to each sample sequences.
 # this could be made more abstract to work for any mapping that we would like to perform with the emapper.py script or made more specifict to generate a helper method for each main method we would like to use emapper.py to process our data with. To start with I am making a more specific verision for just search diamond, and leave further abstraction for a later point.
-def _diamond_search_runner(input_path, eggnog_db, diamond_db, sample_label, output):
-    cmds = ['emapper.py',
-            '--data_dir', str(eggnog_db),
-            '--dmnd_db', str(diamond_db),
-            '-i', str(input_path),
-            '--itype', 'metagenome',
-            '-o', sample_label,
-            '--output_dir', output,
-            '--no_annot',
-            ]
+def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc):
+    cmds = ['emapper.py', '-i', str(input_path), '-o', sample_label,
+                '-m', 'diamond', '--no_annot', '--dmnd_db', str(diamond_db),
+                '--itype', 'metagenome', '--output_dir', output_loc ]
+
     subprocess.run(cmds, check=True)
     return None
 
-def _mmseqs_search_runner(input_path, eggnog_db, mmseqs_db, sample_label, output):
-    cmds = ['emapper.py',
-            '-m', 'mmseqs',
-            '--data_dir', str(eggnog_db),
-            '--mmseqs_db', str(mmseqs_db),
-            '-i', str(input_path),
-            '--itype', 'metagenome',
-            '-o', sample_label,
-            '--output_dir', str(output),
-            '--no_annot',
-            ]
-    subprocess.run(cmds, check=True)
-    return None
-
-def _eggnog_annotate_runner(input_path, eggnog_db, output):
-    cmds = [
-            ]
-    subprocess.run(cmds, check=True)
-    return None
+# def _mmseqs_search_runner(input_path, eggnog_db, mmseqs_db, sample_label, output):
+#     cmds = ['emapper.py',
+#             '-m', 'mmseqs',
+#             '--data_dir', str(eggnog_db),
+#             '--mmseqs_db', str(mmseqs_db),
+#             '-i', str(input_path),
+#             '--itype', 'metagenome',
+#             '-o', sample_label,
+#             '--output_dir', str(output),
+#             '--no_annot',
+#             ]
+#     subprocess.run(cmds, check=True)
+#     return None
+# 
+# def _eggnog_annotate_runner(input_path, eggnog_db, output):
+#     cmds = [
+#             ]
+#     subprocess.run(cmds, check=True)
+#     return None
 
     # no return because the emapper.py script will write the results of subprocess.run to the location specied by output_target, which is pointed at our directory format object, which can be thought of as our real place on disk to write this to.
 

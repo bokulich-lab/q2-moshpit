@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 import importlib
 from q2_types.sample_data import SampleData
-from q2_types.feature_data import FeatureData
 
 from q2_types_genomics.reference_db import ReferenceDB, Diamond
 
@@ -34,7 +33,6 @@ plugin = Plugin(
     short_description='QIIME 2 plugin for metagenome analysis.',
 )
 
-importlib.import_module('q2_moshpit.eggnog')
 importlib.import_module('q2_moshpit.diamond')
 importlib.import_module('q2_moshpit.metabat2')
 
@@ -95,8 +93,8 @@ plugin.methods.register_function(
 # diamond_search
 plugin.methods.register_function(
         function=q2_moshpit.diamond.eggnog_diamond_search,
-        inputs= {'input_sequences': SampleData[Contigs],
-                 'diamond_db': ReferenceDB[Diamond],
+        inputs={'input_sequences': SampleData[Contigs],
+                'diamond_db': ReferenceDB[Diamond],
                 },
         parameters={},
         outputs=[('seed_ortholog', Ortholog[Seed])],

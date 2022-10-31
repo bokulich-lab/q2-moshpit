@@ -14,4 +14,4 @@ del get_versions
 
 
 importlib.import_module('q2_moshpit.metabat2')
-importlib.import_module('q2_moshpit.eggnog')
+importlib.import_module('q2_moshpit.diamond')

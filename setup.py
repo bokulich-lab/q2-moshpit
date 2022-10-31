@@ -34,7 +34,7 @@ setup(
             'data/*', 'data/bins/*', 'data/bins/*/*',
             'data/checkm_reports/*/*/*', 'data/plots/*/*/*'
         ],
-        'q2_moshpit.eggnog.tests': [
+        'q2_moshpit.diamond.tests': [
             'data/*',
         ],
     },

@@ -7,11 +7,10 @@
 # ----------------------------------------------------------------------------
 
 
-from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, Contigs
+from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.ortholog import SeedOrthologDirFmt
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types_genomics.diamond import DiamondDatabaseDirFmt
-from q2_moshpit.plugin_setup import plugin
 
 import os
 import subprocess
@@ -29,7 +28,7 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
 
     # run analysis
     for relpath, obj_path in input_sequences.sequences.iter_views(
-        DNAFASTAFormat):
+            DNAFASTAFormat):
         sample_label = str(relpath).rsplit(r'\.', 2)[0] + '_seed_ortholog'
 
         _diamond_search_runner(input_path=obj_path,

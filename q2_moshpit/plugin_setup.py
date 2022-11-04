@@ -8,9 +8,9 @@
 import importlib
 from q2_types.sample_data import SampleData
 
-from q2_types_genomics.reference_db import ReferenceDB, Diamond
+from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
 
-from q2_types_genomics.ortholog import Ortholog, Seed
+from q2_types_genomics.ortholog import Ortholog, Seed, Annotation
 
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
@@ -102,4 +102,15 @@ plugin.methods.register_function(
         description="This method performs the steps by which we find our "
                     "possible target sequences to annotate using the diamond "
                     "search functionality from the eggnog `emapper.py` script"
+        )
+
+plugin.methods.register_function(
+        function=q2_moshpit.annotation.eggnog_annotate_seed_orthologs,
+        inputs={'hits_table': Ortholog[Seed],
+                'eggnog_db': ReferenceDB[Eggnog],
+                },
+        parameters={},
+        outputs=[('annotation_ortholog', Ortholog[Annotation])],
+        name='eggnog_annotate_seed_orthologs',
+        description="Uses Eggnog Mapper to apply functional annotations from the eggnog database to previously generated \"seed orthologs\"."
         )

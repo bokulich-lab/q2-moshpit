@@ -7,12 +7,6 @@
 # ----------------------------------------------------------------------------
 
 
-import importlib
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+from ._method import eggnog_annotate_seed_orthologs
 
-
-importlib.import_module('q2_moshpit.metabat2')
-importlib.import_module('q2_moshpit.diamond')
-importlib.import_module('q2_moshpit.annotation')
+__all__ = ['eggnog_annotate_seed_orthologs']

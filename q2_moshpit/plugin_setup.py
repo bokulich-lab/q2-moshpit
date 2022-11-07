@@ -112,5 +112,6 @@ plugin.methods.register_function(
         parameters={},
         outputs=[('annotation_ortholog', Ortholog[Annotation])],
         name='eggnog_annotate_seed_orthologs',
-        description="Uses Eggnog Mapper to apply functional annotations from the eggnog database to previously generated \"seed orthologs\"."
+        description="Uses Eggnog Mapper to apply functional annotations from "
+        "the eggnog database to previously generated \"seed orthologs\"."
         )

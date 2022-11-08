@@ -34,8 +34,15 @@ setup(
             'data/*', 'data/bins/*', 'data/bins/*/*',
             'data/checkm_reports/*/*/*', 'data/plots/*/*/*'
         ],
-        'q2_moshpit.diamond.tests': [
+        'q2_moshpit.diamond': [
+            'tests/data/*',
             'data/*',
+            'citations.bib',
+        ],
+        'q2_moshpit.annotation': [
+            'tests/data/*',
+            'data/*',
+            'citations.bib',
         ],
     },
     zip_safe=False,

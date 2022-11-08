@@ -16,6 +16,7 @@ from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Bool, Range, Int
 from qiime2.plugin import Plugin, Citations
+import q2_moshpit.diamond._examples as dmnd_ex
 
 import q2_moshpit
 
@@ -101,7 +102,8 @@ plugin.methods.register_function(
         name='eggnog_diamond_search',
         description="This method performs the steps by which we find our "
                     "possible target sequences to annotate using the diamond "
-                    "search functionality from the eggnog `emapper.py` script"
+                    "search functionality from the eggnog `emapper.py` script",
+        examples={'eggnog_diamond_search': dmnd_ex.eggnog_search_diamond},
         )
 
 plugin.methods.register_function(

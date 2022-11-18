@@ -6,17 +6,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
-import re
 import subprocess
 import tempfile
-import time
 from copy import deepcopy
 from dataclasses import dataclass, field, make_dataclass
 from functools import reduce
 from typing import Union
 
 import pandas as pd
-import requests
 
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
@@ -26,6 +23,7 @@ from q2_moshpit.kraken2.utils import _process_kraken2_arg
 
 RANKS = {x: y for x, y in zip('dpcofgs', range(7))}
 LEVELS = {x: y for x, y in zip(range(7), 'dpcofgs')}
+
 
 @dataclass
 class Node:
@@ -39,6 +37,7 @@ class Node:
 
     def __post_init__(self):
         self.taxonomy = f'{self.rank}__{self.name}'
+
 
 # prepare taxonomic data classes
 LEVEL_CLASSES = []
@@ -78,7 +77,9 @@ def _parse_kraken2_report(
             # does it exist already?
             if name not in existing_ranks:
                 current_level = RANKS[rank]
-                current_node = LEVEL_CLASSES[current_level](rank=rank, name=name, count=count, level=current_level)
+                current_node = LEVEL_CLASSES[current_level](
+                    rank=rank, name=name, count=count, level=current_level
+                )
                 # add the node to the list of ranks
                 levels[rank].append(current_node)
                 if rank != 'd':
@@ -107,7 +108,8 @@ def _parse_kraken2_report(
         current_rank = LEVELS[_l]
         for node in levels[current_rank]:
             if _l > 0:
-                node.taxonomy = f'{node.parent_taxonomy.taxonomy};{node.taxonomy}'
+                node.taxonomy = f'{node.parent_taxonomy.taxonomy};' \
+                                f'{node.taxonomy}'
 
     # find childless nodes
     features = []
@@ -120,29 +122,6 @@ def _parse_kraken2_report(
         abundances, orient='index', columns=[f'{sample_name}/{bin_name}']
     )
     return abundances
-
-
-def _fetch_tax_id(taxon: str) -> int:
-    taxon = taxon.replace('[', '').replace(']', '')
-    params = {
-        'db': 'taxonomy',
-        'term': f'{taxon}[Scientific Name]',
-        'retmode': 'json',
-        'retmax': 100,
-        'retstart': 0
-    }
-
-    response = requests.get(
-        url='https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi',
-        params=params,
-    )
-    result = response.json()['esearchresult']['idlist']
-    time.sleep(0.4)
-    if len(result) == 1:
-        return result[0]
-    else:
-        print('More than one result was found for %s', taxon)
-        return min([int(x) for x in result])
 
 
 def _process_kraken2_reports(reports: dict) -> pd.DataFrame:
@@ -175,32 +154,6 @@ def _process_kraken2_reports(reports: dict) -> pd.DataFrame:
     df_merged.index.name = 'feature-id'
 
     return df_merged
-
-
-def _parse_kraken2_output(
-        report_fp: str, sample_name: str, bin_name: str
-) -> pd.DataFrame:
-    df = pd.read_csv(report_fp, sep='\t', header=None)
-    df.columns = ['status', 'id', 'tax_id', 'length', 'lca_mapping']
-    df['sample'] = sample_name
-    df['split_tax_id'] = df['tax_id'].apply(
-        lambda x: re.findall(r'(.{1,})\(taxid (\d{1,})\)', x)[0]
-    )
-    df[['taxon', 'tax_id']] = df['split_tax_id'].tolist()
-    df.drop('split_tax_id', axis=1, inplace=True)
-    df.set_index('id', drop=True, inplace=True)
-    return df
-
-
-def _process_kraken2_outputs(reports: dict) -> pd.DataFrame:
-    contig_info_all = []
-    for _sample, bins in reports.items():
-        for _bin, _reports in bins.items():
-            contig_info = _parse_kraken2_output(
-                _reports['output'], _sample, _bin
-            )
-            contig_info_all.append(contig_info)
-    return pd.concat(contig_info_all, axis=0)
 
 
 def _fill_missing_levels(
@@ -248,16 +201,14 @@ def _classify_kraken(manifest, common_args) -> (pd.DataFrame, pd.DataFrame):
 
         # fill missing levels
         results_df.index = results_df.index.map(_fill_missing_levels)
-
-        #contigs_to_taxons = _process_kraken2_outputs(kraken2_reports)
-        #grouped = contigs_to_taxons.groupby(['sample', 'taxon']).sum()
-
         results_df.fillna(0, inplace=True)
 
         # create "fake" taxonomy for now
         # should we use the lowest level's NCBI ID here?
         taxonomy = pd.DataFrame(
-            results_df.index.tolist(), index=results_df.index, columns=['Taxon']
+            results_df.index.tolist(),
+            index=results_df.index,
+            columns=['Taxon']
         )
         taxonomy.index.name = 'Feature ID'
         taxonomy['Taxon'] = taxonomy['Taxon'].apply(

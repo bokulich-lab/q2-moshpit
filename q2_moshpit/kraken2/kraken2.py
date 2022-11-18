@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+import shutil
 import subprocess
 import tempfile
 from copy import deepcopy
@@ -16,6 +17,7 @@ from typing import Union
 import pandas as pd
 
 from q2_moshpit._utils import _process_common_input_params, run_command
+from q2_types_genomics.kraken2 import Kraken2ReportDirectoryFormat
 from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
@@ -169,7 +171,9 @@ def _fill_missing_levels(
     return sep.join(taxon)
 
 
-def _classify_kraken(manifest, common_args) -> (pd.DataFrame, pd.DataFrame):
+def _classify_kraken(manifest, common_args) -> (
+        pd.DataFrame, pd.DataFrame, Kraken2ReportDirectoryFormat
+):
     base_cmd = ["kraken2", *common_args]
     kraken2_reports = {}
 
@@ -197,6 +201,17 @@ def _classify_kraken(manifest, common_args) -> (pd.DataFrame, pd.DataFrame):
                 f"(return code {e.returncode}), please inspect "
                 "stdout and stderr to learn more."
             )
+        # copy the original reports
+        kraken2_reports_dir = Kraken2ReportDirectoryFormat()
+        for _sample, _bins in kraken2_reports.items():
+            for _bin, paths in _bins.items():
+                sample_path = os.path.join(kraken2_reports_dir.path, _sample)
+                os.makedirs(sample_path, exist_ok=True)
+                shutil.copy(
+                    paths['report'],
+                    os.path.join(sample_path, f'{_bin}.report.txt')
+                )
+
         results_df = _process_kraken2_reports(kraken2_reports)
 
         # fill missing levels
@@ -215,7 +230,7 @@ def _classify_kraken(manifest, common_args) -> (pd.DataFrame, pd.DataFrame):
             lambda x: x.replace('|', ';')
         )
 
-    return results_df.T, taxonomy
+    return results_df.T, taxonomy, kraken2_reports_dir
 
 
 def classify_kraken(
@@ -223,7 +238,7 @@ def classify_kraken(
         confidence: float = 0.0, minimum_base_quality: int = 0,
         memory_mapping: bool = False, minimum_hit_groups: int = 2,
         quick: bool = False
-) -> (pd.DataFrame, pd.DataFrame):
+) -> (pd.DataFrame, pd.DataFrame, Kraken2ReportDirectoryFormat):
     kwargs = {
         k: v for k, v in locals().items()
         if k not in ["seqs"]

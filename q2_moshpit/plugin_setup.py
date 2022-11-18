@@ -9,6 +9,7 @@ from q2_types.feature_data import FeatureData, Taxonomy
 from q2_types.feature_table import Frequency, FeatureTable
 from q2_types.sample_data import SampleData
 
+from q2_types_genomics.kraken2 import Kraken2Reports
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.core.type import Bool, Range, Int, Str, Float
@@ -102,7 +103,8 @@ plugin.methods.register_function(
     },
     outputs=[
         ('table', FeatureTable[Frequency]),
-        ('taxonomy', FeatureData[Taxonomy])
+        ('taxonomy', FeatureData[Taxonomy]),
+        ('reports', SampleData[Kraken2Reports])
     ],
     input_descriptions={
         "seqs": "Sequences to be classified."
@@ -120,7 +122,8 @@ plugin.methods.register_function(
     },
     output_descriptions={
         'table': 'Abundance table',
-        'taxonomy': 'Assigned taxonomy.'
+        'taxonomy': 'Assigned taxonomy.',
+        'reports': 'Reports produced by Kraken2.'
     },
     name='Perform taxonomic classification of bins or reads using Kraken 2.',
     description='This method uses Kraken 2 to classify provided NGS reads '

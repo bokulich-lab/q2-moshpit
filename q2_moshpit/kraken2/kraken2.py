@@ -12,7 +12,7 @@ import tempfile
 from copy import deepcopy
 from dataclasses import dataclass, field, make_dataclass
 from functools import reduce
-from typing import Union
+from typing import Optional
 
 import pandas as pd
 
@@ -23,8 +23,14 @@ from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
 
 
-RANKS = {x: y for x, y in zip('dpcofgs', range(7))}
-LEVELS = {x: y for x, y in zip(range(7), 'dpcofgs')}
+COLUMNS = [
+        'perc_frags_covered', 'no_frags_covered',
+        'no_frags_assigned', 'rank', 'ncbi_tax_id', 'name'
+    ]
+
+RANK_CODES = 'URDPCOFGS'
+RANKS = {x: y for x, y in zip(RANK_CODES, range(9))}
+LEVELS = {x: y for x, y in zip(range(9), RANK_CODES)}
 
 
 @dataclass
@@ -35,7 +41,7 @@ class Node:
     level: int
     parent_taxonomy: str = None
     taxonomy: str = None
-    children: Union[list, None] = field(default_factory=list)
+    children: Optional[list] = field(default_factory=list)
 
     def __post_init__(self):
         self.taxonomy = f'{self.rank}__{self.name}'
@@ -43,7 +49,7 @@ class Node:
 
 # prepare taxonomic data classes
 LEVEL_CLASSES = []
-for i in range(7):
+for i in range(9):
     base_cls = (Node,) if i == 0 else (LEVEL_CLASSES[i-1],)
     LEVEL_CLASSES.append(make_dataclass(
         cls_name=f'L{i}',
@@ -52,47 +58,74 @@ for i in range(7):
     ))
 
 
-def _find_parent(all_levels: dict, parent_rank: str, parent_name: str):
+def _find_parent(all_levels: dict, df: pd.DataFrame, i: int):
+    # reverse the df up to the given level for easier look-up of a parent
+    df_rev = df[i::-1]
+
+    # crawl through the "tree" and find the taxon with level smaller by 1
+    parent_rank, parent_name, parent_level = None, None, None
+    for j, row in df_rev.iterrows():
+        parent_rank = df_rev.loc[j - 1]['rank'][0]
+        parent_name = df_rev.loc[j - 1]['name']
+        parent_level = df_rev.loc[j - 1]['level']
+        if parent_level <= df.iloc[i]['level'] - 1:
+            break
+    if not parent_rank:
+        raise ValueError('Could not find parent for %s.', df.iloc[i]['name'])
+
     parent_candidates = [
         x for x in all_levels[parent_rank] if x.name == parent_name
     ]
     return parent_candidates[0]
 
 
+def _assign_level(rank: str) -> float:
+    """Assign a numeric level value based on the provided rank.
+
+    Args:
+        rank (str): taxon's rank provided in one-letter code
+
+    Returns:
+        level (float): taxon's taxonomic level. If provided rank was not one
+            of the 10 standard ones, returned level will be the one of the
+            closest ancestor + 0.5.
+    """
+    if len(rank) == 1:
+        return RANKS[rank]
+    else:
+        return RANKS[rank[0]] + 0.5
+
+
 def _parse_kraken2_report(
         report_fp: str, sample_name: str, bin_name: str
 ) -> pd.DataFrame:
-    with open(report_fp, 'r') as r:
-        lines = r.readlines()
+    df = pd.read_csv(report_fp, sep='\t', header=None)
+    df.columns = COLUMNS
+    df['level'] = df['rank'].apply(_assign_level)
+    df['name'] = df['name'].apply(lambda x: x.strip())
 
-    all_taxonomies = {}
-    levels = {x: [] for x in 'dpcofgs'}
-    for line in lines:
-        line = line.split('\t')
-        taxonomy, count = line[0], int(line[1].strip())
-        all_taxonomies[taxonomy] = {f'{sample_name}/{bin_name}': count}
+    levels = {x: [] for x in RANK_CODES}
+    for i, row in df.iterrows():
+        existing_ranks = [node.name for node in levels[row['rank'][0]]]
 
-        line = [tuple(x.split('__')) for x in line[0].split('|')]
-        for i, (rank, name) in enumerate(line):
-            existing_ranks = [node.name for node in levels[rank]]
+        # create the node if it does not yet exist in our register
+        name = row['name'].strip()
+        if name not in existing_ranks:
+            current_node = LEVEL_CLASSES[int(row.level)](
+                rank=row['rank'], name=name, count=row['no_frags_covered'], level=row['level']
+            )
+            # add the node to the list of ranks
+            levels[row['rank'][0]].append(current_node)
+            if row['rank'][0] not in ['U', 'R']:
+                parent = _find_parent(levels, df, i)
+                # add the node to the list of children of a higher rank
+                parent.children.append(current_node)
+                # add the parent to the current node
+                current_node.parent_taxonomy = parent
 
-            # does it exist already?
-            if name not in existing_ranks:
-                current_level = RANKS[rank]
-                current_node = LEVEL_CLASSES[current_level](
-                    rank=rank, name=name, count=count, level=current_level
-                )
-                # add the node to the list of ranks
-                levels[rank].append(current_node)
-                if rank != 'd':
-                    (parent_rank, parent_name) = line[i - 1]
-                    parent = _find_parent(levels, parent_rank, parent_name)
-                    # add the node to the list of children of a higher rank
-                    parent.children.append(current_node)
-                    # add the parent to the current node
-                    current_node.parent_taxonomy = parent
-
-    for _l in range(5, -1, -1):
+    # add "unclassified" nodes wherever necessary (if current level's
+    # count is bigger than the sum of its children's counts)
+    for _l in range(7, -1, -1):
         current_rank = LEVELS[_l]
         for node in levels[current_rank]:
             child_rank, child_level = LEVELS[_l + 1], _l + 1
@@ -105,18 +138,23 @@ def _parse_kraken2_report(
                 node.children.append(unclassified_node)
                 levels[child_rank].append(unclassified_node)
 
-    # expand taxonomies
-    for _l in range(7):
+    # expand taxonomies up to the domain rank
+    for _l in range(9):
         current_rank = LEVELS[_l]
         for node in levels[current_rank]:
-            if _l > 0:
+            if _l > 2:
                 node.taxonomy = f'{node.parent_taxonomy.taxonomy};' \
                                 f'{node.taxonomy}'
 
-    # find childless nodes
+    # find childless nodes - these are the ones we will want to report;
+    # only consider the ranks defined by RANK_CODES (ignore the intermediate
+    # ones like G1, R1, etc.)
     features = []
     for _, taxonomies in levels.items():
-        childless = [x for x in taxonomies if not x.children]
+        childless = [
+            x for x in taxonomies
+            if not x.children and x.parent_taxonomy.rank in RANK_CODES
+        ]
         features.extend(childless)
 
     abundances = {x.taxonomy: x.count for x in features}
@@ -163,7 +201,7 @@ def _fill_missing_levels(
         fill_with: str = 'unclassified',
         prepend: bool =True
 ) -> str:
-    ranks = 'dpcofgs'
+    ranks = RANK_CODES[2:]
     taxon = taxon.split(sep)
     for i in range(len(taxon), 7):
         level = f'{ranks[i]}__{fill_with}' if prepend else fill_with
@@ -176,6 +214,7 @@ def _classify_kraken(manifest, common_args) -> (
 ):
     base_cmd = ["kraken2", *common_args]
     kraken2_reports = {}
+    kraken2_reports_dir = Kraken2ReportDirectoryFormat()
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         try:
@@ -183,13 +222,14 @@ def _classify_kraken(manifest, common_args) -> (
                 if _sample not in kraken2_reports:
                     kraken2_reports[_sample] = {}
                 cmd = deepcopy(base_cmd)
-                bin_dir = os.path.join(tmp_dir, _sample, _bin)
-                os.makedirs(bin_dir, exist_ok=True)
-                report_fp = os.path.join(bin_dir, 'report.txt')
-                output_fp = os.path.join(bin_dir, 'output.txt')
+                sample_dir = os.path.join(kraken2_reports_dir.path, _sample)
+                os.makedirs(sample_dir, exist_ok=True)
+                report_fp = os.path.join(sample_dir, f'{_bin}.report.txt')
+                output_fp = os.path.join(sample_dir, f'{_bin}.output.txt')
                 cmd.extend([
-                    '--use-mpa-style', '--report', report_fp, '--use-names',
-                    '--output', output_fp, fn
+                    '--report', report_fp, '--use-names',
+                    # '--output', output_fp,
+                    fn
                 ])
                 run_command(cmd=cmd, verbose=True)
                 kraken2_reports[_sample].update(
@@ -201,17 +241,8 @@ def _classify_kraken(manifest, common_args) -> (
                 f"(return code {e.returncode}), please inspect "
                 "stdout and stderr to learn more."
             )
-        # copy the original reports
-        kraken2_reports_dir = Kraken2ReportDirectoryFormat()
-        for _sample, _bins in kraken2_reports.items():
-            for _bin, paths in _bins.items():
-                sample_path = os.path.join(kraken2_reports_dir.path, _sample)
-                os.makedirs(sample_path, exist_ok=True)
-                shutil.copy(
-                    paths['report'],
-                    os.path.join(sample_path, f'{_bin}.report.txt')
-                )
 
+        # kraken2_reports_dir = _copy_reports_to_dirfmt(kraken2_reports)
         results_df = _process_kraken2_reports(kraken2_reports)
 
         # fill missing levels

@@ -112,7 +112,8 @@ def _parse_kraken2_report(
         name = row['name'].strip()
         if name not in existing_ranks:
             current_node = LEVEL_CLASSES[int(row.level)](
-                rank=row['rank'], name=name, count=row['no_frags_covered'], level=row['level']
+                rank=row['rank'], name=name,
+                count=row['no_frags_covered'], level=row['level']
             )
             # add the node to the list of ranks
             levels[row['rank'][0]].append(current_node)
@@ -197,10 +198,23 @@ def _process_kraken2_reports(reports: dict) -> pd.DataFrame:
 
 
 def _fill_missing_levels(
-        taxon: str, sep: str =';',
+        taxon: str, sep: str = ';',
         fill_with: str = 'unclassified',
-        prepend: bool =True
+        prepend: bool = True
 ) -> str:
+    """Fill missing levels in the provided taxonomy string, down to level 7.
+
+    Args:
+        taxon (str): Full taxon name to be filled.
+        sep (str): Character used to separate taxonomic levels in the taxon.
+        fill_with (str): String used to fill the missing levels,
+            down to level 7.
+        prepend (bool): If True will prepend every level with one-letter
+            abbreviation of the corresponding rank.
+
+    Returns:
+        str:  Full taxonomy filled down to level 7.
+    """
     ranks = RANK_CODES[2:]
     taxon = taxon.split(sep)
     for i in range(len(taxon), 7):

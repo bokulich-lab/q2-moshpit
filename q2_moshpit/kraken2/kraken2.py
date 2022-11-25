@@ -8,13 +8,14 @@
 import os
 import shutil
 import subprocess
-import tempfile
 from copy import deepcopy
 from dataclasses import dataclass, field, make_dataclass
 from functools import reduce
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
+from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt, \
+    SingleLanePerSamplePairedEndFastqDirFmt
 
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types_genomics.kraken2 import Kraken2ReportDirectoryFormat
@@ -41,7 +42,7 @@ class Node:
     level: int
     parent_taxonomy: str = None
     taxonomy: str = None
-    id: str = None
+    id: str = '0'
     children: Optional[list] = field(default_factory=list)
 
     def __post_init__(self):
@@ -153,6 +154,8 @@ def _parse_kraken2_report(
                 else:
                     node.id = f'{node.parent_taxonomy.id}'
 
+    #
+
     # find childless nodes - these are the ones we will want to report;
     # only consider the ranks defined by RANK_CODES (ignore the intermediate
     # ones like G1, R1, etc.)
@@ -243,48 +246,59 @@ def _classify_kraken(manifest, common_args) -> (
         pd.DataFrame, pd.DataFrame, Kraken2ReportDirectoryFormat
 ):
     base_cmd = ["kraken2", *common_args]
+    base_cmd.append('--paired') if 'reverse' in manifest.columns else False
+
     kraken2_reports = {}
     kraken2_reports_dir = Kraken2ReportDirectoryFormat()
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        try:
-            for (_sample, _bin), fn in manifest.itertuples():
-                if _sample not in kraken2_reports:
-                    kraken2_reports[_sample] = {}
-                cmd = deepcopy(base_cmd)
-                sample_dir = os.path.join(kraken2_reports_dir.path, _sample)
-                os.makedirs(sample_dir, exist_ok=True)
-                report_fp = os.path.join(sample_dir, f'{_bin}.report.txt')
-                output_fp = os.path.join(sample_dir, f'{_bin}.output.txt')
-                cmd.extend([
-                    '--report', report_fp, '--use-names',
-                    # '--output', output_fp,
-                    fn
-                ])
-                run_command(cmd=cmd, verbose=True)
-                kraken2_reports[_sample].update(
-                    {_bin: {'report': report_fp, 'output': output_fp}}
-                )
-        except subprocess.CalledProcessError as e:
-            raise Exception(
-                "An error was encountered while running Kraken 2, "
-                f"(return code {e.returncode}), please inspect "
-                "stdout and stderr to learn more."
+    try:
+        for index, row in manifest.iterrows():
+            if 'filename' in manifest.columns:
+                _sample, _bin, fn = index[0], index[1], [row['filename']]
+            elif 'reverse' in manifest.columns:
+                _sample, _bin, fn = index, index, row.tolist()
+            else:
+                _sample, _bin, fn = index, index, [row['forward']]
+            if _sample not in kraken2_reports:
+                kraken2_reports[_sample] = {}
+            cmd = deepcopy(base_cmd)
+            sample_dir = os.path.join(kraken2_reports_dir.path, _sample)
+            os.makedirs(sample_dir, exist_ok=True)
+            report_fp = os.path.join(sample_dir, f'{_bin}.report.txt')
+            output_fp = os.path.join(sample_dir, f'{_bin}.output.txt')
+            cmd.extend([
+                '--report', report_fp, '--use-names',
+                # '--output', output_fp,
+                *fn
+            ])
+            run_command(cmd=cmd, verbose=True)
+            kraken2_reports[_sample].update(
+                {_bin: {'report': report_fp, 'output': output_fp}}
             )
-
-        results_df, taxonomy_df = _process_kraken2_reports(kraken2_reports)
-
-        # fill missing levels
-        results_df.fillna(0, inplace=True)
-        taxonomy_df['Taxon'] = taxonomy_df['Taxon'].apply(
-            _fill_missing_levels
+    except subprocess.CalledProcessError as e:
+        raise Exception(
+            "An error was encountered while running Kraken 2, "
+            f"(return code {e.returncode}), please inspect "
+            "stdout and stderr to learn more."
         )
+
+    results_df, taxonomy_df = _process_kraken2_reports(kraken2_reports)
+
+    # fill missing levels
+    results_df.fillna(0, inplace=True)
+    taxonomy_df['Taxon'] = taxonomy_df['Taxon'].apply(
+        _fill_missing_levels
+    )
 
     return results_df.T, taxonomy_df, kraken2_reports_dir
 
 
 def classify_kraken(
-        seqs: MultiMAGSequencesDirFmt, db: str, threads: int = 1,
+        seqs: Union[
+            SingleLanePerSamplePairedEndFastqDirFmt,
+            SingleLanePerSampleSingleEndFastqDirFmt,
+            MultiMAGSequencesDirFmt
+        ], db: str, threads: int = 1,
         confidence: float = 0.0, minimum_base_quality: int = 0,
         memory_mapping: bool = False, minimum_hit_groups: int = 2,
         quick: bool = False

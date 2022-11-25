@@ -41,6 +41,7 @@ class Node:
     level: int
     parent_taxonomy: str = None
     taxonomy: str = None
+    id: str = None
     children: Optional[list] = field(default_factory=list)
 
     def __post_init__(self):
@@ -98,7 +99,7 @@ def _assign_level(rank: str) -> float:
 
 def _parse_kraken2_report(
         report_fp: str, sample_name: str, bin_name: str
-) -> pd.DataFrame:
+) -> (pd.DataFrame, pd.DataFrame):
     df = pd.read_csv(report_fp, sep='\t', header=None)
     df.columns = COLUMNS
     df['level'] = df['rank'].apply(_assign_level)
@@ -113,7 +114,8 @@ def _parse_kraken2_report(
         if name not in existing_ranks:
             current_node = LEVEL_CLASSES[int(row.level)](
                 rank=row['rank'], name=name,
-                count=row['no_frags_covered'], level=row['level']
+                count=row['no_frags_covered'], level=row['level'],
+                id=str(row['ncbi_tax_id'])
             )
             # add the node to the list of ranks
             levels[row['rank'][0]].append(current_node)
@@ -135,7 +137,7 @@ def _parse_kraken2_report(
                 unclassified_node = LEVEL_CLASSES[child_level](
                     rank=child_rank, name='unclassified',
                     count=node.count - children_counts, level=child_level,
-                    children=None, parent_taxonomy=node)
+                    children=None, parent_taxonomy=node, id='')
                 node.children.append(unclassified_node)
                 levels[child_rank].append(unclassified_node)
 
@@ -146,6 +148,10 @@ def _parse_kraken2_report(
             if _l > 2:
                 node.taxonomy = f'{node.parent_taxonomy.taxonomy};' \
                                 f'{node.taxonomy}'
+                if node.id:
+                    node.id = f'{node.parent_taxonomy.id}|{node.id}'
+                else:
+                    node.id = f'{node.parent_taxonomy.id}'
 
     # find childless nodes - these are the ones we will want to report;
     # only consider the ranks defined by RANK_CODES (ignore the intermediate
@@ -158,23 +164,29 @@ def _parse_kraken2_report(
         ]
         features.extend(childless)
 
-    abundances = {x.taxonomy: x.count for x in features}
+    abundances = {x.id: x.count for x in features}
     abundances = pd.DataFrame.from_dict(
         abundances, orient='index', columns=[f'{sample_name}/{bin_name}']
     )
-    return abundances
+
+    taxonomies = {x.id: x.taxonomy for x in features}
+    taxonomies = pd.DataFrame.from_dict(
+        taxonomies, orient='index', columns=['Taxon']
+    )
+    return abundances, taxonomies
 
 
-def _process_kraken2_reports(reports: dict) -> pd.DataFrame:
+def _process_kraken2_reports(reports: dict) -> (pd.DataFrame, pd.DataFrame):
     # get abundances per sample
-    abundances = []
+    abundances, taxonomies = [], []
     for _sample, bins in reports.items():
         sample_abundances = []
         for _bin, reports in bins.items():
-            bin_abundances = _parse_kraken2_report(
+            bin_abundances, bin_taxonomies = _parse_kraken2_report(
                 reports['report'], _sample, _bin
             )
             sample_abundances.append(bin_abundances)
+            taxonomies.append(bin_taxonomies)
         # merge bins into one per sample
         bins_merged = reduce(
             lambda left, right: pd.merge(
@@ -186,15 +198,19 @@ def _process_kraken2_reports(reports: dict) -> pd.DataFrame:
         abundances.append(bins_merged)
 
     # combine all samples
-    df_merged = reduce(
+    all_abundances = reduce(
         lambda left, right: pd.merge(
             left, right, left_index=True, right_index=True, how='outer'
         ), abundances
     )
+    all_abundances.index.name = 'feature-id'
 
-    df_merged.index.name = 'feature-id'
+    all_taxonomies = pd.concat(taxonomies, axis=0)
+    all_taxonomies.drop_duplicates(inplace=True)
+    all_taxonomies.index = all_taxonomies.index.sort_values()
+    all_taxonomies.index.name = 'Feature ID'
 
-    return df_merged
+    return all_abundances, all_taxonomies
 
 
 def _fill_missing_levels(
@@ -256,26 +272,15 @@ def _classify_kraken(manifest, common_args) -> (
                 "stdout and stderr to learn more."
             )
 
-        # kraken2_reports_dir = _copy_reports_to_dirfmt(kraken2_reports)
-        results_df = _process_kraken2_reports(kraken2_reports)
+        results_df, taxonomy_df = _process_kraken2_reports(kraken2_reports)
 
         # fill missing levels
-        results_df.index = results_df.index.map(_fill_missing_levels)
         results_df.fillna(0, inplace=True)
-
-        # create "fake" taxonomy for now
-        # should we use the lowest level's NCBI ID here?
-        taxonomy = pd.DataFrame(
-            results_df.index.tolist(),
-            index=results_df.index,
-            columns=['Taxon']
-        )
-        taxonomy.index.name = 'Feature ID'
-        taxonomy['Taxon'] = taxonomy['Taxon'].apply(
-            lambda x: x.replace('|', ';')
+        taxonomy_df['Taxon'] = taxonomy_df['Taxon'].apply(
+            _fill_missing_levels
         )
 
-    return results_df.T, taxonomy, kraken2_reports_dir
+    return results_df.T, taxonomy_df, kraken2_reports_dir
 
 
 def classify_kraken(

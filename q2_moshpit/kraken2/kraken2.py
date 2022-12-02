@@ -29,9 +29,9 @@ COLUMNS = [
         'no_frags_assigned', 'rank', 'ncbi_tax_id', 'name'
     ]
 
-RANK_CODES = 'URDPCOFGS'
-RANKS = {x: y for x, y in zip(RANK_CODES, range(9))}
-LEVELS = {x: y for x, y in zip(range(9), RANK_CODES)}
+RANK_CODES = 'URDKPCOFGS'
+RANKS = {x: y for x, y in zip(RANK_CODES, range(len(RANK_CODES)))}
+LEVELS = {x: y for x, y in zip(range(len(RANK_CODES)), RANK_CODES)}
 
 
 @dataclass
@@ -51,7 +51,7 @@ class Node:
 
 # prepare taxonomic data classes
 LEVEL_CLASSES = []
-for i in range(9):
+for i in range(len(RANK_CODES)):
     base_cls = (Node,) if i == 0 else (LEVEL_CLASSES[i-1],)
     LEVEL_CLASSES.append(make_dataclass(
         cls_name=f'L{i}',
@@ -129,7 +129,7 @@ def _parse_kraken2_report(
 
     # add "unclassified" nodes wherever necessary (if current level's
     # count is bigger than the sum of its children's counts)
-    for _l in range(7, -1, -1):
+    for _l in range(len(RANK_CODES) - 2, -1, -1):
         current_rank = LEVELS[_l]
         for node in levels[current_rank]:
             child_rank, child_level = LEVELS[_l + 1], _l + 1
@@ -143,7 +143,7 @@ def _parse_kraken2_report(
                 levels[child_rank].append(unclassified_node)
 
     # expand taxonomies up to the domain rank
-    for _l in range(9):
+    for _l in range(len(RANK_CODES)):
         current_rank = LEVELS[_l]
         for node in levels[current_rank]:
             if _l > 2:
@@ -153,8 +153,6 @@ def _parse_kraken2_report(
                     node.id = f'{node.parent_taxonomy.id}|{node.id}'
                 else:
                     node.id = f'{node.parent_taxonomy.id}'
-
-    #
 
     # find childless nodes - these are the ones we will want to report;
     # only consider the ranks defined by RANK_CODES (ignore the intermediate

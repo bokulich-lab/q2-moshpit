@@ -21,9 +21,10 @@ import re
 
 def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
                           diamond_db: DiamondDatabaseDirFmt,
+                          num_cpus: int = 1,
                           ) -> SeedOrthologDirFmt:
 
-    diamond_db_fp = diamond_db.path / 'ref_db.dmnd'
+    diamond_db_fp = os.path.join(str(diamond_db), 'ref_db.dmnd')
     temp = tempfile.TemporaryDirectory()
 
     # run analysis
@@ -34,7 +35,8 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
         _diamond_search_runner(input_path=obj_path,
                                diamond_db=diamond_db_fp,
                                sample_label=sample_label,
-                               output_loc=temp.name)
+                               output_loc=temp.name,
+                               num_cpus=num_cpus)
 
     result = SeedOrthologDirFmt()
 
@@ -45,10 +47,10 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
     return result
 
 
-def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc):
+def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc, num_cpus):
 
     cmds = ['emapper.py', '-i', str(input_path), '-o', sample_label,
             '-m', 'diamond', '--no_annot', '--dmnd_db', str(diamond_db),
-            '--itype', 'metagenome', '--output_dir', output_loc]
+            '--itype', 'metagenome', '--output_dir', output_loc, '--cpu', str(num_cpus)]
 
     subprocess.run(cmds, check=True)

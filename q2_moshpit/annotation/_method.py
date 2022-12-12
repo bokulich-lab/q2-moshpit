@@ -23,6 +23,7 @@ import os
 
 def eggnog_annotate_seed_orthologs(hits_table: SeedOrthologDirFmt,
                                    eggnog_db: EggnogRefDirFmt,
+                                   db_in_memory: bool = False,
                                    ) -> AnnotationOrthologDirFmt:
 
     eggnog_db_fp = eggnog_db.path
@@ -36,7 +37,8 @@ def eggnog_annotate_seed_orthologs(hits_table: SeedOrthologDirFmt,
         _annotate_seed_orthologs_runner(seed_ortholog=obj_path,
                                         eggnog_db=eggnog_db_fp,
                                         sample_label=sample_label,
-                                        output_loc=temp.name)
+                                        output_loc=temp.name,
+                                        db_in_memory=db_in_memory)
 
     # INSTANTIATE RESULT OBJECT
     result = AnnotationOrthologDirFmt()
@@ -48,7 +50,7 @@ def eggnog_annotate_seed_orthologs(hits_table: SeedOrthologDirFmt,
 
 
 def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
-                                    output_loc):
+                                    output_loc, db_in_memory):
 
     # at this point instead of being able to specify the type of target
     # orthologs, we want to annotate _all_.
@@ -56,5 +58,7 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
     cmds = ['emapper.py', '-m', 'no_search', '--annotate_hits_table',
             str(seed_ortholog), '--data_dir', str(eggnog_db),
             '-o', str(sample_label), '--output_dir', str(output_loc)]
+    if db_in_memory:
+        cmds.append('--dbmem')
 
     subprocess.run(cmds, check=True)

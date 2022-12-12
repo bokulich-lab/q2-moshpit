@@ -22,7 +22,6 @@ from qiime2.plugin import Plugin, Citations
 import q2_moshpit.usage_examples._examples as all_xmpls
 
 
-
 citations = Citations.load('citations.bib', package='q2_moshpit')
 
 plugin = Plugin(
@@ -103,18 +102,23 @@ plugin.methods.register_function(
         parameters={
                 'num_cpus': Int,
                 },
-        input_descriptions= {
+        input_descriptions={
             'input_sequences': ('Sequence data of the contigs we want to '
                                 'search for hits using the Diamond Database'),
-            'diamond_db': 'The filepath to an artifact containing the Diamond database',
+            'diamond_db': 'The filepath to an artifact containing the'
+                          'Diamond database',
             },
-        parameter_descriptions= {'num_cpus': 'Number of CPUs to utilize. \'0\' will use all available.'},
+        parameter_descriptions={
+            'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+                        'use all available.',
+            },
         outputs=[('seed_ortholog', Ortholog[Seed])],
         name='eggnog_diamond_search',
         description="This method performs the steps by which we find our "
                     "possible target sequences to annotate using the diamond "
                     "search functionality from the eggnog `emapper.py` script",
-        examples={'eggnog_diamond_search': all_xmpls.eggnog_diamond_search_example},
+        examples={'eggnog_diamond_search':
+                  all_xmpls.eggnog_diamond_search_example},
         )
 
 plugin.methods.register_function(
@@ -127,5 +131,6 @@ plugin.methods.register_function(
         name='eggnog_annotate_seed_orthologs',
         description="Uses Eggnog Mapper to apply functional annotations from "
         "the eggnog database to previously generated \"seed orthologs\".",
-        examples={'eggnog_annotate_seed_orthologs': all_xmpls.eggnog_annotate_seed_orthologs_example},
+        examples={'eggnog_annotate_seed_orthologs':
+                  all_xmpls.eggnog_annotate_seed_orthologs_example},
         )

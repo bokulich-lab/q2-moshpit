@@ -47,10 +47,12 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
     return result
 
 
-def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc, num_cpus):
+def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
+                           num_cpus):
 
     cmds = ['emapper.py', '-i', str(input_path), '-o', sample_label,
             '-m', 'diamond', '--no_annot', '--dmnd_db', str(diamond_db),
-            '--itype', 'metagenome', '--output_dir', output_loc, '--cpu', str(num_cpus)]
+            '--itype', 'metagenome', '--output_dir', output_loc, '--cpu',
+            str(num_cpus)]
 
     subprocess.run(cmds, check=True)

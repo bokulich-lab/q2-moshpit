@@ -103,8 +103,8 @@ plugin.methods.register_function(
                 'num_cpus': Int,
                 },
         input_descriptions={
-            'input_sequences': ('Sequence data of the contigs we want to '
-                                'search for hits using the Diamond Database'),
+            'input_sequences': 'Sequence data of the contigs we want to '
+                               'search for hits using the Diamond Database',
             'diamond_db': 'The filepath to an artifact containing the'
                           'Diamond database',
             },

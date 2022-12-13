@@ -123,11 +123,18 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
         function=q2_moshpit.annotation.eggnog_annotate_seed_orthologs,
-        inputs={'hits_table': Ortholog[Seed],
-                'eggnog_db': ReferenceDB[Eggnog],
-                },
+        inputs={
+            'hits_table': Ortholog[Seed],
+            'eggnog_db': ReferenceDB[Eggnog],
+            },
         parameters={
             'db_in_memory': Bool,
+            },
+        parameter_descriptions={
+            'db_in_memory': 'Read entire eggnog database into memory. The '
+                            'eggnog database is very large(>44GB), so this '
+                            'option should only be used on clusters or other '
+                            'machines with enough memory',
             },
         outputs=[('annotation_ortholog', Ortholog[Annotation])],
         name='eggnog_annotate_seed_orthologs',

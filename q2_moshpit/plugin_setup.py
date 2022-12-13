@@ -37,62 +37,7 @@ plugin = Plugin(
 )
 
 importlib.import_module('q2_moshpit.diamond')
-importlib.import_module('q2_moshpit.metabat2')
 
-plugin.methods.register_function(
-    function=q2_moshpit.metabat2.bin_contigs_metabat,
-    inputs={
-        'contigs': SampleData[Contigs],
-        'alignment_maps': SampleData[AlignmentMap]
-    },
-    parameters={
-        'min_contig': Int % Range(1500, None),
-        'max_p': Int % Range(1, 100),
-        'min_s': Int % Range(1, 100),
-        'max_edges': Int % Range(1, None),
-        'p_tnf': Int % Range(0, 100),
-        'no_add': Bool,
-        'min_cv': Int % Range(1, None),
-        'min_cv_sum': Int % Range(1, None),
-        'min_cls_size': Int % Range(1, None),
-        'num_threads': Int % Range(0, None),
-        'seed': Int % Range(0, None),
-        'debug': Bool,
-        'verbose': Bool
-    },
-    outputs=[('mags', SampleData[MAGs])],
-    input_descriptions={
-        'contigs': 'Placeholder.',
-        'alignment_maps': 'Placeholder.'
-    },
-    parameter_descriptions={
-        'min_contig': 'Minimum size of a contig for binning.',
-        'max_p': 'Percentage of "good" contigs considered for binning '
-                 'decided by connection among contigs. The greater, the '
-                 'more sensitive.',
-        'min_s': 'Minimum score of a edge for binning. The greater, the '
-                 'more specific.',
-        'max_edges': 'Maximum number of edges per node. The greater, the '
-                     'more sensitive.',
-        'p_tnf': 'TNF probability cutoff for building TNF graph. Use it to '
-                 'skip the preparation step. (0: auto)',
-        'no_add': 'Turning off additional binning for lost or small contigs.',
-        'min_cv': 'Minimum mean coverage of a contig in each library '
-                  'for binning.',
-        'min_cv_sum': 'Minimum total effective mean coverage of a contig '
-                      '(sum of depth over minCV) for binning.',
-        'min_cls_size': 'Minimum size of a bin as the output.',
-        'num_threads': 'Number of threads to use (0: use all cores).',
-        'seed': 'For exact reproducibility. (0: use random seed)',
-        'debug': 'Debug output.',
-        'verbose': 'Verbose output.'
-    },
-    output_descriptions={'mags': 'The resulting MAGs.'},
-    name='Bin contigs into MAGs using MetaBAT 2.',
-    description='This method uses MetaBAT 2 to bin provided contigs '
-                'into MAGs.',
-    citations=[]
-)
 # diamond_search
 plugin.methods.register_function(
         function=q2_moshpit.diamond.eggnog_diamond_search,

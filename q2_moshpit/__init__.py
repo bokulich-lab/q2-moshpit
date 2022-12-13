@@ -13,7 +13,6 @@ __version__ = get_versions()['version']
 del get_versions
 
 
-importlib.import_module('q2_moshpit.metabat2')
 importlib.import_module('q2_moshpit.diamond')
 importlib.import_module('q2_moshpit.annotation')
 importlib.import_module('q2_moshpit.usage_examples')

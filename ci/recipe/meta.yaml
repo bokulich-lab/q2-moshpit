@@ -19,9 +19,10 @@ requirements:
   run:
     - samtools
     - qiime2 {{ qiime2_epoch }}.*
-    - q2-types-genomics {{ qiime2_epoch }}.*
+    - q2-types-genomics {{ qiime2_epoch }}.*
     - q2templates {{ qiime2_epoch }}.*
-    - eggnog-mapper
+    - eggnog-mapper>=2.1.9
+    - diamond
     - click
 
 test:

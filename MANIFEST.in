@@ -1,3 +1,4 @@
 include versioneer.py
 include eggnog-mapper
+include diamond
 include q2_moshpit/_version.py

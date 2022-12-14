@@ -53,6 +53,6 @@ def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
     cmds = ['emapper.py', '-i', str(input_path), '-o', sample_label,
             '-m', 'diamond', '--no_annot', '--dmnd_db', str(diamond_db),
             '--itype', 'metagenome', '--output_dir', output_loc, '--cpu',
-            str(num_cpus)]
+            str(num_cpus), '--dmnd_ignore_warnings']
 
     subprocess.run(cmds, check=True)

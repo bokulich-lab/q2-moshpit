@@ -25,25 +25,32 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
                           ) -> SeedOrthologDirFmt:
 
     diamond_db_fp = os.path.join(str(diamond_db), 'ref_db.dmnd')
-    temp = tempfile.TemporaryDirectory()
 
-    # run analysis
-    for relpath, obj_path in input_sequences.sequences.iter_views(
-            DNAFASTAFormat):
-        sample_label = str(relpath).rsplit(r'\.', 2)[0] + '_seed_ortholog'
+    with tempfile.TemporaryDirectory() as temp:
+    
+        # run analysis
+        for relpath, obj_path in input_sequences.sequences.iter_views(
+                DNAFASTAFormat):
 
-        _diamond_search_runner(input_path=obj_path,
-                               diamond_db=diamond_db_fp,
-                               sample_label=sample_label,
-                               output_loc=temp.name,
-                               num_cpus=num_cpus)
+            sample_label = str(relpath).rsplit(r'\.', 2)[0] + '_seed_ortholog'
 
-    result = SeedOrthologDirFmt()
-
-    for item in os.listdir(temp.name):
-        if re.match(r".*\..*\.seed_orthologs", item):
-            shutil.copy(os.path.join(temp.name, item), result.path)
-
+            initial_loc = os.getcwd()
+            os.chdir(temp)
+            try: 
+                _diamond_search_runner(input_path=obj_path,
+                                       diamond_db=diamond_db_fp,
+                                       sample_label=sample_label,
+                                       output_loc=temp,
+                                       num_cpus=num_cpus)
+            finally:
+                os.chdir(initial_loc)
+    
+        result = SeedOrthologDirFmt()
+    
+        for item in os.listdir(temp):
+            if re.match(r".*\..*\.seed_orthologs", item):
+                shutil.copy(os.path.join(temp, item), result.path)
+    
     return result
 
 

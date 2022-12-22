@@ -7,10 +7,12 @@
 # ----------------------------------------------------------------------------
 from q2_types.feature_data import FeatureData, Taxonomy
 from q2_types.feature_table import Frequency, FeatureTable
-from q2_types.per_sample_sequences import SequencesWithQuality, PairedEndSequencesWithQuality
+from q2_types.per_sample_sequences import (
+    SequencesWithQuality, PairedEndSequencesWithQuality
+)
 from q2_types.sample_data import SampleData
 
-from q2_types_genomics.kraken2 import Kraken2Reports
+from q2_types_genomics.kraken2 import Kraken2Reports, Kraken2Outputs
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.core.type import Bool, Range, Int, Str, Float
@@ -105,9 +107,8 @@ plugin.methods.register_function(
         'quick': Bool
     },
     outputs=[
-        ('table', FeatureTable[Frequency]),
-        ('taxonomy', FeatureData[Taxonomy]),
-        ('reports', SampleData[Kraken2Reports])
+        ('reports', SampleData[Kraken2Reports]),
+        ('outputs', SampleData[Kraken2Outputs])
     ],
     input_descriptions={
         "seqs": "Sequences to be classified. Both, single-/paired-end reads"
@@ -125,9 +126,8 @@ plugin.methods.register_function(
         'quick': 'Quick operation (use first hit or hits).'
     },
     output_descriptions={
-        'table': 'Abundance table',
-        'taxonomy': 'Assigned taxonomy.',
-        'reports': 'Reports produced by Kraken2.'
+        'reports': 'Reports produced by Kraken2.',
+        'outputs': 'Outputs produced by Kraken2.'
     },
     name='Perform taxonomic classification of bins or reads using Kraken 2.',
     description='This method uses Kraken 2 to classify provided NGS reads '

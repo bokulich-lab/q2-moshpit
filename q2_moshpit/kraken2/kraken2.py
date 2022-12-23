@@ -26,17 +26,17 @@ from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
 
 
-def _get_seq_paths(manifest, df_index, df_row):
-    if "filename" in manifest.columns:
+def _get_seq_paths(df_index, df_row, df_columns):
+    if "filename" in df_columns:
         _sample, _bin, fn = df_index[0], df_index[1], [df_row["filename"]]
-    elif "reverse" in manifest.columns:
+    elif "reverse" in df_columns:
         _sample, _bin, fn = df_index, df_index, df_row.tolist()
     else:
         _sample, _bin, fn = df_index, df_index, [df_row["forward"]]
-    return _bin, _sample, fn
+    return _sample, _bin, fn
 
 
-def _construct_output_paths(_bin, _sample, kraken2_outputs_dir, kraken2_reports_dir):
+def _construct_output_paths(_sample, _bin, kraken2_outputs_dir, kraken2_reports_dir):
     sample_dir_report = os.path.join(kraken2_reports_dir.path, _sample)
     sample_dir_output = os.path.join(kraken2_outputs_dir.path, _sample)
     for s in [sample_dir_report, sample_dir_output]:
@@ -57,9 +57,9 @@ def _classify_kraken(
 
     try:
         for index, row in manifest.iterrows():
-            _bin, _sample, fn = _get_seq_paths(manifest, index, row)
+            _sample, _bin, fn = _get_seq_paths(index, row, manifest.columns)
             output_fp, report_fp = _construct_output_paths(
-                _bin, _sample, kraken2_outputs_dir, kraken2_reports_dir
+                _sample, _bin, kraken2_outputs_dir, kraken2_reports_dir
             )
             cmd = deepcopy(base_cmd)
             cmd.extend(

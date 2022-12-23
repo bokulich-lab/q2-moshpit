@@ -36,7 +36,9 @@ def _get_seq_paths(df_index, df_row, df_columns):
     return _sample, _bin, fn
 
 
-def _construct_output_paths(_sample, _bin, kraken2_outputs_dir, kraken2_reports_dir):
+def _construct_output_paths(
+        _sample, _bin, kraken2_outputs_dir, kraken2_reports_dir
+):
     sample_dir_report = os.path.join(kraken2_reports_dir.path, _sample)
     sample_dir_output = os.path.join(kraken2_outputs_dir.path, _sample)
     for s in [sample_dir_report, sample_dir_output]:
@@ -63,7 +65,8 @@ def _classify_kraken(
             )
             cmd = deepcopy(base_cmd)
             cmd.extend(
-                ["--report", report_fp, "--output", output_fp, "--use-names", *fn]
+                ["--report", report_fp, "--output", output_fp,
+                 "--use-names", *fn]
             )
             run_command(cmd=cmd, verbose=True)
     except subprocess.CalledProcessError as e:

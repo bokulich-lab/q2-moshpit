@@ -30,6 +30,10 @@ setup(
             'data/*', 'data/bins/samp1/*', 'data/contigs/*',
             'data/depth/*', 'data/maps/*'
         ],
+        'q2_moshpit.kraken2.tests': [
+            'data/*', 'data/mags/*/*',
+            'data/single-end/*', 'data/paired-end/*'
+        ]
     },
     zip_safe=False,
 )

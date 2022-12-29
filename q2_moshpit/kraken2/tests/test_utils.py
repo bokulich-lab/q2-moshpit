@@ -5,10 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
 import unittest
 
-import pandas as pd
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_moshpit.kraken2.utils import _process_kraken2_arg

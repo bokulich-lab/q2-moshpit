@@ -31,7 +31,7 @@ setup(
             'data/depth/*', 'data/maps/*'
         ],
         'q2_moshpit.kraken2.tests': [
-            'data/*', 'data/mags/*/*',
+            'data/*', 'data/mags/*', 'data/mags/*/*',
             'data/single-end/*', 'data/paired-end/*'
         ]
     },

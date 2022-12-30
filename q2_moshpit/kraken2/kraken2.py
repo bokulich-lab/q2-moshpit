@@ -164,6 +164,10 @@ def _fetch_libraries(db_dir: str, libraries: List[str], all_kwargs: dict):
         if fetch_behaviour == "skip":
             lib_path = os.path.join(db_dir, "library", library)
             if os.path.exists(lib_path) and len(os.listdir(lib_path)) > 0:
+                print(
+                    f"Skipping download of the '{library}' library, "
+                    f"already exists."
+                )
                 continue
         try:
             cmd = deepcopy(base_cmd)

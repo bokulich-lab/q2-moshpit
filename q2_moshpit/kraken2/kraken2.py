@@ -112,12 +112,15 @@ def classify_kraken(
 def _build_standard_db(db_dir: str, all_kwargs: dict):
     kwargs = {
         k: v for k, v in all_kwargs.items()
-        if k in ["threads", "no_masking", "max_db_size",
-                 "use_ftp", "fast_build"]
+        if k in ["threads", "no_masking", "use_ftp", "fast_build"]
     }
     common_args = _process_common_input_params(
         processing_func=_process_kraken2_arg, params=kwargs
     )
+    if all_kwargs["max_db_size"] > 0:
+        common_args.extend(
+            ["--max-db-size", str(all_kwargs["max_db_size"])]
+        )
     cmd = [
         "kraken2-build", "--standard", "--db", db_dir, *common_args
     ]
@@ -125,7 +128,7 @@ def _build_standard_db(db_dir: str, all_kwargs: dict):
         run_command(cmd=cmd, verbose=True)
     except subprocess.CalledProcessError as e:
         raise Exception(
-            "An error was encountered while building the standard  "
+            "An error was encountered while building the standard "
             f"library, (return code {e.returncode}), please inspect "
             "stdout and stderr to learn more."
         )

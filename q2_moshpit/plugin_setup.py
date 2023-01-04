@@ -10,7 +10,7 @@ from q2_types.per_sample_sequences import (
 )
 from q2_types.sample_data import SampleData
 
-from q2_types_genomics.kraken2 import Kraken2Reports, Kraken2Outputs
+from q2_types_genomics.kraken2 import Kraken2Reports, Kraken2Outputs, Kraken2DB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.core.type import Bool, Range, Int, Str, Float
@@ -93,10 +93,10 @@ plugin.methods.register_function(
     inputs={
         "seqs": SampleData[
             SequencesWithQuality | PairedEndSequencesWithQuality | MAGs
-            ]
+            ],
+        "db": Kraken2DB
     },
     parameters={
-        'db': Str,
         'threads': Int % Range(1, None),
         'confidence': Float % Range(0, 1),
         'minimum_base_quality': Int % Range(0, None),
@@ -110,10 +110,10 @@ plugin.methods.register_function(
     ],
     input_descriptions={
         "seqs": "Sequences to be classified. Both, single-/paired-end reads"
-                "and assembled MAGs, can be provided."
+                "and assembled MAGs, can be provided.",
+        "db": "Kraken 2 database.",
     },
     parameter_descriptions={
-        'db': 'Path to the Kraken 2 database.',
         'threads': 'Number of threads',
         'confidence': 'Confidence score threshold.',
         'minimum_base_quality': 'Minimum base quality used in classification. '

@@ -11,6 +11,7 @@ from q2_types.per_sample_sequences import (
 )
 from q2_types.sample_data import SampleData
 
+import q2_moshpit.kraken2.classification
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
@@ -92,7 +93,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.classify_kraken,
+    function=q2_moshpit.kraken2.classification.classify_kraken,
     inputs={
         "seqs": SampleData[
             SequencesWithQuality | PairedEndSequencesWithQuality | MAGs

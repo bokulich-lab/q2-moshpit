@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2022, QIIME 2 development team.
+# Copyright (c) 2022-2023, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -30,6 +30,13 @@ setup(
             'data/*', 'data/bins/samp1/*', 'data/contigs/*',
             'data/depth/*', 'data/maps/*'
         ],
+        'q2_moshpit.kraken2.tests': [
+            'data/*', 'data/mags/*', 'data/mags/*/*',
+            'data/single-end/*', 'data/paired-end/*',
+            'data/db/*', 'data/reports-mags/*',
+            'data/reports-mags/*/*', 'data/outputs-mags/*',
+            'data/outputs-mags/*/*'
+        ]
     },
     zip_safe=False,
 )

@@ -1,15 +1,19 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2022, QIIME 2 development team.
+# Copyright (c) 2022-2023, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+from q2_types.per_sample_sequences import (
+    SequencesWithQuality, PairedEndSequencesWithQuality
+)
 from q2_types.sample_data import SampleData
 
+from q2_types_genomics.kraken2 import Kraken2Reports, Kraken2Outputs, Kraken2DB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.core.type import Bool, Range, Int
+from qiime2.core.type import Bool, Range, Int, Float
 from qiime2.plugin import (Plugin, Citations)
 
 import q2_moshpit
@@ -81,5 +85,50 @@ plugin.methods.register_function(
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',
+    citations=[]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.classify_kraken,
+    inputs={
+        "seqs": SampleData[
+            SequencesWithQuality | PairedEndSequencesWithQuality | MAGs
+            ],
+        "db": Kraken2DB
+    },
+    parameters={
+        'threads': Int % Range(1, None),
+        'confidence': Float % Range(0, 1),
+        'minimum_base_quality': Int % Range(0, None),
+        'memory_mapping': Bool,
+        'minimum_hit_groups': Int % Range(1, None),
+        'quick': Bool
+    },
+    outputs=[
+        ('reports', SampleData[Kraken2Reports]),
+        ('outputs', SampleData[Kraken2Outputs])
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
+                "and assembled MAGs, can be provided.",
+        "db": "Kraken 2 database.",
+    },
+    parameter_descriptions={
+        'threads': 'Number of threads',
+        'confidence': 'Confidence score threshold.',
+        'minimum_base_quality': 'Minimum base quality used in classification. '
+                                'Only applies when reads are used as input.',
+        'memory_mapping': 'Avoids loading the database into RAM.',
+        'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
+                              'k-mers sharing the same minimizer).',
+        'quick': 'Quick operation (use first hit or hits).'
+    },
+    output_descriptions={
+        'reports': 'Reports produced by Kraken2.',
+        'outputs': 'Outputs produced by Kraken2.'
+    },
+    name='Perform taxonomic classification of bins or reads using Kraken 2.',
+    description='This method uses Kraken 2 to classify provided NGS reads '
+                'or MAGs into taxonomic groups.',
     citations=[]
 )

@@ -14,15 +14,18 @@ from q2_types.per_sample_sequences import (
     SingleLanePerSampleSingleEndFastqDirFmt,
     SingleLanePerSamplePairedEndFastqDirFmt,
 )
+from qiime2 import Artifact
+
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
-    Kraken2OutputDirectoryFormat,
+    Kraken2OutputDirectoryFormat, Kraken2DBDirectoryFormat,
 )
 
 from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
 from unittest.mock import patch, ANY, call
 
 from qiime2.plugin.testing import TestPluginBase
+from qiime2.plugins import moshpit
 
 from q2_moshpit.kraken2.kraken2 import (
     _classify_kraken,
@@ -239,6 +242,32 @@ class TestKraken2(TestPluginBase):
             r'error was encountered .* \(return code 123\)'
         ):
             _classify_kraken(manifest, common_args)
+
+    @patch("q2_moshpit.kraken2._classify_kraken")
+    def test_classify_kraken_action(self, p1):
+        seqs = Artifact.import_data(
+            'SampleData[MAGs]', self.get_data_path("mags")
+        )
+        db = Artifact.import_data('Kraken2DB', self.get_data_path("db"))
+        p1.return_value = (
+            Kraken2ReportDirectoryFormat(
+                self.get_data_path("reports-mags"), "r"
+            ),
+            Kraken2OutputDirectoryFormat(
+                self.get_data_path("outputs-mags"), "r"
+            ),
+        )
+
+        moshpit.actions.classify_kraken(
+            seqs=seqs, db=db, threads=3, confidence=0.9, quick=True
+        )
+
+        exp_args = [
+            '--threads', '3', '--confidence', '0.9',
+            '--minimum-base-quality', '0', '--minimum-hit-groups', '2',
+            '--quick', '--db', str(db.view(Kraken2DBDirectoryFormat).path)
+        ]
+        p1.assert_called_with(ANY, exp_args)
 
 
 if __name__ == "__main__":

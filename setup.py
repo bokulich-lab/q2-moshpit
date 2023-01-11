@@ -32,7 +32,10 @@ setup(
         ],
         'q2_moshpit.kraken2.tests': [
             'data/*', 'data/mags/*', 'data/mags/*/*',
-            'data/single-end/*', 'data/paired-end/*'
+            'data/single-end/*', 'data/paired-end/*',
+            'data/db/*', 'data/reports-mags/*',
+            'data/reports-mags/*/*', 'data/outputs-mags/*',
+            'data/outputs-mags/*/*'
         ]
     },
     zip_safe=False,

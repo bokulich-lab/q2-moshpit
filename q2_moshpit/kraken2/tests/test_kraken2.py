@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 import os
 import unittest
+from subprocess import CalledProcessError
 
 import pandas as pd
 from q2_types.per_sample_sequences import (
@@ -219,6 +220,25 @@ class TestKraken2(TestPluginBase):
                 call(("samp2", "bin1"), ANY, manifest.columns),
             ]
         )
+
+    @patch("q2_moshpit.kraken2.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.kraken2.Kraken2ReportDirectoryFormat")
+    @patch("q2_moshpit.kraken2._get_seq_paths", return_value=(1, 2, [3]))
+    @patch("q2_moshpit.kraken2._construct_output_paths", return_value=(1, 2))
+    @patch("q2_moshpit.kraken2.run_command")
+    def test_classify_kraken_exception(self, p1, p2, p3, p4, p5):
+        manifest = MultiMAGSequencesDirFmt(
+            self.get_data_path("mags"), "r"
+        ).manifest.view(pd.DataFrame)
+        common_args = ["--db", "/some/where/db", "--quick"]
+
+        # run kraken2
+        p1.side_effect = CalledProcessError(returncode=123, cmd="abc")
+        with self.assertRaisesRegex(
+            Exception,
+            r'error was encountered .* \(return code 123\)'
+        ):
+            _classify_kraken(manifest, common_args)
 
 
 if __name__ == "__main__":

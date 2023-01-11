@@ -13,7 +13,7 @@ from q2_types.sample_data import SampleData
 from q2_types_genomics.kraken2 import Kraken2Reports, Kraken2Outputs, Kraken2DB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.core.type import Bool, Range, Int, Str, Float
+from qiime2.core.type import Bool, Range, Int, Float
 from qiime2.plugin import (Plugin, Citations)
 
 import q2_moshpit

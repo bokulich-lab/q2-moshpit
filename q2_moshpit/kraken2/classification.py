@@ -11,13 +11,18 @@ from copy import deepcopy
 from typing import Union
 
 import pandas as pd
-from q2_types.per_sample_sequences import (SingleLanePerSamplePairedEndFastqDirFmt,
-                                           SingleLanePerSampleSingleEndFastqDirFmt)
+from q2_types.per_sample_sequences import (
+    SingleLanePerSamplePairedEndFastqDirFmt,
+    SingleLanePerSampleSingleEndFastqDirFmt
+)
 
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
-from q2_types_genomics.kraken2 import (Kraken2ReportDirectoryFormat,
-                                       Kraken2OutputDirectoryFormat)
+from q2_types_genomics.kraken2 import (
+    Kraken2ReportDirectoryFormat,
+    Kraken2OutputDirectoryFormat,
+    Kraken2DBDirectoryFormat
+)
 from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 
 
@@ -80,7 +85,7 @@ def classify_kraken(
         SingleLanePerSampleSingleEndFastqDirFmt,
         MultiMAGSequencesDirFmt,
     ],
-    db: str,
+    db: Kraken2DBDirectoryFormat,
     threads: int = 1,
     confidence: float = 0.0,
     minimum_base_quality: int = 0,
@@ -88,10 +93,11 @@ def classify_kraken(
     minimum_hit_groups: int = 2,
     quick: bool = False,
 ) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
-    kwargs = {k: v for k, v in locals().items() if k not in ["seqs"]}
+    kwargs = {k: v for k, v in locals().items() if k not in ["seqs", "db"]}
     common_args = _process_common_input_params(
         processing_func=_process_kraken2_arg, params=kwargs
     )
+    common_args.extend(["--db", str(db.path)])
     manifest: pd.DataFrame = seqs.manifest.view(pd.DataFrame)
 
     return _classify_kraken(manifest, common_args)

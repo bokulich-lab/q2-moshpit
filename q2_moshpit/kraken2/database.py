@@ -135,8 +135,8 @@ def _build_database(db_dir: str, all_kwargs: dict):
         run_command(cmd=cmd, verbose=True)
     except subprocess.CalledProcessError as e:
         raise Exception(
-            "An error was encountered while building the standard  "
-            f"library, (return code {e.returncode}), please inspect "
+            "An error was encountered while building the database, "
+            f"(return code {e.returncode}), please inspect "
             "stdout and stderr to learn more."
         )
 
@@ -198,7 +198,7 @@ def build_kraken_db(
                 db_dir=temp_dir, libraries=libraries, all_kwargs=locals()
             )
 
-        # If provided, add the provided sequences to the database
+        # If provided, add the additional sequences to the database
         if seqs:
             for seq in seqs:
                 _add_seqs_to_library(

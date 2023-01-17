@@ -89,7 +89,7 @@ plugin.methods.register_function(
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',
-    citations=[]
+    citations=[citations["kang2019"]]
 )
 
 plugin.methods.register_function(
@@ -134,7 +134,7 @@ plugin.methods.register_function(
     name='Perform taxonomic classification of bins or reads using Kraken 2.',
     description='This method uses Kraken 2 to classify provided NGS reads '
                 'or MAGs into taxonomic groups.',
-    citations=[]
+    citations=[citations["wood2019"]]
 )
 
 plugin.methods.register_function(
@@ -203,5 +203,5 @@ plugin.methods.register_function(
     description='This method builds a Kraken 2 database from provided '
                 'DNA sequences or simply fetches the sequences based on '
                 'user inputs and uses those to construct a database.',
-    citations=[]
+    citations=[citations["wood2019"]]
 )

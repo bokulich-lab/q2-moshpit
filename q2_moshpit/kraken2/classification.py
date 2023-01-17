@@ -12,18 +12,18 @@ from typing import Union
 
 import pandas as pd
 from q2_types.per_sample_sequences import (
-    SingleLanePerSampleSingleEndFastqDirFmt,
     SingleLanePerSamplePairedEndFastqDirFmt,
+    SingleLanePerSampleSingleEndFastqDirFmt
 )
 
-from q2_moshpit._utils import _process_common_input_params, run_command
+from q2_moshpit._utils import run_command, _process_common_input_params
+from q2_moshpit.kraken2.utils import _process_kraken2_arg
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
-    Kraken2OutputDirectoryFormat, Kraken2DBDirectoryFormat,
+    Kraken2OutputDirectoryFormat,
+    Kraken2DBDirectoryFormat
 )
 from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
-
-from q2_moshpit.kraken2.utils import _process_kraken2_arg
 
 
 def _get_seq_paths(df_index, df_row, df_columns):
@@ -37,7 +37,7 @@ def _get_seq_paths(df_index, df_row, df_columns):
 
 
 def _construct_output_paths(
-        _sample, _bin, kraken2_outputs_dir, kraken2_reports_dir
+    _sample, _bin, kraken2_outputs_dir, kraken2_reports_dir
 ):
     sample_dir_report = os.path.join(kraken2_reports_dir.path, _sample)
     sample_dir_output = os.path.join(kraken2_outputs_dir.path, _sample)

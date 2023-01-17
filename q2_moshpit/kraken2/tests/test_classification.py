@@ -27,14 +27,12 @@ from unittest.mock import patch, ANY, call
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
-from q2_moshpit.kraken2.kraken2 import (
-    _classify_kraken,
-    _get_seq_paths,
-    _construct_output_paths,
+from q2_moshpit.kraken2.classification import (
+    _get_seq_paths, _construct_output_paths, _classify_kraken
 )
 
 
-class TestKraken2(TestPluginBase):
+class TestKraken2Classification(TestPluginBase):
     package = "q2_moshpit.kraken2.tests"
 
     def setUp(self):
@@ -121,11 +119,11 @@ class TestKraken2(TestPluginBase):
             ]
         )
 
-    @patch("q2_moshpit.kraken2.Kraken2OutputDirectoryFormat")
-    @patch("q2_moshpit.kraken2.Kraken2ReportDirectoryFormat")
-    @patch("q2_moshpit.kraken2._get_seq_paths")
-    @patch("q2_moshpit.kraken2._construct_output_paths")
-    @patch("q2_moshpit.kraken2.run_command")
+    @patch("q2_moshpit.classification.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.classification.Kraken2ReportDirectoryFormat")
+    @patch("q2_moshpit.classification._get_seq_paths")
+    @patch("q2_moshpit.classification._construct_output_paths")
+    @patch("q2_moshpit.classification.run_command")
     def test_classify_kraken(self, p1, p2, p3, p4, p5):
         manifest = MultiMAGSequencesDirFmt(
             self.get_data_path("mags"), "r"
@@ -224,11 +222,17 @@ class TestKraken2(TestPluginBase):
             ]
         )
 
-    @patch("q2_moshpit.kraken2.Kraken2OutputDirectoryFormat")
-    @patch("q2_moshpit.kraken2.Kraken2ReportDirectoryFormat")
-    @patch("q2_moshpit.kraken2._get_seq_paths", return_value=(1, 2, [3]))
-    @patch("q2_moshpit.kraken2._construct_output_paths", return_value=(1, 2))
-    @patch("q2_moshpit.kraken2.run_command")
+    @patch("q2_moshpit.classification.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.classification.Kraken2ReportDirectoryFormat")
+    @patch(
+        "q2_moshpit.classification._get_seq_paths",
+        return_value=(1, 2, [3])
+    )
+    @patch(
+        "q2_moshpit.classification._construct_output_paths",
+        return_value=(1, 2)
+    )
+    @patch("q2_moshpit.classification.run_command")
     def test_classify_kraken_exception(self, p1, p2, p3, p4, p5):
         manifest = MultiMAGSequencesDirFmt(
             self.get_data_path("mags"), "r"
@@ -243,7 +247,7 @@ class TestKraken2(TestPluginBase):
         ):
             _classify_kraken(manifest, common_args)
 
-    @patch("q2_moshpit.kraken2._classify_kraken")
+    @patch("q2_moshpit.classification._classify_kraken")
     def test_classify_kraken_action(self, p1):
         seqs = Artifact.import_data(
             'SampleData[MAGs]', self.get_data_path("mags")

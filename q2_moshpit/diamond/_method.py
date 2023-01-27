@@ -8,21 +8,23 @@
 
 
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
-from q2_types_genomics.ortholog import SeedOrthologDirFmt
+from q2_types_genomics.genome_data import GenesDirectoryFormat, SeedOrthologDirFmt, OrthologFileFmt
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types_genomics.diamond import DiamondDatabaseDirFmt
+from q2_types.feature_table import BIOMV100Format, BIOMV100DirFmt
+from q2_types_genomics.reference_db import DiamondDatabaseDirFmt
 
 import os
 import subprocess
 import shutil
 import tempfile
 import re
+import pandas as pd
 
 
 def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
                           diamond_db: DiamondDatabaseDirFmt,
                           num_cpus: int = 1,
-                          ) -> SeedOrthologDirFmt:
+                          ) -> (SeedOrthologDirFmt, pd.DataFrame):
 
     diamond_db_fp = os.path.join(str(diamond_db), 'ref_db.dmnd')
     temp = tempfile.TemporaryDirectory()
@@ -44,7 +46,28 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
         if re.match(r".*\..*\.seed_orthologs", item):
             shutil.copy(os.path.join(temp.name, item), result.path)
 
-    return result
+    ft = extract_ft_from_seed_orthologs(result)
+
+    return (result, ft)
+
+def extract_ft_from_seed_orthologs(seed_orthologs):
+
+    per_sample_counts = []
+
+    for sample, obj in seed_orthologs.seed_orthologs.iter_views(
+            OrthologFileFmt):
+        sample_df = obj.view(pd.DataFrame)
+        sample_feature_counts = sample_df.value_counts(['sseqid'])
+        sample_feature_counts.name = sample
+        per_sample_counts.append(sample_feature_counts)
+
+    df = pd.DataFrame(per_sample_counts)
+    df.fillna(0, inplace=True)
+    df.index = df.index.astype(str)
+
+    return df
+
+
 
 
 def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,

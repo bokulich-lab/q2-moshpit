@@ -11,18 +11,18 @@ import importlib
 import q2_moshpit
 from q2_types.sample_data import SampleData
 from q2_types.feature_table import FeatureTable, Frequency
-
-#from q2_types_genomics.feature_data import NOG
-
+from q2_types.feature_data import FeatureData
 from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
+from q2_types_genomics.feature_data import NOG
 
-from q2_types_genomics.genome_data import GenomeData, Ortholog, BLAST6
+from q2_types_genomics.genome_data import GenomeData, BLAST6
 
-from q2_types_genomics.per_sample_data import MAGs, Contigs
+from q2_types_genomics.per_sample_data import Contigs# , MAGs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import Bool, Range, Int
+from qiime2.plugin import Int
 from qiime2.plugin import Plugin, Citations
-#import q2_moshpit.usage_examples._examples as all_xmpls
+# import q2_moshpit.usage_examples._examples as all_xmpls
 
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -126,25 +126,36 @@ plugin.methods.register_function(
         #           all_xmpls.eggnog_diamond_search_example},
         )
 
-# plugin.methods.register_function(
-#         function=q2_moshpit.annotation.eggnog_annotate_seed_orthologs,
-#         inputs={
-#             'hits_table': GenomeData[BLAST6],
-#             'eggnog_db': ReferenceDB[Eggnog],
-#             },
-#         parameters={
-#             'db_in_memory': Bool,
-#             },
-#         parameter_descriptions={
-#             'db_in_memory': 'Read entire eggnog database into memory. The '
-#                             'eggnog database is very large(>44GB), so this '
-#                             'option should only be used on clusters or other '
-#                             'machines with enough memory',
-#             },
-#         outputs=[('annotation_ortholog', FeatureData[NOG])],
-#         name='eggnog_annotate_seed_orthologs',
-#         description="Uses Eggnog Mapper to apply functional annotations from "
-#         "the eggnog database to previously generated \"seed orthologs\".",
-#         #examples={'eggnog_annotate_seed_orthologs':
-#         #          all_xmpls.eggnog_annotate_seed_orthologs_example},
-#         )
+plugin.methods.register_function(
+        function=q2_moshpit.diamond.extract_ft_from_seed_orthologs,
+        inputs={'seed_orthologs': GenomeData[BLAST6],
+                },
+        parameters={},
+        outputs=[('per_sample_counts', FeatureTable[Frequency])],
+        name='feature_table_from_seed_orthologs',
+        description='Generates a FeatureTable[Frequency] of seed orthologs, '
+                    'unnecessary when running `eggnog_diamond_search`.'
+        )
+
+plugin.methods.register_function(
+        function=q2_moshpit.annotation.eggnog_annotate_seed_orthologs,
+        inputs={
+            'hits_table': GenomeData[BLAST6],
+            'eggnog_db': ReferenceDB[Eggnog],
+            },
+        parameters={
+            'db_in_memory': Bool,
+            },
+        parameter_descriptions={
+            'db_in_memory': 'Read entire eggnog database into memory. The '
+                            'eggnog database is very large(>44GB), so this '
+                            'option should only be used on clusters or other '
+                            'machines with enough memory',
+            },
+        outputs=[('annotation_ortholog', FeatureData[NOG])],
+        name='eggnog_annotate_seed_orthologs',
+        description="Uses Eggnog Mapper to apply functional annotations from "
+        "the eggnog database to previously generated \"seed orthologs\".",
+        #examples={'eggnog_annotate_seed_orthologs':
+        #          all_xmpls.eggnog_annotate_seed_orthologs_example},
+        )

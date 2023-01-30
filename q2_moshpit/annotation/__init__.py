@@ -7,6 +7,5 @@
 # ----------------------------------------------------------------------------
 
 
-# from ._method import eggnog_annotate_seed_orthologs
-# 
-# __all__ = ['eggnog_annotate_seed_orthologs']
+from ._method import eggnog_annotate_seed_orthologs
+__all__ = ['eggnog_annotate_seed_orthologs']

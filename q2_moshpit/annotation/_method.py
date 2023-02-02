@@ -11,7 +11,6 @@
 from q2_types_genomics.genome_data import OrthologFileFmt, SeedOrthologDirFmt
 from q2_types_genomics.feature_data import OrthologAnnotationDirFmt
 from q2_types_genomics.reference_db import EggnogRefDirFmt
-from q2_types_genomics.reference_db import ReferenceDB, EggnogRefDirFmt
 
 # library imports
 import subprocess
@@ -31,7 +30,8 @@ def eggnog_annotate_seed_orthologs(hits_table: SeedOrthologDirFmt,
     # run analysis
     for relpath, obj_path in hits_table.seed_orthologs.iter_views(
             OrthologFileFmt):
-        sample_label = str(relpath).rsplit(r'\.', 2)[0] + '.annotation_ortholog'
+        sample_label = str(relpath).rsplit(
+                r'\.', 2)[0] + '.annotation_ortholog'
 
         _annotate_seed_orthologs_runner(seed_ortholog=obj_path,
                                         eggnog_db=eggnog_db_fp,

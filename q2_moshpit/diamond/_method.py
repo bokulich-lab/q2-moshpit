@@ -10,7 +10,6 @@
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types.feature_table import FeatureTable, Frequency, BIOMV210DirFmt
 from q2_types_genomics.reference_db import DiamondDatabaseDirFmt
 
 import os
@@ -51,7 +50,8 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
     return (result, ft)
 
 
-def extract_ft_from_seed_orthologs(seed_orthologs: SeedOrthologDirFmt) -> pd.DataFrame:
+def extract_ft_from_seed_orthologs(seed_orthologs: SeedOrthologDirFmt
+                                   ) -> pd.DataFrame:
 
     per_sample_counts = []
 
@@ -66,7 +66,7 @@ def extract_ft_from_seed_orthologs(seed_orthologs: SeedOrthologDirFmt) -> pd.Dat
     df = pd.DataFrame(per_sample_counts)
     df.fillna(0, inplace=True)
     df.columns = [x[0] for x in df.columns.to_series()]
-    
+
     return df
 
 

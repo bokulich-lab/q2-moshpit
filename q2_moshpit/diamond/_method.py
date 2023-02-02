@@ -32,7 +32,7 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
     # run analysis
     for relpath, obj_path in input_sequences.sequences.iter_views(
             DNAFASTAFormat):
-        sample_label = str(relpath).rsplit(r'\.', 2)[0] + '_seed_ortholog'
+        sample_label = str(relpath).rsplit(r'_', 1)[0]
 
         _diamond_search_runner(input_path=obj_path,
                                diamond_db=diamond_db_fp,
@@ -43,7 +43,7 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
     result = SeedOrthologDirFmt()
 
     for item in os.listdir(temp.name):
-        if re.match(r".*\..*\.seed_orthologs", item):
+        if re.match(r".*\.seed_orthologs", item):
             shutil.copy(os.path.join(temp.name, item), result.path)
 
     ft = extract_ft_from_seed_orthologs(result)
@@ -57,9 +57,10 @@ def extract_ft_from_seed_orthologs(seed_orthologs: SeedOrthologDirFmt) -> pd.Dat
 
     for sample_path, obj in seed_orthologs.seed_orthologs.iter_views(
             OrthologFileFmt):
+        sample_name = sample_path.rsplit(r"\.", 2)[0]
         sample_df = obj.view(pd.DataFrame)
         sample_feature_counts = sample_df.value_counts(['sseqid'])
-        sample_feature_counts.name = str(sample_path)
+        sample_feature_counts.name = str(sample_name)
         per_sample_counts.append(sample_feature_counts)
 
     df = pd.DataFrame(per_sample_counts)

@@ -1,26 +1,35 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2022, QIIME 2 development team.
+# Copyright (c) 2022-2023, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from q2_types.per_sample_sequences import (
+    SequencesWithQuality, PairedEndSequencesWithQuality
+)
+
+import q2_moshpit.kraken2.classification
+from q2_types_genomics.kraken2 import (
+    Kraken2Reports, Kraken2Outputs, Kraken2DB
+)
+from q2_types_genomics.per_sample_data import MAGs, Contigs
+from q2_types_genomics.per_sample_data._type import AlignmentMap
+from qiime2.plugin import (Plugin, Citations)
 
 import importlib
 import q2_moshpit
 from q2_types.sample_data import SampleData
 from q2_types.feature_table import FeatureTable, Frequency
-from q2_types.feature_data import FeatureData
+from q2_types.feature_data import FeatureData, Sequence
 from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
 from q2_types_genomics.feature_data import NOG
 
 from q2_types_genomics.genome_data import GenomeData, BLAST6
 
-from q2_types_genomics.per_sample_data import Contigs  # , MAGs
 # from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.plugin import Bool, Int  # , Range
-from qiime2.plugin import Plugin, Citations
+from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 # import q2_moshpit.usage_examples._examples as all_xmpls
 
 
@@ -93,7 +102,121 @@ plugin.methods.register_function(
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',
-    citations=[]
+    citations=[citations["kang2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.classification.classify_kraken,
+    inputs={
+        "seqs": SampleData[
+            SequencesWithQuality | PairedEndSequencesWithQuality | MAGs
+            ],
+        "db": Kraken2DB
+    },
+    parameters={
+        'threads': Int % Range(1, None),
+        'confidence': Float % Range(0, 1),
+        'minimum_base_quality': Int % Range(0, None),
+        'memory_mapping': Bool,
+        'minimum_hit_groups': Int % Range(1, None),
+        'quick': Bool
+    },
+    outputs=[
+        ('reports', SampleData[Kraken2Reports]),
+        ('outputs', SampleData[Kraken2Outputs])
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
+                "and assembled MAGs, can be provided.",
+        "db": "Kraken 2 database.",
+    },
+    parameter_descriptions={
+        'threads': 'Number of threads',
+        'confidence': 'Confidence score threshold.',
+        'minimum_base_quality': 'Minimum base quality used in classification.'
+                                ' Only applies when reads are used as input.',
+        'memory_mapping': 'Avoids loading the database into RAM.',
+        'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
+                              'k-mers sharing the same minimizer).',
+        'quick': 'Quick operation (use first hit or hits).'
+    },
+    output_descriptions={
+        'reports': 'Reports produced by Kraken2.',
+        'outputs': 'Outputs produced by Kraken2.'
+    },
+    name='Perform taxonomic classification of bins or reads using Kraken 2.',
+    description='This method uses Kraken 2 to classify provided NGS reads '
+                'or MAGs into taxonomic groups.',
+    citations=[citations["wood2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.build_kraken_db,
+    inputs={
+        "seqs": List[FeatureData[Sequence]]
+    },
+    parameters={
+        'standard': Bool,
+        'library_path': Str,
+        'libraries': List[Str % Choices(
+            ['archaea', 'bacteria', 'plasmid', 'viral', 'human', 'fungi',
+             'plant', 'protozoa', 'nr', 'nt', 'UniVec', 'UniVec_Core', ],
+        )],
+        'library_exists': Str % Choices(['skip', 'refetch']),
+        'threads': Int % Range(1, None),
+        'kmer_len': Int % Range(1, None),
+        'minimizer_len': Int % Range(1, None),
+        'minimizer_spaces': Int % Range(1, None),
+        'no_masking': Bool,
+        'max_db_size': Int % Range(0, None),
+        'use_ftp': Bool,
+        'load_factor': Float % Range(0, 1),
+        'fast_build': Bool,
+    },
+    outputs=[
+        ('database', Kraken2DB),
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be added to the Kraken 2 database."
+    },
+    parameter_descriptions={
+        'standard': 'Use standard Kraken 2 database. Incompatible with the '
+                    '"libraries" parameter.',
+        'library_path': 'Path to the directory containing the library files. '
+                        'This is where all the required files will be '
+                        'downloaded - if not provided, a temporary directory '
+                        'will be created.',
+        'libraries': 'List of Kraken 2 reference libraries to be '
+                     'included in the database. Incompatible with '
+                     'the "standard" parameter.',
+        'library_exists': 'Desired behaviour to follow when the library '
+                          'already exists in the "library_path" directory.',
+        'threads': 'Number of threads.',
+        'kmer_len': 'K-mer length in bp/aa.',
+        'minimizer_len': 'Minimizer length in bp/aa.',
+        'minimizer_spaces': 'Number of characters in minimizer that are '
+                            'ignored in comparisons.',
+        'no_masking': 'Avoid masking low-complexity sequences prior to '
+                      'building; masking requires dustmasker or segmasker '
+                      'to be installed in PATH',
+        'max_db_size': 'Maximum number of bytes for Kraken 2 hash table; '
+                       'if the estimator determines more would normally be '
+                       'needed, the reference library will be downsampled '
+                       'to fit.',
+        'use_ftp': 'Use FTP for downloading instead of RSYNC.',
+        'load_factor': 'Proportion of the hash table to be populated.',
+        'fast_build': 'Do not require database to be deterministically '
+                      'built when using multiple threads. This is faster, '
+                      'but does introduce variability in minimizer/LCA pairs.'
+    },
+    output_descriptions={
+        'database': 'Kraken2 database.'
+    },
+    name='Build Kraken 2 database.',
+    description='This method builds a Kraken 2 database from provided '
+                'DNA sequences or simply fetches the sequences based on '
+                'user inputs and uses those to construct a database.',
+    citations=[citations["wood2019"]]
 )
 # diamond_search
 plugin.methods.register_function(

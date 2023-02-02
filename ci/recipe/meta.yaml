@@ -17,6 +17,7 @@ requirements:
     - setuptools
 
   run:
+    - kraken2
     - metabat2
     - samtools
     - qiime2 {{ qiime2_epoch }}.*

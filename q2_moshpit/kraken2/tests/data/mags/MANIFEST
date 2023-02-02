@@ -1,0 +1,4 @@
+sample-id,mag-id,filename
+samp1,bin1,samp1/bin1.fa
+samp1,bin2,samp1/bin2.fa
+samp2,bin1,samp2/bin1.fa

@@ -17,18 +17,12 @@ class TestDiamond(TestPluginBase):
     package = 'q2_moshpit.diamond.tests'
 
     def test_good_small_search(self):
-        input_sequences = ContigSequencesDirFmt(self.get_data_path('tiny_test_data.qza'), mode='r')
+        input_sequences = ContigSequencesDirFmt(
+                self.get_data_path('tiny_test_data.qza'), mode='r')
 
-        diamond_db = DiamondDatabaseDirFmt(self.get_data_path('tiny_diamond_db.qza'), mode='r' )
+        diamond_db = DiamondDatabaseDirFmt(
+                self.get_data_path('tiny_diamond_db.qza'), mode='r')
 
         eggnog_diamond_search(
                 input_sequences=input_sequences,
                 diamond_db=diamond_db)
-
-
-    # def test_generate_feature_table_passing(self):
-    #     filepath = self.get_data_path("seed_orthologs_good.qza")
-
-
-
-

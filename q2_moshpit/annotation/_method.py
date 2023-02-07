@@ -30,8 +30,7 @@ def eggnog_annotate_seed_orthologs(hits_table: SeedOrthologDirFmt,
     # run analysis
     for relpath, obj_path in hits_table.seed_orthologs.iter_views(
             OrthologFileFmt):
-        sample_label = str(relpath).rsplit(
-                r'\.', 2)[0] + '.annotation_ortholog'
+        sample_label = str(relpath).rsplit(r'.', 2)[0]
 
         _annotate_seed_orthologs_runner(seed_ortholog=obj_path,
                                         eggnog_db=eggnog_db_fp,

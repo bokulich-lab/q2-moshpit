@@ -57,7 +57,7 @@ def extract_ft_from_seed_orthologs(seed_orthologs: SeedOrthologDirFmt
 
     for sample_path, obj in seed_orthologs.seed_orthologs.iter_views(
             OrthologFileFmt):
-        sample_name = sample_path.rsplit(r"\.", 2)[0]
+        sample_name = str(sample_path).rsplit(r"\.", 2)[0]
         sample_df = obj.view(pd.DataFrame)
         sample_feature_counts = sample_df.value_counts(['sseqid'])
         sample_feature_counts.name = str(sample_name)

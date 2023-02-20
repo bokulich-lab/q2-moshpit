@@ -26,7 +26,6 @@ requirements:
     - eggnog-mapper >=2.1.10
     - diamond
     - click
-    - q2_types_genomics
 
 test:
   requires:

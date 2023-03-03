@@ -22,7 +22,7 @@ import pandas as pd
 
 def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
                           diamond_db: DiamondDatabaseDirFmt,
-                          num_cpus: int = 1,
+                          num_cpus: int = 1, db_in_memory: bool = False
                           ) -> (SeedOrthologDirFmt, pd.DataFrame):
 
     diamond_db_fp = os.path.join(str(diamond_db), 'ref_db.dmnd')
@@ -37,7 +37,8 @@ def eggnog_diamond_search(input_sequences: ContigSequencesDirFmt,
                                diamond_db=diamond_db_fp,
                                sample_label=sample_label,
                                output_loc=temp.name,
-                               num_cpus=num_cpus)
+                               num_cpus=num_cpus,
+                               db_in_memory=db_in_memory)
 
     result = SeedOrthologDirFmt()
 
@@ -71,11 +72,13 @@ def extract_ft_from_seed_orthologs(seed_orthologs: SeedOrthologDirFmt
 
 
 def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
-                           num_cpus):
+                           num_cpus, db_in_memory):
 
     cmds = ['emapper.py', '-i', str(input_path), '-o', sample_label,
             '-m', 'diamond', '--no_annot', '--dmnd_db', str(diamond_db),
             '--itype', 'metagenome', '--output_dir', output_loc, '--cpu',
             str(num_cpus), '--dmnd_ignore_warnings']
+    if db_in_memory:
+        cmds.append('--dbmem')
 
     subprocess.run(cmds, check=True)

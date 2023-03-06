@@ -6,13 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from .kraken2 import classification, database
+from .metabat2 import metabat2
+from . import diamond, annotation
 
-import importlib
+
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-importlib.import_module('q2_moshpit.kraken2')
-importlib.import_module('q2_moshpit.metabat2')
-importlib.import_module('q2_moshpit.diamond')
-importlib.import_module('q2_moshpit.annotation')
+__all__ = ['metabat2', 'classification', 'database', 'diamond', 'annotation']

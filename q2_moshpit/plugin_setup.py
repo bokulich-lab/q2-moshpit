@@ -226,6 +226,7 @@ plugin.methods.register_function(
                 },
         parameters={
                 'num_cpus': Int,
+                'db_in_memory': Bool,
                 },
         input_descriptions={
             'input_sequences': 'Sequence data of the contigs we want to '
@@ -236,6 +237,10 @@ plugin.methods.register_function(
         parameter_descriptions={
             'num_cpus': 'Number of CPUs to utilize. \'0\' will '
                         'use all available.',
+            'db_in_memory': 'Read database into memory. The '
+                            'database can be very large, so this '
+                            'option should only be used on clusters or other '
+                            'machines with enough memory.',
             },
         outputs=[('seed_ortholog', GenomeData[BLAST6]),
                  ('ortholog_counts', FeatureTable[Frequency])

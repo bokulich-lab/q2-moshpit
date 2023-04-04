@@ -18,14 +18,16 @@ from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.metabat2.utils import _process_metabat2_arg
 
 
-def _get_sample_name_from_path(fp):
-    return os.path.splitext(os.path.basename(fp))[0].split('_')[0]
+def _get_sample_name_from_path(fp, suffix):
+    return os.path.basename(fp).rsplit(suffix, maxsplit=1)[0]
 
 
 def _assert_samples(contigs_fps, maps_fps) -> dict:
     contigs_fps, maps_fps = sorted(contigs_fps), sorted(maps_fps)
-    contig_samps = [_get_sample_name_from_path(x) for x in contigs_fps]
-    map_samps = [_get_sample_name_from_path(x) for x in maps_fps]
+    contig_samps = [_get_sample_name_from_path(x, '_contigs.fa') 
+                    for x in contigs_fps]
+    map_samps = [_get_sample_name_from_path(x, '_alignment.bam') 
+                 for x in maps_fps]
     if set(contig_samps) != set(map_samps):
         raise Exception('Contigs and alignment maps should belong to the '
                         'same sample set. You provided contigs for '

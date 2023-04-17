@@ -7,47 +7,41 @@
 # ----------------------------------------------------------------------------
 import glob
 import os
+import re
 import shutil
 import subprocess
+import tarfile
 import tempfile
-from contextlib import ExitStack
 from copy import deepcopy
 from typing import List
 
+import requests
+import xmltodict
 from q2_types.feature_data import DNAFASTAFormat
 
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types_genomics.kraken2 import (
-    Kraken2DBDirectoryFormat,
+    Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat,
 )
 
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
 
 
-def _build_standard_db(db_dir: str, all_kwargs: dict):
-    kwargs = {
-        k: v for k, v in all_kwargs.items()
-        if k in ["threads", "no_masking", "use_ftp", "fast_build"]
-    }
-    common_args = _process_common_input_params(
-        processing_func=_process_kraken2_arg, params=kwargs
-    )
-    if all_kwargs["max_db_size"] > 0:
-        common_args.extend(
-            ["--max-db-size", str(all_kwargs["max_db_size"])]
-        )
-    cmd = [
-        "kraken2-build", "--standard", "--db", db_dir, *common_args
-    ]
-    try:
-        run_command(cmd=cmd, verbose=True)
-    except subprocess.CalledProcessError as e:
-        raise Exception(
-            "An error was encountered while building the standard "
-            f"library, (return code {e.returncode}), please inspect "
-            "stdout and stderr to learn more."
-        )
-
+COLLECTIONS = {
+    "standard": "standard",
+    "viral": "viral",
+    "minusb": "minusb",
+    "standard8": "standard_08gb",
+    "standard16": "standard_16gb",
+    "pluspf": "pluspf",
+    "pluspf8": "pluspf_08gb",
+    "pluspf16": "pluspf_16gb",
+    "pluspfp": "pluspfp",
+    "pluspfp8": "pluspfp_08gb",
+    "pluspfp16": "pluspfp_16gb",
+    "eupathdb": "eupathdb48",
+}
+S3_COLLECTIONS_URL = 'https://genome-idx.s3.amazonaws.com'
 
 def _fetch_taxonomy(db_dir: str, threads: int, use_ftp: bool):
     cmd = [
@@ -141,8 +135,49 @@ def _build_database(db_dir: str, all_kwargs: dict):
         )
 
 
-def _move_db_files(source: str, destination: str):
-    files = glob.glob(f"{source}/*.k2d")
+def _find_latest_db(collection: str, response: requests.Response) -> str:
+    collection_id = COLLECTIONS[collection]
+    pattern = fr'kraken\/k2_{collection_id}_\d{{8}}.tar.gz'
+
+    s3_objects = xmltodict.parse(response.content)['ListBucketResult']['Contents']
+    s3_objects = [obj for obj in s3_objects if re.match(pattern, obj['Key'])]
+    s3_objects = sorted(s3_objects, key=lambda x: x['LastModified'], reverse=True)
+    latest_db = s3_objects[0]['Key']
+    return latest_db
+
+
+def _fetch_db_collection(collection: str, tmp_dir: str):
+    err_msg = 'Could not connect to the server. Please check your internet ' \
+              'connection and try again. The error was: {}.'
+    try:
+        response = requests.get(S3_COLLECTIONS_URL)
+    except requests.exceptions.ConnectionError as e:
+        raise ValueError(err_msg.format(e))
+
+    if response.status_code == 200:
+        latest_db = _find_latest_db(collection, response)
+    else:
+        raise ValueError(
+            'Could not fetch the list of available databases. '
+            f'Status code was: {response.status_code}. '
+            'Please try again later.'
+        )
+
+    db_uri = f'{S3_COLLECTIONS_URL}/{latest_db}'
+    try:
+        response = requests.get(db_uri)
+    except requests.exceptions.ConnectionError as e:
+        raise ValueError(err_msg.format(e))
+
+    db_path = os.path.join(tmp_dir, os.path.split(db_uri)[-1])
+    with open(db_path, "wb") as f:
+        f.write(response.content)
+    with tarfile.open(db_path, "r:gz") as tar:
+        tar.extractall(path=tmp_dir)
+
+
+def _move_db_files(source: str, destination: str, extension: str = "k2d"):
+    files = glob.glob(f"{source}/*.{extension}")
     for file in files:
         new_file = os.path.join(destination, os.path.split(file)[-1])
         shutil.move(file, new_file)
@@ -150,65 +185,45 @@ def _move_db_files(source: str, destination: str):
 
 def build_kraken_db(
     seqs: DNAFASTAFormat = None,
-    standard: bool = False,
-    library_path: str = None,
-    libraries: List[str] = None,
-    library_exists: str = 'skip',
+    collection: str = None,
     threads: int = 1,
-    kmer_len: int = 35,
-    minimizer_len: int = 31,
-    minimizer_spaces: int = 7,
-    no_masking: bool = False,
-    max_db_size: int = 0,
     use_ftp: bool = False,
-    load_factor: float = 0.7,
-    fast_build: bool = False,
-) -> Kraken2DBDirectoryFormat:
-    db = Kraken2DBDirectoryFormat()
-    db_dir = str(db.path)
+    no_masking: bool = False,
+) -> (Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat):
+    kraken2_db = Kraken2DBDirectoryFormat()
+    bracken_db = BrackenDBDirectoryFormat()
 
-    if standard and libraries:
-        raise ValueError(
-            'Standard Kraken2 database was requested but some libraries '
-            'were also provided. Please provide either only the "standard" '
-            'option or a list of "libraries" to be fetched for the database.'
-        )
-
-    with ExitStack() as stack:
-        if not library_path:
-            temp = tempfile.TemporaryDirectory()
-            temp_dir = temp.name
-            stack.enter_context(temp)
-        else:
-            os.makedirs(library_path, exist_ok=True)
-            temp_dir = library_path
-
-        # If requested, build the standard Kraken2 database
-        if standard:
-            _build_standard_db(db_dir=temp_dir, all_kwargs=locals())
-            _move_db_files(source=temp_dir, destination=db_dir)
-            return db
-
-        # Fetch taxonomy (required regardless of the build source)
-        _fetch_taxonomy(db_dir=temp_dir, threads=threads, use_ftp=use_ftp)
-
-        # If requested, download all the libraries
-        if libraries:
-            _fetch_libraries(
-                db_dir=temp_dir, libraries=libraries, all_kwargs=locals()
-            )
-
-        # If provided, add the additional sequences to the database
+    with tempfile.TemporaryDirectory() as tmp:
+        # Construct the custom-made database
         if seqs:
+            # Fetch taxonomy (also needed for custom databases)
+            _fetch_taxonomy(db_dir=tmp, threads=threads, use_ftp=use_ftp)
+
             for seq in seqs:
                 _add_seqs_to_library(
-                    db_dir=temp_dir, seqs=seq, no_masking=no_masking
+                    db_dir=tmp, seqs=seq, no_masking=no_masking
                 )
 
-        # Finally, build the actual database
-        _build_database(db_dir=temp_dir, all_kwargs=locals())
+            # Build the database
+            _build_database(db_dir=tmp, all_kwargs=locals())
 
-        # Move the database files (*.k2d) to the final location
-        _move_db_files(source=temp_dir, destination=db_dir)
+            # Move the database files (*.k2d) to the final location
+            _move_db_files(source=tmp, destination=str(kraken2_db.path))
 
-    return db
+            # TODO: implement Bracken DB part
+        elif collection:
+            # Find files with the latest version
+            _fetch_db_collection(collection=collection, tmp_dir=tmp)
+
+            # Move the Kraken2/Bracken database files to the final location
+            _move_db_files(tmp, str(kraken2_db.path), extension="k2d")
+            _move_db_files(tmp, str(bracken_db.path), extension="kmer_distrib")
+
+        else:
+            raise ValueError(
+                'You need to either provide a list of sequences to build the '
+                'database from or a valid collection name to be fetched from '
+                '"Kraken 2/Bracken Refseq indexes" resource.'
+            )
+
+    return kraken2_db, bracken_db

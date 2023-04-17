@@ -115,7 +115,7 @@ plugin.methods.register_function(
     },
     parameters={
         'threads': Int % Range(1, None),
-        'confidence': Float % Range(0, 1),
+        'confidence': Float % Range(0, 1, inclusive_end=True),
         'minimum_base_quality': Int % Range(0, None),
         'memory_mapping': Bool,
         'minimum_hit_groups': Int % Range(1, None),

@@ -165,13 +165,14 @@ def _fetch_db_collection(collection: str, tmp_dir: str):
 
     db_uri = f'{S3_COLLECTIONS_URL}/{latest_db}'
     try:
-        response = requests.get(db_uri)
+        response = requests.get(db_uri, stream=True)
+        db_path = os.path.join(tmp_dir, os.path.split(db_uri)[-1])
+        with open(db_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk) if chunk else False
     except requests.exceptions.ConnectionError as e:
         raise ValueError(err_msg.format(e))
 
-    db_path = os.path.join(tmp_dir, os.path.split(db_uri)[-1])
-    with open(db_path, "wb") as f:
-        f.write(response.content)
     with tarfile.open(db_path, "r:gz") as tar:
         tar.extractall(path=tmp_dir)
 

@@ -14,6 +14,7 @@ from q2_types_genomics.reference_db import EggnogRefDirFmt
 import pandas as pd
 import pandas.testing as pdt
 
+
 class TestAnnotate(TestPluginBase):
     package = 'q2_moshpit.annotation.tests'
 
@@ -33,4 +34,3 @@ class TestAnnotate(TestPluginBase):
         for rel_path, obj in obs_obj.annotations.iter_views(OrthologFileFmt):
             obs = obj.view(pd.DataFrame)
         pdt.assert_frame_equal(obs, exp)
-        

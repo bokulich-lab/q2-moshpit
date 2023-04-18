@@ -20,7 +20,7 @@ from qiime2.plugins import moshpit
 
 from q2_moshpit.kraken2.database import (
     _build_standard_db, _fetch_taxonomy, _fetch_libraries,
-    _add_seqs_to_library, _build_database, _move_db_files
+    _add_seqs_to_library, _build_kraken2_database, _move_db_files
 )
 from q2_types_genomics.kraken2 import Kraken2DBDirectoryFormat
 
@@ -174,7 +174,7 @@ class TestKraken2Database(TestPluginBase):
 
     @patch('q2_moshpit.kraken2.database.run_command')
     def test_build_database(self, p1):
-        _build_database(self.db_dir, all_kwargs=self.kwargs)
+        _build_kraken2_database(self.db_dir, all_kwargs=self.kwargs)
 
         exp_cmd = [
             "kraken2-build", "--build", "--db", self.db_dir,
@@ -188,7 +188,7 @@ class TestKraken2Database(TestPluginBase):
         all_kwargs = deepcopy(self.kwargs)
         all_kwargs['max_db_size'] = 0
 
-        _build_database(self.db_dir, all_kwargs=all_kwargs)
+        _build_kraken2_database(self.db_dir, all_kwargs=all_kwargs)
 
         exp_cmd = [
             "kraken2-build", "--build", "--db", self.db_dir,
@@ -207,7 +207,7 @@ class TestKraken2Database(TestPluginBase):
                 "An error was encountered .* building the database, "
                 r"\(return code 123\), please inspect .*"
         ):
-            _build_database(self.db_dir, all_kwargs=self.kwargs)
+            _build_kraken2_database(self.db_dir, all_kwargs=self.kwargs)
 
     def test_move_db_files(self):
         with TemporaryDirectory() as tmp_dir:
@@ -237,7 +237,7 @@ class TestKraken2Database(TestPluginBase):
             )
 
     @patch("q2_moshpit.kraken2.database.Kraken2DBDirectoryFormat")
-    @patch("q2_moshpit.kraken2.database._build_database")
+    @patch("q2_moshpit.kraken2.database._build_kraken2_database")
     @patch("q2_moshpit.kraken2.database._add_seqs_to_library")
     @patch("q2_moshpit.kraken2.database._fetch_libraries")
     @patch("q2_moshpit.kraken2.database._fetch_taxonomy")
@@ -273,7 +273,7 @@ class TestKraken2Database(TestPluginBase):
         )
 
     @patch("q2_moshpit.kraken2.database.Kraken2DBDirectoryFormat")
-    @patch("q2_moshpit.kraken2.database._build_database")
+    @patch("q2_moshpit.kraken2.database._build_kraken2_database")
     @patch("q2_moshpit.kraken2.database._add_seqs_to_library")
     @patch("q2_moshpit.kraken2.database._fetch_libraries")
     @patch("q2_moshpit.kraken2.database._fetch_taxonomy")
@@ -306,7 +306,7 @@ class TestKraken2Database(TestPluginBase):
 
     @patch("q2_moshpit.kraken2.database.tempfile.TemporaryDirectory")
     @patch("q2_moshpit.kraken2.database.Kraken2DBDirectoryFormat")
-    @patch("q2_moshpit.kraken2.database._build_database")
+    @patch("q2_moshpit.kraken2.database._build_kraken2_database")
     @patch("q2_moshpit.kraken2.database._add_seqs_to_library")
     @patch("q2_moshpit.kraken2.database._fetch_libraries")
     @patch("q2_moshpit.kraken2.database._fetch_taxonomy")
@@ -338,7 +338,7 @@ class TestKraken2Database(TestPluginBase):
         p6.assert_not_called()
 
     @patch("q2_moshpit.kraken2.database.Kraken2DBDirectoryFormat")
-    @patch("q2_moshpit.kraken2.database._build_database")
+    @patch("q2_moshpit.kraken2.database._build_kraken2_database")
     @patch("q2_moshpit.kraken2.database._add_seqs_to_library")
     @patch("q2_moshpit.kraken2.database._fetch_libraries")
     @patch("q2_moshpit.kraken2.database._fetch_taxonomy")

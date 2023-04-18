@@ -150,8 +150,15 @@ plugin.methods.register_function(
              'pluspfp', 'pluspfp8', 'pluspfp16', 'eupathdb'],
         ),
         'threads': Int % Range(1, None),
-        'use_ftp': Bool,
+        'kmer_len': Int % Range(1, None),
+        'minimizer_len': Int % Range(1, None),
+        'minimizer_spaces': Int % Range(1, None),
         'no_masking': Bool,
+        'max_db_size': Int % Range(0, None),
+        'use_ftp': Bool,
+        'load_factor': Float % Range(0, 1),
+        'fast_build': Bool,
+        'read_len': List[Int % Range(1, None)],
     },
     outputs=[
         ('kraken2_database', Kraken2DB),
@@ -166,19 +173,33 @@ plugin.methods.register_function(
                       'indexes/k2 for the description of the available '
                       'options.',
         'threads': 'Number of threads. Only applicable when building a '
-                   'custom database',
+                   'custom database.',
+        'kmer_len': 'K-mer length in bp/aa.',
+        'minimizer_len': 'Minimizer length in bp/aa.',
+        'minimizer_spaces': 'Number of characters in minimizer that are '
+                            'ignored in comparisons.',
         'no_masking': 'Avoid masking low-complexity sequences prior to '
                       'building; masking requires dustmasker or segmasker '
-                      'to be installed in PATH.',
+                      'to be installed in PATH',
+        'max_db_size': 'Maximum number of bytes for Kraken 2 hash table; '
+                       'if the estimator determines more would normally be '
+                       'needed, the reference library will be downsampled '
+                       'to fit.',
         'use_ftp': 'Use FTP for downloading instead of RSYNC.',
+        'load_factor': 'Proportion of the hash table to be populated.',
+        'fast_build': 'Do not require database to be deterministically '
+                      'built when using multiple threads. This is faster, '
+                      'but does introduce variability in minimizer/LCA pairs.',
+        'read_len': 'Ideal read lengths to be used while building the Bracken '
+                    'database.'
     },
     output_descriptions={
         'kraken2_database': 'Kraken2 database.',
         'bracken_database': 'Bracken database.'
     },
     name='Build Kraken 2 database.',
-    description='This method builds a Kraken 2 database from provided '
-                'DNA sequences or simply fetches the sequences based on '
-                'user inputs and uses those to construct a database.',
+    description='This method builds a Kraken 2/Bracken databases from '
+                'provided DNA sequences or simply fetches pre-built '
+                'versions from an online resource.',
     citations=[citations["wood2019"]]
 )

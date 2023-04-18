@@ -43,6 +43,7 @@ COLLECTIONS = {
 }
 S3_COLLECTIONS_URL = 'https://genome-idx.s3.amazonaws.com'
 
+
 def _fetch_taxonomy(db_dir: str, threads: int, use_ftp: bool):
     cmd = [
         "kraken2-build", "--download-taxonomy",
@@ -109,7 +110,7 @@ def _add_seqs_to_library(db_dir: str, seqs: DNAFASTAFormat, no_masking: bool):
         )
 
 
-def _build_database(db_dir: str, all_kwargs: dict):
+def _build_kraken2_database(db_dir: str, all_kwargs: dict):
     kwargs = {
         k: v for k, v in all_kwargs.items()
         if k in ["threads", "minimizer_len", "minimizer_spaces",
@@ -131,6 +132,23 @@ def _build_database(db_dir: str, all_kwargs: dict):
         raise Exception(
             "An error was encountered while building the database, "
             f"(return code {e.returncode}), please inspect "
+            "stdout and stderr to learn more."
+        )
+
+
+def _build_bracken_database(
+        kraken2_db_dir: str, threads: int, kmer_len: int, read_len: int
+):
+    cmd = [
+        "bracken-build", "-d", kraken2_db_dir, "-t", str(threads),
+        "-k", str(kmer_len), "-l", str(read_len)
+    ]
+    try:
+        run_command(cmd=cmd, verbose=True)
+    except subprocess.CalledProcessError as e:
+        raise Exception(
+            "An error was encountered while building the Bracken  "
+            f"database, (return code {e.returncode}), please inspect "
             "stdout and stderr to learn more."
         )
 
@@ -188,11 +206,22 @@ def build_kraken_db(
     seqs: DNAFASTAFormat = None,
     collection: str = None,
     threads: int = 1,
-    use_ftp: bool = False,
+    kmer_len: int = 35,
+    minimizer_len: int = 31,
+    minimizer_spaces: int = 7,
     no_masking: bool = False,
+    max_db_size: int = 0,
+    use_ftp: bool = False,
+    load_factor: float = 0.7,
+    fast_build: bool = False,
+    read_len: int = None,
 ) -> (Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat):
     kraken2_db = Kraken2DBDirectoryFormat()
     bracken_db = BrackenDBDirectoryFormat()
+
+    if not read_len:
+        # use the same values as in the pre-built databases
+        read_len = [50, 75, 100, 150, 200, 250, 300]
 
     with tempfile.TemporaryDirectory() as tmp:
         # Construct the custom-made database
@@ -205,13 +234,22 @@ def build_kraken_db(
                     db_dir=tmp, seqs=seq, no_masking=no_masking
                 )
 
-            # Build the database
-            _build_database(db_dir=tmp, all_kwargs=locals())
+            # Build the Kraken2 database
+            common_args = {k: v for k, v in locals().items()
+                           if k not in ["seqs", "collection"]}
+            _build_kraken2_database(db_dir=tmp, all_kwargs=common_args)
 
-            # Move the database files (*.k2d) to the final location
-            _move_db_files(source=tmp, destination=str(kraken2_db.path))
+            # Build the Bracken database
+            for rl in read_len:
+                _build_bracken_database(
+                    kraken2_db_dir=tmp, threads=threads,
+                    kmer_len=kmer_len, read_len=rl
+                )
 
-            # TODO: implement Bracken DB part
+            # Move the Kraken2/Bracken database files to the final location
+            _move_db_files(tmp, str(kraken2_db.path), extension="k2d")
+            _move_db_files(tmp, str(bracken_db.path), extension="kmer_distrib")
+
         elif collection:
             # Find files with the latest version
             _fetch_db_collection(collection=collection, tmp_dir=tmp)

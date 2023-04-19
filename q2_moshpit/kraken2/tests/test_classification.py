@@ -119,11 +119,11 @@ class TestKraken2Classification(TestPluginBase):
             ]
         )
 
-    @patch("q2_moshpit.classification.Kraken2OutputDirectoryFormat")
-    @patch("q2_moshpit.classification.Kraken2ReportDirectoryFormat")
-    @patch("q2_moshpit.classification._get_seq_paths")
-    @patch("q2_moshpit.classification._construct_output_paths")
-    @patch("q2_moshpit.classification.run_command")
+    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification._get_seq_paths")
+    @patch("q2_moshpit.kraken2.classification._construct_output_paths")
+    @patch("q2_moshpit.kraken2.classification.run_command")
     def test_classify_kraken(self, p1, p2, p3, p4, p5):
         manifest = MultiMAGSequencesDirFmt(
             self.get_data_path("mags"), "r"
@@ -222,17 +222,17 @@ class TestKraken2Classification(TestPluginBase):
             ]
         )
 
-    @patch("q2_moshpit.classification.Kraken2OutputDirectoryFormat")
-    @patch("q2_moshpit.classification.Kraken2ReportDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
     @patch(
-        "q2_moshpit.classification._get_seq_paths",
+        "q2_moshpit.kraken2.classification._get_seq_paths",
         return_value=(1, 2, [3])
     )
     @patch(
-        "q2_moshpit.classification._construct_output_paths",
+        "q2_moshpit.kraken2.classification._construct_output_paths",
         return_value=(1, 2)
     )
-    @patch("q2_moshpit.classification.run_command")
+    @patch("q2_moshpit.kraken2.classification.run_command")
     def test_classify_kraken_exception(self, p1, p2, p3, p4, p5):
         manifest = MultiMAGSequencesDirFmt(
             self.get_data_path("mags"), "r"
@@ -247,7 +247,7 @@ class TestKraken2Classification(TestPluginBase):
         ):
             _classify_kraken(manifest, common_args)
 
-    @patch("q2_moshpit.classification._classify_kraken")
+    @patch("q2_moshpit.kraken2.classification._classify_kraken")
     def test_classify_kraken_action(self, p1):
         seqs = Artifact.import_data(
             'SampleData[MAGs]', self.get_data_path("mags")

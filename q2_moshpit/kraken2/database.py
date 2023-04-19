@@ -157,9 +157,12 @@ def _find_latest_db(collection: str, response: requests.Response) -> str:
     collection_id = COLLECTIONS[collection]
     pattern = fr'kraken\/k2_{collection_id}_\d{{8}}.tar.gz'
 
-    s3_objects = xmltodict.parse(response.content)['ListBucketResult']['Contents']
+    s3_objects = xmltodict.parse(response.content)
+    s3_objects = s3_objects['ListBucketResult']['Contents']
     s3_objects = [obj for obj in s3_objects if re.match(pattern, obj['Key'])]
-    s3_objects = sorted(s3_objects, key=lambda x: x['LastModified'], reverse=True)
+    s3_objects = sorted(
+        s3_objects, key=lambda x: x['LastModified'], reverse=True
+    )
     latest_db = s3_objects[0]['Key']
     return latest_db
 
@@ -202,6 +205,36 @@ def _move_db_files(source: str, destination: str, extension: str = "k2d"):
         shutil.move(file, new_file)
 
 
+def _fetch_prebuilt_dbs(bracken_db, collection, kraken2_db, tmp):
+    # Find files with the latest version
+    _fetch_db_collection(collection=collection, tmp_dir=tmp)
+    # Move the Kraken2/Bracken database files to the final location
+    _move_db_files(tmp, str(kraken2_db.path), extension="k2d")
+    _move_db_files(tmp, str(bracken_db.path), extension="kmer_distrib")
+
+
+def _build_dbs_from_seqs(bracken_db, kraken2_db, seqs, tmp_dir, common_args):
+    _fetch_taxonomy(
+        db_dir=tmp_dir, threads=common_args["threads"],
+        use_ftp=common_args["use_ftp"]
+    )
+    for seq in seqs:
+        _add_seqs_to_library(
+            db_dir=tmp_dir, seqs=seq, no_masking=common_args["no_masking"]
+        )
+    # Build the Kraken2 database
+    _build_kraken2_database(db_dir=tmp_dir, all_kwargs=common_args)
+    # Build the Bracken database
+    for rl in common_args["read_len"]:
+        _build_bracken_database(
+            kraken2_db_dir=tmp_dir, threads=common_args["threads"],
+            kmer_len=common_args["kmer_len"], read_len=rl
+        )
+    # Move the Kraken2/Bracken database files to the final location
+    _move_db_files(tmp_dir, str(kraken2_db.path), extension="k2d")
+    _move_db_files(tmp_dir, str(bracken_db.path), extension="kmer_distrib")
+
+
 def build_kraken_db(
     seqs: DNAFASTAFormat = None,
     collection: str = None,
@@ -226,38 +259,15 @@ def build_kraken_db(
     with tempfile.TemporaryDirectory() as tmp:
         # Construct the custom-made database
         if seqs:
-            # Fetch taxonomy (also needed for custom databases)
-            _fetch_taxonomy(db_dir=tmp, threads=threads, use_ftp=use_ftp)
-
-            for seq in seqs:
-                _add_seqs_to_library(
-                    db_dir=tmp, seqs=seq, no_masking=no_masking
-                )
-
-            # Build the Kraken2 database
             common_args = {k: v for k, v in locals().items()
                            if k not in ["seqs", "collection"]}
-            _build_kraken2_database(db_dir=tmp, all_kwargs=common_args)
 
-            # Build the Bracken database
-            for rl in read_len:
-                _build_bracken_database(
-                    kraken2_db_dir=tmp, threads=threads,
-                    kmer_len=kmer_len, read_len=rl
-                )
-
-            # Move the Kraken2/Bracken database files to the final location
-            _move_db_files(tmp, str(kraken2_db.path), extension="k2d")
-            _move_db_files(tmp, str(bracken_db.path), extension="kmer_distrib")
-
+            # Fetch taxonomy (also needed for custom databases)
+            _build_dbs_from_seqs(
+                bracken_db, kraken2_db, seqs, tmp, common_args
+            )
         elif collection:
-            # Find files with the latest version
-            _fetch_db_collection(collection=collection, tmp_dir=tmp)
-
-            # Move the Kraken2/Bracken database files to the final location
-            _move_db_files(tmp, str(kraken2_db.path), extension="k2d")
-            _move_db_files(tmp, str(bracken_db.path), extension="kmer_distrib")
-
+            _fetch_prebuilt_dbs(bracken_db, collection, kraken2_db, tmp)
         else:
             raise ValueError(
                 'You need to either provide a list of sequences to build the '

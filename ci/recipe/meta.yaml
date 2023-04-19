@@ -17,6 +17,7 @@ requirements:
     - setuptools
 
   run:
+    - bracken
     - kraken2
     - metabat2
     - samtools

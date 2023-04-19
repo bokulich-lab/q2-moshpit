@@ -214,6 +214,7 @@ def _fetch_prebuilt_dbs(bracken_db, collection, kraken2_db, tmp):
 
 
 def _build_dbs_from_seqs(bracken_db, kraken2_db, seqs, tmp_dir, common_args):
+    # Fetch taxonomy (also needed for custom databases)
     _fetch_taxonomy(
         db_dir=tmp_dir, threads=common_args["threads"],
         use_ftp=common_args["use_ftp"]
@@ -257,8 +258,8 @@ def build_kraken_db(
         read_len = [50, 75, 100, 150, 200, 250, 300]
 
     with tempfile.TemporaryDirectory() as tmp:
-        # Construct the custom-made database
         if seqs:
+            # Construct the custom-made database
             common_args = {k: v for k, v in locals().items()
                            if k not in ["seqs", "collection"]}
 

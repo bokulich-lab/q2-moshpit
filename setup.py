@@ -43,7 +43,7 @@ setup(
         'q2_moshpit.annotation': [
             'tests/data/*', 'tests/data/good_hits/*',
             'tests/data/bad_hits/*', 'tests/data/eggnog_db/*',
-            'citations.bib',
+            'tests/data/expected/*', 'citations.bib',
         ],
         'q2_moshpit.kraken2.tests': [
             'data/*', 'data/mags/*', 'data/mags/*/*',

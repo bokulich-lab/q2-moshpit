@@ -64,7 +64,7 @@ class TestMetabat2(TestPluginBase):
 
         with self.assertRaisesRegex(
                 Exception,
-                'Contigs and alignment maps should belong to the same sample '
+                'Contigs and alignment maps should belong to the same sample'
                 ' set. You provided contigs for samples: s1,s3 but maps for'
                 ' samples: s1,s2,s3. Please check your inputs and try again.'
         ):

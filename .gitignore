@@ -135,3 +135,6 @@ dmypy.json
 e5.proteomes.faa
 e5.taxid_info.tsv
 *.dmnd
+
+# Mac OS
+.DS_Store

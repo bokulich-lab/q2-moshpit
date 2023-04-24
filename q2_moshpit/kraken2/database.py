@@ -147,7 +147,7 @@ def _build_bracken_database(
         run_command(cmd=cmd, verbose=True)
     except subprocess.CalledProcessError as e:
         raise Exception(
-            "An error was encountered while building the Bracken  "
+            "An error was encountered while building the Bracken "
             f"database, (return code {e.returncode}), please inspect "
             "stdout and stderr to learn more."
         )
@@ -158,8 +158,14 @@ def _find_latest_db(collection: str, response: requests.Response) -> str:
     pattern = fr'kraken\/k2_{collection_id}_\d{{8}}.tar.gz'
 
     s3_objects = xmltodict.parse(response.content)
-    s3_objects = s3_objects['ListBucketResult']['Contents']
-    s3_objects = [obj for obj in s3_objects if re.match(pattern, obj['Key'])]
+    s3_objects = s3_objects.get('ListBucketResult')
+    if not s3_objects:
+        raise ValueError(
+            'No databases were found in the response returned by S3. '
+            'Please try again.'
+        )
+    s3_objects = [obj for obj in s3_objects['Contents']
+                  if re.match(pattern, obj['Key'])]
     s3_objects = sorted(
         s3_objects, key=lambda x: x['LastModified'], reverse=True
     )
@@ -205,7 +211,7 @@ def _move_db_files(source: str, destination: str, extension: str = "k2d"):
         shutil.move(file, new_file)
 
 
-def _fetch_prebuilt_dbs(bracken_db, collection, kraken2_db, tmp):
+def _fetch_prebuilt_dbs(bracken_db, kraken2_db, collection, tmp):
     # Find files with the latest version
     _fetch_db_collection(collection=collection, tmp_dir=tmp)
     # Move the Kraken2/Bracken database files to the final location
@@ -268,7 +274,7 @@ def build_kraken_db(
                 bracken_db, kraken2_db, seqs, tmp, common_args
             )
         elif collection:
-            _fetch_prebuilt_dbs(bracken_db, collection, kraken2_db, tmp)
+            _fetch_prebuilt_dbs(bracken_db, kraken2_db, collection, tmp)
         else:
             raise ValueError(
                 'You need to either provide a list of sequences to build the '

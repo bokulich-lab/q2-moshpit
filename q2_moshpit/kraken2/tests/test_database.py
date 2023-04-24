@@ -23,11 +23,14 @@ from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
 from q2_moshpit.kraken2.database import (
-    _fetch_taxonomy, _fetch_libraries,
-    _add_seqs_to_library, _build_kraken2_database, _move_db_files, _build_bracken_database, _find_latest_db,
-    _fetch_db_collection, S3_COLLECTIONS_URL, _build_dbs_from_seqs, _fetch_prebuilt_dbs
+    _fetch_taxonomy, _fetch_libraries, _add_seqs_to_library,
+    _build_kraken2_database, _move_db_files, _build_bracken_database,
+    _find_latest_db, _fetch_db_collection, S3_COLLECTIONS_URL,
+    _build_dbs_from_seqs, _fetch_prebuilt_dbs
 )
-from q2_types_genomics.kraken2 import Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat
+from q2_types_genomics.kraken2 import (
+    Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat
+)
 
 
 class MockTempDir(tempfile.TemporaryDirectory):
@@ -155,7 +158,8 @@ class TestKraken2Database(TestPluginBase):
         ):
 
             _fetch_libraries(
-                self.kraken2_db_dir, libraries=['human'], all_kwargs=self.kwargs
+                self.kraken2_db_dir, libraries=['human'],
+                all_kwargs=self.kwargs
             )
 
     @patch('q2_moshpit.kraken2.database.run_command')
@@ -182,7 +186,9 @@ class TestKraken2Database(TestPluginBase):
                 "An error was encountered .* adding sequences to the "
                 r"library, \(return code 123\), please inspect .*"
         ):
-            _add_seqs_to_library(self.kraken2_db_dir, seqs=seqs, no_masking=True)
+            _add_seqs_to_library(
+                self.kraken2_db_dir, seqs=seqs, no_masking=True
+            )
 
     @patch('q2_moshpit.kraken2.database.run_command')
     def test_build_kraken2_database(self, p1):

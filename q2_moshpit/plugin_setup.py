@@ -201,5 +201,5 @@ plugin.methods.register_function(
     description='This method builds a Kraken 2/Bracken databases from '
                 'provided DNA sequences or simply fetches pre-built '
                 'versions from an online resource.',
-    citations=[citations["wood2019"]]
+    citations=[citations["wood2019"], citations["lu2017"]]
 )

@@ -6,9 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+import re
 import subprocess
+import tempfile
 from copy import deepcopy
-from typing import Union
+from typing import Union, List
 
 import pandas as pd
 from q2_types.per_sample_sequences import (
@@ -21,7 +23,7 @@ from q2_moshpit.kraken2.utils import _process_kraken2_arg
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
-    Kraken2DBDirectoryFormat
+    Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat
 )
 from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 
@@ -79,25 +81,149 @@ def _classify_kraken(
     return kraken2_reports_dir, kraken2_outputs_dir
 
 
+def _run_bracken_one_sample(
+        bracken_db: str, kraken2_report_dir: str, tmp_dir: str,
+        threshold: int, read_len: int, level: str
+) -> pd.DataFrame:
+    sample_id = os.path.basename(kraken2_report_dir)
+    kraken2_report_fp = os.path.join(
+        kraken2_report_dir, f"{sample_id}.report.txt"
+    )
+    bracken_output_fp = os.path.join(
+        tmp_dir, f"{sample_id}.bracken.output.txt"
+    )
+    bracken_report_fp = os.path.join(
+        tmp_dir, f"{sample_id}.bracken.report.txt"
+    )
+    cmd = [
+        "bracken",
+        "-d", bracken_db,
+        "-i", kraken2_report_fp,
+        "-o", bracken_output_fp,
+        "-w", bracken_report_fp,
+        "-t", str(threshold),
+        "-r", str(read_len),
+        "-l", level,
+    ]
+    try:
+        run_command(cmd=cmd, verbose=True)
+    except subprocess.CalledProcessError as e:
+        # TODO: what should be the behaviour when no reads could be classified?
+        raise Exception(
+            "An error was encountered while running Bracken, "
+            f"(return code {e.returncode}), please inspect "
+            "stdout and stderr to learn more."
+        )
+    bracken_table = pd.read_csv(bracken_output_fp, sep="\t", index_col=0)
+    bracken_table["sample_id"] = sample_id
+
+    return bracken_table
+
+
+def _estimate_bracken(
+        kraken_reports: Kraken2ReportDirectoryFormat,
+        bracken_db: BrackenDBDirectoryFormat,
+        threshold: int,
+        read_len: int,
+        level: str
+) -> pd.DataFrame:
+    bracken_tables = []
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            for report_dir in kraken_reports.path.iterdir():
+                bracken_table = _run_bracken_one_sample(
+                    bracken_db=str(bracken_db),
+                    kraken2_report_dir=report_dir,
+                    tmp_dir=tmpdir, threshold=threshold,
+                    read_len=read_len, level=level
+                )
+                bracken_tables.append(bracken_table)
+        except subprocess.CalledProcessError as e:
+            raise Exception(
+                "An error was encountered while running Bracken, "
+                f"(return code {e.returncode}), please inspect "
+                "stdout and stderr to learn more."
+            )
+
+    bracken_table = pd.concat(bracken_tables).reset_index()
+    bracken_table = bracken_table.pivot(
+        index="sample_id", columns="name", values="new_est_reads"
+    )
+
+    return bracken_table
+
+
+def _get_available_lens(bracken_db: BrackenDBDirectoryFormat) -> List[int]:
+    pattern = r'.+database(\d{2,})mers\.kmer_distrib$'
+    lengths = []
+    for db in bracken_db.path.iterdir():
+        lengths.extend(re.findall(pattern, str(db)))
+    return sorted([int(x) for x in lengths])
+
+
+def _is_reads(seqs):
+    return isinstance(
+            seqs, (SingleLanePerSamplePairedEndFastqDirFmt,
+                   SingleLanePerSampleSingleEndFastqDirFmt)
+    )
+
+
 def classify_kraken(
     seqs: Union[
         SingleLanePerSamplePairedEndFastqDirFmt,
         SingleLanePerSampleSingleEndFastqDirFmt,
         MultiMAGSequencesDirFmt,
     ],
-    db: Kraken2DBDirectoryFormat,
+    kraken2_db: Kraken2DBDirectoryFormat,
+    bracken_db: BrackenDBDirectoryFormat,
     threads: int = 1,
     confidence: float = 0.0,
     minimum_base_quality: int = 0,
     memory_mapping: bool = False,
     minimum_hit_groups: int = 2,
     quick: bool = False,
-) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
-    kwargs = {k: v for k, v in locals().items() if k not in ["seqs", "db"]}
+    threshold: int = 0,
+    read_len: int = 100,
+    level: str = 'S'
+) -> (
+        Kraken2ReportDirectoryFormat,
+        Kraken2OutputDirectoryFormat,
+        pd.DataFrame
+):
+    kraken2_args = [
+        "threads", "confidence", "minimum_base_quality",
+        "memory_mapping", "minimum_hit_groups", "quick"
+    ]
+    kwargs = {k: v for k, v in locals().items() if k in kraken2_args}
     common_args = _process_common_input_params(
         processing_func=_process_kraken2_arg, params=kwargs
     )
-    common_args.extend(["--db", str(db.path)])
+    common_args.extend(["--db", str(kraken2_db.path)])
     manifest: pd.DataFrame = seqs.manifest.view(pd.DataFrame)
 
-    return _classify_kraken(manifest, common_args)
+    if _is_reads(seqs):
+        # Check if read length is available in the Bracken DB
+        available_lens = _get_available_lens(bracken_db)
+        if read_len not in available_lens:
+            raise ValueError(
+                f"Provided read length ({read_len}) is not available in the "
+                f"Bracken DB. The available values are: "
+                f"{', '.join([str(x) for x in available_lens])}."
+            )
+
+    k2_reports, k2_outputs = _classify_kraken(manifest, common_args)
+
+    # Process with Bracken
+    # TODO: should we try to estimate read length from the input seqs
+    #  or let user decide?
+    if _is_reads(seqs):
+        bracken_table = _estimate_bracken(
+            kraken_reports=k2_reports, bracken_db=bracken_db,
+            threshold=threshold, read_len=read_len, level=level
+        )
+    else:
+        # TODO: for now, if MAGs were provided, output an empty table
+        bracken_table = pd.DataFrame()
+        bracken_table.index = [f'{x[0]}_{x[1]}' for x in manifest.index]
+
+    return k2_reports, k2_outputs, bracken_table

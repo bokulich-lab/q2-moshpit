@@ -6,15 +6,16 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 from q2_types.feature_data import FeatureData, Sequence
+from q2_types.feature_table import FeatureTable, Frequency
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
 from q2_types.sample_data import SampleData
 
-import q2_moshpit.kraken2.classification
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
+from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
@@ -98,7 +99,8 @@ plugin.methods.register_function(
         "seqs": SampleData[
             SequencesWithQuality | PairedEndSequencesWithQuality | MAGs
             ],
-        "db": Kraken2DB
+        "kraken2_db": Kraken2DB,
+        "bracken_db": BrackenDB
     },
     parameters={
         'threads': Int % Range(1, None),
@@ -106,34 +108,49 @@ plugin.methods.register_function(
         'minimum_base_quality': Int % Range(0, None),
         'memory_mapping': Bool,
         'minimum_hit_groups': Int % Range(1, None),
-        'quick': Bool
+        'quick': Bool,
+        'threshold': Int % Range(0, None),
+        'read_len': Int % Range(0, None),
+        'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S'])
     },
     outputs=[
         ('reports', SampleData[Kraken2Reports]),
-        ('outputs', SampleData[Kraken2Outputs])
+        ('outputs', SampleData[Kraken2Outputs]),
+        ('abundances', FeatureTable[Frequency])
     ],
     input_descriptions={
         "seqs": "Sequences to be classified. Both, single-/paired-end reads"
                 "and assembled MAGs, can be provided.",
-        "db": "Kraken 2 database.",
+        "kraken2_db": "Kraken 2 database.",
+        "bracken_db": "Bracken database."
     },
     parameter_descriptions={
-        'threads': 'Number of threads',
+        'threads': 'Number of threads.',
         'confidence': 'Confidence score threshold.',
         'minimum_base_quality': 'Minimum base quality used in classification.'
                                 ' Only applies when reads are used as input.',
         'memory_mapping': 'Avoids loading the database into RAM.',
         'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
                               'k-mers sharing the same minimizer).',
-        'quick': 'Quick operation (use first hit or hits).'
+        'quick': 'Quick operation (use first hit or hits).',
+        'threshold': 'Bracken: number of reads required PRIOR to abundance '
+                     'estimation to perform re-estimation.',
+        'read_len': 'Bracken: read length to get all classifications for.',
+        'level': 'Bracken: taxonomic level to estimate abundance at.'
     },
     output_descriptions={
         'reports': 'Reports produced by Kraken2.',
-        'outputs': 'Outputs produced by Kraken2.'
+        'outputs': 'Outputs produced by Kraken2.',
+        'abundances': 'Feature table with relative abundances re-estimated '
+                      'by Bracken. Only applicable when reads were used as '
+                      'input.'
     },
-    name='Perform taxonomic classification of bins or reads using Kraken 2.',
+    name='Perform taxonomic classification of bins or reads using'
+         ' Kraken 2/Bracken.',
     description='This method uses Kraken 2 to classify provided NGS reads '
-                'or MAGs into taxonomic groups.',
+                'or MAGs into taxonomic groups. If reads are provided, '
+                'abundance re-estimation with Bracken is performed in '
+                'addition.',
     citations=[citations["wood2019"]]
 )
 

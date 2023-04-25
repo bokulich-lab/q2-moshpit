@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 from copy import deepcopy
@@ -18,6 +19,7 @@ from typing import List
 import requests
 import xmltodict
 from q2_types.feature_data import DNAFASTAFormat
+from tqdm import tqdm
 
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types_genomics.kraken2 import (
@@ -42,6 +44,7 @@ COLLECTIONS = {
     "eupathdb": "eupathdb48",
 }
 S3_COLLECTIONS_URL = 'https://genome-idx.s3.amazonaws.com'
+CHUNK_SIZE = 8192
 
 
 def _fetch_taxonomy(db_dir: str, threads: int, use_ftp: bool):
@@ -183,6 +186,7 @@ def _fetch_db_collection(collection: str, tmp_dir: str):
 
     if response.status_code == 200:
         latest_db = _find_latest_db(collection, response)
+        print(f'Found the latest "{collection}" database: {latest_db}.')
     else:
         raise ValueError(
             'Could not fetch the list of available databases. '
@@ -193,15 +197,28 @@ def _fetch_db_collection(collection: str, tmp_dir: str):
     db_uri = f'{S3_COLLECTIONS_URL}/{latest_db}'
     try:
         response = requests.get(db_uri, stream=True)
+        total_size = int(response.headers.get('content-length', 0))
+        if total_size > 0:
+            progress_bar = tqdm(
+                desc=f'Downloading the "{latest_db}" database',
+                total=total_size, unit='B',
+                unit_scale=True, unit_divisor=1024,
+            )
         db_path = os.path.join(tmp_dir, os.path.split(db_uri)[-1])
         with open(db_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
+            for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                 f.write(chunk) if chunk else False
+                if total_size > 0:
+                    progress_bar.update(len(chunk))
+            progress_bar.close() if total_size > 0 else False
     except requests.exceptions.ConnectionError as e:
         raise ValueError(err_msg.format(e))
 
+    msg = "Download finished. Extracting database files..."
+    print(f"{msg}", end="", flush=True)
     with tarfile.open(db_path, "r:gz") as tar:
         tar.extractall(path=tmp_dir)
+    print(f"\r{msg} Done.", flush=True)
 
 
 def _move_db_files(source: str, destination: str, extension: str = "k2d"):

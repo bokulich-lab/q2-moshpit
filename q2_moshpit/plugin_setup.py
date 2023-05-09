@@ -26,6 +26,25 @@ from q2_moshpit import __version__
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
 
+kraken2_params = {
+    'threads': Int % Range(1, None),
+    'confidence': Float % Range(0, 1, inclusive_end=True),
+    'minimum_base_quality': Int % Range(0, None),
+    'memory_mapping': Bool,
+    'minimum_hit_groups': Int % Range(1, None),
+    'quick': Bool,
+}
+kraken2_param_descriptions = {
+    'threads': 'Number of threads.',
+    'confidence': 'Confidence score threshold.',
+    'minimum_base_quality': 'Minimum base quality used in classification.'
+                            ' Only applies when reads are used as input.',
+    'memory_mapping': 'Avoids loading the database into RAM.',
+    'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
+                          'k-mers sharing the same minimizer).',
+    'quick': 'Quick operation (use first hit or hits).',
+}
+
 plugin = Plugin(
     name='moshpit',
     version=__version__,
@@ -98,17 +117,41 @@ plugin.methods.register_function(
     inputs={
         "seqs": SampleData[
             SequencesWithQuality | PairedEndSequencesWithQuality | MAGs
+        ],
+        "kraken2_db": Kraken2DB,
+    },
+    parameters=kraken2_params,
+    outputs=[
+        ('reports', SampleData[Kraken2Reports]),
+        ('outputs', SampleData[Kraken2Outputs]),
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
+                "and assembled MAGs, can be provided.",
+        "kraken2_db": "Kraken 2 database.",
+    },
+    parameter_descriptions=kraken2_param_descriptions,
+    output_descriptions={
+        'reports': 'Reports produced by Kraken2.',
+        'outputs': 'Outputs produced by Kraken2.',
+    },
+    name='Perform taxonomic classification of reads or MAGs using Kraken 2.',
+    description='This method uses Kraken 2 to classify provided NGS reads '
+                'or MAGs into taxonomic groups.',
+    citations=[citations["wood2019"]]
+)
+
+plugin.pipelines.register_function(
+    function=q2_moshpit.kraken2.bracken.classify_kraken_bracken,
+    inputs={
+        "seqs": SampleData[
+            SequencesWithQuality | PairedEndSequencesWithQuality
             ],
         "kraken2_db": Kraken2DB,
         "bracken_db": BrackenDB
     },
     parameters={
-        'threads': Int % Range(1, None),
-        'confidence': Float % Range(0, 1, inclusive_end=True),
-        'minimum_base_quality': Int % Range(0, None),
-        'memory_mapping': Bool,
-        'minimum_hit_groups': Int % Range(1, None),
-        'quick': Bool,
+        **kraken2_params,
         'threshold': Int % Range(0, None),
         'read_len': Int % Range(0, None),
         'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S'])
@@ -125,14 +168,7 @@ plugin.methods.register_function(
         "bracken_db": "Bracken database."
     },
     parameter_descriptions={
-        'threads': 'Number of threads.',
-        'confidence': 'Confidence score threshold.',
-        'minimum_base_quality': 'Minimum base quality used in classification.'
-                                ' Only applies when reads are used as input.',
-        'memory_mapping': 'Avoids loading the database into RAM.',
-        'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
-                              'k-mers sharing the same minimizer).',
-        'quick': 'Quick operation (use first hit or hits).',
+        **kraken2_param_descriptions,
         'threshold': 'Bracken: number of reads required PRIOR to abundance '
                      'estimation to perform re-estimation.',
         'read_len': 'Bracken: read length to get all classifications for.',
@@ -142,15 +178,12 @@ plugin.methods.register_function(
         'reports': 'Reports produced by Kraken2.',
         'outputs': 'Outputs produced by Kraken2.',
         'abundances': 'Feature table with relative abundances re-estimated '
-                      'by Bracken. Only applicable when reads were used as '
-                      'input.'
+                      'by Bracken.'
     },
-    name='Perform taxonomic classification of bins or reads using'
-         ' Kraken 2/Bracken.',
+    name='Perform taxonomic classification of reads using Kraken 2/Bracken.',
     description='This method uses Kraken 2 to classify provided NGS reads '
-                'or MAGs into taxonomic groups. If reads are provided, '
-                'abundance re-estimation with Bracken is performed in '
-                'addition.',
+                'into taxonomic groups and re-estimates their abundances '
+                'with Bracken.',
     citations=[citations["wood2019"]]
 )
 

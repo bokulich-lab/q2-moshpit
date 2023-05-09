@@ -6,7 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from .bracken import classify_kraken_bracken
 from .database import build_kraken_db
 from .classification import classify_kraken
 
-__all__ = ['build_kraken_db', 'classify_kraken']
+__all__ = ['build_kraken_db', 'classify_kraken', 'classify_kraken_bracken']

@@ -14,6 +14,7 @@ from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
 from q2_types.sample_data import SampleData
+
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
@@ -22,6 +23,7 @@ import q2_moshpit
 from q2_types_genomics.feature_data import NOG, MAG
 from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.genome_data import BLAST6
+from q2_types_genomics.kaiju import KaijuDB
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
@@ -424,4 +426,38 @@ plugin.methods.register_function(
     outputs=[('ortholog_annotations', FeatureData[NOG])],
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kaiju.fetch_kaiju_db,
+    inputs={},
+    parameters={
+        "database_type": Str
+        % Choices(
+            [
+                "nr",
+                "nr_euk",
+                "refseq",
+                "fungi",
+                "viruses",
+                "plasmids",
+                "progenomes",
+                "rvdb",
+            ]
+        ),
+    },
+    outputs=[
+        ("database", KaijuDB),
+    ],
+    input_descriptions={},
+    parameter_descriptions={
+        "database_type": "Type of database to be downloaded. For more information "
+        "on available types please see the list on Kaiju's web "
+        "server: https://kaiju.binf.ku.dk/server",
+    },
+    output_descriptions={"database": "Kaiju database."},
+    name="Fetch Kaiju database.",
+    description="This method fetches the latest Kaiju database from "
+                "https://kaiju.binf.ku.dk/server.",
+    citations=[citations["menzel2016"]],
 )

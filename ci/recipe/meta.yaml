@@ -18,6 +18,7 @@ requirements:
 
   run:
     - bracken
+    - kaiju
     - kraken2
     - metabat2
     - samtools

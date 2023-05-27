@@ -9,5 +9,7 @@
 from .bracken import classify_kraken_bracken
 from .database import build_kraken_db
 from .classification import classify_kraken
+from .select import select_kraken_features
 
-__all__ = ['build_kraken_db', 'classify_kraken', 'classify_kraken_bracken']
+__all__ = ['build_kraken_db', 'classify_kraken', 'classify_kraken_bracken',
+           'select_kraken_features']

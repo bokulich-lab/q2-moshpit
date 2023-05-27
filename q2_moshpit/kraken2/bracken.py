@@ -11,7 +11,6 @@ import subprocess
 import tempfile
 
 import pandas as pd
-from qiime2 import Artifact
 
 from q2_moshpit._utils import run_command
 from q2_types_genomics.kraken2 import (
@@ -111,7 +110,8 @@ def _assert_read_lens_available(
 def classify_kraken_bracken(
     ctx, seqs, kraken2_db, bracken_db, threads=1, confidence=0.0,
     minimum_base_quality=0, memory_mapping=False, minimum_hit_groups=2,
-    quick=False, threshold=0, read_len=100, level='S'
+    quick=False, report_minimizer_data=False, threshold=0, read_len=100,
+    level='S'
 ):
     bracken_db = bracken_db.view(BrackenDBDirectoryFormat)
     _assert_read_lens_available(bracken_db, read_len)
@@ -131,7 +131,7 @@ def classify_kraken_bracken(
     )
 
     # TODO: should this return the original Kraken2 reports?
-    bracken_table = Artifact.import_data(
+    bracken_table = ctx.make_artifact(
         "FeatureTable[Frequency]", bracken_table
     )
     return k2_reports, k2_outputs, bracken_table

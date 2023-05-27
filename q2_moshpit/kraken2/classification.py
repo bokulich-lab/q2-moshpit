@@ -92,6 +92,7 @@ def classify_kraken(
     memory_mapping: bool = False,
     minimum_hit_groups: int = 2,
     quick: bool = False,
+    report_minimizer_data: bool = False
 ) -> (
         Kraken2ReportDirectoryFormat,
         Kraken2OutputDirectoryFormat,

@@ -58,18 +58,20 @@ def _kraken_to_ncbi_tree(df):
         label = row['name']
         otu = str(row['ncbi_tax_id'])
 
-        if r in ('U', 'R') or (len(r) > 1 and not r.startswith('S')):
-            continue  # unclassified, root, or non-strain infra-clade
+        if r in ('U', 'R'):
+            continue  # unclassified or root
 
         indent = _get_indentation(label)
         name = f"{r.lower()}__{label.strip()}"
         node = skbio.TreeNode(name=name, length=1)
-        id_node = skbio.TreeNode(name=otu, length=0)
-        id_node.is_actual_tip = False
-        node.append(id_node)
+
+        # Don't include internal non-strain infra-clades as tips
+        if len(r) == 1 or r.startswith('S'):
+            id_node = skbio.TreeNode(name=otu, length=0)
+            node.append(id_node)
 
         parent_indent, parent_node = stack[-1]
-        if parent_indent >= indent:
+        if parent_indent >= indent and parent_node.children:
             parent_node.children[0].is_actual_tip = True
 
         while parent_indent >= indent:
@@ -104,11 +106,12 @@ def _combine_ncbi_trees(trees):
                         matching = matching.find(node.name)
                     except skbio.tree.MissingNodeError:
                         matching.append(node)
+                        break
     return full_tree
 
 
 def _ncbi_tree_to_tips(tree):
-    return [n.name for n in tree.tips() if n.is_actual_tip]
+    return [n.name for n in tree.tips() if hasattr(n, 'is_actual_tip')]
 
 
 def _pad_ranks(ranks):

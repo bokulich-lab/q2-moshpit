@@ -215,13 +215,17 @@ plugin.methods.register_function(
         "mags": SampleData[MAGs],
         "distance_matrix": DistanceMatrix
     },
-    parameters={},
+    parameters={
+        "threshold": Float % Range(0, 1, inclusive_end=True)
+    },
     outputs=[('dereplicated_mags', FeatureData[MAG]), ('feature_table', FeatureTable[PresenceAbsence])],
     input_descriptions={
         "mags": "MAGs to be dereplicated.",
         "distance_matrix": "Matrix of distances between MAGs."
     },
-    parameter_descriptions={},
+    parameter_descriptions={
+        "threshold": "Similarity threshold required to consider two bins identical."
+    },
     output_descriptions={
         "dereplicated_mags": "Dereplicated MAGs.",
         "feature_table": "Mapping between MAGs and samples."

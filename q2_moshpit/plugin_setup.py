@@ -5,13 +5,16 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import FeatureData, Sequence
+from q2_types.feature_table import FeatureTable, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
 from q2_types.sample_data import SampleData
 
 import q2_moshpit.kraken2.classification
+from q2_types_genomics.feature_data import MAG
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
@@ -204,4 +207,28 @@ plugin.methods.register_function(
                 'DNA sequences or simply fetches the sequences based on '
                 'user inputs and uses those to construct a database.',
     citations=[citations["wood2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.dereplication.dereplicate_mags,
+    inputs={
+        "mags": SampleData[MAGs],
+        "distance_matrix": DistanceMatrix
+    },
+    parameters={},
+    outputs=[('dereplicated_mags', FeatureData[MAG]), ('feature_table', FeatureTable[PresenceAbsence])],
+    input_descriptions={
+        "mags": "MAGs to be dereplicated.",
+        "distance_matrix": "Matrix of distances between MAGs."
+    },
+    parameter_descriptions={},
+    output_descriptions={
+        "dereplicated_mags": "Dereplicated MAGs.",
+        "feature_table": "Mapping between MAGs and samples."
+    },
+    name='Dereplicate MAGs from multiple samples.',
+    description='This method dereplicates MAGs from multiple samples '
+                'using distances between them found in the provided '
+                'distance matrix.',
+    citations=[]
 )

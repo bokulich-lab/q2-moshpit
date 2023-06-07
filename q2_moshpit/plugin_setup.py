@@ -233,6 +233,7 @@ plugin.methods.register_function(
     name='Dereplicate MAGs from multiple samples.',
     description='This method dereplicates MAGs from multiple samples '
                 'using distances between them found in the provided '
-                'distance matrix.',
+                'distance matrix. For each cluster of similar MAGs, '
+                'the longest one will be selected as the representative.',
     citations=[]
 )

@@ -20,7 +20,7 @@ from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.core.type import (Bool, Range, Int, Str, Float, List, Choices,
-                              Properties)
+                              Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 
 import q2_moshpit
@@ -117,18 +117,21 @@ plugin.methods.register_function(
     citations=[citations["kang2019"]]
 )
 
+T_kraken_in, P_kraken_out = TypeMap({
+    (SequencesWithQuality | PairedEndSequencesWithQuality): Properties('reads'),
+    MAGs: Properties('mags'),
+})
+
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.classification.classify_kraken,
     inputs={
-        "seqs": SampleData[
-            SequencesWithQuality | PairedEndSequencesWithQuality | MAGs
-        ],
+        "seqs": SampleData[T_kraken_in],
         "kraken2_db": Kraken2DB,
     },
     parameters=kraken2_params,
     outputs=[
-        ('reports', SampleData[Kraken2Reports]),
-        ('outputs', SampleData[Kraken2Outputs]),
+        ('reports', SampleData[Kraken2Reports % P_kraken_out]),
+        ('outputs', SampleData[Kraken2Outputs % P_kraken_out]),
     ],
     input_descriptions={
         "seqs": "Sequences to be classified. Both, single-/paired-end reads"
@@ -146,44 +149,37 @@ plugin.methods.register_function(
     citations=[citations["wood2019"]]
 )
 
-plugin.pipelines.register_function(
-    function=q2_moshpit.kraken2.bracken.classify_kraken_bracken,
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.bracken.estimate_bracken,
     inputs={
-        "seqs": SampleData[
-            SequencesWithQuality | PairedEndSequencesWithQuality
-            ],
-        "kraken2_db": Kraken2DB,
+        "kraken_reports": SampleData[Kraken2Reports % Properties('reads')],
         "bracken_db": BrackenDB
     },
     parameters={
-        **kraken2_params,
         'threshold': Int % Range(0, None),
         'read_len': Int % Range(0, None),
         'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S'])
     },
     outputs=[
-        ('reports', SampleData[Kraken2Reports]),
-        ('outputs', SampleData[Kraken2Outputs]),
-        ('abundances', FeatureTable[Frequency])
+        ('reports', SampleData[Kraken2Reports % Properties('bracken')]),
+        ('taxonomy', FeatureData[Taxonomy]),
+        ('table', FeatureTable[Frequency])
     ],
     input_descriptions={
-        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
-                "and assembled MAGs, can be provided.",
-        "kraken2_db": "Kraken 2 database.",
+        "kraken_reports": "Reports produced by Kraken2.",
         "bracken_db": "Bracken database."
     },
     parameter_descriptions={
-        **kraken2_param_descriptions,
         'threshold': 'Bracken: number of reads required PRIOR to abundance '
                      'estimation to perform re-estimation.',
         'read_len': 'Bracken: read length to get all classifications for.',
         'level': 'Bracken: taxonomic level to estimate abundance at.'
     },
     output_descriptions={
-        'reports': 'Reports produced by Kraken2.',
-        'outputs': 'Outputs produced by Kraken2.',
-        'abundances': 'Feature table with relative abundances re-estimated '
-                      'by Bracken.'
+        'reports': 'Reports modified by Bracken.',
+        'taxonomy': 'The NCBI taxonomy.',
+        'table': 'Feature table with relative abundances re-estimated '
+                 'by Bracken.'
     },
     name='Perform taxonomic classification of reads using Kraken 2/Bracken.',
     description='This method uses Kraken 2 to classify provided NGS reads '

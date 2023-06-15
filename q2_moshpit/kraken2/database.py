@@ -10,7 +10,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import tarfile
 import tempfile
 from copy import deepcopy

@@ -335,7 +335,7 @@ class TestKraken2Database(TestPluginBase):
         )
         mock_find.assert_called_once_with("viral", ANY)
         mock_tqdm.assert_called_once_with(
-            desc=f'Downloading the "kraken/k2_viral.tar.gz" database',
+            desc='Downloading the "kraken/k2_viral.tar.gz" database',
             total=1000, unit='B',
             unit_scale=True, unit_divisor=1024,
         )

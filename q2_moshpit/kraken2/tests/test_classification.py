@@ -28,7 +28,7 @@ from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
 from q2_moshpit.kraken2.classification import (
-    _get_seq_paths, _construct_output_paths, _classify_kraken
+    _get_seq_paths, _construct_output_paths, _classify_kraken2
 )
 
 
@@ -153,7 +153,7 @@ class TestKraken2Classification(TestPluginBase):
         p5.return_value = fake_output_dir
 
         # run kraken2
-        obs_reports, obs_outputs = _classify_kraken(manifest, common_args)
+        obs_reports, obs_outputs = _classify_kraken2(manifest, common_args)
 
         self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
         self.assertIsInstance(obs_outputs, Kraken2OutputDirectoryFormat)
@@ -245,9 +245,9 @@ class TestKraken2Classification(TestPluginBase):
             Exception,
             r'error was encountered .* \(return code 123\)'
         ):
-            _classify_kraken(manifest, common_args)
+            _classify_kraken2(manifest, common_args)
 
-    @patch("q2_moshpit.classification._classify_kraken")
+    @patch("q2_moshpit.classification._classify_kraken2")
     def test_classify_kraken_action(self, p1):
         seqs = Artifact.import_data(
             'SampleData[MAGs]', self.get_data_path("mags")

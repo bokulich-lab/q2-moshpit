@@ -123,7 +123,7 @@ T_kraken_in, P_kraken_out = TypeMap({
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.classification.classify_kraken,
+    function=q2_moshpit.kraken2.classification.classify_kraken2,
     inputs={
         "seqs": SampleData[T_kraken_in],
         "kraken2_db": Kraken2DB,
@@ -253,7 +253,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.select_kraken_features,
+    function=q2_moshpit.kraken2.kraken2_to_features,
     inputs={
         'kraken_reports': SampleData[Kraken2Reports]
     },
@@ -288,7 +288,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.select_kraken_mag_features,
+    function=q2_moshpit.kraken2.kraken2_to_mag_features,
     inputs={
         'kraken_reports': SampleData[Kraken2Reports % Properties('mags')],
         'kraken_outputs': SampleData[Kraken2Outputs % Properties('mags')]

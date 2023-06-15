@@ -13,7 +13,7 @@ import tempfile
 import pandas as pd
 
 from q2_moshpit._utils import run_command
-from q2_moshpit.kraken2.select import select_kraken_features
+from q2_moshpit.kraken2.select import kraken2_to_features
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     BrackenDBDirectoryFormat,
@@ -127,7 +127,7 @@ def estimate_bracken(
         threshold=threshold, read_len=read_len, level=level
     )
 
-    _, taxonomy, _ = select_kraken_features(
+    _, taxonomy, _ = kraken2_to_features(
         reports=reports, coverage_threshold=0.0
     )
 

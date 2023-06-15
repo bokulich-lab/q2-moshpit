@@ -48,7 +48,7 @@ def _construct_output_paths(
     return output_fp, report_fp
 
 
-def _classify_kraken(
+def _classify_kraken2(
     manifest, common_args
 ) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
     base_cmd = ["kraken2", *common_args]
@@ -78,7 +78,7 @@ def _classify_kraken(
     return kraken2_reports_dir, kraken2_outputs_dir
 
 
-def classify_kraken(
+def classify_kraken2(
     seqs: Union[
         SingleLanePerSamplePairedEndFastqDirFmt,
         SingleLanePerSampleSingleEndFastqDirFmt,
@@ -104,4 +104,4 @@ def classify_kraken(
     common_args.extend(["--db", str(kraken2_db.path)])
     manifest: pd.DataFrame = seqs.manifest.view(pd.DataFrame)
 
-    return _classify_kraken(manifest, common_args)
+    return _classify_kraken2(manifest, common_args)

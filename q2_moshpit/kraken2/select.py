@@ -10,17 +10,18 @@ import os
 from collections import deque
 
 from q2_types_genomics.kraken2 import (
-    Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat)
+    Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat
+)
 
 import pandas as pd
 import skbio
 
 
-def select_kraken_mag_features(kraken_reports: Kraken2ReportDirectoryFormat,
-                               kraken_outputs: Kraken2OutputDirectoryFormat,
-                               coverage_threshold: float = 0.1) \
+def kraken2_to_mag_features(kraken_reports: Kraken2ReportDirectoryFormat,
+                           kraken_outputs: Kraken2OutputDirectoryFormat,
+                           coverage_threshold: float = 0.1) \
          -> (pd.DataFrame, pd.DataFrame):
-    table, taxonomy = select_kraken_features(
+    table, taxonomy = kraken2_to_features(
         kraken_reports, coverage_threshold)
 
     rows_list = []
@@ -56,8 +57,8 @@ def select_kraken_mag_features(kraken_reports: Kraken2ReportDirectoryFormat,
     return mag_table, mag_taxonomy
 
 
-def select_kraken_features(kraken_reports: Kraken2ReportDirectoryFormat,
-                           coverage_threshold: float = 0.1) \
+def kraken2_to_features(kraken_reports: Kraken2ReportDirectoryFormat,
+                        coverage_threshold: float = 0.1) \
         -> (pd.DataFrame, pd.DataFrame):
 
     rows = []

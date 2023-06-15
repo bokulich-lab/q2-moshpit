@@ -94,6 +94,7 @@ def _estimate_bracken(
     bracken_table = bracken_table.pivot(
         index="sample_id", columns="taxonomy_id", values="new_est_reads"
     )
+    bracken_table.fillna(0, inplace=True)
 
     return bracken_table, bracken_reports
 

@@ -170,7 +170,6 @@ class TestKraken2Classification(TestPluginBase):
                         exp_rep_fps[0],
                         "--output",
                         exp_out_fps[0],
-                        "--use-names",
                         "samp1/bin1.fa",
                     ],
                     verbose=True,
@@ -185,7 +184,6 @@ class TestKraken2Classification(TestPluginBase):
                         exp_rep_fps[1],
                         "--output",
                         exp_out_fps[1],
-                        "--use-names",
                         "samp1/bin2.fa",
                     ],
                     verbose=True,
@@ -200,7 +198,6 @@ class TestKraken2Classification(TestPluginBase):
                         exp_rep_fps[2],
                         "--output",
                         exp_out_fps[2],
-                        "--use-names",
                         "samp2/bin1.fa",
                     ],
                     verbose=True,
@@ -262,8 +259,8 @@ class TestKraken2Classification(TestPluginBase):
             ),
         )
 
-        moshpit.actions.classify_kraken(
-            seqs=seqs, db=db, threads=3, confidence=0.9, quick=True
+        moshpit.actions.classify_kraken2(
+            seqs=seqs, kraken2_db=db, threads=3, confidence=0.9, quick=True
         )
 
         exp_args = [

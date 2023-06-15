@@ -131,7 +131,7 @@ plugin.methods.register_function(
     parameters=kraken2_params,
     outputs=[
         ('reports', SampleData[Kraken2Reports % P_kraken_out]),
-        ('outputs', SampleData[Kraken2Outputs % P_kraken_out]),
+        ('hits', SampleData[Kraken2Outputs % P_kraken_out]),
     ],
     input_descriptions={
         "seqs": "Sequences to be classified. Both, single-/paired-end reads"
@@ -141,7 +141,7 @@ plugin.methods.register_function(
     parameter_descriptions=kraken2_param_descriptions,
     output_descriptions={
         'reports': 'Reports produced by Kraken2.',
-        'outputs': 'Outputs produced by Kraken2.',
+        'hits': 'Output files produced by Kraken2.',
     },
     name='Perform taxonomic classification of reads or MAGs using Kraken 2.',
     description='This method uses Kraken 2 to classify provided NGS reads '
@@ -255,7 +255,7 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.kraken2_to_features,
     inputs={
-        'kraken_reports': SampleData[Kraken2Reports]
+        'reports': SampleData[Kraken2Reports]
     },
     parameters={
         'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
@@ -265,7 +265,7 @@ plugin.methods.register_function(
         ('taxonomy', FeatureData[Taxonomy])
     ],
     input_descriptions={
-        'kraken_reports': 'Per-sample Kraken 2 reports.'
+        'reports': 'Per-sample Kraken 2 reports.'
     },
     parameter_descriptions={
         'coverage_threshold': 'The minimum percent coverage required to'
@@ -275,23 +275,23 @@ plugin.methods.register_function(
         'table': 'A presence/absence table of selected features. The features'
                  ' are not of even ranks, but will be the most specific rank'
                  ' available.',
-        'taxonomy': 'Infra-clade ranks are ignored'
-                    ' unless they are strain-level. Missing internal ranks'
-                    ' are annotated by their next most specific rank,'
-                    ' with the exception of k__Bacteria and k__Archaea which'
-                    ' match their domain\'s name.',
+        'taxonomy': 'Infra-clade ranks are ignored '
+                    'unless they are strain-level. Missing internal ranks '
+                    'are annotated by their next most specific rank, '
+                    'with the exception of k__Bacteria and k__Archaea which '
+                    'match their domain\'s name.',
     },
     name='Select downstream features from Kraken 2',
-    description='Convert a Kraken 2 report, which is an annotated NCBI'
-                ' taxonomy tree into generic artifacts for downstream'
-                ' analyses.'
+    description='Convert a Kraken 2 report, which is an annotated NCBI '
+                'taxonomy tree into generic artifacts for downstream '
+                'analyses.'
 )
 
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.kraken2_to_mag_features,
     inputs={
-        'kraken_reports': SampleData[Kraken2Reports % Properties('mags')],
-        'kraken_outputs': SampleData[Kraken2Outputs % Properties('mags')]
+        'reports': SampleData[Kraken2Reports % Properties('mags')],
+        'hits': SampleData[Kraken2Outputs % Properties('mags')]
     },
     parameters={
         'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
@@ -301,25 +301,25 @@ plugin.methods.register_function(
         ('taxonomy', FeatureData[Taxonomy])
     ],
     input_descriptions={
-        'kraken_reports': 'Per-sample Kraken 2 reports.',
-        'kraken_outputs': 'Per-sample Kraken 2 hit tables.'
+        'reports': 'Per-sample Kraken 2 reports.',
+        'hits': 'Per-sample Kraken 2 output files.'
     },
     parameter_descriptions={
-        'coverage_threshold': 'The minimum percent coverage required to'
-                              ' produce a feature.'
+        'coverage_threshold': 'The minimum percent coverage required to '
+                              'produce a feature.'
     },
     output_descriptions={
-        'table': 'A presence/absence table of selected features. The features'
-                 ' are not of even ranks, but will be the most specific rank'
-                 ' available.',
+        'table': 'A presence/absence table of selected features. The features '
+                 'are not of even ranks, but will be the most specific rank '
+                 'available.',
         'taxonomy': 'Infra-clade ranks are ignored'
-                    ' unless they are strain-level. Missing internal ranks'
-                    ' are annotated by their next most specific rank,'
-                    ' with the exception of k__Bacteria and k__Archaea which'
-                    ' match their domain\'s name.',
+                    'unless they are strain-level. Missing internal ranks '
+                    'are annotated by their next most specific rank, '
+                    'with the exception of k__Bacteria and k__Archaea which '
+                    'match their domain\'s name.',
     },
-    name='Select downstream features from Kraken 2',
-    description='Convert a Kraken 2 report, which is an annotated NCBI'
-                ' taxonomy tree into generic artifacts for downstream'
-                ' analyses.'
+    name='Select downstream MAG features from Kraken 2',
+    description='Convert a Kraken 2 report, which is an annotated NCBI '
+                'taxonomy tree into generic artifacts for downstream '
+                'analyses.'
 )

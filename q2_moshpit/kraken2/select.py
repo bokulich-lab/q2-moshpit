@@ -17,19 +17,20 @@ import pandas as pd
 import skbio
 
 
-def kraken2_to_mag_features(kraken_reports: Kraken2ReportDirectoryFormat,
-                           kraken_outputs: Kraken2OutputDirectoryFormat,
-                           coverage_threshold: float = 0.1) \
-         -> (pd.DataFrame, pd.DataFrame):
-    table, taxonomy = kraken2_to_features(
-        kraken_reports, coverage_threshold)
+def kraken2_to_mag_features(
+        reports: Kraken2ReportDirectoryFormat,
+        hits: Kraken2OutputDirectoryFormat,
+        coverage_threshold: float = 0.1
+) -> (pd.DataFrame, pd.DataFrame):
+    table, taxonomy = kraken2_to_features(reports, coverage_threshold)
 
     rows_list = []
     taxa_list = []
     # convert IDs to match MAGs instead of taxids/db ids
     for sample_id in table.index:
         kraken_table_fp = (
-            kraken_outputs.path / sample_id / f'{sample_id}.output.txt')
+            hits.path / sample_id / f'{sample_id}.output.txt'
+        )
         hits_df = pd.read_csv(kraken_table_fp, sep='\t',
                               header=None, dtype='str')
         MAG_COL = 1
@@ -57,13 +58,13 @@ def kraken2_to_mag_features(kraken_reports: Kraken2ReportDirectoryFormat,
     return mag_table, mag_taxonomy
 
 
-def kraken2_to_features(kraken_reports: Kraken2ReportDirectoryFormat,
+def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
                         coverage_threshold: float = 0.1) \
         -> (pd.DataFrame, pd.DataFrame):
 
     rows = []
     trees = []
-    for relpath, df in kraken_reports.reports.iter_views(pd.DataFrame):
+    for relpath, df in reports.reports.iter_views(pd.DataFrame):
         sample_id, _ = os.path.split(relpath)
 
         filtered = df[df['perc_frags_covered'] >= coverage_threshold]

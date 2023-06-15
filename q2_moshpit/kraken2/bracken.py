@@ -11,9 +11,9 @@ import subprocess
 import tempfile
 
 import pandas as pd
-from qiime2 import Artifact
 
 from q2_moshpit._utils import run_command
+from q2_moshpit.kraken2.select import select_kraken_features
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     BrackenDBDirectoryFormat,
@@ -21,8 +21,8 @@ from q2_types_genomics.kraken2 import (
 
 
 def _run_bracken_one_sample(
-        bracken_db: str, kraken2_report_dir: str, tmp_dir: str,
-        threshold: int, read_len: int, level: str
+        bracken_db: str, kraken2_report_dir: str, bracken_report_dir: str,
+        tmp_dir: str, threshold: int, read_len: int, level: str
 ) -> pd.DataFrame:
     sample_id = os.path.basename(kraken2_report_dir)
     kraken2_report_fp = os.path.join(
@@ -31,8 +31,10 @@ def _run_bracken_one_sample(
     bracken_output_fp = os.path.join(
         tmp_dir, f"{sample_id}.bracken.output.txt"
     )
+    sample_dir = os.path.join(bracken_report_dir, sample_id)
+    os.makedirs(sample_dir, exist_ok=True)
     bracken_report_fp = os.path.join(
-        tmp_dir, f"{sample_id}.bracken.report.txt"
+        sample_dir, "bracken.report.txt"
     )
     cmd = [
         "bracken",
@@ -65,14 +67,17 @@ def _estimate_bracken(
         threshold: int,
         read_len: int,
         level: str
-) -> pd.DataFrame:
+) -> (pd.DataFrame, Kraken2ReportDirectoryFormat):
     bracken_tables = []
+    bracken_reports = Kraken2ReportDirectoryFormat()
+
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
             for report_dir in kraken_reports.path.iterdir():
                 bracken_table = _run_bracken_one_sample(
                     bracken_db=str(bracken_db),
                     kraken2_report_dir=report_dir,
+                    bracken_report_dir=str(bracken_reports),
                     tmp_dir=tmpdir, threshold=threshold,
                     read_len=read_len, level=level
                 )
@@ -89,7 +94,7 @@ def _estimate_bracken(
         index="sample_id", columns="name", values="new_est_reads"
     )
 
-    return bracken_table
+    return bracken_table, bracken_reports
 
 
 def _assert_read_lens_available(
@@ -108,30 +113,22 @@ def _assert_read_lens_available(
         )
 
 
-def classify_kraken_bracken(
-    ctx, seqs, kraken2_db, bracken_db, threads=1, confidence=0.0,
-    minimum_base_quality=0, memory_mapping=False, minimum_hit_groups=2,
-    quick=False, threshold=0, read_len=100, level='S'
-):
-    bracken_db = bracken_db.view(BrackenDBDirectoryFormat)
+def estimate_bracken(
+    kraken_reports: Kraken2ReportDirectoryFormat,
+    bracken_db: BrackenDBDirectoryFormat,
+    threshold: int = 0,
+    read_len: int = 100,
+    level: str = 'S'
+) -> (Kraken2ReportDirectoryFormat, pd.DataFrame, pd.DataFrame):
     _assert_read_lens_available(bracken_db, read_len)
 
-    kwargs = {
-        k: v for k, v in locals().items()
-        if k not in ["ctx", "bracken_db", "threshold", "read_len", "level"]
-    }
-
-    classify_kraken = ctx.get_action('moshpit', 'classify_kraken')
-    k2_reports, k2_outputs = classify_kraken(**kwargs)
-
-    bracken_table = _estimate_bracken(
-        kraken_reports=k2_reports.view(Kraken2ReportDirectoryFormat),
-        bracken_db=bracken_db, threshold=threshold, read_len=read_len,
-        level=level
+    table, reports = _estimate_bracken(
+        kraken_reports=kraken_reports, bracken_db=bracken_db,
+        threshold=threshold, read_len=read_len, level=level
     )
 
-    # TODO: should this return the original Kraken2 reports?
-    bracken_table = Artifact.import_data(
-        "FeatureTable[Frequency]", bracken_table
+    _, taxonomy, _ = select_kraken_features(
+        reports=reports, coverage_threshold=0.0
     )
-    return k2_reports, k2_outputs, bracken_table
+
+    return reports, taxonomy, table

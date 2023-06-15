@@ -23,6 +23,7 @@ requirements:
     - samtools
     - qiime2 {{ qiime2_epoch }}.*
     - q2-types-genomics {{ qiime2_epoch }}.*
+    - tqdm
     - xmltodict
 
 test:

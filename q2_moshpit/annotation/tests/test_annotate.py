@@ -35,4 +35,3 @@ class TestAnnotate(TestPluginBase):
         self.assertEqual(len(objs), 1)
         df = objs[0][1].view(pd.DataFrame)
         pdt.assert_frame_equal(df, exp)
-

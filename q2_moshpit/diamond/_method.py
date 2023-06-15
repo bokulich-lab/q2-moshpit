@@ -15,7 +15,6 @@ import qiime2.util
 
 import os
 import subprocess
-import shutil
 import tempfile
 import re
 import pandas as pd
@@ -60,7 +59,7 @@ def extract_ft_from_seed_orthologs(seed_orthologs: SeedOrthologDirFmt
 
     for sample_path, obj in seed_orthologs.seed_orthologs.iter_views(
             OrthologFileFmt):
-        #TODO: put filename to sample name logic on OrthologFileFmt object
+        # TODO: put filename to sample name logic on OrthologFileFmt object
         sample_name = str(sample_path).replace('.emapper.seed_orthologs', '')
         sample_df = obj.view(pd.DataFrame)
         sample_feature_counts = sample_df.value_counts('sseqid')

@@ -14,9 +14,6 @@ from q2_types_genomics.reference_db import EggnogRefDirFmt
 
 # library imports
 import subprocess
-import shutil
-import tempfile
-import os
 
 
 def eggnog_annotate_seed_orthologs(hits_table: SeedOrthologDirFmt,

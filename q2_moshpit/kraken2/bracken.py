@@ -57,6 +57,7 @@ def _run_bracken_one_sample(
         )
     bracken_table = pd.read_csv(bracken_output_fp, sep="\t", index_col=0)
     bracken_table["sample_id"] = sample_id
+    bracken_table["taxonomy_id"] = bracken_table["taxonomy_id"].astype(str)
 
     return bracken_table
 
@@ -91,7 +92,7 @@ def _estimate_bracken(
 
     bracken_table = pd.concat(bracken_tables).reset_index()
     bracken_table = bracken_table.pivot(
-        index="sample_id", columns="name", values="new_est_reads"
+        index="sample_id", columns="taxonomy_id", values="new_est_reads"
     )
 
     return bracken_table, bracken_reports
@@ -127,7 +128,7 @@ def estimate_bracken(
         threshold=threshold, read_len=read_len, level=level
     )
 
-    _, taxonomy, _ = kraken2_to_features(
+    _, taxonomy = kraken2_to_features(
         reports=reports, coverage_threshold=0.0
     )
 

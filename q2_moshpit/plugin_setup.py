@@ -28,9 +28,7 @@ from q2_types_genomics.feature_data import NOG
 
 from q2_types_genomics.genome_data import GenomeData, BLAST6
 
-# from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
-# import q2_moshpit.usage_examples._examples as all_xmpls
 
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -249,8 +247,6 @@ plugin.methods.register_function(
         description="This method performs the steps by which we find our "
                     "possible target sequences to annotate using the diamond "
                     "search functionality from the eggnog `emapper.py` script",
-        # examples={'eggnog_diamond_search':
-        #           all_xmpls.eggnog_diamond_search_example},
         )
 
 plugin.methods.register_function(
@@ -283,6 +279,4 @@ plugin.methods.register_function(
         name='eggnog_annotate_seed_orthologs',
         description="Uses Eggnog Mapper to apply functional annotations from "
         "the eggnog database to previously generated \"seed orthologs\".",
-        # examples={'eggnog_annotate_seed_orthologs':
-        #           all_xmpls.eggnog_annotate_seed_orthologs_example},
         )

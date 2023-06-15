@@ -31,6 +31,8 @@ class TestAnnotate(TestPluginBase):
         exp_fp = self.get_data_path('expected/test_output.emapper.annotations')
         exp = OrthologFileFmt(exp_fp, mode='r').view(pd.DataFrame)
 
-        for rel_path, obj in obs_obj.annotations.iter_views(OrthologFileFmt):
-            obs = obj.view(pd.DataFrame)
-        pdt.assert_frame_equal(obs, exp)
+        objs = list(obs_obj.annotations.iter_views(OrthologFileFmt))
+        self.assertEqual(len(objs), 1)
+        df = objs[0][1].view(pd.DataFrame)
+        pdt.assert_frame_equal(df, exp)
+

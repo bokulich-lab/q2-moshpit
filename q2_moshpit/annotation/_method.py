@@ -25,7 +25,8 @@ def eggnog_annotate_seed_orthologs(hits_table: SeedOrthologDirFmt,
                                    ) -> OrthologAnnotationDirFmt:
 
     eggnog_db_fp = eggnog_db.path
-    temp = tempfile.TemporaryDirectory()
+
+    result = OrthologAnnotationDirFmt()
 
     # run analysis
     for relpath, obj_path in hits_table.seed_orthologs.iter_views(
@@ -35,14 +36,8 @@ def eggnog_annotate_seed_orthologs(hits_table: SeedOrthologDirFmt,
         _annotate_seed_orthologs_runner(seed_ortholog=obj_path,
                                         eggnog_db=eggnog_db_fp,
                                         sample_label=sample_label,
-                                        output_loc=temp.name,
+                                        output_loc=result,
                                         db_in_memory=db_in_memory)
-
-    # INSTANTIATE RESULT OBJECT
-    result = OrthologAnnotationDirFmt()
-
-    for item in os.listdir(temp.name):
-        shutil.copy(os.path.join(temp.name, item), result.path)
 
     return result
 

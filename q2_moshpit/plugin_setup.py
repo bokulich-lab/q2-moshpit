@@ -177,14 +177,9 @@ plugin.methods.register_function(
     },
     output_descriptions={
         'reports': 'Reports modified by Bracken.',
-        'taxonomy': 'The NCBI taxonomy.',
-        'table': 'Feature table with relative abundances re-estimated '
-                 'by Bracken.'
     },
-    name='Perform taxonomic classification of reads using Kraken 2/Bracken.',
-    description='This method uses Kraken 2 to classify provided NGS reads '
-                'into taxonomic groups and re-estimates their abundances '
-                'with Bracken.',
+    name='Perform read abundance re-estimation using Bracken.',
+    description='This method uses Bracken to re-estimate read abundances.',
     citations=[citations["wood2019"]]
 )
 

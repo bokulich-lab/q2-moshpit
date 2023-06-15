@@ -20,7 +20,6 @@ def select_kraken_features(reports: Kraken2ReportDirectoryFormat,
                            coverage_threshold: float = 0.1) \
         -> (pd.DataFrame, pd.DataFrame, NewickFormat):
 
-    taxonomy = pd.DataFrame(columns=['id', 'taxonomy'])
     rows = []
     trees = []
     for relpath, df in reports.reports.iter_views(pd.DataFrame):

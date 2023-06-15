@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
-from q2_types.tree import Phylogeny, Rooted
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
@@ -118,7 +117,8 @@ plugin.methods.register_function(
 )
 
 T_kraken_in, P_kraken_out = TypeMap({
-    (SequencesWithQuality | PairedEndSequencesWithQuality): Properties('reads'),
+    (SequencesWithQuality
+     | PairedEndSequencesWithQuality): Properties('reads'),
     MAGs: Properties('mags'),
 })
 
@@ -255,18 +255,17 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.select_kraken_features,
     inputs={
-        'reports': SampleData[Kraken2Reports]
+        'kraken_reports': SampleData[Kraken2Reports]
     },
     parameters={
         'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
     },
     outputs=[
         ('table', FeatureTable[PresenceAbsence]),
-        ('taxonomy', FeatureData[Taxonomy]),
-        ('tree', Phylogeny[Rooted] % Properties('taxonomy')),
+        ('taxonomy', FeatureData[Taxonomy])
     ],
     input_descriptions={
-        'reports': 'Per-sample Kraken 2 reports.'
+        'kraken_reports': 'Per-sample Kraken 2 reports.'
     },
     parameter_descriptions={
         'coverage_threshold': 'The minimum percent coverage required to'
@@ -276,13 +275,48 @@ plugin.methods.register_function(
         'table': 'A presence/absence table of selected features. The features'
                  ' are not of even ranks, but will be the most specific rank'
                  ' available.',
-        'taxonomy': 'The NCBI taxonomy. Infra-clade ranks are ignored'
+        'taxonomy': 'Infra-clade ranks are ignored'
                     ' unless they are strain-level. Missing internal ranks'
                     ' are annotated by their next most specific rank,'
                     ' with the exception of k__Bacteria and k__Archaea which'
                     ' match their domain\'s name.',
-        'tree': 'A tree form of the taxonomy in which all internal branches'
-                ' are length 1, except for the taxid tips which are length 0.'
+    },
+    name='Select downstream features from Kraken 2',
+    description='Convert a Kraken 2 report, which is an annotated NCBI'
+                ' taxonomy tree into generic artifacts for downstream'
+                ' analyses.'
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.select_kraken_mag_features,
+    inputs={
+        'kraken_reports': SampleData[Kraken2Reports % Properties('mags')],
+        'kraken_outputs': SampleData[Kraken2Outputs % Properties('mags')]
+    },
+    parameters={
+        'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
+    },
+    outputs=[
+        ('table', FeatureTable[PresenceAbsence]),
+        ('taxonomy', FeatureData[Taxonomy])
+    ],
+    input_descriptions={
+        'kraken_reports': 'Per-sample Kraken 2 reports.',
+        'kraken_outputs': 'Per-sample Kraken 2 hit tables.'
+    },
+    parameter_descriptions={
+        'coverage_threshold': 'The minimum percent coverage required to'
+                              ' produce a feature.'
+    },
+    output_descriptions={
+        'table': 'A presence/absence table of selected features. The features'
+                 ' are not of even ranks, but will be the most specific rank'
+                 ' available.',
+        'taxonomy': 'Infra-clade ranks are ignored'
+                    ' unless they are strain-level. Missing internal ranks'
+                    ' are annotated by their next most specific rank,'
+                    ' with the exception of k__Bacteria and k__Archaea which'
+                    ' match their domain\'s name.',
     },
     name='Select downstream features from Kraken 2',
     description='Convert a Kraken 2 report, which is an annotated NCBI'

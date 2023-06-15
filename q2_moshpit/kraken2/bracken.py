@@ -34,7 +34,7 @@ def _run_bracken_one_sample(
     sample_dir = os.path.join(bracken_report_dir, sample_id)
     os.makedirs(sample_dir, exist_ok=True)
     bracken_report_fp = os.path.join(
-        sample_dir, f"bracken.report.txt"
+        sample_dir, "bracken.report.txt"
     )
     cmd = [
         "bracken",

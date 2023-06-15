@@ -9,20 +9,60 @@
 import os
 from collections import deque
 
-from q2_types_genomics.kraken2 import Kraken2ReportDirectoryFormat
-from q2_types.tree import NewickFormat
+from q2_types_genomics.kraken2 import (
+    Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat)
 
 import pandas as pd
 import skbio
 
 
-def select_kraken_features(reports: Kraken2ReportDirectoryFormat,
+def select_kraken_mag_features(kraken_reports: Kraken2ReportDirectoryFormat,
+                               kraken_outputs: Kraken2OutputDirectoryFormat,
+                               coverage_threshold: float = 0.1) \
+         -> (pd.DataFrame, pd.DataFrame):
+    table, taxonomy = select_kraken_features(
+        kraken_reports, coverage_threshold)
+
+    rows_list = []
+    taxa_list = []
+    # convert IDs to match MAGs instead of taxids/db ids
+    for sample_id in table.index:
+        kraken_table_fp = (
+            kraken_outputs.path / sample_id / f'{sample_id}.output.txt')
+        hits_df = pd.read_csv(kraken_table_fp, sep='\t',
+                              header=None, dtype='str')
+        MAG_COL = 1
+        TAXA_COL = 2
+
+        sample_series = table.loc[sample_id, :]
+        sample_obs = sample_series[sample_series != 0]
+        merged_df = hits_df.join(sample_obs, on=TAXA_COL, how='right')
+        merged_df = merged_df.join(taxonomy, on=TAXA_COL, how='left')
+
+        new_taxa = merged_df[[MAG_COL, 'Taxon']].set_index(MAG_COL)
+        new_taxa.index.name = 'Feature ID'
+
+        table_row = pd.Series(True, index=new_taxa.index.unique())
+        table_row.name = sample_id
+
+        taxa_list.append(new_taxa)
+        rows_list.append(table_row)
+
+    cat_taxonomy = pd.concat(taxa_list)
+    mag_taxonomy = cat_taxonomy[~cat_taxonomy.index.duplicated()]
+
+    mag_table = pd.DataFrame(rows_list).fillna(False)
+
+    return mag_table, mag_taxonomy
+
+
+def select_kraken_features(kraken_reports: Kraken2ReportDirectoryFormat,
                            coverage_threshold: float = 0.1) \
-        -> (pd.DataFrame, pd.DataFrame, NewickFormat):
+        -> (pd.DataFrame, pd.DataFrame):
 
     rows = []
     trees = []
-    for relpath, df in reports.reports.iter_views(pd.DataFrame):
+    for relpath, df in kraken_reports.reports.iter_views(pd.DataFrame):
         sample_id, _ = os.path.split(relpath)
 
         filtered = df[df['perc_frags_covered'] >= coverage_threshold]
@@ -38,11 +78,8 @@ def select_kraken_features(reports: Kraken2ReportDirectoryFormat,
 
     table = pd.DataFrame(rows).fillna(False)
     taxonomy = _to_taxonomy(full_tree)
-    newick = NewickFormat()
-    with newick.open() as fh:
-        full_tree.write(fh, format='newick')
 
-    return table, taxonomy, newick
+    return table, taxonomy
 
 
 def _get_indentation(string, indent=2):

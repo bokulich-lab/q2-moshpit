@@ -65,8 +65,7 @@ def _classify_kraken(
             )
             cmd = deepcopy(base_cmd)
             cmd.extend(
-                ["--report", report_fp, "--output", output_fp,
-                 "--use-names", *fn]
+                ["--report", report_fp, "--output", output_fp, *fn]
             )
             run_command(cmd=cmd, verbose=True)
     except subprocess.CalledProcessError as e:

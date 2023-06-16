@@ -7,6 +7,6 @@
 # ----------------------------------------------------------------------------
 
 
-from ._method import eggnog_diamond_search, extract_ft_from_seed_orthologs
+from ._method import (eggnog_diamond_search, eggnog_annotate)
 
-__all__ = ['eggnog_diamond_search', 'extract_ft_from_seed_orthologs']
+__all__ = ['eggnog_diamond_search', 'eggnog_annotate']

@@ -14,19 +14,20 @@ import q2_moshpit.kraken2.classification
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
-from q2_types_genomics.per_sample_data import MAGs, Contigs
-from q2_types_genomics.per_sample_data._type import AlignmentMap
 from qiime2.plugin import (Plugin, Citations)
 
 import importlib
 import q2_moshpit
+
 from q2_types.sample_data import SampleData
 from q2_types.feature_table import FeatureTable, Frequency
 from q2_types.feature_data import FeatureData, Sequence
+
 from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
 from q2_types_genomics.feature_data import NOG
-
 from q2_types_genomics.genome_data import GenomeData, BLAST6
+from q2_types_genomics.per_sample_data import MAGs, Contigs
+from q2_types_genomics.per_sample_data._type import AlignmentMap
 
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 
@@ -45,7 +46,7 @@ plugin = Plugin(
     short_description='QIIME 2 plugin for metagenome analysis.',
 )
 
-importlib.import_module('q2_moshpit.diamond')
+importlib.import_module('q2_moshpit.eggnog')
 importlib.import_module('q2_moshpit.metabat2')
 
 plugin.methods.register_function(
@@ -216,9 +217,9 @@ plugin.methods.register_function(
                 'user inputs and uses those to construct a database.',
     citations=[citations["wood2019"]]
 )
-# diamond_search
+
 plugin.methods.register_function(
-        function=q2_moshpit.diamond.eggnog_diamond_search,
+        function=q2_moshpit.eggnog.eggnog_diamond_search,
         inputs={'input_sequences': SampleData[Contigs],
                 'diamond_db': ReferenceDB[Diamond],
                 },
@@ -243,25 +244,14 @@ plugin.methods.register_function(
         outputs=[('seed_ortholog', GenomeData[BLAST6]),
                  ('ortholog_counts', FeatureTable[Frequency])
                  ],
-        name='eggnog_diamond_search',
+        name='Run eggNOG search using diamond aligner',
         description="This method performs the steps by which we find our "
                     "possible target sequences to annotate using the diamond "
                     "search functionality from the eggnog `emapper.py` script",
         )
 
 plugin.methods.register_function(
-        function=q2_moshpit.diamond.extract_ft_from_seed_orthologs,
-        inputs={'seed_orthologs': GenomeData[BLAST6],
-                },
-        parameters={},
-        outputs=[('per_sample_counts', FeatureTable[Frequency])],
-        name='feature_table_from_seed_orthologs',
-        description='Generates a FeatureTable[Frequency] of seed orthologs, '
-                    'unnecessary when running `eggnog_diamond_search`.'
-        )
-
-plugin.methods.register_function(
-        function=q2_moshpit.annotation.eggnog_annotate_seed_orthologs,
+        function=q2_moshpit.eggnog.eggnog_annotate,
         inputs={
             'hits_table': GenomeData[BLAST6],
             'eggnog_db': ReferenceDB[Eggnog],
@@ -270,13 +260,12 @@ plugin.methods.register_function(
             'db_in_memory': Bool,
             },
         parameter_descriptions={
-            'db_in_memory': 'Read entire eggnog database into memory. The '
+            'db_in_memory': 'Read eggnog database into memory. The '
                             'eggnog database is very large(>44GB), so this '
                             'option should only be used on clusters or other '
-                            'machines with enough memory',
+                            'machines with enough memory.',
             },
-        outputs=[('annotation_ortholog', FeatureData[NOG])],
-        name='eggnog_annotate_seed_orthologs',
-        description="Uses Eggnog Mapper to apply functional annotations from "
-        "the eggnog database to previously generated \"seed orthologs\".",
+        outputs=[('ortholog_annotations', FeatureData[NOG])],
+        name='Annotate orthologs against eggNOG database',
+        description="Apply eggnog mapper to annotate seed orthologs.",
         )

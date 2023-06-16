@@ -8,11 +8,11 @@
 
 from .kraken2 import classification, database
 from .metabat2 import metabat2
-from . import diamond, annotation
+from . import eggnog, annotation
 
 
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-__all__ = ['metabat2', 'classification', 'database', 'diamond', 'annotation']
+__all__ = ['metabat2', 'classification', 'database', 'eggnog', 'annotation']

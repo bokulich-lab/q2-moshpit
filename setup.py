@@ -35,16 +35,15 @@ setup(
             'data/*', 'data/bins/*', 'data/bins/*/*',
             'data/checkm_reports/*/*/*', 'data/plots/*/*/*'
         ],
-        'q2_moshpit.diamond': [
+        'q2_moshpit.eggnog': [
             'tests/data/*',
             'tests/data/contig-sequences-1/*',
             'tests/data/random-db-1/*',
+            'tests/data/good_hits/*',
+            'tests/data/bad_hits/*',
+            'tests/data/eggnog_db/*',
+            'tests/data/expected/*',
             'citations.bib',
-        ],
-        'q2_moshpit.annotation': [
-            'tests/data/*', 'tests/data/good_hits/*',
-            'tests/data/bad_hits/*', 'tests/data/eggnog_db/*',
-            'tests/data/expected/*', 'citations.bib',
         ],
         'q2_moshpit.kraken2.tests': [
             'data/*', 'data/mags/*', 'data/mags/*/*',

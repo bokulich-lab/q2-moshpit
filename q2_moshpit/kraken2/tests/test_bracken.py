@@ -10,12 +10,11 @@ import shutil
 import tempfile
 import unittest
 from subprocess import CalledProcessError
-from unittest.mock import patch, ANY, call, Mock, MagicMock
+from unittest.mock import patch
 
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from qiime2.plugin.testing import TestPluginBase
-from qiime2.plugins import moshpit
 
 from q2_moshpit.kraken2.bracken import (
     _assert_read_lens_available, _run_bracken_one_sample, _estimate_bracken)
@@ -80,17 +79,26 @@ class TestBracken(TestPluginBase):
             read_len=self.kwargs['read_len'],
             level=self.kwargs['level'],
         )
-        exp_table = pd.read_csv(self.get_data_path('bracken-report/sample1.table.csv'), index_col=0)
+        exp_table = pd.read_csv(
+            self.get_data_path('bracken-report/sample1.table.csv'),
+            index_col=0
+        )
         exp_table["taxonomy_id"] = exp_table["taxonomy_id"].astype(str)
 
         assert_frame_equal(obs_table, exp_table)
         p1.assert_called_once_with(
             cmd=[
                 "bracken", "-d", self.bracken_db_dir,
-                "-i", os.path.join(kraken2_report_dir, "sample1.report.txt"),
-                "-o", os.path.join(self.temp_dir, "sample1.bracken.output.txt"),
-                "-w", os.path.join(bracken_report_dir, "sample1", "bracken.report.txt"),
-                "-t", str(self.kwargs['threshold']), "-r", str(self.kwargs['read_len']),
+                "-i",
+                os.path.join(kraken2_report_dir, "sample1.report.txt"),
+                "-o",
+                os.path.join(self.temp_dir, "sample1.bracken.output.txt"),
+                "-w",
+                os.path.join(
+                    bracken_report_dir, "sample1", "bracken.report.txt"
+                ),
+                "-t", str(self.kwargs['threshold']),
+                "-r", str(self.kwargs['read_len']),
                 "-l", self.kwargs['level']
             ], verbose=True
         )
@@ -123,10 +131,12 @@ class TestBracken(TestPluginBase):
 
         tables = [
             pd.read_csv(
-                self.get_data_path('bracken-report/sample1.table.csv'), index_col=0
+                self.get_data_path('bracken-report/sample1.table.csv'),
+                index_col=0
             ),
             pd.read_csv(
-                self.get_data_path('bracken-report/sample2.table.csv'), index_col=0
+                self.get_data_path('bracken-report/sample2.table.csv'),
+                index_col=0
             )
         ]
         p1.side_effect = tables
@@ -139,7 +149,8 @@ class TestBracken(TestPluginBase):
             level=self.kwargs['level'],
         )
         exp_table = pd.read_csv(
-            self.get_data_path('bracken-report/samples-merged.csv'), index_col=0
+            self.get_data_path('bracken-report/samples-merged.csv'),
+            index_col=0
         )
         exp_table.columns = [int(x) for x in exp_table.columns]
         exp_table.columns.name = "taxonomy_id"

@@ -37,8 +37,6 @@ test:
   imports:
     - q2_moshpit
     - qiime2.plugins.moshpit
-    - qiime2.plugins.types_genomics
-    - q2_types_genomics
   commands:
     - pytest --cov q2_moshpit --pyargs q2_moshpit
 

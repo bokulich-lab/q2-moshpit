@@ -14,6 +14,7 @@ import q2_moshpit.kraken2.classification
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
+
 from qiime2.plugin import (Plugin, Citations)
 
 import importlib
@@ -26,6 +27,7 @@ from q2_types.feature_data import FeatureData, Sequence
 from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
 from q2_types_genomics.feature_data import NOG
 from q2_types_genomics.genome_data import GenomeData, BLAST6
+from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 
@@ -155,13 +157,11 @@ plugin.methods.register_function(
         "seqs": List[FeatureData[Sequence]]
     },
     parameters={
-        'standard': Bool,
-        'library_path': Str,
-        'libraries': List[Str % Choices(
-            ['archaea', 'bacteria', 'plasmid', 'viral', 'human', 'fungi',
-             'plant', 'protozoa', 'nr', 'nt', 'UniVec', 'UniVec_Core', ],
-        )],
-        'library_exists': Str % Choices(['skip', 'refetch']),
+        'collection': Str % Choices(
+            ['viral', 'minusb', 'standard', 'standard8',
+             'standard16', 'pluspf', 'pluspf8', 'pluspf16',
+             'pluspfp', 'pluspfp8', 'pluspfp16', 'eupathdb'],
+        ),
         'threads': Int % Range(1, None),
         'kmer_len': Int % Range(1, None),
         'minimizer_len': Int % Range(1, None),
@@ -171,26 +171,22 @@ plugin.methods.register_function(
         'use_ftp': Bool,
         'load_factor': Float % Range(0, 1),
         'fast_build': Bool,
+        'read_len': List[Int % Range(1, None)],
     },
     outputs=[
-        ('database', Kraken2DB),
+        ('kraken2_database', Kraken2DB),
+        ('bracken_database', BrackenDB),
     ],
     input_descriptions={
         "seqs": "Sequences to be added to the Kraken 2 database."
     },
     parameter_descriptions={
-        'standard': 'Use standard Kraken 2 database. Incompatible with the '
-                    '"libraries" parameter.',
-        'library_path': 'Path to the directory containing the library files. '
-                        'This is where all the required files will be '
-                        'downloaded - if not provided, a temporary directory '
-                        'will be created.',
-        'libraries': 'List of Kraken 2 reference libraries to be '
-                     'included in the database. Incompatible with '
-                     'the "standard" parameter.',
-        'library_exists': 'Desired behaviour to follow when the library '
-                          'already exists in the "library_path" directory.',
-        'threads': 'Number of threads.',
+        'collection': 'Name of the database collection to be fetched. '
+                      'Please check https://benlangmead.github.io/aws-'
+                      'indexes/k2 for the description of the available '
+                      'options.',
+        'threads': 'Number of threads. Only applicable when building a '
+                   'custom database.',
         'kmer_len': 'K-mer length in bp/aa.',
         'minimizer_len': 'Minimizer length in bp/aa.',
         'minimizer_spaces': 'Number of characters in minimizer that are '
@@ -206,16 +202,19 @@ plugin.methods.register_function(
         'load_factor': 'Proportion of the hash table to be populated.',
         'fast_build': 'Do not require database to be deterministically '
                       'built when using multiple threads. This is faster, '
-                      'but does introduce variability in minimizer/LCA pairs.'
+                      'but does introduce variability in minimizer/LCA pairs.',
+        'read_len': 'Ideal read lengths to be used while building the Bracken '
+                    'database.'
     },
     output_descriptions={
-        'database': 'Kraken2 database.'
+        'kraken2_database': 'Kraken2 database.',
+        'bracken_database': 'Bracken database.'
     },
     name='Build Kraken 2 database.',
-    description='This method builds a Kraken 2 database from provided '
-                'DNA sequences or simply fetches the sequences based on '
-                'user inputs and uses those to construct a database.',
-    citations=[citations["wood2019"]]
+    description='This method builds a Kraken 2/Bracken databases from '
+                'provided DNA sequences or simply fetches pre-built '
+                'versions from an online resource.',
+    citations=[citations["wood2019"], citations["lu2017"]]
 )
 
 plugin.methods.register_function(

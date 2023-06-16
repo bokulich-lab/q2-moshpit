@@ -50,7 +50,8 @@ setup(
             'data/single-end/*', 'data/paired-end/*',
             'data/db/*', 'data/reports-mags/*',
             'data/reports-mags/*/*', 'data/outputs-mags/*',
-            'data/outputs-mags/*/*', 'data/seqs/*'
+            'data/outputs-mags/*/*', 'data/seqs/*',
+            'data/bracken-db/*'
         ]
     },
     zip_safe=False,

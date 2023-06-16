@@ -23,7 +23,6 @@ requirements:
     - samtools
     - qiime2 {{ qiime2_epoch }}.*
     - q2-types-genomics {{ qiime2_epoch }}.*
-    - q2templates {{ qiime2_epoch }}.*
     - eggnog-mapper >=2.1.10
     - diamond
     - tqdm

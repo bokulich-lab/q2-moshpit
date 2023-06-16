@@ -131,10 +131,5 @@ dmypy.json
 # PyCharm configuration
 .idea/
 
-# temp eggnogmapper database files
-e5.proteomes.faa
-e5.taxid_info.tsv
-*.dmnd
-
 # Mac OS
 .DS_Store

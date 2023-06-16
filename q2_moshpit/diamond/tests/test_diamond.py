@@ -26,7 +26,7 @@ class TestDiamond(TestPluginBase):
 
         diamond_db = qiime2.Artifact.import_data(
             'ReferenceDB[Diamond]',
-            self.get_data_path('random-db-1.fa')
+            self.get_data_path('random-db-1')
         ).view(DiamondDatabaseDirFmt)
 
         _, obs = eggnog_diamond_search(

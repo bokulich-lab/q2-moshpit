@@ -37,7 +37,8 @@ setup(
         ],
         'q2_moshpit.diamond': [
             'tests/data/*',
-            'data/*',
+            'tests/data/contig-sequences-1/*',
+            'tests/data/random-db-1/*',
             'citations.bib',
         ],
         'q2_moshpit.annotation': [

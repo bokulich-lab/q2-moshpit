@@ -85,7 +85,7 @@ def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
     subprocess.run(cmds, check=True)
 
 
-def eggnog_annotate(hits_table: SeedOrthologDirFmt,
+def eggnog_annotate(eggnog_hits: SeedOrthologDirFmt,
                     eggnog_db: EggnogRefDirFmt,
                     db_in_memory: bool = False) -> OrthologAnnotationDirFmt:
 
@@ -94,7 +94,7 @@ def eggnog_annotate(hits_table: SeedOrthologDirFmt,
     result = OrthologAnnotationDirFmt()
 
     # run analysis
-    for relpath, obj_path in hits_table.seed_orthologs.iter_views(
+    for relpath, obj_path in eggnog_hits.seed_orthologs.iter_views(
             OrthologFileFmt):
         sample_label = str(relpath).rsplit(r'.', 2)[0]
 

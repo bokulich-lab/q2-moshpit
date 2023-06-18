@@ -52,7 +52,7 @@ class TestAnnotate(TestPluginBase):
         egg_db_fp = self.get_data_path('eggnog_db/')
         egg_db = EggnogRefDirFmt(egg_db_fp, mode='r')
 
-        obs_obj = eggnog_annotate(hits_table=seed_orthologs, eggnog_db=egg_db)
+        obs_obj = eggnog_annotate(eggnog_hits=seed_orthologs, eggnog_db=egg_db)
 
         exp_fp = self.get_data_path('expected/test_output.emapper.annotations')
         exp = OrthologFileFmt(exp_fp, mode='r').view(pd.DataFrame)

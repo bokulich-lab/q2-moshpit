@@ -26,7 +26,7 @@ from q2_types.feature_data import FeatureData, Sequence
 
 from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
 from q2_types_genomics.feature_data import NOG
-from q2_types_genomics.genome_data import GenomeData, BLAST6
+from q2_types_genomics.genome_data import BLAST6
 from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
@@ -240,8 +240,8 @@ plugin.methods.register_function(
                             'option should only be used on clusters or other '
                             'machines with enough memory.',
             },
-        outputs=[('seed_ortholog', GenomeData[BLAST6]),
-                 ('ortholog_counts', FeatureTable[Frequency])
+        outputs=[('eggnog_hits', SampleData[BLAST6]),
+                 ('table', FeatureTable[Frequency])
                  ],
         name='Run eggNOG search using diamond aligner',
         description="This method performs the steps by which we find our "
@@ -252,7 +252,7 @@ plugin.methods.register_function(
 plugin.methods.register_function(
         function=q2_moshpit.eggnog.eggnog_annotate,
         inputs={
-            'hits_table': GenomeData[BLAST6],
+            'eggnog_hits': SampleData[BLAST6],
             'eggnog_db': ReferenceDB[Eggnog],
             },
         parameters={

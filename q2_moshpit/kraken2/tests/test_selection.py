@@ -29,7 +29,9 @@ class TestKrakenSelect(TestPluginBase):
         super().setUp()
         self.temp_dir = tempfile.mkdtemp()
 
-        fp = self.get_data_path("kraken2-reports-select/kraken2_reads_table.json")
+        fp = self.get_data_path(
+            "kraken2-reports-select/kraken2_reads_table.json"
+        )
         self.kraken2_reads_table = pd.read_json(fp)
         self.kraken2_reads_table.columns = [
             str(x) for x in self.kraken2_reads_table.columns

@@ -317,9 +317,9 @@ plugin.methods.register_function(
 #                               'produce a feature.'
 #     },
 #     output_descriptions={
-#         'table': 'A presence/absence table of selected features. The features '
-#                  'are not of even ranks, but will be the most specific rank '
-#                  'available.',
+#         'table': 'A presence/absence table of selected features. The '
+#                  'features are not of even ranks, but will be the most '
+#                  'specific rank available.',
 #         'taxonomy': 'Infra-clade ranks are ignored'
 #                     'unless they are strain-level. Missing internal ranks '
 #                     'are annotated by their next most specific rank, '

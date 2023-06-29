@@ -29,6 +29,7 @@ def kraken2_to_mag_features(
     # convert IDs to match MAGs instead of taxids/db ids
     for sample_id in table.index:
         kraken_table_fp = (
+            # TODO: the second sample_id needs to actually be the bin_id
             hits.path / sample_id / f'{sample_id}.output.txt'
         )
         hits_df = pd.read_csv(kraken_table_fp, sep='\t',

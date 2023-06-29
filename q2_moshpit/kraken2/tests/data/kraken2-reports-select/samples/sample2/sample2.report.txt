@@ -1,0 +1,28 @@
+100.00	473127	0	R	1	root
+100.00	473127	0	R1	131567	  cellular organisms
+100.00	473127	0	D	2	    Bacteria
+100.00	473127	0	D1	1783272	      Terrabacteria group
+100.00	473127	0	P	201174	        Actinomycetota
+100.00	473127	0	C	1760	          Actinomycetes
+100.00	473127	0	O	85007	            Mycobacteriales
+100.00	473127	0	F	1762	              Mycobacteriaceae
+100.00	473127	0	G	1763	                Mycobacterium
+48.31	228564	0	G1	2993898	                  Mycobacterium ulcerans group
+46.70	220938	220938	S	265949	                    Mycobacterium pseudoshottsii
+0.91	4324	4324	S	1809	                    Mycobacterium ulcerans
+0.23	1106	1106	S	1781	                    Mycobacterium marinum
+0.06	272	272	S	133549	                    Mycobacterium shottsii
+0.41	1922	1922	S	261524	                    Mycobacterium liflandii
+51.59	244093	244093	S	169765	                  Mycobacterium lacus
+0.08	367	0	G1	77643	                  Mycobacterium tuberculosis complex
+0.07	312	312	S	1773	                    Mycobacterium tuberculosis
+0.01	55	55	S	78331	                    Mycobacterium canettii
+0.00	15	15	S	486698	                  Mycobacterium riyadhense
+0.00	10	10	S	886343	                  Mycobacterium spongiae
+0.00	8	8	S	29311	                  Mycobacterium haemophilum
+0.00	10	10	S	398694	                  Mycobacterium shinjukuense
+0.00	12	12	S	1768	                  Mycobacterium kansasii
+0.00	12	12	S	44010	                  Mycobacterium conspicuum
+0.00	6	6	S	2094119	                  Mycobacterium basiliense
+0.00	13	13	S	1389713	                  Mycobacterium paragordonae
+0.00	11	11	S	2738409	                  Mycobacterium ostraviense

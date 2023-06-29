@@ -16,7 +16,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     license='BSD-3-Clause',
     packages=find_packages(),
-    author="Michal Ziemski",
+    author="Michal Ziemski, Keegan Evans",
     author_email="ziemski.michal@gmail.com",
     description="QIIME 2 plugin for metagenome analysis.",
     url="https://github.com/bokulich-lab/q2-moshpit",
@@ -25,10 +25,25 @@ setup(
         ['q2-moshpit=q2_moshpit.plugin_setup:plugin']
     },
     package_data={
-        'q2_moshpit': ['citations.bib'],
+        'q2_moshpit': ['citations.bib', 'tests/data/*'],
+        'q2_moshpit.usage_examples': ['tests/data/*'],
         'q2_moshpit.metabat2.tests': [
             'data/*', 'data/bins/samp1/*', 'data/contigs/*',
             'data/depth/*', 'data/maps/*'
+        ],
+        'q2_moshpit.checkm.tests': [
+            'data/*', 'data/bins/*', 'data/bins/*/*',
+            'data/checkm_reports/*/*/*', 'data/plots/*/*/*'
+        ],
+        'q2_moshpit.eggnog': [
+            'tests/data/*',
+            'tests/data/contig-sequences-1/*',
+            'tests/data/random-db-1/*',
+            'tests/data/good_hits/*',
+            'tests/data/bad_hits/*',
+            'tests/data/eggnog_db/*',
+            'tests/data/expected/*',
+            'citations.bib',
         ],
         'q2_moshpit.kraken2.tests': [
             'data/*', 'data/mags/*', 'data/mags/*/*',

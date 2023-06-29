@@ -5,25 +5,33 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from q2_types.feature_data import FeatureData, Sequence, Taxonomy
-from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
-from q2_types.sample_data import SampleData
 
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
+
+import importlib
+import q2_moshpit
+
+from q2_types.sample_data import SampleData
+from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
+from q2_types.feature_data import FeatureData, Sequence, Taxonomy
+
+from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
+from q2_types_genomics.feature_data import NOG
+from q2_types_genomics.genome_data import BLAST6
 from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.core.type import (Bool, Range, Int, Str, Float, List, Choices,
-                              Properties, TypeMap)
+from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 
-import q2_moshpit
-from q2_moshpit import __version__
+
+from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
+
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
 
@@ -51,7 +59,7 @@ kraken2_param_descriptions = {
 
 plugin = Plugin(
     name='moshpit',
-    version=__version__,
+    version=q2_moshpit.__version__,
     website="https://github.com/bokulich-lab/q2-moshpit",
     package='q2_moshpit',
     description=(
@@ -60,6 +68,9 @@ plugin = Plugin(
         'tools for genome binning and functional annotation.'),
     short_description='QIIME 2 plugin for metagenome analysis.',
 )
+
+importlib.import_module('q2_moshpit.eggnog')
+importlib.import_module('q2_moshpit.metabat2')
 
 plugin.methods.register_function(
     function=q2_moshpit.metabat2.bin_contigs_metabat,
@@ -320,3 +331,55 @@ plugin.methods.register_function(
                 'taxonomy tree into generic artifacts for downstream '
                 'analyses.'
 )
+
+plugin.methods.register_function(
+        function=q2_moshpit.eggnog.eggnog_diamond_search,
+        inputs={'input_sequences': SampleData[Contigs],
+                'diamond_db': ReferenceDB[Diamond],
+                },
+        parameters={
+                'num_cpus': Int,
+                'db_in_memory': Bool,
+                },
+        input_descriptions={
+            'input_sequences': 'Sequence data of the contigs we want to '
+                               'search for hits using the Diamond Database',
+            'diamond_db': 'The filepath to an artifact containing the'
+                          'Diamond database',
+            },
+        parameter_descriptions={
+            'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+                        'use all available.',
+            'db_in_memory': 'Read database into memory. The '
+                            'database can be very large, so this '
+                            'option should only be used on clusters or other '
+                            'machines with enough memory.',
+            },
+        outputs=[('eggnog_hits', SampleData[BLAST6]),
+                 ('table', FeatureTable[Frequency])
+                 ],
+        name='Run eggNOG search using diamond aligner',
+        description="This method performs the steps by which we find our "
+                    "possible target sequences to annotate using the diamond "
+                    "search functionality from the eggnog `emapper.py` script",
+        )
+
+plugin.methods.register_function(
+        function=q2_moshpit.eggnog.eggnog_annotate,
+        inputs={
+            'eggnog_hits': SampleData[BLAST6],
+            'eggnog_db': ReferenceDB[Eggnog],
+            },
+        parameters={
+            'db_in_memory': Bool,
+            },
+        parameter_descriptions={
+            'db_in_memory': 'Read eggnog database into memory. The '
+                            'eggnog database is very large(>44GB), so this '
+                            'option should only be used on clusters or other '
+                            'machines with enough memory.',
+            },
+        outputs=[('ortholog_annotations', FeatureData[NOG])],
+        name='Annotate orthologs against eggNOG database',
+        description="Apply eggnog mapper to annotate seed orthologs.",
+        )

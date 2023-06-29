@@ -5,26 +5,15 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-import json
-import os
 import shutil
 import tempfile
-import unittest
-from subprocess import CalledProcessError
-from unittest.mock import patch
 
 import pandas as pd
 from pandas._testing import assert_frame_equal
 from q2_moshpit.kraken2 import kraken2_to_features, kraken2_to_mag_features
 from qiime2.plugin.testing import TestPluginBase
 
-from q2_moshpit.kraken2.bracken import (
-    _assert_read_lens_available,
-    _run_bracken_one_sample,
-    _estimate_bracken,
-)
 from q2_types_genomics.kraken2 import (
-    BrackenDBDirectoryFormat,
     Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat,
 )
 
@@ -82,4 +71,6 @@ class TestKrakenSelect(TestPluginBase):
         hits = Kraken2OutputDirectoryFormat(
             self.get_data_path("outputs-mags"), "r"
         )
-        obs_table, obs_taxonomy = kraken2_to_mag_features(reports, hits, 0.0)
+        obs_table, obs_taxonomy = kraken2_to_mag_features(
+            reports, hits, 0.0
+        )

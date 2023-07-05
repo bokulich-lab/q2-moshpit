@@ -12,42 +12,76 @@ from typing import List, Dict, Tuple
 import pandas as pd
 import skbio
 from q2_types.feature_data import DNAFASTAFormat
+from scipy.cluster.hierarchy import ward, fcluster
 
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
 from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 
 
-def find_similar_bins(
-    distance_matrix: pd.DataFrame, threshold: float
+# def find_similar_bins(
+#     distance_matrix: pd.DataFrame, threshold: float
+# ) -> List[List[str]]:
+#     """
+#     Finds similar bins based on a distance matrix and a similarity threshold.
+#
+#     Args:
+#         distance_matrix (pd.DataFrame): A pandas DataFrame containing the pairwise distances between bins.
+#         threshold (float): A float representing the maximum distance for two bins to be considered similar.
+#
+#     Returns:
+#         A list where each element is a list  of similar bins.
+#
+#     Notes:
+#         The output will look like:
+#             [['sample1_bin1', 'sample3_bin3'], ['sample2_bin4, 'sample3_bin1']]
+#         meaning that sample1_bin1 is similar to sample3_bin3 and sample2_bin4 is similar to sample3_bin1,
+#         according to the provided threshold.
+#     """
+#     sample_names = list(distance_matrix.index)
+#     similar_bins = {}
+#     for i, bin1 in enumerate(sample_names):
+#         for j, bin2 in enumerate(sample_names[i + 1:]):
+#             distance = distance_matrix.loc[bin1, bin2]
+#             if distance <= threshold:
+#                 if bin1 not in similar_bins:
+#                     similar_bins[bin1] = []
+#                 similar_bins[bin1].append(bin2)
+#     similar_bins = [[key, *value] for key, value in similar_bins.items()]
+#     return similar_bins
+
+
+def find_similar_bins_fcluster(
+        distance_matrix: pd.DataFrame, threshold: float
 ) -> List[List[str]]:
     """
-    Finds similar bins based on a distance matrix and a similarity threshold.
+    Group bins into clusters based on a distance threshold.
 
     Args:
-        distance_matrix (pd.DataFrame): A pandas DataFrame containing the pairwise distances between bins.
-        threshold (float): A float representing the maximum distance for two bins to be considered similar.
+        distance_matrix (pd.DataFrame): A distance matrix.
+        threshold (float): The distance threshold for forming clusters.
 
     Returns:
-        A list where each element is a list  of similar bins.
+         A list where each element is a list  of similar bins.
 
     Notes:
-        The output will look like:
-            [['sample1_bin1', 'sample3_bin3'], ['sample2_bin4, 'sample3_bin1']]
-        meaning that sample1_bin1 is similar to sample3_bin3 and sample2_bin4 is similar to sample3_bin1,
-        according to the provided threshold.
+         The output will look like:
+             [['sample1_bin1', 'sample3_bin3'], ['sample2_bin4, 'sample3_bin1']]
+         meaning that sample1_bin1 is similar to sample3_bin3 and sample2_bin4 is
+         similar to sample3_bin1, according to the provided threshold.
     """
-    sample_names = list(distance_matrix.index)
-    similar_bins = {}
-    for i, bin1 in enumerate(sample_names):
-        for j, bin2 in enumerate(sample_names[i + 1 :]):
-            distance = distance_matrix.loc[bin1, bin2]
-            if distance <= threshold:
-                if bin1 not in similar_bins:
-                    similar_bins[bin1] = []
-                similar_bins[bin1].append(bin2)
-    similar_bins = [[key, *value] for key, value in similar_bins.items()]
-    return similar_bins
 
+    # Perform hierarchical/agglomerative clustering
+    tree = ward(distance_matrix.values)
+
+    # Form flat clusters from the hierarchical clustering defined by the given linkage matrix
+    cluster_ids = fcluster(tree, t=threshold, criterion='distance')
+
+    # Map each MAG to its corresponding cluster
+    clusters = {i: [] for i in cluster_ids}
+    for i, cluster in enumerate(cluster_ids):
+        clusters[cluster].append(distance_matrix.index[i])
+
+    return list(clusters.values())
 
 def get_bin_lengths(mags: MultiMAGSequencesDirFmt) -> pd.Series:
     """
@@ -206,7 +240,7 @@ def dereplicate_mags(
     distances = distance_matrix.to_data_frame()
 
     # find similar bins, according to the threshold
-    bin_clusters = find_similar_bins(distances, 1 - threshold)
+    bin_clusters = find_similar_bins_fcluster(distances, threshold)
 
     # find the longest bin in each cluster
     bin_lengths = get_bin_lengths(mags)

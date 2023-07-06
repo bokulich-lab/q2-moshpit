@@ -103,8 +103,6 @@ class TestKrakenSelect(TestPluginBase):
 
         raise NotImplementedError('Additional tests needed.')
 
-
-
     # The following test is currently failing b/c the format is looking
     # for file names that don't exist in the `outputs-mags` directory. It's
     # looking for `outputs-mags/sample1/sample1.output.txt`, but the file

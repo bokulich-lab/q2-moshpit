@@ -67,7 +67,6 @@ def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
     trees = []
     for relpath, df in reports.reports.iter_views(pd.DataFrame):
         sample_id, _ = os.path.split(relpath)
-        print(df)
 
         filtered = df[df['perc_frags_covered'] >= coverage_threshold]
         tree = _kraken_to_ncbi_tree(filtered)
@@ -103,12 +102,12 @@ def _kraken_to_ncbi_tree(df):
 
         indent = _get_indentation(label)
         name = f"{r.lower()}__{label.strip()}"
-        node = skbio.TreeNode(name=name, length=0)
+        node = skbio.TreeNode(name=name, length=0.0)
 
         # Don't include internal non-strain infra-clades as tips
         if len(r) == 1 or r.startswith('S'):
-            id_node = skbio.TreeNode(name=otu, length=0)
-            node.length = 1  # not infra-clade, so give it a length
+            id_node = skbio.TreeNode(name=otu, length=0.0)
+            node.length = 1.0  # not infra-clade, so give it a length
             node.append(id_node)
 
         parent_indent, parent_node = stack[-1]

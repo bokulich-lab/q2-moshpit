@@ -1,0 +1,1 @@
+(((2:0, ((201174:0, (1760:0, (85007:0, (1762:0, (1763:0, ((1767:0)'s__Mycobacterium intracellulare':1)'g1__Mycobacterium avium complex (MAC)':0)'g__Mycobacterium':1)'f__Mycobacteriaceae':1)'o__Mycobacteriales':1)'c__Actinomycetes':1)'p__Actinomycetota':1)'d1__Terrabacteria group':0)'d__Bacteria':1)'r1__cellular organisms':0);

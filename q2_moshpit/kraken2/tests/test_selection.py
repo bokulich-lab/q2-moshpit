@@ -10,7 +10,9 @@ import tempfile
 
 import pandas as pd
 from pandas._testing import assert_frame_equal
+import skbio
 from q2_moshpit.kraken2 import kraken2_to_features  # , kraken2_to_mag_features
+from q2_moshpit.kraken2.select import _kraken_to_ncbi_tree
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_types_genomics.kraken2 import (
@@ -82,6 +84,26 @@ class TestKrakenSelect(TestPluginBase):
 
         assert_frame_equal(obs_table, self.kraken2_reads_table)
         assert_frame_equal(obs_taxonomy, self.kraken_taxonomy)
+
+    def test_kraken_to_ncbi_tree(self):
+        reports = Kraken2ReportDirectoryFormat(
+            self.get_data_path("kraken_to_ncbi_tree/example1"), "r"
+        )
+        reports = list(reports.reports.iter_views(pd.DataFrame))
+        report_df = reports[0][1]
+
+        exp_tree_fp = self.get_data_path("kraken_to_ncbi_tree/exp-tree1.txt")
+        exp_tree = skbio.TreeNode.read(exp_tree_fp)
+
+        obs_tree = _kraken_to_ncbi_tree(report_df)
+
+        # skbio.TreeNode doesn't define an equality operator, so performing
+        # this test on newick strings (which is probably fragile)
+        self.assertEqual(str(obs_tree), str(exp_tree))
+
+        raise NotImplementedError('Additional tests needed.')
+
+
 
     # The following test is currently failing b/c the format is looking
     # for file names that don't exist in the `outputs-mags` directory. It's

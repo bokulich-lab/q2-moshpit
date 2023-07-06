@@ -87,12 +87,12 @@ class TestKrakenSelect(TestPluginBase):
 
     def test_kraken_to_ncbi_tree(self):
         reports = Kraken2ReportDirectoryFormat(
-            self.get_data_path("kraken_to_ncbi_tree/example1"), "r"
+            self.get_data_path("kraken-to-ncbi-tree/example1"), "r"
         )
         reports = list(reports.reports.iter_views(pd.DataFrame))
         report_df = reports[0][1]
 
-        exp_tree_fp = self.get_data_path("kraken_to_ncbi_tree/exp-tree1.txt")
+        exp_tree_fp = self.get_data_path("kraken-to-ncbi-tree/exp-tree1.txt")
         exp_tree = skbio.TreeNode.read(exp_tree_fp)
 
         obs_tree = _kraken_to_ncbi_tree(report_df)

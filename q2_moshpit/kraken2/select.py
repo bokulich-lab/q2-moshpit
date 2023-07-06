@@ -67,6 +67,7 @@ def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
     trees = []
     for relpath, df in reports.reports.iter_views(pd.DataFrame):
         sample_id, _ = os.path.split(relpath)
+        print(df)
 
         filtered = df[df['perc_frags_covered'] >= coverage_threshold]
         tree = _kraken_to_ncbi_tree(filtered)

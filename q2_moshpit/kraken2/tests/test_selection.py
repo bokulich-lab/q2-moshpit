@@ -10,11 +10,11 @@ import tempfile
 
 import pandas as pd
 from pandas._testing import assert_frame_equal
-from q2_moshpit.kraken2 import kraken2_to_features, kraken2_to_mag_features
+from q2_moshpit.kraken2 import kraken2_to_features  # , kraken2_to_mag_features
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_types_genomics.kraken2 import (
-    Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat,
+    Kraken2ReportDirectoryFormat,  # Kraken2OutputDirectoryFormat,
 )
 
 
@@ -49,14 +49,16 @@ class TestKrakenSelect(TestPluginBase):
             "kraken2-reports-select/kraken2_taxonomy.tsv"
         )
         self.kraken_taxonomy = pd.read_csv(
-            fp, sep='\t', header=0, dtype={"Feature ID":"object", "Taxon":str})
+            fp, sep='\t', header=0,
+            dtype={"Feature ID": "object", "Taxon": str})
         self.kraken_taxonomy.set_index("Feature ID", inplace=True)
 
         fp = self.get_data_path(
             "kraken2-reports-select/kraken2_taxonomy_filtered.tsv"
         )
         self.kraken_taxonomy_filtered = pd.read_csv(
-            fp, sep='\t', header=0, dtype={"Feature ID":"object", "Taxon":str})
+            fp, sep='\t', header=0,
+            dtype={"Feature ID": "object", "Taxon": str})
         self.kraken_taxonomy_filtered.set_index("Feature ID", inplace=True)
 
     def tearDown(self):

@@ -16,7 +16,6 @@ from copy import deepcopy
 import skbio.io
 from q2_types.feature_data import DNAIterator
 
-from q2_types_genomics.feature_map import MAGtoContigsFormat
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
 from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
 

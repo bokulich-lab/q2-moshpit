@@ -18,11 +18,11 @@ from unittest.mock import patch, ANY, call
 
 from qiime2.plugin.testing import TestPluginBase
 
-from q2_moshpit.metabat2.metabat2 import (_assert_samples,
-                                          _get_sample_name_from_path,
-                                          _sort_bams, _estimate_depth,
-                                          _run_metabat2, _process_sample,
-                                          _bin_contigs_metabat, _generate_contig_map)
+from q2_moshpit.metabat2.metabat2 import (
+    _assert_samples, _get_sample_name_from_path, _sort_bams,
+    _estimate_depth, _run_metabat2, _process_sample, _bin_contigs_metabat,
+    _generate_contig_map
+)
 
 
 class TestMetabat2(TestPluginBase):

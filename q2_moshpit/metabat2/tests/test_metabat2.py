@@ -14,7 +14,7 @@ import tempfile
 import unittest
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
 from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
-from unittest.mock import patch, ANY
+from unittest.mock import patch, ANY, call
 
 from qiime2.plugin.testing import TestPluginBase
 
@@ -22,7 +22,7 @@ from q2_moshpit.metabat2.metabat2 import (_assert_samples,
                                           _get_sample_name_from_path,
                                           _sort_bams, _estimate_depth,
                                           _run_metabat2, _process_sample,
-                                          _bin_contigs_metabat)
+                                          _bin_contigs_metabat, _generate_contig_map)
 
 
 class TestMetabat2(TestPluginBase):
@@ -131,23 +131,30 @@ class TestMetabat2(TestPluginBase):
             exp_cmd.extend(fake_args)
             p1.assert_called_once_with(exp_cmd, check=True)
 
+    @patch('q2_moshpit.metabat2.uuid4')
     @patch('q2_moshpit.metabat2._sort_bams')
     @patch('q2_moshpit.metabat2._estimate_depth')
     @patch('q2_moshpit.metabat2._run_metabat2')
-    def test_process_sample(self, p1, p2, p3):
+    def test_process_sample(self, p1, p2, p3, p4):
         fake_props = {
             'map': 'some/where/samp1_alignment.bam',
-            'contigs': 'some/where/samp1_contigs.fa'
+            'contigs': 'some/where/samp1_contigs.fasta'
         }
         fake_props_mod = {
             'map': 'some/where/samp1_alignment_sorted.bam',
-            'contigs': 'some/where/samp1_contigs.fa'
+            'contigs': 'some/where/samp1_contigs.fasta'
         }
         fake_args = ['--verbose', '--minContig', '1500', '--minClsSize',
                      '10000']
 
         p3.return_value = fake_props_mod
         p2.return_value = 'some/where/samp1_depth.txt'
+        p4.side_effect = [
+            '522775d4-b1c6-4ee3-8b47-cd990f17eb8b',
+            '684db670-6304-4f33-a0ea-7f570532e178',
+            '37356c23-b8db-4bbe-b4c9-d35e1cef615b',
+            '51c19113-31f0-4e4c-bbb3-b9df26b949f3'
+        ]
 
         with tempfile.TemporaryDirectory() as fake_loc:
             p1.return_value = os.path.join(fake_loc, 'bins', 'samp1')
@@ -166,7 +173,10 @@ class TestMetabat2(TestPluginBase):
                 x.split('/')[-1] for x in
                 glob.glob(os.path.join(fake_loc, 'samp1', '*.fasta'))
             ])
-            exp_bins = {'bin1.fasta', 'bin2.fasta'}
+            exp_bins = {
+                '522775d4-b1c6-4ee3-8b47-cd990f17eb8b.fasta',
+                '684db670-6304-4f33-a0ea-7f570532e178.fasta'
+            }
             self.assertSetEqual(exp_bins, obs_bins)
 
             p3.assert_called_once_with('samp1', fake_props, ANY)
@@ -176,7 +186,9 @@ class TestMetabat2(TestPluginBase):
                 'some/where/samp1_depth.txt', fake_args
             )
 
-    def test_bin_contigs_metabat(self):
+    @patch('q2_moshpit.metabat2.MultiFASTADirectoryFormat')
+    @patch('q2_moshpit.metabat2._process_sample')
+    def test_bin_contigs_metabat(self, p1, p2):
         input_contigs = self.get_data_path('contigs')
         input_maps = self.get_data_path('maps')
         contigs = ContigSequencesDirFmt(input_contigs, mode='r')
@@ -184,20 +196,62 @@ class TestMetabat2(TestPluginBase):
 
         args = ['--verbose', '--minContig', '1500', '--minClsSize', '10000']
 
-        obs = _bin_contigs_metabat(contigs, maps, args)
+        mock_contigs = MultiFASTADirectoryFormat(
+            self.get_data_path('bins'), 'r'
+        )
+        p2.return_value = mock_contigs
 
-        self.assertIsInstance(obs, MultiFASTADirectoryFormat)
+        obs_bins, obs_map = _bin_contigs_metabat(contigs, maps, args)
+
+        self.assertIsInstance(obs_bins, MultiFASTADirectoryFormat)
+        p1.assert_has_calls([
+            call(
+                'samp1',
+                {'contigs': self.get_data_path('/contigs/samp1_contigs.fa'),
+                 'map': self.get_data_path('/maps/samp1_alignment.bam')},
+                args, str(mock_contigs)
+            ),
+            call(
+                'samp2',
+                {'contigs': self.get_data_path('/contigs/samp2_contigs.fa'),
+                 'map': self.get_data_path('/maps/samp2_alignment.bam')},
+                args, str(mock_contigs)
+            )
+        ])
 
         # find the newly formed bins
         obs_bins = sorted([sorted([
             '/'.join(x.split('/')[-2:]) for x in
-            glob.glob(os.path.join(str(obs), f'samp{y}', '*.fasta'))
+            glob.glob(os.path.join(str(obs_bins), f'samp{y}', '*.fa'))
         ]) for y in (1, 2)])
         exp_bins = [
-            ['samp1/bin1.fasta', 'samp1/bin2.fasta'],
-            ['samp2/bin1.fasta', 'samp2/bin2.fasta']
+            ['samp1/522775d4-b1c6-4ee3-8b47-cd990f17eb8b.fa',
+             'samp1/684db670-6304-4f33-a0ea-7f570532e178.fa'],
+            ['samp2/37356c23-b8db-4bbe-b4c9-d35e1cef615b.fa',
+             'samp2/51c19113-31f0-4e4c-bbb3-b9df26b949f3.fa']
         ]
         self.assertListEqual(exp_bins, obs_bins)
+
+    def test_generate_contig_map(self):
+        contigs = MultiFASTADirectoryFormat(
+            self.get_data_path('bins-small'), 'r'
+        )
+        obs = _generate_contig_map(contigs)
+        exp = {
+            '684db670-6304-4f33-a0ea-7f570532e178': [
+                'NODE_2', 'NODE_6', 'NODE_7'
+            ],
+            '522775d4-b1c6-4ee3-8b47-cd990f17eb8b': [
+                'NODE_8', 'NODE_11'
+            ],
+            '51c19113-31f0-4e4c-bbb3-b9df26b949f3': [
+                'NODE_12', 'NODE_13', 'NODE_14'
+            ],
+            '37356c23-b8db-4bbe-b4c9-d35e1cef615b': [
+                'NODE_2', 'NODE_6', 'NODE_7', 'NODE_15'
+            ]
+        }
+        self.assertDictEqual(exp, obs)
 
 
 if __name__ == '__main__':

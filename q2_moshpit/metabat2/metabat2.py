@@ -6,11 +6,17 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import glob
+from uuid import uuid4
+
 import os.path
 import shutil
 import tempfile
 from copy import deepcopy
 
+import skbio.io
+from q2_types.feature_data import DNAIterator
+
+from q2_types_genomics.feature_map import MAGtoContigsFormat
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
 from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
 
@@ -70,9 +76,9 @@ def _run_metabat2(samp_name, samp_props, loc, depth_fp, common_args):
     return bins_dp
 
 
-def _rename_bin(bin_fp, new_location):
-    base, _ = os.path.splitext(os.path.basename(bin_fp))
-    return os.path.join(new_location, f'{base.replace(".", "")}.fasta')
+def _rename_bin(new_location):
+    uuid = uuid4()
+    return os.path.join(new_location, f'{uuid}.fasta')
 
 
 def _process_sample(samp_name, samp_props, common_args, result_loc):
@@ -85,30 +91,49 @@ def _process_sample(samp_name, samp_props, common_args, result_loc):
 
         # run metabat2
         bins_dp = _run_metabat2(
-            samp_name, props, tmp, depth_fp, common_args)
+            samp_name, props, tmp, depth_fp, common_args
+        )
 
+        # rename using UUID v4
         all_bins = glob.glob(os.path.join(bins_dp, '*.fa'))
         new_location = os.path.join(str(result_loc), samp_name)
         os.makedirs(new_location)
-        all_bins_new = [_rename_bin(x, new_location) for x in all_bins]
+        all_bins_new = [_rename_bin(new_location) for x in all_bins]
 
         for old, new in zip(all_bins, all_bins_new):
             shutil.move(old, new)
 
 
+def _generate_contig_map(
+        bins: MultiFASTADirectoryFormat
+) -> dict:
+    contig_map = {}
+    for seq in bins.sequences.iter_views(DNAIterator):
+        mag_id = os.path.splitext(os.path.basename(seq[0]))[0]
+        seqs = skbio.read(
+            os.path.join(str(bins), str(seq[0])),
+            format='fasta', verify=False
+        )
+        contigs = [x.metadata['id'] for x in seqs]
+        contig_map[mag_id] = contigs
+    return contig_map
+
+
 def _bin_contigs_metabat(
         contigs: ContigSequencesDirFmt, alignment_maps: BAMDirFmt,
         common_args: list
-) -> MultiFASTADirectoryFormat:
+) -> (MultiFASTADirectoryFormat, dict):
     contigs_fps = sorted(glob.glob(os.path.join(str(contigs), '*.fa')))
     maps_fps = sorted(glob.glob(os.path.join(str(alignment_maps), '*.bam')))
     sample_set = _assert_samples(contigs_fps, maps_fps)
 
-    result = MultiFASTADirectoryFormat()
+    bins = MultiFASTADirectoryFormat()
     for samp, props in sample_set.items():
-        _process_sample(samp, props, common_args, str(result))
+        _process_sample(samp, props, common_args, str(bins))
 
-    return result
+    contig_map = _generate_contig_map(bins)
+
+    return bins, contig_map
 
 
 def bin_contigs_metabat(
@@ -118,7 +143,7 @@ def bin_contigs_metabat(
     min_cv: int = None, min_cv_sum: int = None, min_cls_size: int = None,
     num_threads: int = None, seed: int = None, debug: bool = None,
     verbose: bool = None
-) -> MultiFASTADirectoryFormat:
+) -> (MultiFASTADirectoryFormat, dict):
 
     kwargs = {k: v for k, v in locals().items()
               if k not in ['contigs', 'alignment_maps']}

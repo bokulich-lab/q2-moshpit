@@ -11,6 +11,7 @@ from q2_types.per_sample_sequences import (
 )
 
 import q2_moshpit.kraken2.classification
+from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
@@ -72,7 +73,10 @@ plugin.methods.register_function(
         'debug': Bool,
         'verbose': Bool
     },
-    outputs=[('mags', SampleData[MAGs])],
+    outputs=[
+        ('mags', SampleData[MAGs]),
+        ('contig_map', FeatureMap[MAGtoContigs])
+    ],
     input_descriptions={
         'contigs': 'Placeholder.',
         'alignment_maps': 'Placeholder.'
@@ -99,7 +103,10 @@ plugin.methods.register_function(
         'debug': 'Debug output.',
         'verbose': 'Verbose output.'
     },
-    output_descriptions={'mags': 'The resulting MAGs.'},
+    output_descriptions={
+        'mags': 'The resulting MAGs.',
+        'contig_map': 'MAG-to-contigs map.'
+    },
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',

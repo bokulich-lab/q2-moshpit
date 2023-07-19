@@ -171,11 +171,11 @@ class TestMetabat2(TestPluginBase):
             # find the newly formed bins
             obs_bins = set([
                 x.split('/')[-1] for x in
-                glob.glob(os.path.join(fake_loc, 'samp1', '*.fasta'))
+                glob.glob(os.path.join(fake_loc, 'samp1', '*.fa'))
             ])
             exp_bins = {
-                '522775d4-b1c6-4ee3-8b47-cd990f17eb8b.fasta',
-                '684db670-6304-4f33-a0ea-7f570532e178.fasta'
+                '522775d4-b1c6-4ee3-8b47-cd990f17eb8b.fa',
+                '684db670-6304-4f33-a0ea-7f570532e178.fa'
             }
             self.assertSetEqual(exp_bins, obs_bins)
 
@@ -196,10 +196,10 @@ class TestMetabat2(TestPluginBase):
 
         args = ['--verbose', '--minContig', '1500', '--minClsSize', '10000']
 
-        mock_contigs = MultiFASTADirectoryFormat(
+        mock_bins = MultiFASTADirectoryFormat(
             self.get_data_path('bins'), 'r'
         )
-        p2.return_value = mock_contigs
+        p2.return_value = mock_bins
 
         obs_bins, obs_map = _bin_contigs_metabat(contigs, maps, args)
 
@@ -209,13 +209,13 @@ class TestMetabat2(TestPluginBase):
                 'samp1',
                 {'contigs': self.get_data_path('/contigs/samp1_contigs.fa'),
                  'map': self.get_data_path('/maps/samp1_alignment.bam')},
-                args, str(mock_contigs)
+                args, str(mock_bins)
             ),
             call(
                 'samp2',
                 {'contigs': self.get_data_path('/contigs/samp2_contigs.fa'),
                  'map': self.get_data_path('/maps/samp2_alignment.bam')},
-                args, str(mock_contigs)
+                args, str(mock_bins)
             )
         ])
 
@@ -231,6 +231,22 @@ class TestMetabat2(TestPluginBase):
              'samp2/51c19113-31f0-4e4c-bbb3-b9df26b949f3.fa']
         ]
         self.assertListEqual(exp_bins, obs_bins)
+
+    @patch('q2_moshpit.metabat2.MultiFASTADirectoryFormat')
+    @patch('q2_moshpit.metabat2._process_sample')
+    def test_bin_contigs_metabat_no_mags(self, p1, p2):
+        input_contigs = self.get_data_path('contigs')
+        input_maps = self.get_data_path('maps')
+        contigs = ContigSequencesDirFmt(input_contigs, mode='r')
+        maps = BAMDirFmt(input_maps, mode='r')
+
+        args = ['--verbose', '--minContig', '1500', '--minClsSize', '10000']
+
+        mock_bins = MultiFASTADirectoryFormat()
+        p2.return_value = mock_bins
+
+        with self.assertRaisesRegex(ValueError, 'No MAGs were formed'):
+            _bin_contigs_metabat(contigs, maps, args)
 
     def test_generate_contig_map(self):
         contigs = MultiFASTADirectoryFormat(

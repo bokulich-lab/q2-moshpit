@@ -75,11 +75,6 @@ def _run_metabat2(samp_name, samp_props, loc, depth_fp, common_args):
     return bins_dp
 
 
-def _rename_bin(new_location):
-    uuid = uuid4()
-    return os.path.join(new_location, f'{uuid}.fasta')
-
-
 def _process_sample(samp_name, samp_props, common_args, result_loc):
     with tempfile.TemporaryDirectory() as tmp:
         # sort alignment map
@@ -95,26 +90,26 @@ def _process_sample(samp_name, samp_props, common_args, result_loc):
 
         # rename using UUID v4
         all_bins = glob.glob(os.path.join(bins_dp, '*.fa'))
-        new_location = os.path.join(str(result_loc), samp_name)
-        os.makedirs(new_location)
-        all_bins_new = [_rename_bin(new_location) for x in all_bins]
-
-        for old, new in zip(all_bins, all_bins_new):
-            shutil.move(old, new)
+        dest_dir = os.path.join(str(result_loc), samp_name)
+        os.makedirs(dest_dir)
+        for old_bin in all_bins:
+            new_bin = os.path.join(dest_dir, f'{uuid4()}.fa')
+            shutil.move(old_bin, new_bin)
 
 
 def _generate_contig_map(
         bins: MultiFASTADirectoryFormat
 ) -> dict:
     contig_map = {}
-    for seq in bins.sequences.iter_views(DNAIterator):
-        mag_id = os.path.splitext(os.path.basename(seq[0]))[0]
+    for bin_fp, _ in bins.sequences.iter_views(DNAIterator):
+        # bin_fp will look like /path/to/some/where/uuid4-bin-name.fa
+        bin_id = os.path.splitext(os.path.basename(bin_fp))[0]
         seqs = skbio.read(
-            os.path.join(str(bins), str(seq[0])),
+            os.path.join(str(bins), str(bin_fp)),
             format='fasta', verify=False
         )
         contigs = [x.metadata['id'] for x in seqs]
-        contig_map[mag_id] = contigs
+        contig_map[bin_id] = contigs
     return contig_map
 
 
@@ -129,6 +124,11 @@ def _bin_contigs_metabat(
     bins = MultiFASTADirectoryFormat()
     for samp, props in sample_set.items():
         _process_sample(samp, props, common_args, str(bins))
+
+    if not glob.glob(os.path.join(str(bins), '*/*.fa')):
+        raise ValueError(
+            'No MAGs were formed during binning, please check your inputs.'
+        )
 
     contig_map = _generate_contig_map(bins)
 

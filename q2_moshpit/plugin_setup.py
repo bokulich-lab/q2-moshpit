@@ -105,7 +105,8 @@ plugin.methods.register_function(
     },
     output_descriptions={
         'mags': 'The resulting MAGs.',
-        'contig_map': 'MAG-to-contigs map.'
+        'contig_map': 'Mapping of MAG identifiers to the contig identifiers '
+                      'contained in each MAG.'
     },
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '

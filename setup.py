@@ -28,8 +28,8 @@ setup(
         'q2_moshpit': ['citations.bib', 'tests/data/*'],
         'q2_moshpit.usage_examples': ['tests/data/*'],
         'q2_moshpit.metabat2.tests': [
-            'data/*', 'data/bins/samp1/*', 'data/contigs/*',
-            'data/depth/*', 'data/maps/*'
+            'data/*', 'data/bins/*/*', 'data/contigs/*',
+            'data/depth/*', 'data/maps/*', 'data/bins-small/*/*'
         ],
         'q2_moshpit.checkm.tests': [
             'data/*', 'data/bins/*', 'data/bins/*/*',

@@ -9,9 +9,13 @@ from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
 
+from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
+
+from qiime2.core.type import (Properties, TypeMap)
+from qiime2.plugin import (Plugin, Citations)
 
 import importlib
 import q2_moshpit
@@ -26,9 +30,6 @@ from q2_types_genomics.genome_data import BLAST6
 from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.core.type import (Properties, TypeMap)
-from qiime2.plugin import (Plugin, Citations)
-
 
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 
@@ -93,7 +94,10 @@ plugin.methods.register_function(
         'debug': Bool,
         'verbose': Bool
     },
-    outputs=[('mags', SampleData[MAGs])],
+    outputs=[
+        ('mags', SampleData[MAGs]),
+        ('contig_map', FeatureMap[MAGtoContigs])
+    ],
     input_descriptions={
         'contigs': 'Placeholder.',
         'alignment_maps': 'Placeholder.'
@@ -120,7 +124,11 @@ plugin.methods.register_function(
         'debug': 'Debug output.',
         'verbose': 'Verbose output.'
     },
-    output_descriptions={'mags': 'The resulting MAGs.'},
+    output_descriptions={
+        'mags': 'The resulting MAGs.',
+        'contig_map': 'Mapping of MAG identifiers to the contig identifiers '
+                      'contained in each MAG.'
+    },
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',

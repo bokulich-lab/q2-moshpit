@@ -51,7 +51,12 @@ setup(
             'data/db/*', 'data/reports-mags/*',
             'data/reports-mags/*/*', 'data/outputs-mags/*',
             'data/outputs-mags/*/*', 'data/seqs/*',
-            'data/bracken-db/*'
+            'data/bracken-db/*', 'data/bracken-report/*',
+            'data/bracken-report/*/*', 'data/kraken2-report/*/*',
+            'data/kraken2-reports-select/*',
+            'data/kraken2-reports-select/*/*/*',
+            'data/kraken-to-ncbi-tree/*',
+            'data/kraken-to-ncbi-tree/*/*/*'
         ]
     },
     zip_safe=False,

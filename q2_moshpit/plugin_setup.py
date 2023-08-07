@@ -5,25 +5,24 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
 
-import q2_moshpit.kraken2.classification
 from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
 
+from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 
 import importlib
 import q2_moshpit
 
 from q2_types.sample_data import SampleData
-from q2_types.feature_table import FeatureTable, Frequency
-from q2_types.feature_data import FeatureData, Sequence
+from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
+from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 
 from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
 from q2_types_genomics.feature_data import NOG
@@ -36,6 +35,28 @@ from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
+
+kraken2_params = {
+    'threads': Int % Range(1, None),
+    'confidence': Float % Range(0, 1, inclusive_end=True),
+    'minimum_base_quality': Int % Range(0, None),
+    'memory_mapping': Bool,
+    'minimum_hit_groups': Int % Range(1, None),
+    'quick': Bool,
+    'report_minimizer_data': Bool
+}
+kraken2_param_descriptions = {
+    'threads': 'Number of threads.',
+    'confidence': 'Confidence score threshold.',
+    'minimum_base_quality': 'Minimum base quality used in classification.'
+                            ' Only applies when reads are used as input.',
+    'memory_mapping': 'Avoids loading the database into RAM.',
+    'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
+                          'k-mers sharing the same minimizer).',
+    'quick': 'Quick operation (use first hit or hits).',
+    'report_minimizer_data': 'Include number of read-minimizers per-taxon and'
+                             ' unique read-minimizers per-taxon in the repot.'
+}
 
 plugin = Plugin(
     name='moshpit',
@@ -114,48 +135,70 @@ plugin.methods.register_function(
     citations=[citations["kang2019"]]
 )
 
+T_kraken_in, P_kraken_out = TypeMap({
+    (SequencesWithQuality
+     | PairedEndSequencesWithQuality): Properties('reads'),
+    MAGs: Properties('mags'),
+})
+
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.classification.classify_kraken,
+    function=q2_moshpit.kraken2.classification.classify_kraken2,
     inputs={
-        "seqs": SampleData[
-            SequencesWithQuality | PairedEndSequencesWithQuality | MAGs
-            ],
-        "db": Kraken2DB
+        "seqs": SampleData[T_kraken_in],
+        "kraken2_db": Kraken2DB,
     },
-    parameters={
-        'threads': Int % Range(1, None),
-        'confidence': Float % Range(0, 1, inclusive_end=True),
-        'minimum_base_quality': Int % Range(0, None),
-        'memory_mapping': Bool,
-        'minimum_hit_groups': Int % Range(1, None),
-        'quick': Bool
-    },
+    parameters=kraken2_params,
     outputs=[
-        ('reports', SampleData[Kraken2Reports]),
-        ('outputs', SampleData[Kraken2Outputs])
+        ('reports', SampleData[Kraken2Reports % P_kraken_out]),
+        ('hits', SampleData[Kraken2Outputs % P_kraken_out]),
     ],
     input_descriptions={
         "seqs": "Sequences to be classified. Both, single-/paired-end reads"
                 "and assembled MAGs, can be provided.",
-        "db": "Kraken 2 database.",
+        "kraken2_db": "Kraken 2 database.",
     },
-    parameter_descriptions={
-        'threads': 'Number of threads',
-        'confidence': 'Confidence score threshold.',
-        'minimum_base_quality': 'Minimum base quality used in classification.'
-                                ' Only applies when reads are used as input.',
-        'memory_mapping': 'Avoids loading the database into RAM.',
-        'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
-                              'k-mers sharing the same minimizer).',
-        'quick': 'Quick operation (use first hit or hits).'
-    },
+    parameter_descriptions=kraken2_param_descriptions,
     output_descriptions={
         'reports': 'Reports produced by Kraken2.',
-        'outputs': 'Outputs produced by Kraken2.'
+        'hits': 'Output files produced by Kraken2.',
     },
-    name='Perform taxonomic classification of bins or reads using Kraken 2.',
+    name='Perform taxonomic classification of reads or MAGs using Kraken 2.',
     description='This method uses Kraken 2 to classify provided NGS reads '
                 'or MAGs into taxonomic groups.',
+    citations=[citations["wood2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.bracken.estimate_bracken,
+    inputs={
+        "kraken_reports": SampleData[Kraken2Reports % Properties('reads')],
+        "bracken_db": BrackenDB
+    },
+    parameters={
+        'threshold': Int % Range(0, None),
+        'read_len': Int % Range(0, None),
+        'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S'])
+    },
+    outputs=[
+        ('reports', SampleData[Kraken2Reports % Properties('bracken')]),
+        ('taxonomy', FeatureData[Taxonomy]),
+        ('table', FeatureTable[Frequency])
+    ],
+    input_descriptions={
+        "kraken_reports": "Reports produced by Kraken2.",
+        "bracken_db": "Bracken database."
+    },
+    parameter_descriptions={
+        'threshold': 'Bracken: number of reads required PRIOR to abundance '
+                     'estimation to perform re-estimation.',
+        'read_len': 'Bracken: read length to get all classifications for.',
+        'level': 'Bracken: taxonomic level to estimate abundance at.'
+    },
+    output_descriptions={
+        'reports': 'Reports modified by Bracken.',
+    },
+    name='Perform read abundance re-estimation using Bracken.',
+    description='This method uses Bracken to re-estimate read abundances.',
     citations=[citations["wood2019"]]
 )
 
@@ -224,6 +267,78 @@ plugin.methods.register_function(
                 'versions from an online resource.',
     citations=[citations["wood2019"], citations["lu2017"]]
 )
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.kraken2_to_features,
+    inputs={
+        'reports': SampleData[Kraken2Reports]
+    },
+    parameters={
+        'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
+    },
+    outputs=[
+        ('table', FeatureTable[PresenceAbsence]),
+        ('taxonomy', FeatureData[Taxonomy])
+    ],
+    input_descriptions={
+        'reports': 'Per-sample Kraken 2 reports.'
+    },
+    parameter_descriptions={
+        'coverage_threshold': 'The minimum percent coverage required to'
+                              ' produce a feature.'
+    },
+    output_descriptions={
+        'table': 'A presence/absence table of selected features. The features'
+                 ' are not of even ranks, but will be the most specific rank'
+                 ' available.',
+        'taxonomy': 'Infra-clade ranks are ignored '
+                    'unless they are strain-level. Missing internal ranks '
+                    'are annotated by their next most specific rank, '
+                    'with the exception of k__Bacteria and k__Archaea which '
+                    'match their domain\'s name.',
+    },
+    name='Select downstream features from Kraken 2',
+    description='Convert a Kraken 2 report, which is an annotated NCBI '
+                'taxonomy tree into generic artifacts for downstream '
+                'analyses.'
+)
+
+# plugin.methods.register_function(
+#     function=q2_moshpit.kraken2.kraken2_to_mag_features,
+#     inputs={
+#         'reports': SampleData[Kraken2Reports % Properties('mags')],
+#         'hits': SampleData[Kraken2Outputs % Properties('mags')]
+#     },
+#     parameters={
+#         'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
+#     },
+#     outputs=[
+#         ('table', FeatureTable[PresenceAbsence]),
+#         ('taxonomy', FeatureData[Taxonomy])
+#     ],
+#     input_descriptions={
+#         'reports': 'Per-sample Kraken 2 reports.',
+#         'hits': 'Per-sample Kraken 2 output files.'
+#     },
+#     parameter_descriptions={
+#         'coverage_threshold': 'The minimum percent coverage required to '
+#                               'produce a feature.'
+#     },
+#     output_descriptions={
+#         'table': 'A presence/absence table of selected features. The '
+#                  'features are not of even ranks, but will be the most '
+#                  'specific rank available.',
+#         'taxonomy': 'Infra-clade ranks are ignored'
+#                     'unless they are strain-level. Missing internal ranks '
+#                     'are annotated by their next most specific rank, '
+#                     'with the exception of k__Bacteria and k__Archaea which '
+#                     'match their domain\'s name.',
+#     },
+#     name='Select downstream MAG features from Kraken 2',
+#     description='Convert a Kraken 2 report, which is an annotated NCBI '
+#                 'taxonomy tree into generic artifacts for downstream '
+#                 'analyses.'
+# )
 
 plugin.methods.register_function(
         function=q2_moshpit.eggnog.eggnog_diamond_search,

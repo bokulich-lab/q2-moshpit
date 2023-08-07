@@ -19,6 +19,7 @@ requirements:
   run:
     - bracken
     - kraken2
+    - bracken
     - metabat2
     - samtools
     - qiime2 {{ qiime2_epoch }}.*

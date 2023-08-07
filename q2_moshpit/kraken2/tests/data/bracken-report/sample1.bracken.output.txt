@@ -1,0 +1,4 @@
+name	taxonomy_id	taxonomy_lvl	kraken_assigned_reads	added_reads	new_est_reads	fraction_total_reads
+Myranavirus phabba	2956211	S	16	0	16	0.11034
+Streptococcus phage 20617	1392231	S	4	8	12	0.08276
+Wellingtonvirus wellington	2734153	S	11	-11	0	0.00000

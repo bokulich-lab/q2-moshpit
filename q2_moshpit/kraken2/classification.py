@@ -21,7 +21,7 @@ from q2_moshpit.kraken2.utils import _process_kraken2_arg
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
-    Kraken2DBDirectoryFormat
+    Kraken2DBDirectoryFormat,
 )
 from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 
@@ -48,7 +48,7 @@ def _construct_output_paths(
     return output_fp, report_fp
 
 
-def _classify_kraken(
+def _classify_kraken2(
     manifest, common_args
 ) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
     base_cmd = ["kraken2", *common_args]
@@ -65,8 +65,7 @@ def _classify_kraken(
             )
             cmd = deepcopy(base_cmd)
             cmd.extend(
-                ["--report", report_fp, "--output", output_fp,
-                 "--use-names", *fn]
+                ["--report", report_fp, "--output", output_fp, *fn]
             )
             run_command(cmd=cmd, verbose=True)
     except subprocess.CalledProcessError as e:
@@ -79,25 +78,30 @@ def _classify_kraken(
     return kraken2_reports_dir, kraken2_outputs_dir
 
 
-def classify_kraken(
+def classify_kraken2(
     seqs: Union[
         SingleLanePerSamplePairedEndFastqDirFmt,
         SingleLanePerSampleSingleEndFastqDirFmt,
         MultiMAGSequencesDirFmt,
     ],
-    db: Kraken2DBDirectoryFormat,
+    kraken2_db: Kraken2DBDirectoryFormat,
     threads: int = 1,
     confidence: float = 0.0,
     minimum_base_quality: int = 0,
     memory_mapping: bool = False,
     minimum_hit_groups: int = 2,
     quick: bool = False,
-) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
-    kwargs = {k: v for k, v in locals().items() if k not in ["seqs", "db"]}
+    report_minimizer_data: bool = False
+) -> (
+        Kraken2ReportDirectoryFormat,
+        Kraken2OutputDirectoryFormat,
+):
+    kwargs = {k: v for k, v in locals().items()
+              if k not in ["seqs", "kraken2_db"]}
     common_args = _process_common_input_params(
         processing_func=_process_kraken2_arg, params=kwargs
     )
-    common_args.extend(["--db", str(db.path)])
+    common_args.extend(["--db", str(kraken2_db.path)])
     manifest: pd.DataFrame = seqs.manifest.view(pd.DataFrame)
 
-    return _classify_kraken(manifest, common_args)
+    return _classify_kraken2(manifest, common_args)

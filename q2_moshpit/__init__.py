@@ -7,11 +7,16 @@
 # ----------------------------------------------------------------------------
 
 from .dereplication import dereplicate_mags
-from .kraken2 import classification, database
+from .kraken2 import bracken, classification, database
 from .metabat2 import metabat2
+from . import eggnog
+
 
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-__all__ = ['metabat2', 'classification', 'database', 'dereplicate_mags']
+__all__ = [
+    'metabat2', 'bracken', 'classification', 'database',
+    'dereplicate_mags', 'eggnog'
+]

@@ -6,31 +6,63 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 from q2_types.distance_matrix import DistanceMatrix
-from q2_types.feature_data import FeatureData, Sequence
-from q2_types.feature_table import FeatureTable, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
-from q2_types.sample_data import SampleData
 
-import q2_moshpit.kraken2.classification
 from q2_types_genomics.feature_data import MAG
+from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
-from q2_types_genomics.per_sample_data import MAGs, Contigs
-from q2_types_genomics.per_sample_data._type import AlignmentMap
-from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
+
+from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 
+import importlib
 import q2_moshpit
-from q2_moshpit import __version__
+
+from q2_types.sample_data import SampleData
+from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
+from q2_types.feature_data import FeatureData, Sequence, Taxonomy
+
+from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
+from q2_types_genomics.feature_data import NOG
+from q2_types_genomics.genome_data import BLAST6
+from q2_types_genomics.kraken2._type import BrackenDB
+from q2_types_genomics.per_sample_data import MAGs, Contigs
+from q2_types_genomics.per_sample_data._type import AlignmentMap
+
+from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
+
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
 
+kraken2_params = {
+    'threads': Int % Range(1, None),
+    'confidence': Float % Range(0, 1, inclusive_end=True),
+    'minimum_base_quality': Int % Range(0, None),
+    'memory_mapping': Bool,
+    'minimum_hit_groups': Int % Range(1, None),
+    'quick': Bool,
+    'report_minimizer_data': Bool
+}
+kraken2_param_descriptions = {
+    'threads': 'Number of threads.',
+    'confidence': 'Confidence score threshold.',
+    'minimum_base_quality': 'Minimum base quality used in classification.'
+                            ' Only applies when reads are used as input.',
+    'memory_mapping': 'Avoids loading the database into RAM.',
+    'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
+                          'k-mers sharing the same minimizer).',
+    'quick': 'Quick operation (use first hit or hits).',
+    'report_minimizer_data': 'Include number of read-minimizers per-taxon and'
+                             ' unique read-minimizers per-taxon in the repot.'
+}
+
 plugin = Plugin(
     name='moshpit',
-    version=__version__,
+    version=q2_moshpit.__version__,
     website="https://github.com/bokulich-lab/q2-moshpit",
     package='q2_moshpit',
     description=(
@@ -39,6 +71,9 @@ plugin = Plugin(
         'tools for genome binning and functional annotation.'),
     short_description='QIIME 2 plugin for metagenome analysis.',
 )
+
+importlib.import_module('q2_moshpit.eggnog')
+importlib.import_module('q2_moshpit.metabat2')
 
 plugin.methods.register_function(
     function=q2_moshpit.metabat2.bin_contigs_metabat,
@@ -61,7 +96,10 @@ plugin.methods.register_function(
         'debug': Bool,
         'verbose': Bool
     },
-    outputs=[('mags', SampleData[MAGs])],
+    outputs=[
+        ('mags', SampleData[MAGs]),
+        ('contig_map', FeatureMap[MAGtoContigs])
+    ],
     input_descriptions={
         'contigs': 'Placeholder.',
         'alignment_maps': 'Placeholder.'
@@ -88,55 +126,81 @@ plugin.methods.register_function(
         'debug': 'Debug output.',
         'verbose': 'Verbose output.'
     },
-    output_descriptions={'mags': 'The resulting MAGs.'},
+    output_descriptions={
+        'mags': 'The resulting MAGs.',
+        'contig_map': 'Mapping of MAG identifiers to the contig identifiers '
+                      'contained in each MAG.'
+    },
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',
     citations=[citations["kang2019"]]
 )
 
+T_kraken_in, P_kraken_out = TypeMap({
+    (SequencesWithQuality
+     | PairedEndSequencesWithQuality): Properties('reads'),
+    MAGs: Properties('mags'),
+})
+
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.classification.classify_kraken,
+    function=q2_moshpit.kraken2.classification.classify_kraken2,
     inputs={
-        "seqs": SampleData[
-            SequencesWithQuality | PairedEndSequencesWithQuality | MAGs
-            ],
-        "db": Kraken2DB
+        "seqs": SampleData[T_kraken_in],
+        "kraken2_db": Kraken2DB,
     },
-    parameters={
-        'threads': Int % Range(1, None),
-        'confidence': Float % Range(0, 1, inclusive_end=True),
-        'minimum_base_quality': Int % Range(0, None),
-        'memory_mapping': Bool,
-        'minimum_hit_groups': Int % Range(1, None),
-        'quick': Bool
-    },
+    parameters=kraken2_params,
     outputs=[
-        ('reports', SampleData[Kraken2Reports]),
-        ('outputs', SampleData[Kraken2Outputs])
+        ('reports', SampleData[Kraken2Reports % P_kraken_out]),
+        ('hits', SampleData[Kraken2Outputs % P_kraken_out]),
     ],
     input_descriptions={
         "seqs": "Sequences to be classified. Both, single-/paired-end reads"
                 "and assembled MAGs, can be provided.",
-        "db": "Kraken 2 database.",
+        "kraken2_db": "Kraken 2 database.",
     },
-    parameter_descriptions={
-        'threads': 'Number of threads',
-        'confidence': 'Confidence score threshold.',
-        'minimum_base_quality': 'Minimum base quality used in classification.'
-                                ' Only applies when reads are used as input.',
-        'memory_mapping': 'Avoids loading the database into RAM.',
-        'minimum_hit_groups': 'Minimum number of hit groups (overlapping '
-                              'k-mers sharing the same minimizer).',
-        'quick': 'Quick operation (use first hit or hits).'
-    },
+    parameter_descriptions=kraken2_param_descriptions,
     output_descriptions={
         'reports': 'Reports produced by Kraken2.',
-        'outputs': 'Outputs produced by Kraken2.'
+        'hits': 'Output files produced by Kraken2.',
     },
-    name='Perform taxonomic classification of bins or reads using Kraken 2.',
+    name='Perform taxonomic classification of reads or MAGs using Kraken 2.',
     description='This method uses Kraken 2 to classify provided NGS reads '
                 'or MAGs into taxonomic groups.',
+    citations=[citations["wood2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.bracken.estimate_bracken,
+    inputs={
+        "kraken_reports": SampleData[Kraken2Reports % Properties('reads')],
+        "bracken_db": BrackenDB
+    },
+    parameters={
+        'threshold': Int % Range(0, None),
+        'read_len': Int % Range(0, None),
+        'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S'])
+    },
+    outputs=[
+        ('reports', SampleData[Kraken2Reports % Properties('bracken')]),
+        ('taxonomy', FeatureData[Taxonomy]),
+        ('table', FeatureTable[Frequency])
+    ],
+    input_descriptions={
+        "kraken_reports": "Reports produced by Kraken2.",
+        "bracken_db": "Bracken database."
+    },
+    parameter_descriptions={
+        'threshold': 'Bracken: number of reads required PRIOR to abundance '
+                     'estimation to perform re-estimation.',
+        'read_len': 'Bracken: read length to get all classifications for.',
+        'level': 'Bracken: taxonomic level to estimate abundance at.'
+    },
+    output_descriptions={
+        'reports': 'Reports modified by Bracken.',
+    },
+    name='Perform read abundance re-estimation using Bracken.',
+    description='This method uses Bracken to re-estimate read abundances.',
     citations=[citations["wood2019"]]
 )
 
@@ -146,13 +210,11 @@ plugin.methods.register_function(
         "seqs": List[FeatureData[Sequence]]
     },
     parameters={
-        'standard': Bool,
-        'library_path': Str,
-        'libraries': List[Str % Choices(
-            ['archaea', 'bacteria', 'plasmid', 'viral', 'human', 'fungi',
-             'plant', 'protozoa', 'nr', 'nt', 'UniVec', 'UniVec_Core', ],
-        )],
-        'library_exists': Str % Choices(['skip', 'refetch']),
+        'collection': Str % Choices(
+            ['viral', 'minusb', 'standard', 'standard8',
+             'standard16', 'pluspf', 'pluspf8', 'pluspf16',
+             'pluspfp', 'pluspfp8', 'pluspfp16', 'eupathdb'],
+        ),
         'threads': Int % Range(1, None),
         'kmer_len': Int % Range(1, None),
         'minimizer_len': Int % Range(1, None),
@@ -162,26 +224,22 @@ plugin.methods.register_function(
         'use_ftp': Bool,
         'load_factor': Float % Range(0, 1),
         'fast_build': Bool,
+        'read_len': List[Int % Range(1, None)],
     },
     outputs=[
-        ('database', Kraken2DB),
+        ('kraken2_database', Kraken2DB),
+        ('bracken_database', BrackenDB),
     ],
     input_descriptions={
         "seqs": "Sequences to be added to the Kraken 2 database."
     },
     parameter_descriptions={
-        'standard': 'Use standard Kraken 2 database. Incompatible with the '
-                    '"libraries" parameter.',
-        'library_path': 'Path to the directory containing the library files. '
-                        'This is where all the required files will be '
-                        'downloaded - if not provided, a temporary directory '
-                        'will be created.',
-        'libraries': 'List of Kraken 2 reference libraries to be '
-                     'included in the database. Incompatible with '
-                     'the "standard" parameter.',
-        'library_exists': 'Desired behaviour to follow when the library '
-                          'already exists in the "library_path" directory.',
-        'threads': 'Number of threads.',
+        'collection': 'Name of the database collection to be fetched. '
+                      'Please check https://benlangmead.github.io/aws-'
+                      'indexes/k2 for the description of the available '
+                      'options.',
+        'threads': 'Number of threads. Only applicable when building a '
+                   'custom database.',
         'kmer_len': 'K-mer length in bp/aa.',
         'minimizer_len': 'Minimizer length in bp/aa.',
         'minimizer_spaces': 'Number of characters in minimizer that are '
@@ -197,16 +255,19 @@ plugin.methods.register_function(
         'load_factor': 'Proportion of the hash table to be populated.',
         'fast_build': 'Do not require database to be deterministically '
                       'built when using multiple threads. This is faster, '
-                      'but does introduce variability in minimizer/LCA pairs.'
+                      'but does introduce variability in minimizer/LCA pairs.',
+        'read_len': 'Ideal read lengths to be used while building the Bracken '
+                    'database.'
     },
     output_descriptions={
-        'database': 'Kraken2 database.'
+        'kraken2_database': 'Kraken2 database.',
+        'bracken_database': 'Bracken database.'
     },
     name='Build Kraken 2 database.',
-    description='This method builds a Kraken 2 database from provided '
-                'DNA sequences or simply fetches the sequences based on '
-                'user inputs and uses those to construct a database.',
-    citations=[citations["wood2019"]]
+    description='This method builds a Kraken 2/Bracken databases from '
+                'provided DNA sequences or simply fetches pre-built '
+                'versions from an online resource.',
+    citations=[citations["wood2019"], citations["lu2017"]]
 )
 
 plugin.methods.register_function(
@@ -237,3 +298,127 @@ plugin.methods.register_function(
                 'the longest one will be selected as the representative.',
     citations=[]
 )
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.kraken2_to_features,
+    inputs={
+        'reports': SampleData[Kraken2Reports]
+    },
+    parameters={
+        'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
+    },
+    outputs=[
+        ('table', FeatureTable[PresenceAbsence]),
+        ('taxonomy', FeatureData[Taxonomy])
+    ],
+    input_descriptions={
+        'reports': 'Per-sample Kraken 2 reports.'
+    },
+    parameter_descriptions={
+        'coverage_threshold': 'The minimum percent coverage required to'
+                              ' produce a feature.'
+    },
+    output_descriptions={
+        'table': 'A presence/absence table of selected features. The features'
+                 ' are not of even ranks, but will be the most specific rank'
+                 ' available.',
+        'taxonomy': 'Infra-clade ranks are ignored '
+                    'unless they are strain-level. Missing internal ranks '
+                    'are annotated by their next most specific rank, '
+                    'with the exception of k__Bacteria and k__Archaea which '
+                    'match their domain\'s name.',
+    },
+    name='Select downstream features from Kraken 2',
+    description='Convert a Kraken 2 report, which is an annotated NCBI '
+                'taxonomy tree into generic artifacts for downstream '
+                'analyses.'
+)
+
+# plugin.methods.register_function(
+#     function=q2_moshpit.kraken2.kraken2_to_mag_features,
+#     inputs={
+#         'reports': SampleData[Kraken2Reports % Properties('mags')],
+#         'hits': SampleData[Kraken2Outputs % Properties('mags')]
+#     },
+#     parameters={
+#         'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
+#     },
+#     outputs=[
+#         ('table', FeatureTable[PresenceAbsence]),
+#         ('taxonomy', FeatureData[Taxonomy])
+#     ],
+#     input_descriptions={
+#         'reports': 'Per-sample Kraken 2 reports.',
+#         'hits': 'Per-sample Kraken 2 output files.'
+#     },
+#     parameter_descriptions={
+#         'coverage_threshold': 'The minimum percent coverage required to '
+#                               'produce a feature.'
+#     },
+#     output_descriptions={
+#         'table': 'A presence/absence table of selected features. The '
+#                  'features are not of even ranks, but will be the most '
+#                  'specific rank available.',
+#         'taxonomy': 'Infra-clade ranks are ignored'
+#                     'unless they are strain-level. Missing internal ranks '
+#                     'are annotated by their next most specific rank, '
+#                     'with the exception of k__Bacteria and k__Archaea which '
+#                     'match their domain\'s name.',
+#     },
+#     name='Select downstream MAG features from Kraken 2',
+#     description='Convert a Kraken 2 report, which is an annotated NCBI '
+#                 'taxonomy tree into generic artifacts for downstream '
+#                 'analyses.'
+# )
+
+plugin.methods.register_function(
+        function=q2_moshpit.eggnog.eggnog_diamond_search,
+        inputs={'input_sequences': SampleData[Contigs],
+                'diamond_db': ReferenceDB[Diamond],
+                },
+        parameters={
+                'num_cpus': Int,
+                'db_in_memory': Bool,
+                },
+        input_descriptions={
+            'input_sequences': 'Sequence data of the contigs we want to '
+                               'search for hits using the Diamond Database',
+            'diamond_db': 'The filepath to an artifact containing the'
+                          'Diamond database',
+            },
+        parameter_descriptions={
+            'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+                        'use all available.',
+            'db_in_memory': 'Read database into memory. The '
+                            'database can be very large, so this '
+                            'option should only be used on clusters or other '
+                            'machines with enough memory.',
+            },
+        outputs=[('eggnog_hits', SampleData[BLAST6]),
+                 ('table', FeatureTable[Frequency])
+                 ],
+        name='Run eggNOG search using diamond aligner',
+        description="This method performs the steps by which we find our "
+                    "possible target sequences to annotate using the diamond "
+                    "search functionality from the eggnog `emapper.py` script",
+        )
+
+plugin.methods.register_function(
+        function=q2_moshpit.eggnog.eggnog_annotate,
+        inputs={
+            'eggnog_hits': SampleData[BLAST6],
+            'eggnog_db': ReferenceDB[Eggnog],
+            },
+        parameters={
+            'db_in_memory': Bool,
+            },
+        parameter_descriptions={
+            'db_in_memory': 'Read eggnog database into memory. The '
+                            'eggnog database is very large(>44GB), so this '
+                            'option should only be used on clusters or other '
+                            'machines with enough memory.',
+            },
+        outputs=[('ortholog_annotations', FeatureData[NOG])],
+        name='Annotate orthologs against eggNOG database',
+        description="Apply eggnog mapper to annotate seed orthologs.",
+        )

@@ -50,7 +50,7 @@ from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 #     return similar_bins
 
 
-def find_similar_bins_fcluster(
+def _find_similar_bins_fcluster(
         distance_matrix: pd.DataFrame, threshold: float
 ) -> List[List[str]]:
     """
@@ -84,7 +84,7 @@ def find_similar_bins_fcluster(
     return list(clusters.values())
 
 
-def get_bin_lengths(mags: MultiMAGSequencesDirFmt) -> pd.Series:
+def _get_bin_lengths(mags: MultiMAGSequencesDirFmt) -> pd.Series:
     """
     Calculates the length of each bin in a MultiMAGSequencesDirFmt object.
 
@@ -105,15 +105,15 @@ def get_bin_lengths(mags: MultiMAGSequencesDirFmt) -> pd.Series:
     return ser
 
 
-def remap_bins(
-    bin_clusters: List[List[str]], longest_bins: List[int], distances: pd.DataFrame
+def _remap_bins(
+    bin_clusters: List[List[str]], longest_bins: List[str], distances: pd.DataFrame
 ) -> Dict[str, str]:
     """
     Maps duplicate bins to a single dereplicated bin and assigns new IDs to the unique bins.
 
     Args:
         bin_clusters (list): A list of lists, where each inner list contains the IDs of similar bins.
-        longest_bins (list): A list of longest bin for each cluster.
+        longest_bins (str): A list of longest bin for each cluster.
         distances (pd.DataFrame): The original bin distance matrix.
 
     Returns:
@@ -144,7 +144,7 @@ def remap_bins(
     return final_bins
 
 
-def reassign_bins_to_samples(
+def _reassign_bins_to_samples(
     final_bins: Dict[str, str], manifest: pd.DataFrame
 ) -> Dict[str, Dict[str, int]]:
     """
@@ -182,7 +182,7 @@ def reassign_bins_to_samples(
     return samples_to_bins
 
 
-def write_unique_bins(
+def _write_unique_bins(
     all_bins: MultiMAGSequencesDirFmt, bins_remapped: Dict[str, str]
 ) -> MAGSequencesDirFmt:
     """
@@ -207,7 +207,7 @@ def write_unique_bins(
     return derep_bins
 
 
-def generate_pa_table(
+def _generate_pa_table(
     unique_bins_per_sample: Dict[str, Dict[str, int]]
 ) -> pd.DataFrame:
     """
@@ -235,22 +235,22 @@ def dereplicate_mags(
     distances = distance_matrix.to_data_frame()
 
     # find similar bins, according to the threshold
-    bin_clusters = find_similar_bins_fcluster(distances, threshold)
+    bin_clusters = _find_similar_bins_fcluster(distances, threshold)
 
     # find the longest bin in each cluster
-    bin_lengths = get_bin_lengths(mags)
+    bin_lengths = _get_bin_lengths(mags)
     longest_bins = [bin_lengths[ids].idxmax() for ids in bin_clusters]
 
     # generate a map between the original bins and the dereplicated bins
-    final_bins = remap_bins(bin_clusters, longest_bins, distances)
+    final_bins = _remap_bins(bin_clusters, longest_bins, distances)
 
     # generate dereplicated bin sequences
-    unique_bin_seqs = write_unique_bins(mags, final_bins)
+    unique_bin_seqs = _write_unique_bins(mags, final_bins)
 
     # generate a presence-absence table
-    unique_bins_per_sample = reassign_bins_to_samples(
+    unique_bins_per_sample = _reassign_bins_to_samples(
         final_bins, mags.manifest.view(pd.DataFrame)
     )
-    presence_absence = generate_pa_table(unique_bins_per_sample)
+    presence_absence = _generate_pa_table(unique_bins_per_sample)
 
     return unique_bin_seqs, presence_absence

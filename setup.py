@@ -57,6 +57,10 @@ setup(
             'data/kraken2-reports-select/*/*/*',
             'data/kraken-to-ncbi-tree/*',
             'data/kraken-to-ncbi-tree/*/*/*'
+        ],
+        'q2_moshpit.dereplication.tests': [
+            'data/*', 'data/mags/*', 'data/mags/*/*',
+            'data/mags-unique/*',
         ]
     },
     zip_safe=False,

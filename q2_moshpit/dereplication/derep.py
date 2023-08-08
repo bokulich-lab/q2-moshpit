@@ -250,6 +250,7 @@ def _generate_pa_table(
         absence.
     """
     presence_absence = pd.DataFrame.from_records(unique_bins_per_sample).T
+    presence_absence = presence_absence.astype(bool).astype(int)
     presence_absence.index.name = "sample-id"
     presence_absence.sort_index(inplace=True)
     presence_absence = presence_absence[sorted(presence_absence.columns)]

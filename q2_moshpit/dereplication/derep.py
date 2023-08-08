@@ -66,7 +66,7 @@ def _find_similar_bins_fcluster(
         threshold (float): The distance threshold for forming clusters.
 
     Returns:
-         A list where each element is a list  of similar bins.
+         A list where each element is a list of similar bins.
 
     Notes:
          The output will look like:

@@ -39,11 +39,12 @@ class TestDereplication(TestPluginBase):
             self.dist_matrix_df, ids=self.dist_matrix_df.index
         )
         self.clusters_99 = [
+            ['24dee6fe-9b84-45bb-8145-de7b092533a1'],
             ['ca7012fc-ba65-40c3-84f5-05aa478a7585',
              'db03f8b6-28e1-48c5-a47c-9c65f38f7357',
              'fa4d7420-d0a4-455a-b4d7-4fa66e54c9bf'],
             ['d65a71fa-4279-4588-b937-0747ed5d604d',
-             'fb0bc871-04f6-486b-a10e-8e0cb66f8de3']
+             'fb0bc871-04f6-486b-a10e-8e0cb66f8de3'],
         ]
         self.bin_map = {
             'ca7012fc-ba65-40c3-84f5-05aa478a7585':
@@ -55,16 +56,20 @@ class TestDereplication(TestPluginBase):
             'fa4d7420-d0a4-455a-b4d7-4fa66e54c9bf':
                 'ca7012fc-ba65-40c3-84f5-05aa478a7585',
             'fb0bc871-04f6-486b-a10e-8e0cb66f8de3':
-                'd65a71fa-4279-4588-b937-0747ed5d604d'
+                'd65a71fa-4279-4588-b937-0747ed5d604d',
+            '24dee6fe-9b84-45bb-8145-de7b092533a1':
+                '24dee6fe-9b84-45bb-8145-de7b092533a1'
         }
         self.dereplicated_bins = {
             'sample1': {
                 'ca7012fc-ba65-40c3-84f5-05aa478a7585': 1,
-                'd65a71fa-4279-4588-b937-0747ed5d604d': 1
+                'd65a71fa-4279-4588-b937-0747ed5d604d': 1,
+                '24dee6fe-9b84-45bb-8145-de7b092533a1': 1
             },
             'sample2': {
                 'ca7012fc-ba65-40c3-84f5-05aa478a7585': 2,
-                'd65a71fa-4279-4588-b937-0747ed5d604d': 1
+                'd65a71fa-4279-4588-b937-0747ed5d604d': 1,
+                '24dee6fe-9b84-45bb-8145-de7b092533a1': 0
             }
         }
 
@@ -81,8 +86,9 @@ class TestDereplication(TestPluginBase):
     def test_bin_lengths(self):
         obs = _get_bin_lengths(self.bins)
         exp = pd.Series(
-            [3000, 2000, 3000, 2000, 3000], name='length',
+            [1935, 3000, 2000, 3000, 2000, 3000], name='length',
             index=[
+                '24dee6fe-9b84-45bb-8145-de7b092533a1',
                 'ca7012fc-ba65-40c3-84f5-05aa478a7585',
                 'fb0bc871-04f6-486b-a10e-8e0cb66f8de3',
                 'd65a71fa-4279-4588-b937-0747ed5d604d',
@@ -95,8 +101,9 @@ class TestDereplication(TestPluginBase):
 
     def test_remap_bins(self):
         longest_bins = [
+            '24dee6fe-9b84-45bb-8145-de7b092533a1',
             'ca7012fc-ba65-40c3-84f5-05aa478a7585',
-            'd65a71fa-4279-4588-b937-0747ed5d604d'
+            'd65a71fa-4279-4588-b937-0747ed5d604d',
         ]
         obs = _remap_bins(self.clusters_99, longest_bins, self.dist_matrix_df)
         exp = self.bin_map

@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 import os.path
 import shutil
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 import pandas as pd
 import skbio
@@ -22,20 +22,25 @@ from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 #     distance_matrix: pd.DataFrame, threshold: float
 # ) -> List[List[str]]:
 #     """
-#     Finds similar bins based on a distance matrix and a similarity threshold.
+#     Finds similar bins based on a distance matrix and
+#     a similarity threshold.
 #
 #     Args:
-#         distance_matrix (pd.DataFrame): A pandas DataFrame containing the pairwise distances between bins.
-#         threshold (float): A float representing the maximum distance for two bins to be considered similar.
+#         distance_matrix (pd.DataFrame): A pandas DataFrame containing the
+#                                           pairwise distances between bins.
+#         threshold (float): A float representing the maximum distance for
+#                               two bins to be considered similar.
 #
 #     Returns:
 #         A list where each element is a list  of similar bins.
 #
 #     Notes:
 #         The output will look like:
-#             [['sample1_bin1', 'sample3_bin3'], ['sample2_bin4, 'sample3_bin1']]
-#         meaning that sample1_bin1 is similar to sample3_bin3 and sample2_bin4 is similar to sample3_bin1,
-#         according to the provided threshold.
+#             [['sample1_bin1', 'sample3_bin3'],
+#              ['sample2_bin4, 'sample3_bin1']]
+#         meaning that sample1_bin1 is similar to sample3_bin3 and
+#         sample2_bin4 is similar to sample3_bin1, according to the
+#         provided threshold.
 #     """
 #     sample_names = list(distance_matrix.index)
 #     similar_bins = {}
@@ -65,15 +70,18 @@ def _find_similar_bins_fcluster(
 
     Notes:
          The output will look like:
-             [['sample1_bin1', 'sample3_bin3'], ['sample2_bin4, 'sample3_bin1']]
-         meaning that sample1_bin1 is similar to sample3_bin3 and sample2_bin4 is
-         similar to sample3_bin1, according to the provided threshold.
+             [['sample1_bin1', 'sample3_bin3'],
+              ['sample2_bin4, 'sample3_bin1']]
+         meaning that sample1_bin1 is similar to sample3_bin3 and
+         sample2_bin4 is similar to sample3_bin1, according to
+         the provided threshold.
     """
 
     # Perform hierarchical/agglomerative clustering
     tree = ward(distance_matrix.values)
 
-    # Form flat clusters from the hierarchical clustering defined by the given linkage matrix
+    # Form flat clusters from the hierarchical clustering defined
+    # by the given linkage matrix
     cluster_ids = fcluster(tree, t=threshold, criterion='distance')
 
     # Map each MAG to its corresponding cluster
@@ -89,10 +97,12 @@ def _get_bin_lengths(mags: MultiMAGSequencesDirFmt) -> pd.Series:
     Calculates the length of each bin in a MultiMAGSequencesDirFmt object.
 
     Args:
-        mags (MultiMAGSequencesDirFmt): An object containing all the original bins from all samples.
+        mags (MultiMAGSequencesDirFmt): An object containing all the
+                                        original bins from all samples.
 
     Returns:
-        A pandas Series where the index is the bin name and the value is the length of the bin.
+        A pandas Series where the index is the bin name and the value
+        is the length of the bin.
     """
     bin_lengths = {}
     for path, seq in mags.sequences.iter_views(DNAFASTAFormat):
@@ -101,23 +111,30 @@ def _get_bin_lengths(mags: MultiMAGSequencesDirFmt) -> pd.Series:
             tot += len(_seq)
         bin_lengths[str(path)] = tot
     ser = pd.Series(bin_lengths, name="length")
-    ser.index = ser.index.map(lambda x: x.replace(".fasta", "").split("/")[-1])
+    ser.index = ser.index.map(
+        lambda x: x.replace(".fasta", "").split("/")[-1]
+    )
     return ser
 
 
 def _remap_bins(
-    bin_clusters: List[List[str]], longest_bins: List[str], distances: pd.DataFrame
+    bin_clusters: List[List[str]],
+    longest_bins: List[str],
+    distances: pd.DataFrame
 ) -> Dict[str, str]:
     """
-    Maps duplicate bins to a single dereplicated bin and assigns new IDs to the unique bins.
+    Maps duplicate bins to a single dereplicated bin and assigns
+    new IDs to the unique bins.
 
     Args:
-        bin_clusters (list): A list of lists, where each inner list contains the IDs of similar bins.
+        bin_clusters (list): A list of lists, where each inner list contains
+                                the IDs of similar bins.
         longest_bins (str): A list of longest bin for each cluster.
         distances (pd.DataFrame): The original bin distance matrix.
 
     Returns:
-        A dictionary where the keys are the original bin names and the values are tuples of the old and new bin IDs.
+        A dictionary where the keys are the original bin names and the
+        values are tuples of the old and new bin IDs.
 
     Notes:
         The output will look like:
@@ -131,7 +148,7 @@ def _remap_bins(
              'sample3_bin1': 'mag3',
              'sample3_bin2': 'mag4',
              'sample3_bin3': 'mag5'}
-        meaning that mag5 was assigned to both, sample1_bin1 and sample3_bin3.
+        meaning that mag5 was assigned to sample1_bin1 and sample3_bin3.
     """
     final_bins = {}
     for i, similar_bins in enumerate(bin_clusters):
@@ -151,22 +168,29 @@ def _reassign_bins_to_samples(
     Assigns bins to samples based on the final bin mapping.
 
     Args:
-        final_bins (dict): A dictionary where the keys are the original bin names and the values are the
+        final_bins (dict): A dictionary where the keys are the original
+                            bin names and the values are the
                             new bin IDs.
-        manifest (pd.DataFrame): Manifest of the original sample set - required to recover information
+        manifest (pd.DataFrame): Manifest of the original sample set -
+                                    required to recover information
                                     about original sample IDs.
 
     Returns:
-        A dictionary where the keys are sample IDs and the values are dictionaries where the keys are MAG IDs and
-        the values are the number of bins assigned to that MAG.
+        A dictionary where the keys are sample IDs and the values are
+        dictionaries where the keys are MAG IDs and the values are
+        the number of bins assigned to that MAG.
 
     Notes:
         The output will look like:
-            {'sample1': {'mag1': 0, 'mag2': 1, 'mag3': 0, 'mag4': 0, 'mag5': 1, 'mag6': 0, 'mag7': 0, 'mag8': 0},),
-             'sample2': {'mag1': 1, 'mag2': 0, 'mag3': 1, 'mag4': 0, 'mag5': 0, 'mag6': 1, 'mag7': 1, 'mag8': 1},),
-             'sample3': {'mag1': 0, 'mag2': 0, 'mag3': 1, 'mag4': 1, 'mag5': 1, 'mag6': 0, 'mag7': 0, 'mag8': 0},)}.
+            {'sample1': {'mag1': 0, 'mag2': 1, 'mag3': 0, 'mag4': 0,
+                         'mag5': 1, 'mag6': 0, 'mag7': 0, 'mag8': 0},),
+             'sample2': {'mag1': 1, 'mag2': 0, 'mag3': 1, 'mag4': 0,
+                         'mag5': 0, 'mag6': 1, 'mag7': 1, 'mag8': 1},),
+             'sample3': {'mag1': 0, 'mag2': 0, 'mag3': 1, 'mag4': 1,
+                         'mag5': 1, 'mag6': 0, 'mag7': 0, 'mag8': 0},)}.
     """
-    all_samples = manifest.copy(deep=True).reset_index().replace({"mag-id": final_bins})
+    all_samples = manifest.copy(deep=True) \
+        .reset_index().replace({"mag-id": final_bins})
     all_derep_mags = set([mag_id for _, mag_id in final_bins.items()])
 
     samples_to_bins = {
@@ -186,11 +210,13 @@ def _write_unique_bins(
     all_bins: MultiMAGSequencesDirFmt, bins_remapped: Dict[str, str]
 ) -> MAGSequencesDirFmt:
     """
-    Writes the unique bins to a new MAGSequencesDirFmt object based on the final bin mapping.
+    Writes the unique bins to a new MAGSequencesDirFmt object
+    based on the final bin mapping.
 
     Args:
-        all_bins (MultiMAGSequencesDirFmt): An object containing all the bins.
-        bins_remapped (dict): A dictionary where the keys are the original bin names and the values are tuples of
+        all_bins (MultiMAGSequencesDirFmt): An object with all the bins.
+        bins_remapped (dict): A dictionary where the keys are the original
+                                bin names and the values are tuples of
                                 the old and new bin IDs.
 
     Returns:
@@ -211,14 +237,17 @@ def _generate_pa_table(
     unique_bins_per_sample: Dict[str, Dict[str, int]]
 ) -> pd.DataFrame:
     """
-    Generates a presence-absence table from a dictionary of unique bins per sample.
+    Generates a presence-absence table from a dictionary of unique
+    bins per sample.
 
     Args:
-        unique_bins_per_sample: A dictionary where the keys are sample IDs and the values are lists of unique bin IDs.
+        unique_bins_per_sample: A dictionary where the keys are sample IDs
+                                and the values are lists of unique bin IDs.
 
     Returns:
-        A pandas DataFrame where the index is the sample ID and the columns are the unique bin IDs, with 1 indicating
-        presence and 0 indicating absence.
+        A pandas DataFrame where the index is the sample ID and the columns
+        are the unique bin IDs, with 1 indicating presence and 0 indicating
+        absence.
     """
     presence_absence = pd.DataFrame.from_records(unique_bins_per_sample).T
     presence_absence.index.name = "sample-id"

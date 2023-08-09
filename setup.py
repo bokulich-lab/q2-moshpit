@@ -56,7 +56,8 @@ setup(
             'data/kraken2-reports-select/*',
             'data/kraken2-reports-select/*/*/*',
             'data/kraken-to-ncbi-tree/*',
-            'data/kraken-to-ncbi-tree/*/*/*'
+            'data/kraken-to-ncbi-tree/*/*/*',
+            'data/mags-derep/*'
         ]
     },
     zip_safe=False,

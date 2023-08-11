@@ -21,25 +21,21 @@ from q2_types_genomics.kraken2 import (
 
 
 def _run_bracken_one_sample(
-        bracken_db: str, kraken2_report_dir: str, bracken_report_dir: str,
+        bracken_db: str, kraken2_report_fp: str, bracken_report_dir: str,
         tmp_dir: str, threshold: int, read_len: int, level: str
 ) -> pd.DataFrame:
-    sample_id = os.path.basename(kraken2_report_dir)
-    kraken2_report_fp = os.path.join(
-        kraken2_report_dir, f"{sample_id}.report.txt"
-    )
+    sample_id = os.path.basename(
+        kraken2_report_fp).replace(".report.txt", "")
     bracken_output_fp = os.path.join(
         tmp_dir, f"{sample_id}.bracken.output.txt"
     )
-    sample_dir = os.path.join(bracken_report_dir, sample_id)
-    os.makedirs(sample_dir, exist_ok=True)
     bracken_report_fp = os.path.join(
-        sample_dir, "bracken.report.txt"
+        bracken_report_dir, f"{sample_id}.report.txt"
     )
     cmd = [
         "bracken",
         "-d", bracken_db,
-        "-i", kraken2_report_fp,
+        "-i", str(kraken2_report_fp),
         "-o", bracken_output_fp,
         "-w", bracken_report_fp,
         "-t", str(threshold),
@@ -74,10 +70,10 @@ def _estimate_bracken(
 
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
-            for report_dir in kraken_reports.path.iterdir():
+            for report_fp in kraken_reports.path.iterdir():
                 bracken_table = _run_bracken_one_sample(
                     bracken_db=str(bracken_db),
-                    kraken2_report_dir=report_dir,
+                    kraken2_report_fp=report_fp,
                     bracken_report_dir=str(bracken_reports),
                     tmp_dir=tmpdir, threshold=threshold,
                     read_len=read_len, level=level

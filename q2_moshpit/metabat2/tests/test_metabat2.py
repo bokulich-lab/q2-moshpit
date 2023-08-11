@@ -178,7 +178,9 @@ class TestMetabat2(TestPluginBase):
             os.makedirs(os.path.join(fake_loc, 'samp1'))
             shutil.copy(
                 samp1_unbinned_fp,
-                os.path.join(fake_temp_dir, 'bins', 'samp1', 'bin.unbinned.fa'),
+                os.path.join(
+                    fake_temp_dir, 'bins', 'samp1', 'bin.unbinned.fa'
+                ),
             )
 
             _process_sample(

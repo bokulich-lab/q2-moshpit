@@ -126,16 +126,18 @@ class TestMetabat2(TestPluginBase):
             exp_cmd = [
                 'metabat2', '-i', fake_props['contigs'],
                 '-a', '/some/depth/file.txt', '-o',
-                os.path.join(fake_loc, 'samp1', 'bin')
+                os.path.join(fake_loc, 'samp1', 'bin'),
+                '--unbinned'
             ]
             exp_cmd.extend(fake_args)
             p1.assert_called_once_with(exp_cmd, check=True)
 
+    @patch('tempfile.TemporaryDirectory')
     @patch('q2_moshpit.metabat2.uuid4')
     @patch('q2_moshpit.metabat2._sort_bams')
     @patch('q2_moshpit.metabat2._estimate_depth')
     @patch('q2_moshpit.metabat2._run_metabat2')
-    def test_process_sample(self, p1, p2, p3, p4):
+    def test_process_sample(self, p1, p2, p3, p4, p5):
         fake_props = {
             'map': 'some/where/samp1_alignment.bam',
             'contigs': 'some/where/samp1_contigs.fasta'
@@ -146,6 +148,7 @@ class TestMetabat2(TestPluginBase):
         }
         fake_args = ['--verbose', '--minContig', '1500', '--minClsSize',
                      '10000']
+        fake_unbinned = ContigSequencesDirFmt()
 
         p3.return_value = fake_props_mod
         p2.return_value = 'some/where/samp1_depth.txt'
@@ -155,18 +158,32 @@ class TestMetabat2(TestPluginBase):
             '37356c23-b8db-4bbe-b4c9-d35e1cef615b',
             '51c19113-31f0-4e4c-bbb3-b9df26b949f3'
         ]
+        fake_temp_dir = tempfile.mkdtemp()
+        p5.return_value.__enter__.return_value = fake_temp_dir
 
         with tempfile.TemporaryDirectory() as fake_loc:
             p1.return_value = os.path.join(fake_loc, 'bins', 'samp1')
 
             # copy two expected bins to the new location
-            samp1_bins_fp = self.get_data_path('bins/samp1')
+            samp1_bins_fp = self.get_data_path('bins-no-uuid/samp1')
             shutil.copytree(
                 samp1_bins_fp, os.path.join(fake_loc, 'bins', 'samp1'),
                 dirs_exist_ok=True
             )
 
-            _process_sample('samp1', fake_props, fake_args, fake_loc)
+            # copy expected unbinned contigs to the new location
+            samp1_unbinned_fp = self.get_data_path(
+                'contigs/samp1_contigs.fa'
+            )
+            os.makedirs(os.path.join(fake_loc, 'samp1'))
+            shutil.copy(
+                samp1_unbinned_fp,
+                os.path.join(fake_temp_dir, 'bins', 'samp1', 'bin.unbinned.fa'),
+            )
+
+            _process_sample(
+                'samp1', fake_props, fake_args, fake_loc, fake_unbinned
+            )
 
             # find the newly formed bins
             obs_bins = set([
@@ -179,6 +196,14 @@ class TestMetabat2(TestPluginBase):
             }
             self.assertSetEqual(exp_bins, obs_bins)
 
+            # find the unbinned contigs
+            obs_unbinned = set([
+                x.split('/')[-1] for x in
+                glob.glob(os.path.join(fake_unbinned.path, '*.fa'))
+            ])
+            exp_unbinned = {'samp1_contigs.fa', }
+            self.assertSetEqual(exp_unbinned, obs_unbinned)
+
             p3.assert_called_once_with('samp1', fake_props, ANY)
             p2.assert_called_once_with('samp1', fake_props_mod, ANY)
             p1.assert_called_once_with(
@@ -186,9 +211,10 @@ class TestMetabat2(TestPluginBase):
                 'some/where/samp1_depth.txt', fake_args
             )
 
+    @patch('q2_moshpit.metabat2.ContigSequencesDirFmt')
     @patch('q2_moshpit.metabat2.MultiFASTADirectoryFormat')
     @patch('q2_moshpit.metabat2._process_sample')
-    def test_bin_contigs_metabat(self, p1, p2):
+    def test_bin_contigs_metabat(self, p1, p2, p3):
         input_contigs = self.get_data_path('contigs')
         input_maps = self.get_data_path('maps')
         contigs = ContigSequencesDirFmt(input_contigs, mode='r')
@@ -201,7 +227,13 @@ class TestMetabat2(TestPluginBase):
         )
         p2.return_value = mock_bins
 
-        obs_bins, obs_map = _bin_contigs_metabat(contigs, maps, args)
+        mock_unbinned = ContigSequencesDirFmt(
+            self.get_data_path('contigs/samp1_contigs.fa'), 'r'
+        )
+        p3.return_value = mock_unbinned
+
+        obs_bins, obs_map, obs_unbinned = \
+            _bin_contigs_metabat(contigs, maps, args)
 
         self.assertIsInstance(obs_bins, MultiFASTADirectoryFormat)
         p1.assert_has_calls([
@@ -209,13 +241,13 @@ class TestMetabat2(TestPluginBase):
                 'samp1',
                 {'contigs': self.get_data_path('/contigs/samp1_contigs.fa'),
                  'map': self.get_data_path('/maps/samp1_alignment.bam')},
-                args, str(mock_bins)
+                args, str(mock_bins), str(mock_unbinned)
             ),
             call(
                 'samp2',
                 {'contigs': self.get_data_path('/contigs/samp2_contigs.fa'),
                  'map': self.get_data_path('/maps/samp2_alignment.bam')},
-                args, str(mock_bins)
+                args, str(mock_bins), str(mock_unbinned)
             )
         ])
 

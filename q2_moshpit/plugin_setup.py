@@ -96,7 +96,8 @@ plugin.methods.register_function(
     },
     outputs=[
         ('mags', SampleData[MAGs]),
-        ('contig_map', FeatureMap[MAGtoContigs])
+        ('contig_map', FeatureMap[MAGtoContigs]),
+        ('unbinned_contigs', SampleData[Contigs])
     ],
     input_descriptions={
         'contigs': 'Placeholder.',
@@ -127,7 +128,8 @@ plugin.methods.register_function(
     output_descriptions={
         'mags': 'The resulting MAGs.',
         'contig_map': 'Mapping of MAG identifiers to the contig identifiers '
-                      'contained in each MAG.'
+                      'contained in each MAG.',
+        'unbinned_contigs': 'Contigs that were not binned into any MAG.'
     },
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '

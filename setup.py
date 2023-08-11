@@ -29,7 +29,8 @@ setup(
         'q2_moshpit.usage_examples': ['tests/data/*'],
         'q2_moshpit.metabat2.tests': [
             'data/*', 'data/bins/*/*', 'data/contigs/*',
-            'data/depth/*', 'data/maps/*', 'data/bins-small/*/*'
+            'data/depth/*', 'data/maps/*', 'data/bins-small/*/*',
+            'data/bins-no-uuid/*/*'
         ],
         'q2_moshpit.checkm.tests': [
             'data/*', 'data/bins/*', 'data/bins/*/*',

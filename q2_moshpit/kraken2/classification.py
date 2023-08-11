@@ -5,10 +5,11 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import glob
 import os
 import subprocess
 from copy import deepcopy
-from typing import Union
+from typing import Union, Optional
 
 import pandas as pd
 from q2_types.per_sample_sequences import (
@@ -18,50 +19,70 @@ from q2_types.per_sample_sequences import (
 
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
+from q2_types_genomics.feature_data import MAGSequencesDirFmt
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
     Kraken2DBDirectoryFormat,
 )
-from q2_types_genomics.per_sample_data import MultiMAGSequencesDirFmt
 
 
 def _get_seq_paths(df_index, df_row, df_columns):
-    if "filename" in df_columns:
-        _sample, _bin, fn = df_index[0], df_index[1], [df_row["filename"]]
-    elif "reverse" in df_columns:
-        _sample, _bin, fn = df_index, df_index, df_row.tolist()
+    if "reverse" in df_columns:
+        _sample, fn = df_index, df_row.tolist()
     else:
-        _sample, _bin, fn = df_index, df_index, [df_row["forward"]]
-    return _sample, _bin, fn
+        _sample, fn = df_index, [df_row["forward"]]
+    return _sample, fn
 
 
 def _construct_output_paths(
-    _sample, _bin, kraken2_outputs_dir, kraken2_reports_dir
+        _sample, kraken2_outputs_dir, kraken2_reports_dir
 ):
-    sample_dir_report = os.path.join(kraken2_reports_dir.path, _sample)
-    sample_dir_output = os.path.join(kraken2_outputs_dir.path, _sample)
-    for s in [sample_dir_report, sample_dir_output]:
-        os.makedirs(s, exist_ok=True)
-    report_fp = os.path.join(sample_dir_report, f"{_bin}.report.txt")
-    output_fp = os.path.join(sample_dir_output, f"{_bin}.output.txt")
+    report_fp = os.path.join(
+        kraken2_reports_dir.path, f"{_sample}.report.txt"
+    )
+    output_fp = os.path.join(
+        kraken2_outputs_dir.path, f"{_sample}.output.txt"
+    )
     return output_fp, report_fp
 
 
 def _classify_kraken2(
-    manifest, common_args
+        seqs, common_args
 ) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
+    if isinstance(seqs, MAGSequencesDirFmt):
+        manifest = None
+    else:
+        manifest: Optional[pd.DataFrame] = seqs.manifest.view(pd.DataFrame)
+
     base_cmd = ["kraken2", *common_args]
-    base_cmd.append("--paired") if "reverse" in manifest.columns else False
+    if manifest is not None and "reverse" in manifest.columns:
+        base_cmd.append("--paired")
 
     kraken2_reports_dir = Kraken2ReportDirectoryFormat()
     kraken2_outputs_dir = Kraken2OutputDirectoryFormat()
 
+    def get_paths_for_reads(index, row):
+        return _get_seq_paths(index, row, list(manifest.columns))
+
+    def get_paths_for_mags(mag_id, fp):
+        return mag_id, [fp]
+
     try:
-        for index, row in manifest.iterrows():
-            _sample, _bin, fn = _get_seq_paths(index, row, manifest.columns)
+        if manifest is not None:  # we got reads - use the manifest
+            iterate_over = manifest.iterrows()
+            path_function = get_paths_for_reads
+        else:  # we got MAGs - use the filenames directly
+            iterate_over = (
+                (os.path.basename(fp).split(".")[0], fp)
+                for fp in glob.glob(os.path.join(seqs.path, "*.fasta"))
+            )
+            path_function = get_paths_for_mags
+
+        for args in iterate_over:
+            _sample, fn = path_function(*args)
             output_fp, report_fp = _construct_output_paths(
-                _sample, _bin, kraken2_outputs_dir, kraken2_reports_dir
+                _sample, kraken2_outputs_dir, kraken2_reports_dir
             )
             cmd = deepcopy(base_cmd)
             cmd.extend(
@@ -79,19 +100,19 @@ def _classify_kraken2(
 
 
 def classify_kraken2(
-    seqs: Union[
-        SingleLanePerSamplePairedEndFastqDirFmt,
-        SingleLanePerSampleSingleEndFastqDirFmt,
-        MultiMAGSequencesDirFmt,
-    ],
-    kraken2_db: Kraken2DBDirectoryFormat,
-    threads: int = 1,
-    confidence: float = 0.0,
-    minimum_base_quality: int = 0,
-    memory_mapping: bool = False,
-    minimum_hit_groups: int = 2,
-    quick: bool = False,
-    report_minimizer_data: bool = False
+        seqs: Union[
+            SingleLanePerSamplePairedEndFastqDirFmt,
+            SingleLanePerSampleSingleEndFastqDirFmt,
+            MAGSequencesDirFmt,
+        ],
+        kraken2_db: Kraken2DBDirectoryFormat,
+        threads: int = 1,
+        confidence: float = 0.0,
+        minimum_base_quality: int = 0,
+        memory_mapping: bool = False,
+        minimum_hit_groups: int = 2,
+        quick: bool = False,
+        report_minimizer_data: bool = False
 ) -> (
         Kraken2ReportDirectoryFormat,
         Kraken2OutputDirectoryFormat,
@@ -102,6 +123,4 @@ def classify_kraken2(
         processing_func=_process_kraken2_arg, params=kwargs
     )
     common_args.extend(["--db", str(kraken2_db.path)])
-    manifest: pd.DataFrame = seqs.manifest.view(pd.DataFrame)
-
-    return _classify_kraken2(manifest, common_args)
+    return _classify_kraken2(seqs, common_args)

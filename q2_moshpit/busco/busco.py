@@ -9,10 +9,13 @@ import glob
 import json
 import os
 import tempfile
+from typing import List, Mapping
 from copy import deepcopy
 from distutils.dir_util import copy_tree
-from typing import Mapping
 from zipfile import ZipFile
+from .utils import _parse_busco_params
+from .._utils import _process_common_input_params
+
 
 import pandas as pd
 import pkg_resources
@@ -23,7 +26,6 @@ from q2_checkm.plots import _draw_detailed_plots, _draw_overview_plots
 from q2_checkm.utils import (
     _get_plots_per_sample,
     _process_checkm_arg,
-    _process_common_input_params,
     run_command,
 )
 
@@ -78,7 +80,6 @@ def _evaluate_bins(
 
     # Return a dict where key is sample name and value is path "tmp/sample/storage/bin_stats_ext.tsv"
     return stats_fps
-
 
 def _draw_checkm_plots(
     results_dir: str, bins: MultiMAGSequencesDirFmt, db_path: str, plot_type: str = "gc"
@@ -256,48 +257,106 @@ def _zip_checkm_plots(plots_per_sample: Mapping[str, Mapping[str, str]], zip_pat
                 arcname = os.path.relpath(plot_fp, common_path)
                 zf.write(plot_fp, arcname=arcname)
 
+def run_busco(output_dir: str, mags: MultiMAGSequencesDirFmt, params: List[str]):
+    """Evaluates bins for all samples using CheckM.
 
-def evaluate_bins(
+    Args:
+        output_dir (str): Location where the final results should be stored.
+        mags (MultiMAGSequencesDirFmt): The mags to be analyzed.
+        params (List[str]): List of parsed arguments to pass to BUSCO
+
+    Returns:
+        dict: Dictionary containing the paths to the generated reports.
+    """
+    base_cmd = ["busco", *params]
+
+    # Creates pandas df "manifest" from bins
+    manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
+
+    # Make a new column in manifest with the directories of files listed in column "filename"
+    manifest["sample_dir"] = manifest.filename.apply(lambda x: os.path.dirname(x))
+
+    # numpy.ndarray with unique dirs
+    sample_dirs = manifest["sample_dir"].unique()
+    
+    # For every unique dir run checkm
+    for sample_dir in sample_dirs:
+        # Get name of dir and make path with it inside the tmp dir
+        sample = os.path.split(sample_dir)[-1]
+
+        # Deep copy base comand extend it with the sample specific info and run it
+        cmd = deepcopy(base_cmd)
+        cmd.extend(["--in", sample_dir, "-o", sample, "--out_path", output_dir])
+        run_command(cmd, env={**os.environ})
+
+def plot_busco(
     output_dir: str,
-    bins: MultiMAGSequencesDirFmt,
-    db_path: str,
-    reduced_tree: bool = None,
-    unique: int = None,
-    multi: int = None,
-    force_domain: bool = None,
-    no_refinement: bool = None,
-    individual_markers: bool = None,
-    skip_adj_correction: bool = None,
-    skip_pseudogene_correction: bool = None,
-    aai_strain: float = None,
-    ignore_thresholds: bool = None,
+    mags: MultiMAGSequencesDirFmt,
+    out: str = None,
+    mode: str = None,
+    lineage: str = None,
+    augustus: bool = None,
+    augustus_parameters: str = None,
+    augustus_species: str = None,
+    auto_lineage: bool = None,
+    auto_lineage_euk: bool = None,
+    auto_lineage_prok: bool = None,
+    cpu: int = None,
+    config: str = None,
+    contig_break: int = None,
+    datasets_version: str = None,
+    download: str = None,
+    download_base_url: str = None,
+    download_path: str = None,
     e_value: float = None,
-    length: float = None,
-    threads: int = None,
-    pplacer_threads: int = None,
-):
+    force: bool = None,
+    limit: int = None,
+    help: bool = None,
+    list_datasets: bool = None,
+    long: str = None,
+    metaeuk_parameters: str = None,
+    metaeuk_rerun_parameters: str = None,
+    offline: bool = None,
+    out_path: str = None,
+    quiet: bool = None,
+    restart: bool = None,
+    scaffold_composition: bool = None,
+    tar: bool = None,
+    update_data: bool = None,
+    version: bool = None,
+) -> None:
+    """
+    qiime2 wraping function for the BUSCO assessment tool <https://busco.ezlab.org/> and visualizes
+    results.
+
+    Args:
+        see all possible inputs by running `qiime q2-moshpit busco -h`
+
+    Output:
+        plots.zip: zip file containing all of the busco plots
+        busco_output_files: all busco outputfiles
+        qiime_html: html for rendering the output plots
+    """
 
     # Create dictionary with local varaibles (kwards passed to the function or their defaults)
-    # excluding "output_dir", "bins" and "db_path"
+    # excluding "output_dir" and "mags"
     kwargs = {
-        k: v for k, v in locals().items() if k not in ["output_dir", "bins", "db_path"]
+        k: v for k, v in locals().items() if k not in ["output_dir", "mags"]
     }
 
-    # Filter out all kwards that are Falsy or integers
+    # Filter out all kwards that are None or False
     common_args = _process_common_input_params(
-        processing_func=_process_checkm_arg, params=kwargs
+        processing_func=_parse_busco_params, params=kwargs
     )
 
-    # TODO: check that CheckM's database is available (or fetch?)
-
-    # Creates output directory with path 'tmp',
-    # run CheckM's lineage_wf pipeline, draw all the QC plots and zip
-    # them into a single archive for download
+    # Creates output directory with path 'tmp'
     with tempfile.TemporaryDirectory() as tmp:
-        results_dir = os.path.join(tmp, "results")
 
-        # Run checkm for every sample. Returns dictionary to report files. 
-        reports = _evaluate_bins(results_dir, bins, db_path, common_args)
+        # Construct path to temporary results dir
+        results_dir = os.path.join(tmp, "busco_output")
+
+        # Run busco for every sample. Returns dictionary to report files. 
+        reports = run_busco(results_dir, mags, common_args)
         
         # For every type of graph draw graphs and save the paths
         all_plots = {}

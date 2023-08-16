@@ -5,33 +5,30 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import importlib
+
+from q2_types.distance_matrix import DistanceMatrix
+from q2_types.feature_data import FeatureData, Sequence, Taxonomy
+from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
-
-from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
-from q2_types_genomics.kraken2 import (
-    Kraken2Reports, Kraken2Outputs, Kraken2DB
-)
-
+from q2_types.sample_data import SampleData
+from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 
-import importlib
 import q2_moshpit
-
-from q2_types.sample_data import SampleData
-from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
-from q2_types.feature_data import FeatureData, Sequence, Taxonomy
-
-from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
 from q2_types_genomics.feature_data import NOG, MAG
+from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.genome_data import BLAST6
+from q2_types_genomics.kraken2 import (
+    Kraken2Reports, Kraken2Outputs, Kraken2DB
+)
 from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-
-from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
+from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
 
@@ -273,6 +270,39 @@ plugin.methods.register_function(
                 'provided DNA sequences or simply fetches pre-built '
                 'versions from an online resource.',
     citations=[citations["wood2019"], citations["lu2017"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.dereplication.dereplicate_mags,
+    inputs={
+        "mags": SampleData[MAGs],
+        "distance_matrix": DistanceMatrix
+    },
+    parameters={
+        "threshold": Float % Range(0, 1, inclusive_end=True)
+    },
+    outputs=[
+        ('dereplicated_mags', FeatureData[MAG]),
+        ('feature_table', FeatureTable[PresenceAbsence])
+    ],
+    input_descriptions={
+        "mags": "MAGs to be dereplicated.",
+        "distance_matrix": "Matrix of distances between MAGs."
+    },
+    parameter_descriptions={
+        "threshold": "Similarity threshold required to consider "
+                     "two bins identical."
+    },
+    output_descriptions={
+        "dereplicated_mags": "Dereplicated MAGs.",
+        "feature_table": "Mapping between MAGs and samples."
+    },
+    name='Dereplicate MAGs from multiple samples.',
+    description='This method dereplicates MAGs from multiple samples '
+                'using distances between them found in the provided '
+                'distance matrix. For each cluster of similar MAGs, '
+                'the longest one will be selected as the representative.',
+    citations=[]
 )
 
 plugin.methods.register_function(

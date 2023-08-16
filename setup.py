@@ -29,7 +29,8 @@ setup(
         'q2_moshpit.usage_examples': ['tests/data/*'],
         'q2_moshpit.metabat2.tests': [
             'data/*', 'data/bins/*/*', 'data/contigs/*',
-            'data/depth/*', 'data/maps/*', 'data/bins-small/*/*'
+            'data/depth/*', 'data/maps/*', 'data/bins-small/*/*',
+            'data/bins-no-uuid/*/*'
         ],
         'q2_moshpit.checkm.tests': [
             'data/*', 'data/bins/*', 'data/bins/*/*',
@@ -46,7 +47,7 @@ setup(
             'citations.bib',
         ],
         'q2_moshpit.kraken2.tests': [
-            'data/*', 'data/mags/*', 'data/mags/*/*',
+            'data/*', 'data/mags-derep/*',
             'data/single-end/*', 'data/paired-end/*',
             'data/db/*', 'data/reports-mags/*',
             'data/reports-mags/*/*', 'data/outputs-mags/*',
@@ -54,9 +55,9 @@ setup(
             'data/bracken-db/*', 'data/bracken-report/*',
             'data/bracken-report/*/*', 'data/kraken2-report/*/*',
             'data/kraken2-reports-select/*',
-            'data/kraken2-reports-select/*/*/*',
+            'data/kraken2-reports-select/*/*',
             'data/kraken-to-ncbi-tree/*',
-            'data/kraken-to-ncbi-tree/*/*/*'
+            'data/kraken-to-ncbi-tree/*/*/*',
         ],
         'q2_moshpit.dereplication.tests': [
             'data/*', 'data/mags/*', 'data/mags/*/*',

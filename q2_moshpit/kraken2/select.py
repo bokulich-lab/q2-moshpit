@@ -28,10 +28,7 @@ def kraken2_to_mag_features(
     taxa_list = []
     # convert IDs to match MAGs instead of taxids/db ids
     for sample_id in table.index:
-        kraken_table_fp = (
-            # TODO: the second sample_id needs to actually be the bin_id
-            hits.path / sample_id / f'{sample_id}.output.txt'
-        )
+        kraken_table_fp = (hits.path / f'{sample_id}.output.txt')
         hits_df = pd.read_csv(kraken_table_fp, sep='\t',
                               header=None, dtype='str')
         MAG_COL = 1
@@ -66,7 +63,7 @@ def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
     rows = []
     trees = []
     for relpath, df in reports.reports.iter_views(pd.DataFrame):
-        sample_id, _ = os.path.split(relpath)
+        sample_id = os.path.basename(relpath).replace(".report.txt", "")
 
         filtered = df[df['perc_frags_covered'] >= coverage_threshold]
         tree = _kraken_to_ncbi_tree(filtered)

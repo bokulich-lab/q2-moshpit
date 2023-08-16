@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import glob
+import re
 from uuid import uuid4
 
 import os.path
@@ -69,13 +70,15 @@ def _run_metabat2(samp_name, samp_props, loc, depth_fp, common_args):
     bins_prefix = os.path.join(bins_dp, 'bin')
     os.makedirs(bins_dp)
     cmd = ['metabat2', '-i', samp_props['contigs'], '-a', depth_fp,
-           '-o', bins_prefix]
+           '-o', bins_prefix, '--unbinned']
     cmd.extend(common_args)
     run_command(cmd, verbose=True)
     return bins_dp
 
 
-def _process_sample(samp_name, samp_props, common_args, result_loc):
+def _process_sample(
+        samp_name, samp_props, common_args, result_loc, unbinned_loc
+):
     with tempfile.TemporaryDirectory() as tmp:
         # sort alignment map
         props = _sort_bams(samp_name, samp_props, tmp)
@@ -88,13 +91,25 @@ def _process_sample(samp_name, samp_props, common_args, result_loc):
             samp_name, props, tmp, depth_fp, common_args
         )
 
+        all_outputs = glob.glob(os.path.join(bins_dp, '*.fa'))
+        all_bins = [
+            x for x in all_outputs if re.search(r'bin\.[0-9]+\.fa$', x)
+        ]
+        unbinned_fp = os.path.join(bins_dp, 'bin.unbinned.fa')
+
         # rename using UUID v4
-        all_bins = glob.glob(os.path.join(bins_dp, '*.fa'))
-        dest_dir = os.path.join(str(result_loc), samp_name)
-        os.makedirs(dest_dir)
+        bin_dest_dir = os.path.join(str(result_loc), samp_name)
+        os.makedirs(bin_dest_dir, exist_ok=True)
         for old_bin in all_bins:
-            new_bin = os.path.join(dest_dir, f'{uuid4()}.fa')
+            new_bin = os.path.join(bin_dest_dir, f'{uuid4()}.fa')
             shutil.move(old_bin, new_bin)
+
+        # move unbinned contigs
+        unbinned_dest = os.path.join(
+            str(unbinned_loc), f'{samp_name}_contigs.fa'
+        )
+        if os.path.isfile(unbinned_fp):
+            shutil.move(unbinned_fp, unbinned_dest)
 
 
 def _generate_contig_map(
@@ -116,14 +131,15 @@ def _generate_contig_map(
 def _bin_contigs_metabat(
         contigs: ContigSequencesDirFmt, alignment_maps: BAMDirFmt,
         common_args: list
-) -> (MultiFASTADirectoryFormat, dict):
+) -> (MultiFASTADirectoryFormat, dict, ContigSequencesDirFmt):
     contigs_fps = sorted(glob.glob(os.path.join(str(contigs), '*.fa')))
     maps_fps = sorted(glob.glob(os.path.join(str(alignment_maps), '*.bam')))
     sample_set = _assert_samples(contigs_fps, maps_fps)
 
     bins = MultiFASTADirectoryFormat()
+    unbinned = ContigSequencesDirFmt()
     for samp, props in sample_set.items():
-        _process_sample(samp, props, common_args, str(bins))
+        _process_sample(samp, props, common_args, str(bins), str(unbinned))
 
     if not glob.glob(os.path.join(str(bins), '*/*.fa')):
         raise ValueError(
@@ -132,7 +148,7 @@ def _bin_contigs_metabat(
 
     contig_map = _generate_contig_map(bins)
 
-    return bins, contig_map
+    return bins, contig_map, unbinned
 
 
 def bin_contigs_metabat(
@@ -142,7 +158,7 @@ def bin_contigs_metabat(
     min_cv: int = None, min_cv_sum: int = None, min_cls_size: int = None,
     num_threads: int = None, seed: int = None, debug: bool = None,
     verbose: bool = None
-) -> (MultiFASTADirectoryFormat, dict):
+) -> (MultiFASTADirectoryFormat, dict, ContigSequencesDirFmt):
 
     kwargs = {k: v for k, v in locals().items()
               if k not in ['contigs', 'alignment_maps']}

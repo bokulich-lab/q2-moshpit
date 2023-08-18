@@ -8,7 +8,9 @@
 
 import os
 from collections import deque
+from typing import List
 
+from q2_moshpit.kraken2.utils import _find_lca, _find_super_lca, _find_lca_majority, _taxon_to_list
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat
 )
@@ -16,44 +18,88 @@ from q2_types_genomics.kraken2 import (
 import pandas as pd
 import skbio
 
+RANKS = 'dkpcofgs'
+
+
+def _join_ranks(taxonomy: List[str], ranks: List[str]) -> str:
+    taxonomy = [x for x in taxonomy if x]
+    taxonomy = ';'.join([''.join(t) for t in zip(ranks, taxonomy)])
+    return taxonomy
+
+
+def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
+    methods = {
+        'lca': _find_lca, 'super': _find_super_lca,
+        'majority': _find_lca_majority
+    }
+    func = methods[mode]
+    taxa = pd.concat(taxa_list)
+
+    # Convert taxonomies to list; optionally remove rank handle
+    taxa['Taxon'] = taxa['Taxon'].apply(
+        lambda x: _taxon_to_list(x, rank_handle=f'^[{RANKS[:-1]}]__|s1?__')
+    )
+
+    results = {}
+    for mag_id in taxa['mag_id'].unique():
+        data = taxa[taxa['mag_id'] == mag_id]['Taxon']
+
+        result = func(data)
+        results[mag_id] = result
+
+    # results = pd.DataFrame.from_dict(results, orient='index').fillna('')
+    results = pd.DataFrame.from_dict(results, orient='index')
+    results = results.apply(lambda x: x.tolist(), axis=1).to_frame()
+    results.columns = ['Taxon']
+
+    def check_none_end(lst):
+        # Check if last element is None.
+        return lst[-1] is None
+
+    # clean up final rank
+    while results['Taxon'].apply(lambda x: x[-1] is None).all():
+        results['Taxon'] = results['Taxon'].apply(
+            lambda lst: lst[:-1] if not lst[-1] else lst
+        )
+    # join ranks
+    ranks = [*[f'{r}__' for r in RANKS], 'ssp__']
+    results['Taxon'] = results['Taxon'].apply(
+        lambda x: _join_ranks(x, ranks)
+    )
+
+    results.index.name = 'Feature ID'
+    return results
+
 
 def kraken2_to_mag_features(
         reports: Kraken2ReportDirectoryFormat,
         hits: Kraken2OutputDirectoryFormat,
-        coverage_threshold: float = 0.1
-) -> (pd.DataFrame, pd.DataFrame):
+        coverage_threshold: float = 0.1,
+        lca_mode: str = 'majority'
+) -> pd.DataFrame:
     table, taxonomy = kraken2_to_features(reports, coverage_threshold)
 
-    rows_list = []
     taxa_list = []
     # convert IDs to match MAGs instead of taxids/db ids
-    for sample_id in table.index:
-        kraken_table_fp = (hits.path / f'{sample_id}.output.txt')
-        hits_df = pd.read_csv(kraken_table_fp, sep='\t',
-                              header=None, dtype='str')
+    for mag_id in table.index:
+        kraken_table_fp = (hits.path / f'{mag_id}.output.txt')
+        hits_df = pd.read_csv(
+            kraken_table_fp, sep='\t', header=None, dtype='str'
+        )
         MAG_COL = 1
         TAXA_COL = 2
 
-        sample_series = table.loc[sample_id, :]
-        sample_obs = sample_series[sample_series != 0]
-        merged_df = hits_df.join(sample_obs, on=TAXA_COL, how='right')
+        mag_series = table.loc[mag_id, :]
+        mag_obs = mag_series[mag_series != 0]
+        merged_df = hits_df.join(mag_obs, on=TAXA_COL, how='right')
         merged_df = merged_df.join(taxonomy, on=TAXA_COL, how='left')
 
         new_taxa = merged_df[[MAG_COL, 'Taxon']].set_index(MAG_COL)
         new_taxa.index.name = 'Feature ID'
-
-        table_row = pd.Series(True, index=new_taxa.index.unique())
-        table_row.name = sample_id
-
+        new_taxa['mag_id'] = mag_id
         taxa_list.append(new_taxa)
-        rows_list.append(table_row)
 
-    cat_taxonomy = pd.concat(taxa_list)
-    mag_taxonomy = cat_taxonomy[~cat_taxonomy.index.duplicated()]
-
-    mag_table = pd.DataFrame(rows_list).fillna(False)
-
-    return mag_table, mag_taxonomy
+    return _find_lcas(taxa_list, lca_mode)
 
 
 def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,

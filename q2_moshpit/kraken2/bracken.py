@@ -21,26 +21,33 @@ from q2_types_genomics.kraken2 import (
 
 
 def _run_bracken_one_sample(
-        bracken_db: str, kraken2_report_fp: str, bracken_report_dir: str,
-        tmp_dir: str, threshold: int, read_len: int, level: str
+    bracken_db: str,
+    kraken2_report_fp: str,
+    bracken_report_dir: str,
+    tmp_dir: str,
+    threshold: int,
+    read_len: int,
+    level: str,
 ) -> pd.DataFrame:
-    sample_id = os.path.basename(
-        kraken2_report_fp).replace(".report.txt", "")
-    bracken_output_fp = os.path.join(
-        tmp_dir, f"{sample_id}.bracken.output.txt"
-    )
-    bracken_report_fp = os.path.join(
-        bracken_report_dir, f"{sample_id}.report.txt"
-    )
+    sample_id = os.path.basename(kraken2_report_fp).replace(".report.txt", "")
+    bracken_output_fp = os.path.join(tmp_dir, f"{sample_id}.bracken.output.txt")
+    bracken_report_fp = os.path.join(bracken_report_dir, f"{sample_id}.report.txt")
     cmd = [
         "bracken",
-        "-d", bracken_db,
-        "-i", str(kraken2_report_fp),
-        "-o", bracken_output_fp,
-        "-w", bracken_report_fp,
-        "-t", str(threshold),
-        "-r", str(read_len),
-        "-l", level,
+        "-d",
+        bracken_db,
+        "-i",
+        str(kraken2_report_fp),
+        "-o",
+        bracken_output_fp,
+        "-w",
+        bracken_report_fp,
+        "-t",
+        str(threshold),
+        "-r",
+        str(read_len),
+        "-l",
+        level,
     ]
     try:
         run_command(cmd=cmd, verbose=True)
@@ -59,11 +66,11 @@ def _run_bracken_one_sample(
 
 
 def _estimate_bracken(
-        kraken_reports: Kraken2ReportDirectoryFormat,
-        bracken_db: BrackenDBDirectoryFormat,
-        threshold: int,
-        read_len: int,
-        level: str
+    kraken_reports: Kraken2ReportDirectoryFormat,
+    bracken_db: BrackenDBDirectoryFormat,
+    threshold: int,
+    read_len: int,
+    level: str,
 ) -> (pd.DataFrame, Kraken2ReportDirectoryFormat):
     bracken_tables = []
     bracken_reports = Kraken2ReportDirectoryFormat()
@@ -75,8 +82,10 @@ def _estimate_bracken(
                     bracken_db=str(bracken_db),
                     kraken2_report_fp=report_fp,
                     bracken_report_dir=str(bracken_reports),
-                    tmp_dir=tmpdir, threshold=threshold,
-                    read_len=read_len, level=level
+                    tmp_dir=tmpdir,
+                    threshold=threshold,
+                    read_len=read_len,
+                    level=level,
                 )
                 bracken_tables.append(bracken_table)
         except subprocess.CalledProcessError as e:
@@ -95,10 +104,8 @@ def _estimate_bracken(
     return bracken_table, bracken_reports
 
 
-def _assert_read_lens_available(
-        bracken_db: BrackenDBDirectoryFormat, read_len: int
-):
-    pattern = r'.+database(\d{2,})mers\.kmer_distrib$'
+def _assert_read_lens_available(bracken_db: BrackenDBDirectoryFormat, read_len: int):
+    pattern = r".+database(\d{2,})mers\.kmer_distrib$"
     lengths = []
     for db in bracken_db.path.iterdir():
         lengths.extend(re.findall(pattern, str(db)))
@@ -116,17 +123,18 @@ def estimate_bracken(
     bracken_db: BrackenDBDirectoryFormat,
     threshold: int = 0,
     read_len: int = 100,
-    level: str = 'S'
+    level: str = "S",
 ) -> (Kraken2ReportDirectoryFormat, pd.DataFrame, pd.DataFrame):
     _assert_read_lens_available(bracken_db, read_len)
 
     table, reports = _estimate_bracken(
-        kraken_reports=kraken_reports, bracken_db=bracken_db,
-        threshold=threshold, read_len=read_len, level=level
+        kraken_reports=kraken_reports,
+        bracken_db=bracken_db,
+        threshold=threshold,
+        read_len=read_len,
+        level=level,
     )
 
-    _, taxonomy = kraken2_to_features(
-        reports=reports, coverage_threshold=0.0
-    )
+    _, taxonomy = kraken2_to_features(reports=reports, coverage_threshold=0.0)
 
     return reports, taxonomy, table

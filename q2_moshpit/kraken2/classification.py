@@ -14,7 +14,7 @@ from typing import Union, Optional
 import pandas as pd
 from q2_types.per_sample_sequences import (
     SingleLanePerSamplePairedEndFastqDirFmt,
-    SingleLanePerSampleSingleEndFastqDirFmt
+    SingleLanePerSampleSingleEndFastqDirFmt,
 )
 
 from q2_moshpit._utils import run_command, _process_common_input_params
@@ -35,20 +35,14 @@ def _get_seq_paths(df_index, df_row, df_columns):
     return _sample, fn
 
 
-def _construct_output_paths(
-        _sample, kraken2_outputs_dir, kraken2_reports_dir
-):
-    report_fp = os.path.join(
-        kraken2_reports_dir.path, f"{_sample}.report.txt"
-    )
-    output_fp = os.path.join(
-        kraken2_outputs_dir.path, f"{_sample}.output.txt"
-    )
+def _construct_output_paths(_sample, kraken2_outputs_dir, kraken2_reports_dir):
+    report_fp = os.path.join(kraken2_reports_dir.path, f"{_sample}.report.txt")
+    output_fp = os.path.join(kraken2_outputs_dir.path, f"{_sample}.output.txt")
     return output_fp, report_fp
 
 
 def _classify_kraken2(
-        seqs, common_args
+    seqs, common_args
 ) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
     if isinstance(seqs, MAGSequencesDirFmt):
         manifest = None
@@ -85,9 +79,7 @@ def _classify_kraken2(
                 _sample, kraken2_outputs_dir, kraken2_reports_dir
             )
             cmd = deepcopy(base_cmd)
-            cmd.extend(
-                ["--report", report_fp, "--output", output_fp, *fn]
-            )
+            cmd.extend(["--report", report_fp, "--output", output_fp, *fn])
             run_command(cmd=cmd, verbose=True)
     except subprocess.CalledProcessError as e:
         raise Exception(
@@ -100,25 +92,21 @@ def _classify_kraken2(
 
 
 def classify_kraken2(
-        seqs: Union[
-            SingleLanePerSamplePairedEndFastqDirFmt,
-            SingleLanePerSampleSingleEndFastqDirFmt,
-            MAGSequencesDirFmt,
-        ],
-        kraken2_db: Kraken2DBDirectoryFormat,
-        threads: int = 1,
-        confidence: float = 0.0,
-        minimum_base_quality: int = 0,
-        memory_mapping: bool = False,
-        minimum_hit_groups: int = 2,
-        quick: bool = False,
-        report_minimizer_data: bool = False
-) -> (
-        Kraken2ReportDirectoryFormat,
-        Kraken2OutputDirectoryFormat,
-):
-    kwargs = {k: v for k, v in locals().items()
-              if k not in ["seqs", "kraken2_db"]}
+    seqs: Union[
+        SingleLanePerSamplePairedEndFastqDirFmt,
+        SingleLanePerSampleSingleEndFastqDirFmt,
+        MAGSequencesDirFmt,
+    ],
+    kraken2_db: Kraken2DBDirectoryFormat,
+    threads: int = 1,
+    confidence: float = 0.0,
+    minimum_base_quality: int = 0,
+    memory_mapping: bool = False,
+    minimum_hit_groups: int = 2,
+    quick: bool = False,
+    report_minimizer_data: bool = False,
+) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat,):
+    kwargs = {k: v for k, v in locals().items() if k not in ["seqs", "kraken2_db"]}
     common_args = _process_common_input_params(
         processing_func=_process_kraken2_arg, params=kwargs
     )

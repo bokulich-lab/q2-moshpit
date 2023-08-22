@@ -179,7 +179,7 @@ def _zip_busco_plots(paths_to_plots: dict, zip_path: str) -> None:
 
 def busco(
     output_dir: str,
-    mags: MultiMAGSequencesDirFmt,
+    bins: MultiMAGSequencesDirFmt,
     mode: str = None,
     lineage: str = None,
     augustus: bool = None,
@@ -192,7 +192,7 @@ def busco(
     config: str = None,
     contig_break: int = None,
     datasets_version: str = None,
-    download: str = None,
+    download: List[str] = None,
     download_base_url: str = None,
     download_path: str = None,
     e_value: float = None,
@@ -224,8 +224,8 @@ def busco(
     """
 
     # Create dictionary with local varaibles (kwards passed to the function or their defaults)
-    # excluding "output_dir" and "mags"
-    kwargs = {k: v for k, v in locals().items() if k not in ["output_dir", "mags"]}
+    # excluding "output_dir" and "bins"
+    kwargs = {k: v for k, v in locals().items() if k not in ["output_dir", "bins"]}
 
     # Filter out all kwards that are None, False or 0.0
     common_args = _process_common_input_params(
@@ -237,7 +237,7 @@ def busco(
         # Run busco for every sample. Returns dictionary to report files.
         results_dir = os.path.join(tmp, "busco_output")
         path_to_run_summeries = _run_busco(
-            output_dir=results_dir, mags=mags, params=common_args
+            output_dir=results_dir, mags=bins, params=common_args
         )
 
         # Collect result for each sample and save to file.

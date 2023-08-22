@@ -1,7 +1,7 @@
 import pandas as pd
 import altair as alt
 import json
-from types import List
+from typing import List
 
 arguments_with_hyphens = {
     "auto_lineage": "auto-lineage",

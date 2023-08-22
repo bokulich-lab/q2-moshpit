@@ -392,7 +392,7 @@ plugin.methods.register_function(
 )
 
 busco_params = {
-    "mode": Str,
+    "mode": Str % Choices(["genome", "transcriptome", "proteins"]),
     "lineage": Str,
     "augustus": Bool,
     "augustus_parameters": Str,
@@ -404,7 +404,7 @@ busco_params = {
     "config": Str,
     "contig_break": Int,  # NOTE: Dont know which is the appropoiate range for this parameter.
     "datasets_version": Str,
-    "download": Str,
+    "download": List[Str],
     "download_base_url": Str,
     "download_path": Str,
     "e_value": Float % Range(0, 1),
@@ -424,36 +424,62 @@ busco_params = {
     "version": Bool,
 }
 busco_param_descriptions = {
-    "mode": "Specify which BUSCO analysis mode to run.\nThere are three valid modes:\n- geno or genome, for genome assemblies (DNA)\n- tran or transcriptome, for transcriptome assemblies (DNA)\n- prot or proteins, for annotated gene sets (protein)",
-    "lineage": "Specify the name of the BUSCO lineage to be used.",
-    "augustus": "Use augustus gene predictor for eukaryote runs",
-    "augustus_parameters": "Pass additional arguments to Augustus. All arguments should be contained within a single string with no white space, with each argument separated by a comma.",
+    "mode": "Specify which BUSCO analysis mode to run."
+    "There are three valid modes: 1) 'geno' or 'genome', "
+    "for genome assemblies (DNA), 2) 'tran' or 'transcriptome', "
+    "for transcriptome assemblies (DNA) and 3) 'prot' or 'proteins' "
+    "for annotated gene sets (protein).",
+    "lineage": "Specify the name of the BUSCO lineage to be used. "
+    "To see all possible options run `busco --list-datasets`.",
+    "augustus": "Use augustus gene predictor for eukaryote runs.",
+    "augustus_parameters": "Pass additional arguments to Augustus. "
+    "All arguments should be contained within a single string with no "
+    "white space, with each argument separated by a comma. "
+    "Example: '--PARAM1=VALUE1,--PARAM2=VALUE2'.",
     "augustus_species": "Specify a species for Augustus training.",
-    "auto_lineage": "Run auto-lineage to find optimum lineage path",
-    "auto_lineage_euk": "Run auto-placement just on eukaryote tree to find optimum lineage path",
-    "auto_lineage_prok": "Run auto-lineage just on non-eukaryote trees to find optimum lineage path",
+    "auto_lineage": "Run auto-lineage to find optimum lineage path.",
+    "auto_lineage_euk": "Run auto-placement just on eukaryote tree to find optimum lineage"
+    "path.",
+    "auto_lineage_prok": "Run auto-lineage just on non-eukaryote trees to find optimum "
+    "lineage path.",
     "cpu": "Specify the number (N=integer) of threads/cores to use.",
-    "config": "Provide a config file",
-    "contig_break": "Number of contiguous Ns to signify a break between contigs. Default is n=10.",
-    "datasets_version": "Specify the version of BUSCO datasets, e.g. odb10",
-    "download": "Download dataset. Possible values are a specific dataset name, 'all', 'prokaryota', 'eukaryota', or 'virus'. If used together with other command line arguments, make sure to place this last.",
-    "download_base_url": "Set the url to the remote BUSCO dataset location",
-    "download_path": "Specify local filepath for storing BUSCO dataset downloads",
-    "e_value": "E-value cutoff for BLAST searches. Allowed formats, 0.001 or 1e-03 (Default: 1e-03)",
-    "force": "Force rewriting of existing files. Must be used when output files with the provided name already exist.",
-    "help": "Show this help message and exit",
-    "limit": "How many candidate regions (contig or transcript) to consider per BUSCO (default: 3)",
-    "list_datasets": "Print the list of available BUSCO datasets",
-    "long": "Optimization Augustus self-training mode (Default: Off); adds considerably to the run time, but can improve results for some non-model organisms",
-    "metaeuk_parameters '--PARAM1=VALUE1,--PARAM2=VALUE2'": "Pass additional arguments to Metaeuk for the first run. All arguments should be contained within a single string with no white space, with each argument separated by a comma.",
-    "metaeuk_rerun_parameters '--PARAM1=VALUE1,--PARAM2=VALUE2'": "Pass additional arguments to Metaeuk for the second run. All arguments should be contained within a single string with no white space, with each argument separated by a comma.",
-    "offline": "To indicate that BUSCO cannot attempt to download files",
-    "quiet": "Disable the info logs, displays only errors",
+    "config": "Provide a config file.",
+    "contig_break": "Number of contiguous Ns to signify a break between contigs. "
+    "Default is n=10.",
+    "datasets_version": "Specify the version of BUSCO datasets, e.g. odb10.",
+    "download": "Download dataset. Possible values are a specific dataset name, "
+    "'all', 'prokaryota', 'eukaryota', or 'virus'. If used together "
+    "with other command line arguments, make sure to place this last. "
+    "Example: '[dataset ...]'.",
+    "download_base_url": "Set the url to the remote BUSCO dataset location.",
+    "download_path": "Specify local filepath for storing BUSCO dataset downloads.",
+    "e_value": "E-value cutoff for BLAST searches. "
+    "Allowed formats, 0.001 or 1e-03, Default: 1e-03.",
+    "force": "Force rewriting of existing files. Must be used when output files "
+    "with the provided name already exist.",
+    "help": "Show this help message and exit.",
+    "limit": "How many candidate regions (contig or transcript) to consider per"
+    "BUSCO. Default: 3.",
+    "list_datasets": "Print the list of available BUSCO datasets.",
+    "long": "Optimization Augustus self-training mode (Default: Off); "
+    "adds considerably to the run time, "
+    "but can improve results for some non-model organisms.",
+    "metaeuk_parameters": "Pass additional arguments to Metaeuk for the first run. "
+    "All arguments should be contained within a single string"
+    "with no white space, with each argument separated by a comma."
+    "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
+    "metaeuk_rerun_parameters": "Pass additional arguments to Metaeuk for the second run. "
+    "All arguments should be contained within a single string "
+    "with no white space, with each argument separated by a comma. "
+    "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
+    "offline": "To indicate that BUSCO cannot attempt to download files.",
+    "quiet": "Disable the info logs, displays only errors.",
     "restart": "Continue a run that had already partially completed.",
-    "scaffold_composition": "Writes ACGTN content per scaffold to a file scaffold_composition.txt",
-    "tar": "Compress some subdirectories with many files to save space",
-    "update_data": "Download and replace with last versions all lineages datasets and files necessary to their automated selection",
-    "version": "Show this version and exit",
+    "scaffold_composition": "Writes ACGTN content per scaffold to a file `scaffold_composition.txt`.",
+    "tar": "Compress some subdirectories with many files to save space.",
+    "update_data": "Download and replace with last versions all lineages datasets and "
+    "files necessary to their automated selection.",
+    "version": "Show this version and exit.",
 }
 
 
@@ -468,6 +494,9 @@ plugin.visualizers.register_function(
     },
     parameter_descriptions=busco_param_descriptions,
     name="Evaluate quality of the generated MAGs using BUSCO.",
-    description="This method uses BUSCO  (Benchmarking Universal Single-Copy Ortholog assessment tool) to assess the quality of assembled MAGs and generates visualizations summarising the results.",
+    description="This method uses BUSCO "
+    "(Benchmarking Universal Single-Copy Ortholog assessment tool) "
+    "to assess the quality of assembled MAGs and generates "
+    "visualizations summarising the results.",
     citations=[citations["manni_busco_2021"]],
 )

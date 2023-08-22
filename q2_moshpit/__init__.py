@@ -9,6 +9,7 @@
 from .kraken2 import bracken, classification, database
 from .metabat2 import metabat2
 from . import eggnog
+from . import busco
 
 
 from ._version import get_versions
@@ -16,4 +17,4 @@ from ._version import get_versions
 __version__ = get_versions()["version"]
 del get_versions
 
-__all__ = ["metabat2", "bracken", "classification", "database", "eggnog"]
+__all__ = ["metabat2", "bracken", "classification", "database", "eggnog", "busco"]

@@ -10,7 +10,9 @@ import os
 from collections import deque
 from typing import List
 
-from q2_moshpit.kraken2.utils import _find_lca, _find_super_lca, _find_lca_majority, _taxon_to_list
+from q2_moshpit.kraken2.utils import (
+    _find_lca, _find_lca_majority, _taxon_to_list, _join_ranks
+)
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat
 )
@@ -21,15 +23,10 @@ import skbio
 RANKS = 'dkpcofgs'
 
 
-def _join_ranks(taxonomy: List[str], ranks: List[str]) -> str:
-    taxonomy = [x for x in taxonomy if x]
-    taxonomy = ';'.join([''.join(t) for t in zip(ranks, taxonomy)])
-    return taxonomy
-
-
 def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
     methods = {
-        'lca': _find_lca, 'super': _find_super_lca,
+        'lca': _find_lca,
+        # 'super': _find_super_lca,
         'majority': _find_lca_majority
     }
     func = methods[mode]
@@ -43,7 +40,6 @@ def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
     results = {}
     for mag_id in taxa['mag_id'].unique():
         data = taxa[taxa['mag_id'] == mag_id]['Taxon']
-
         result = func(data)
         results[mag_id] = result
 
@@ -52,15 +48,6 @@ def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
     results = results.apply(lambda x: x.tolist(), axis=1).to_frame()
     results.columns = ['Taxon']
 
-    def check_none_end(lst):
-        # Check if last element is None.
-        return lst[-1] is None
-
-    # clean up final rank
-    while results['Taxon'].apply(lambda x: x[-1] is None).all():
-        results['Taxon'] = results['Taxon'].apply(
-            lambda lst: lst[:-1] if not lst[-1] else lst
-        )
     # join ranks
     ranks = [*[f'{r}__' for r in RANKS], 'ssp__']
     results['Taxon'] = results['Taxon'].apply(

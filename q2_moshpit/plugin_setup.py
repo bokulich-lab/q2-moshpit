@@ -348,7 +348,7 @@ plugin.methods.register_function(
     },
     parameters={
         'coverage_threshold': Float % Range(0, 100, inclusive_end=True),
-        'lca_mode': Str % Choices(['lca', 'super', 'majority'])
+        'lca_mode': Str % Choices(['lca', 'majority'])
     },
     outputs=[('taxonomy', FeatureData[Taxonomy])],
     input_descriptions={

@@ -6,8 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 from collections import Counter
-from itertools import zip_longest, takewhile
+from itertools import zip_longest, takewhile, dropwhile
 from re import sub
+from typing import List
 
 from q2_moshpit._utils import _construct_param
 
@@ -39,17 +40,8 @@ def _process_kraken2_arg(arg_key, arg_val):
 
 def _find_lca(taxa):
     """Find least common ancestor between two semicolon-delimited strings."""
-    # determine optimal zip mode. Normally, zip is best because trimming to
-    # shortest is an inherent feature of LCA.
-    # However if only one frame contains an assignment for feature x, we want
-    # to just take that taxonomy. zip_longest will accomplish this while using
-    # the same machinery... same deal if we want to take a superset taxonomy
-    if '' in taxa:
-        zip_it = zip_longest
-    else:
-        zip_it = zip
     # LCA ends where zipped taxonomy strings no longer converge to len == 1
-    taxa_comparison = [set(rank) - {None} for rank in zip_it(*taxa)]
+    taxa_comparison = [set(rank) - {None} for rank in zip(*taxa)]
     return (rank.pop() for rank in takewhile(
         lambda x: len(x) == 1, taxa_comparison))
 
@@ -63,7 +55,7 @@ def _find_lca_majority(taxa):
 def _find_super_lca(taxa, collapse_substrings=True):
     # collapse and count unique labels at each rank
     # yields list of ('labels', counts) sorted by most to least abundant
-    taxa = [[t for t in r if t not in ['',]] for r in zip_longest(*taxa)]
+    taxa = [[t for t in r if t not in ['', ]] for r in zip_longest(*taxa)]
     # taxa = [[t if t else '' for t in r] for r in taxa]
     if collapse_substrings:
         # find longest string in group of sub/superstrings, combine
@@ -82,7 +74,11 @@ def _find_super_lca(taxa, collapse_substrings=True):
 
 def _taxon_to_list(taxon, rank_handle):
     """Split taxonomy string into list of taxonomic labels"""
-    if rank_handle != '':
-        return [sub(rank_handle, '', t.strip()) for t in taxon.split(';')]
-    else:
-        return [t.strip() for t in taxon.split(';')]
+    return [sub(rank_handle, '', t.strip()) for t in taxon.split(';')]
+
+
+def _join_ranks(taxonomy: List[str], ranks: List[str]) -> str:
+    taxonomy = list(dropwhile(lambda x: x is None, taxonomy[::-1]))
+    taxonomy = ['' if x is None else x for x in taxonomy[::-1]]
+    taxonomy = ';'.join([''.join(t) for t in zip(ranks, taxonomy)])
+    return taxonomy

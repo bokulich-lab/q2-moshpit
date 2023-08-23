@@ -101,7 +101,7 @@ def _draw_busco_plots(path_to_run_summeries: dict, output_dir: str) -> dict:
     paths_to_plots = {}
 
     # For every sample make a plot
-    for sample_id, path_to_summary in path_to_run_summeries:
+    for sample_id, path_to_summary in path_to_run_summeries.items():
         # Read in text file as dataframe
         df = pd.read_csv(filepath_or_buffer=path_to_summary, sep="\t")
 
@@ -112,7 +112,7 @@ def _draw_busco_plots(path_to_run_summeries: dict, output_dir: str) -> dict:
         df["missing"] = df["fragmented"] + df["Missing"]
 
         # Get sample id without extension (.fasta)
-        df["input_file"] = df["Input file"].str.split(".", expand=True)[0]
+        df["input_file"] = df["Input_file"].str.split(".", expand=True)[0]
 
         # Set the style
         sns.set(style="whitegrid")
@@ -147,6 +147,7 @@ def _draw_busco_plots(path_to_run_summeries: dict, output_dir: str) -> dict:
 
         # Save figure to file
         output_name = os.path.join(output_dir, sample_id, "plot_batch_summary.svg")
+        os.makedirs(os.path.dirname(output_name), exist_ok=True)
         plt.savefig(output_name, format="svg")
 
         # Save path to dictionary
@@ -245,13 +246,13 @@ def busco(
         for sample_id, path_to_summary in path_to_run_summeries.items():
             df = pd.read_csv(filepath_or_buffer=path_to_summary, sep="\t")
             df["sample_id"] = sample_id
-            all_summeries_list.append[df]
+            all_summeries_list.append(df)
 
         ## Concatenate
         all_summeries_df = pd.concat(all_summeries_list)
 
         ## Save to file
-        all_summeries_path = os.path.join(tmp, "all_batch_cummeries.csv")
+        all_summeries_path = os.path.join(output_dir, "all_batch_summeries.csv")
         all_summeries_df.to_csv(all_summeries_path)
 
         # Draw BUSCO plots for all samples
@@ -261,7 +262,7 @@ def busco(
         )
 
         # Zip graphs for user download
-        zip_name = os.path.join(tmp, "busco_plots.zip")
+        zip_name = os.path.join(output_dir, "busco_plots.zip")
         _zip_busco_plots(paths_to_plots=paths_to_plots, zip_path=zip_name)
 
         # Render qiime html report
@@ -269,7 +270,13 @@ def busco(
         context = {
             "tabs": [{"title": "BUSCO Results", "url": "index.html"}],
             "samples": json.dumps(list(path_to_run_summeries.keys())),
-            "vega_plots": _draw_busco_plots_for_render(all_summeries_df),
+            "vega_plots_overview": _draw_busco_plots_for_render(
+                all_summeries_df,
+                width=800,
+                height=200,
+                titleFontSize=20,
+                labelFontSize=17,
+            ),
         }
 
         # Copy BUSCO results from tmp dir to output_dir

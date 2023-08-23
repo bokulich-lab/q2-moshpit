@@ -39,7 +39,11 @@ def _parse_busco_params(arg_key, arg_val) -> List[str]:
 
 
 def _draw_busco_plots_for_render(
-    df: pd.core.frame.DataFrame, width: int = None, height: int = None
+    df: pd.core.frame.DataFrame,
+    width: int = None,
+    height: int = None,
+    labelFontSize: int = None,
+    titleFontSize: int = None,
 ) -> dict:
     """
     Draws a hroizontal normalized bar plot for every sample for which BUSCO was
@@ -51,6 +55,8 @@ def _draw_busco_plots_for_render(
         df (pd.core.frame.DataFrame): tabular batch summary for all samples
         width (int): width of the plot
         height (int): height of the plot
+        labelFontSize (int): size of the labels in plot
+        titleFontSize (int): size of titles in plot
 
     Output:
         Output plot in dictionary from.
@@ -66,7 +72,7 @@ def _draw_busco_plots_for_render(
 
     # Pivot long
     df2 = pd.melt(
-        df2,
+        df,
         id_vars=["sample_id", "mag_id"],
         value_vars=["single", "duplicated", "fragmented", "missing"],
         value_name="BUSCO_percentage",
@@ -98,13 +104,21 @@ def _draw_busco_plots_for_render(
                 "order",
                 sort="ascending",
             ),
-            row=alt.Row("sample_id", title="Sample ID"),
+            row=alt.Row("sample_id", title="Sample ID", align="each"),
         )
-        .configure_axis(labelFontSize=12, titleFontSize=15)
     )
 
+    # Resize text and plot
+    output_plot = output_plot.configure_axis(
+        labelFontSize=labelFontSize, titleFontSize=titleFontSize
+    )
+    output_plot = output_plot.configure_legend(
+        labelFontSize=labelFontSize, titleFontSize=titleFontSize
+    )
+    output_plot = output_plot.configure_header(
+        labelFontSize=labelFontSize, titleFontSize=titleFontSize
+    )
+    output_plot = output_plot.properties(width=width, height=height)
+
     # Return
-    if width and height:
-        return json.dumps(output_plot.properties(width=width, height=height).to_dict())
-    else:
-        return json.dumps(output_plot.to_dict())
+    return json.dumps(output_plot.to_dict())

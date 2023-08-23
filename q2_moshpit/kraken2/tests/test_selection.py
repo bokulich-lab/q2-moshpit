@@ -192,7 +192,7 @@ class TestKrakenSelect(TestPluginBase):
         pandas.testing.assert_frame_equal(obs, exp)
 
     def test_find_lcas_mode_majority_terminal_none(self):
-        taxa = [ self.taxa_mag2, self.taxa_mag4]
+        taxa = [self.taxa_mag2, self.taxa_mag4]
         obs = _find_lcas(taxa, mode='majority')
         exp = pd.DataFrame.from_dict({
             '3acec411-b0d0-4441-b936-5b8b571fa328': [

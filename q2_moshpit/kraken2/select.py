@@ -11,7 +11,7 @@ from collections import deque
 from typing import List
 
 from q2_moshpit.kraken2.utils import (
-    _find_lca, _find_lca_majority, _taxon_to_list, _join_ranks
+    _find_lca, _taxon_to_list, _join_ranks
 )
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat
@@ -24,10 +24,19 @@ RANKS = 'dkpcofgs'
 
 
 def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
+    """Find the least common ancestor in every DataFrame of taxa.
+
+    Args:
+        taxa_list (List[pd.DataFrame]): A list of taxonomy DataFrames.
+        mode (str): The mode used to determine the least common ancestor.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the LCA of each feature (MAG).
+    """
     methods = {
         'lca': _find_lca,
         # 'super': _find_super_lca,
-        'majority': _find_lca_majority
+        # 'majority': _find_lca_majority
     }
     func = methods[mode]
     taxa = pd.concat(taxa_list)
@@ -37,18 +46,18 @@ def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
         lambda x: _taxon_to_list(x, rank_handle=f'^[{RANKS[:-1]}]__|s1?__')
     )
 
+    # Find LCA for every MAG
     results = {}
     for mag_id in taxa['mag_id'].unique():
         data = taxa[taxa['mag_id'] == mag_id]['Taxon']
         result = func(data)
         results[mag_id] = result
 
-    # results = pd.DataFrame.from_dict(results, orient='index').fillna('')
     results = pd.DataFrame.from_dict(results, orient='index')
     results = results.apply(lambda x: x.tolist(), axis=1).to_frame()
     results.columns = ['Taxon']
 
-    # join ranks
+    # Join ranks
     ranks = [*[f'{r}__' for r in RANKS], 'ssp__']
     results['Taxon'] = results['Taxon'].apply(
         lambda x: _join_ranks(x, ranks)
@@ -62,7 +71,7 @@ def kraken2_to_mag_features(
         reports: Kraken2ReportDirectoryFormat,
         hits: Kraken2OutputDirectoryFormat,
         coverage_threshold: float = 0.1,
-        lca_mode: str = 'majority'
+        # lca_mode: str = 'lca'
 ) -> pd.DataFrame:
     table, taxonomy = kraken2_to_features(reports, coverage_threshold)
 
@@ -86,7 +95,7 @@ def kraken2_to_mag_features(
         new_taxa['mag_id'] = mag_id
         taxa_list.append(new_taxa)
 
-    return _find_lcas(taxa_list, lca_mode)
+    return _find_lcas(taxa_list, mode='lca')
 
 
 def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,

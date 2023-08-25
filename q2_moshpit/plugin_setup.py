@@ -348,7 +348,7 @@ plugin.methods.register_function(
     },
     parameters={
         'coverage_threshold': Float % Range(0, 100, inclusive_end=True),
-        'lca_mode': Str % Choices(['lca', 'majority'])
+        # 'lca_mode': Str % Choices(['lca', 'majority'])
     },
     outputs=[('taxonomy', FeatureData[Taxonomy])],
     input_descriptions={
@@ -358,8 +358,8 @@ plugin.methods.register_function(
     parameter_descriptions={
         'coverage_threshold': 'The minimum percent coverage required to '
                               'produce a feature.',
-        'lca_mode': 'The method used to determine the LCA of a MAG using '
-                    'taxonomic assignments of its contigs. '
+        # 'lca_mode': 'The method used to determine the LCA of a MAG using '
+        #             'taxonomic assignments of its contigs. '
     },
     output_descriptions={
         'taxonomy': 'Infra-clade ranks are ignored'

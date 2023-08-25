@@ -11,7 +11,7 @@ import pandas as pd
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_moshpit.kraken2.utils import (
-    _process_kraken2_arg, _find_lca, _find_lca_majority, _join_ranks
+    _process_kraken2_arg, _find_lca, _join_ranks
 )
 
 
@@ -98,30 +98,21 @@ class TestKraken2Utils(TestPluginBase):
         ]
         self.assertListEqual(obs, exp)
 
-    def test_find_lca_majority_1(self):
-        obs = list(_find_lca_majority(self.taxa))
-        exp = [
-            'Bacteria', 'Bacteria', 'Actinomycetota', 'Actinomycetes',
-            'Mycobacteriales', 'Mycobacteriaceae', 'Mycobacterium',
-            'Mycobacterium florentinum', None
-        ]
-        self.assertListEqual(obs, exp)
-
-    def test_find_lca_majority_2(self):
-        obs = list(_find_lca_majority(self.taxa_mixed))
-        exp = [
-            'Bacteria', 'Bacteria', 'Actinomycetota', 'Actinomycetes',
-            'Mycobacteriales', 'Corynebacteriaceae', 'Corynebacterium',
-            'Corynebacterium glutamicum',
-        ]
-        self.assertListEqual(obs, exp)
-
-    # def test_find_super_lca(self):
-    #     obs = list(_find_super_lca(self.taxa))
+    # def test_find_lca_majority_1(self):
+    #     obs = list(_find_lca_majority(self.taxa))
     #     exp = [
     #         'Bacteria', 'Bacteria', 'Actinomycetota', 'Actinomycetes',
     #         'Mycobacteriales', 'Mycobacteriaceae', 'Mycobacterium',
-    #         'Mycobacterium florentinum'
+    #         'Mycobacterium florentinum', None
+    #     ]
+    #     self.assertListEqual(obs, exp)
+    #
+    # def test_find_lca_majority_2(self):
+    #     obs = list(_find_lca_majority(self.taxa_mixed))
+    #     exp = [
+    #         'Bacteria', 'Bacteria', 'Actinomycetota', 'Actinomycetes',
+    #         'Mycobacteriales', 'Corynebacteriaceae', 'Corynebacterium',
+    #         'Corynebacterium glutamicum',
     #     ]
     #     self.assertListEqual(obs, exp)
 

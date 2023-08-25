@@ -340,42 +340,39 @@ plugin.methods.register_function(
                 'analyses.'
 )
 
-# plugin.methods.register_function(
-#     function=q2_moshpit.kraken2.kraken2_to_mag_features,
-#     inputs={
-#         'reports': SampleData[Kraken2Reports % Properties('mags')],
-#         'hits': SampleData[Kraken2Outputs % Properties('mags')]
-#     },
-#     parameters={
-#         'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
-#     },
-#     outputs=[
-#         ('table', FeatureTable[PresenceAbsence]),
-#         ('taxonomy', FeatureData[Taxonomy])
-#     ],
-#     input_descriptions={
-#         'reports': 'Per-sample Kraken 2 reports.',
-#         'hits': 'Per-sample Kraken 2 output files.'
-#     },
-#     parameter_descriptions={
-#         'coverage_threshold': 'The minimum percent coverage required to '
-#                               'produce a feature.'
-#     },
-#     output_descriptions={
-#         'table': 'A presence/absence table of selected features. The '
-#                  'features are not of even ranks, but will be the most '
-#                  'specific rank available.',
-#         'taxonomy': 'Infra-clade ranks are ignored'
-#                     'unless they are strain-level. Missing internal ranks '
-#                     'are annotated by their next most specific rank, '
-#                     'with the exception of k__Bacteria and k__Archaea which '
-#                     'match their domain\'s name.',
-#     },
-#     name='Select downstream MAG features from Kraken 2',
-#     description='Convert a Kraken 2 report, which is an annotated NCBI '
-#                 'taxonomy tree into generic artifacts for downstream '
-#                 'analyses.'
-# )
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.kraken2_to_mag_features,
+    inputs={
+        'reports': FeatureData[Kraken2Reports % Properties('mags')],
+        'hits': FeatureData[Kraken2Outputs % Properties('mags')],
+    },
+    parameters={
+        'coverage_threshold': Float % Range(0, 100, inclusive_end=True),
+        # 'lca_mode': Str % Choices(['lca', 'majority'])
+    },
+    outputs=[('taxonomy', FeatureData[Taxonomy])],
+    input_descriptions={
+        'reports': 'Per-sample Kraken 2 reports.',
+        'hits': 'Per-sample Kraken 2 output files.',
+    },
+    parameter_descriptions={
+        'coverage_threshold': 'The minimum percent coverage required to '
+                              'produce a feature.',
+        # 'lca_mode': 'The method used to determine the LCA of a MAG using '
+        #             'taxonomic assignments of its contigs. '
+    },
+    output_descriptions={
+        'taxonomy': 'Infra-clade ranks are ignored'
+                    'unless they are strain-level. Missing internal ranks '
+                    'are annotated by their next most specific rank, '
+                    'with the exception of k__Bacteria and k__Archaea which '
+                    'match their domain\'s name.',
+    },
+    name='Select downstream MAG features from Kraken 2',
+    description='Convert a Kraken 2 report, which is an annotated NCBI '
+                'taxonomy tree into generic artifacts for downstream '
+                'analyses.'
+)
 
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,

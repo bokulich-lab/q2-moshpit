@@ -5,8 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from collections import Counter
-from itertools import zip_longest, takewhile, dropwhile
+from itertools import takewhile, dropwhile
 from re import sub
 from typing import List
 
@@ -61,10 +60,10 @@ def _find_lca(taxa):
 #     taxa_comparison = [Counter(t).most_common() for t in taxa]
 #     # return majority wherever a clear majority is found
 #     # terminate when no majority is found, that's your LCA
-#     # propagate empty ranks that maintain majority/consensus by inserting ''
-#     # to preserve empty ranks in the original taxonomies (e.g., when using a
-#     # rank handle unannotated levels will be removed, but as long as these pass
-#     # muster we want to preserve those labels)
+#     # propagate empty ranks that maintain majority/consensus by inserting
+#     # '' to preserve empty ranks in the original taxonomies (e.g., when
+#     # using a rank handle unannotated levels will be removed, but as long
+#     # as these pass muster we want to preserve those labels)
 #     return [rank[0][0] if rank else '' for rank in takewhile(
 #         lambda x: len(x) < 2 or x[0][1] > x[1][1], taxa_comparison)]
 

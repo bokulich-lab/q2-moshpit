@@ -29,6 +29,7 @@ requirements:
     - tqdm
     - xmltodict
     - seaborn
+    - busco >=5.0.0
 
 test:
   requires:

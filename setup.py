@@ -33,13 +33,7 @@ setup(
             "data/bins-small/*/*",
             "data/bins-no-uuid/*/*",
         ],
-        "q2_moshpit.checkm.tests": [
-            "data/*",
-            "data/bins/*",
-            "data/bins/*/*",
-            "data/checkm_reports/*/*/*",
-            "data/plots/*/*/*",
-        ],
+        "q2_moshpit.busco.tests": ["data/*"],
         "q2_moshpit.eggnog": [
             "tests/data/*",
             "tests/data/contig-sequences-1/*",

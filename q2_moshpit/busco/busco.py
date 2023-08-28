@@ -30,7 +30,7 @@ def busco(
     output_dir: str,
     bins: MultiMAGSequencesDirFmt,
     mode: str = None,
-    lineage: str = None,
+    lineage_dataset: str = None,
     augustus: bool = None,
     augustus_parameters: str = None,
     augustus_species: str = None,
@@ -44,7 +44,7 @@ def busco(
     download: List[str] = None,
     download_base_url: str = None,
     download_path: str = None,
-    e_value: float = None,
+    evalue: float = None,
     force: bool = None,
     limit: int = None,
     help: bool = None,
@@ -52,6 +52,7 @@ def busco(
     long: bool = None,
     metaeuk_parameters: str = None,
     metaeuk_rerun_parameters: str = None,
+    miniprot: bool = None,
     offline: bool = None,
     quiet: bool = None,
     restart: bool = None,
@@ -146,6 +147,3 @@ def busco(
         os.remove(
             os.path.join(output_dir, "q2templateassets", "js", "bootstrap.min.js")
         )
-
-        # NOTE: It seems to me that the plots are saved to a zip in out_dir but, not everything is zipped.
-        # Isnt it supposed to?

@@ -393,7 +393,7 @@ plugin.methods.register_function(
 
 busco_params = {
     "mode": Str % Choices(["genome", "transcriptome", "proteins"]),
-    "lineage": Str,
+    "lineage_dataset": Str,
     "augustus": Bool,
     "augustus_parameters": Str,
     "augustus_species": Str,
@@ -407,7 +407,7 @@ busco_params = {
     "download": List[Str],
     "download_base_url": Str,
     "download_path": Str,
-    "e_value": Float % Range(0, 1),
+    "evalue": Float % Range(0, 1),
     "force": Bool,
     "limit": Int,  # NOTE: Dont know which is the appropoiate range for this parameter.
     "help": Bool,
@@ -415,6 +415,7 @@ busco_params = {
     "long": Bool,
     "metaeuk_parameters": Str,
     "metaeuk_rerun_parameters": Str,
+    "miniprot": Bool,
     "offline": Bool,
     "quiet": Bool,
     "restart": Bool,
@@ -429,7 +430,7 @@ busco_param_descriptions = {
     "for genome assemblies (DNA), 2) 'tran' or 'transcriptome', "
     "for transcriptome assemblies (DNA) and 3) 'prot' or 'proteins' "
     "for annotated gene sets (protein).",
-    "lineage": "Specify the name of the BUSCO lineage to be used. "
+    "lineage_dataset": "Specify the name of the BUSCO lineage to be used. "
     "To see all possible options run `busco --list-datasets`.",
     "augustus": "Use augustus gene predictor for eukaryote runs.",
     "augustus_parameters": "Pass additional arguments to Augustus. "
@@ -453,7 +454,7 @@ busco_param_descriptions = {
     "Example: '[dataset ...]'.",
     "download_base_url": "Set the url to the remote BUSCO dataset location.",
     "download_path": "Specify local filepath for storing BUSCO dataset downloads.",
-    "e_value": "E-value cutoff for BLAST searches. "
+    "evalue": "E-value cutoff for BLAST searches. "
     "Allowed formats, 0.001 or 1e-03, Default: 1e-03.",
     "force": "Force rewriting of existing files. Must be used when output files "
     "with the provided name already exist.",
@@ -472,6 +473,7 @@ busco_param_descriptions = {
     "All arguments should be contained within a single string "
     "with no white space, with each argument separated by a comma. "
     "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
+    "miniprot": "Use miniprot gene predictor for eukaryote runs.",
     "offline": "To indicate that BUSCO cannot attempt to download files.",
     "quiet": "Disable the info logs, displays only errors.",
     "restart": "Continue a run that had already partially completed.",

@@ -170,7 +170,7 @@ def _run_busco(
         # Get name of dir and make path with it inside the tmp dir
         # NOTE: It appears that the paths in filename column are <sample_id>/file_name.fasta
         # The created sample_dir column already contains the isolated <sample_id>.
-        # Therefore the os.path.split(sample_dir)[-1] steps seeps unnecessary, unless
+        # Therefore the os.path.split(sample_dir)[-1] steps seems unnecessary, unless
         # paths in filename column are some times compleate paths and not only relative.
         sample = os.path.split(sample_dir)[-1]
 

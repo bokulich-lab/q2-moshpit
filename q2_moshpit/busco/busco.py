@@ -121,8 +121,8 @@ def busco(
             "samples": json.dumps(list(path_to_run_summeries.keys())),
             "vega_plots_overview": _draw_busco_plots_for_render(
                 all_summeries_df,
-                width=800,
-                height=200 / 3,
+                width=600,
+                height=18,
                 titleFontSize=20,
                 labelFontSize=17,
             ),

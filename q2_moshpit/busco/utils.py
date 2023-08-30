@@ -78,12 +78,12 @@ def _draw_busco_plots_for_render(
     df["mag_id"] = df["input_file"].str.split(".", expand=True)[0]
 
     # Get number of samples
-    n_samples = len(df["sample_id"].unique())
+    n_samples = len(df["mag_id"].unique())
 
     # Pivot long
     df2 = pd.melt(
         df,
-        id_vars=["sample_id", "mag_id"],
+        id_vars=["sample_id", "mag_id", "dataset", "n_markers"],
         value_vars=["single", "duplicated", "fragmented", "missing"],
         value_name="BUSCO_percentage",
         var_name="category",
@@ -92,6 +92,13 @@ def _draw_busco_plots_for_render(
     # Specify order
     mapping = {"single": 1, "duplicated": 2, "fragmented": 3, "missing": 4}
     df2["order"] = df2["category"].map(mapping)
+
+    # Estimate fraction of sequences in each BUSCO category
+    df2["fracc_markers"] = (
+        "~"
+        + round(df2["BUSCO_percentage"] * df2["n_markers"] / 100).map(int).map(str)
+        + "/124"
+    )
 
     # Plot
     domain = ["single", "duplicated", "fragmented", "missing"]
@@ -103,19 +110,26 @@ def _draw_busco_plots_for_render(
         .encode(
             x=alt.X("sum(BUSCO_percentage)", stack="normalize", title="BUSCO fracc."),
             y=alt.Y("mag_id", axis=alt.Axis(title="MAG ID")),
-            # color=alt.Color('category').scale(domain=domain, range=range_),
             color=alt.Color(
                 "category",
                 scale=alt.Scale(domain=domain, range=range_),
                 legend=alt.Legend(title="BUSCO Category"),
             ),
-            order=alt.Order(
-                # Sort the segments of the bars by this field
-                "order",
-                sort="ascending",
-            ),
-            row=alt.Row("sample_id", title="Sample ID", align="each"),
+            order=alt.Order("order", sort="ascending"),
+            tooltip=[
+                alt.Tooltip("sample_id", title="Sample ID"),
+                alt.Tooltip("mag_id", title="MAG ID"),
+                alt.Tooltip("dataset", title="Lineage dataset"),
+                alt.Tooltip(
+                    "fracc_markers", title="Aprox. number of markers in this category"
+                ),
+                alt.Tooltip("BUSCO_percentage", title="Percentage [%]"),
+            ],
+            opacity=alt.value(0.85),
         )
+        .properties(width=width, height=height * n_samples)
+        .facet(row=alt.Row("sample_id", title="Sample ID"))
+        .resolve_scale(y="independent")
     )
 
     # Resize text and plot
@@ -128,7 +142,6 @@ def _draw_busco_plots_for_render(
     output_plot = output_plot.configure_header(
         labelFontSize=labelFontSize, titleFontSize=titleFontSize
     )
-    output_plot = output_plot.properties(width=width, height=height * n_samples)
 
     # Return
     return json.dumps(output_plot.to_dict())

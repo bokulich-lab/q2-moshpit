@@ -402,10 +402,7 @@ busco_params = {
     "auto_lineage_prok": Bool,
     "cpu": Int % Range(1, None),
     "config": Str,
-    "contig_break": Int
-    % Range(
-        1, None
-    ),  # TODO: Dont know which is the appropoiate range for this parameter.
+    "contig_break": Int % Range(0, None),
     "datasets_version": Str,
     "download": List[Str],
     "download_base_url": Str,

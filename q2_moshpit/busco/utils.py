@@ -180,11 +180,7 @@ def _run_busco(
 
     # For every unique sample dir run busco
     for sample_dir in sample_dirs:
-        # Get name of dir and make path with it inside the tmp dir
-        # NOTE: It appears that the paths in filename column are <sample_id>/file_name.fasta
-        # The created sample_dir column already contains the isolated <sample_id>.
-        # Therefore the os.path.split(sample_dir)[-1] steps seems unnecessary, unless
-        # paths in filename column are some times compleate paths and not only relative.
+        # Get sample ide from tip dirname
         sample = os.path.split(sample_dir)[-1]
 
         # Deep copy base comand extend it with the sample specific info and run it

@@ -51,12 +51,12 @@ def _draw_busco_plots_for_render(
     height: int = None,
     labelFontSize: int = None,
     titleFontSize: int = None,
-) -> dict:
+) -> str:
     """
     Draws a hroizontal normalized bar plot for every sample for which BUSCO was
     run. Each barplot shows the BUSCO results for each of the MAGs in the sample.
     The plots for all samples are drwan in one composite plot which is then returned as
-    a dictionary for rendering.
+    a dictionary for rendering (but casted to a string).
 
     Args:
         df (pd.core.frame.DataFrame): tabular batch summary for all samples
@@ -66,7 +66,7 @@ def _draw_busco_plots_for_render(
         titleFontSize (int): size of titles in plot
 
     Output:
-        Output plot in dictionary from.
+        Output plot in dictionary from casted to a string.
     """
 
     # Clean column names
@@ -278,16 +278,15 @@ def _draw_busco_plots(path_to_run_summeries: dict, output_dir: str) -> Dict[str,
 
 def _zip_busco_plots(paths_to_plots: dict, zip_path: str) -> None:
     """
-    Creates a single zip archive containing all plots produced by CheckM
-    for all the samples.
+    Creates a single zip archive containing all plots produced by BUSCO,
+    one for each sample.
 
     Args:
-        plots_per_sample (Mapping[str, Mapping[str, str]]): Dictionary
-            containing the mapping of plot paths per plot type per sample.
+        paths_to_plots: Dictionary containing the mapping of sample to plot path.
         zip_path (str): The path to the zip archive.
     """
 
-    # Get shortest coommon path between files
+    # Get shortest comon path between files
     common_path = os.path.commonpath(paths_to_plots.values())
 
     # Write to zipfile

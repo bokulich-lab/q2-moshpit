@@ -102,7 +102,7 @@ def busco(
 
         ## Save to file
         all_summeries_path = os.path.join(output_dir, "all_batch_summeries.csv")
-        all_summeries_df.to_csv(all_summeries_path)
+        all_summeries_df.to_csv(all_summeries_path, index=False)
 
         # Draw BUSCO plots for all samples
         plots_dir = os.path.join(tmp, "plots")

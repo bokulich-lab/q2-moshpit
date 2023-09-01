@@ -56,12 +56,11 @@ def _process_common_input_params(processing_func, params: dict) -> List[str]:
     """
     processed_args = []
     for arg_key, arg_val in params.items():
-        # NOTE: This if condition excludes arguments which are falsy (0.0, False, None, "", [], etc),
-        # except for integers. It excludes floats that are 0.0.
-        # This seems to be ok w.r.t BUSCO but it might not be for other tools in moshpit.
-        if type(arg_val) != int and not arg_val:  # noqa: E721
-            continue
-        else:
+        # This if condition excludes arguments which are falsy (False, None, "", []),
+        # except for integers and floats.
+        if type(arg_val) == int or type(arg_val) == float or arg_val:  # noqa: E721
             processed_args.extend(processing_func(arg_key, arg_val))
+        else:
+            continue
 
     return processed_args

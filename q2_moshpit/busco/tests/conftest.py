@@ -18,7 +18,9 @@ def MAGS_test_data(tmp_path_factory):
     tmp_path = tmp_path_factory.mktemp("busco_pytest_tmpdir")
 
     # Unzip files into temp dir
-    with ZipFile("./data/test_data.zip", "r") as f:
+    p = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(p, "./data/test_data.zip")
+    with ZipFile(p, "r") as f:
         f.extractall(tmp_path)
 
     # NOTE: tmp_path_factory is a fixed name defined in pytest which is

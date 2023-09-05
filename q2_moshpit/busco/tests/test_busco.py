@@ -78,7 +78,9 @@ def test_zip_busco_plots(tmp_path):
     path_to_run_summeries = {}
 
     # Group the DataFrame by the 'sample_id' column
-    df = pd.read_csv("./data/all_batch_summeries.csv")
+    p = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(p, "./data/all_batch_summeries.csv")
+    df = pd.read_csv(p)
     grouped = df.groupby("sample_id")
 
     # Iterate through the groups and store each group as a DataFrame in the dictionary
@@ -127,7 +129,9 @@ def test_run_busco(tmp_path, MAGS_test_data):
 
 # Test `_draw_busco_plots_for_render`
 def test_draw_busco_plots_for_render():
-    all_summeries_df = pd.read_csv("./data/all_batch_summeries.csv")
+    p = os.path.dirname(os.path.abspath(__file__))
+    p = os.path.join(p, "./data/all_batch_summeries.csv")
+    all_summeries_df = pd.read_csv(p)
     plot_as_dict = _draw_busco_plots_for_render(
         all_summeries_df,
         width=600,

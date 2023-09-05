@@ -47,7 +47,72 @@ def _construct_output_paths(
     return output_fp, report_fp
 
 
+def classify_kraken2(
+        ctx,
+        seqs,
+        kraken2_db,
+        threads=1,
+        confidence=0.0,
+        minimum_base_quality=0,
+        memory_mapping=False,
+        minimum_hit_groups=2,
+        quick=False,
+        report_minimizer_data=False
+):
+    kwargs = {k: v for k, v in locals().items()
+              if k not in ["seqs", "kraken2_db", "ctx"]}
+
+    _classify_kraken2 = ctx.get_action("moshpit", "_classify_kraken2")
+
+    if seqs.type <= SampleData[SequencesWithQuality]:
+        partition_method = ctx.get_action("demux", "partition_samples_single")
+    elif seqs.type <= SampleData[SequencesWithQuality]:
+        partition_method = ctx.get_action("demux", "partition_samples_paired")
+    else:
+        raise NotImplementedError()
+
+    (partitioned_seqs,) = partition_method(seqs)
+
+    kraken2_reports = []
+    kraken2_outputs = []
+    for seq in partitioned_seqs.values():
+        (kraken2_reports, kraken2_output) = _classify_kraken2(
+                seq, kraken2_db, **kwargs)
+        kraken2_reports.append(kraken2_report)
+        kraken2_outputs.append(kraken2_output)
+
+    (collated_kraken2_reports,) = collate_kraken2_reports(kraken2_reports)
+    (collated_kraken2_outputs,) = collate_kraken2_outputs(kraken2_outputs)
+
+    return collated_kraken_reports, collated_kraken_outputs
+
+
 def _classify_kraken2(
+        seqs: Union[
+            SingleLanePerSamplePairedEndFastqDirFmt,
+            SingleLanePerSampleSingleEndFastqDirFmt,
+            MAGSequencesDirFmt,
+        ],
+        kraken2_db: Kraken2DBDirectoryFormat,
+        threads: int = 1,
+        confidence: float = 0.0,
+        minimum_base_quality: int = 0,
+        memory_mapping: bool = False,
+        minimum_hit_groups: int = 2,
+        quick: bool = False,
+        report_minimizer_data: bool = False
+) -> (
+        Kraken2ReportDirectoryFormat,
+        Kraken2OutputDirectoryFormat,
+):
+    common_args = _process_common_input_params(
+        processing_func=_process_kraken2_arg, params=kwargs
+    )
+    common_args.extend(["--db", str(kraken2_db.path)])
+    return classify_kraken2_helper(seqs, common_args)
+
+
+def classify_kraken2_helper(
         seqs, common_args
 ) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
     if isinstance(seqs, MAGSequencesDirFmt):
@@ -97,30 +162,3 @@ def _classify_kraken2(
         )
 
     return kraken2_reports_dir, kraken2_outputs_dir
-
-
-def classify_kraken2(
-        seqs: Union[
-            SingleLanePerSamplePairedEndFastqDirFmt,
-            SingleLanePerSampleSingleEndFastqDirFmt,
-            MAGSequencesDirFmt,
-        ],
-        kraken2_db: Kraken2DBDirectoryFormat,
-        threads: int = 1,
-        confidence: float = 0.0,
-        minimum_base_quality: int = 0,
-        memory_mapping: bool = False,
-        minimum_hit_groups: int = 2,
-        quick: bool = False,
-        report_minimizer_data: bool = False
-) -> (
-        Kraken2ReportDirectoryFormat,
-        Kraken2OutputDirectoryFormat,
-):
-    kwargs = {k: v for k, v in locals().items()
-              if k not in ["seqs", "kraken2_db"]}
-    common_args = _process_common_input_params(
-        processing_func=_process_kraken2_arg, params=kwargs
-    )
-    common_args.extend(["--db", str(kraken2_db.path)])
-    return _classify_kraken2(seqs, common_args)

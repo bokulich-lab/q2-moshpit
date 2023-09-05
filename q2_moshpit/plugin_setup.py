@@ -145,8 +145,35 @@ T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({
     ),
 })
 
-plugin.methods.register_function(
+plugin.pipelines.register_function(
     function=q2_moshpit.kraken2.classification.classify_kraken2,
+    inputs={
+        "seqs": T_kraken_in,
+        "kraken2_db": Kraken2DB,
+    },
+    parameters=kraken2_params,
+    outputs=[
+        ('reports', T_kraken_out_rep),
+        ('hits', T_kraken_out_hits),
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
+                "and assembled MAGs, can be provided.",
+        "kraken2_db": "Kraken 2 database.",
+    },
+    parameter_descriptions=kraken2_param_descriptions,
+    output_descriptions={
+        'reports': 'Reports produced by Kraken2.',
+        'hits': 'Output files produced by Kraken2.',
+    },
+    name='Perform taxonomic classification of reads or MAGs using Kraken 2.',
+    description='This method uses Kraken 2 to classify provided NGS reads '
+                'or MAGs into taxonomic groups.',
+    citations=[citations["wood2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.classification._classify_kraken2,
     inputs={
         "seqs": T_kraken_in,
         "kraken2_db": Kraken2DB,

@@ -446,7 +446,8 @@ busco_param_descriptions = {
     "cpu": "Specify the number (N=integer) of threads/cores to use.",
     "config": "Provide a config file.",
     "contig_break": "Number of contiguous Ns to signify a break between contigs. "
-    "Default is n=10.",
+    "Default is n=10. See https://gitlab.com/ezlab/busco/-/issues/691 for a more"
+    "detailed explanation.",
     "datasets_version": "Specify the version of BUSCO datasets, e.g. odb10.",
     "download": "Download dataset. Possible values are a specific dataset name, "
     "'all', 'prokaryota', 'eukaryota', or 'virus'. If used together "

@@ -83,7 +83,8 @@ def test_zip_busco_plots(tmp_path):
     df = pd.read_csv(p)
     grouped = df.groupby("sample_id")
 
-    # Iterate through the groups and store each group as a DataFrame in the dictionary
+    # Iterate through the groups and store each group as a
+    # DataFrame in the dictionary
     for sample_id, group_df in grouped:
         path_to_df = f"{tmp_path}/{sample_id}.csv"
         group_df.to_csv(path_to_df, sep="\t", index=False)

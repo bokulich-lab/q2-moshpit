@@ -54,9 +54,9 @@ def _draw_busco_plots_for_render(
 ) -> str:
     """
     Draws a hroizontal normalized bar plot for every sample for which BUSCO was
-    run. Each barplot shows the BUSCO results for each of the MAGs in the sample.
-    The plots for all samples are drwan in one composite plot which is then returned as
-    a dictionary for rendering (but casted to a string).
+    run. Each barplot shows the BUSCO results for each of the MAGs in the
+    sample. The plots for all samples are drwan in one composite plot which
+    is then returned as a dictionary for rendering (but casted to a string).
 
     Args:
         df (pd.core.frame.DataFrame): tabular batch summary for all samples
@@ -96,7 +96,9 @@ def _draw_busco_plots_for_render(
     # Estimate fraction of sequences in each BUSCO category
     df2["fracc_markers"] = (
         "~"
-        + round(df2["BUSCO_percentage"] * df2["n_markers"] / 100).map(int).map(str)
+        + round(
+            df2["BUSCO_percentage"] * df2["n_markers"] / 100
+        ).map(int).map(str)
         + "/124"
     )
 
@@ -108,7 +110,11 @@ def _draw_busco_plots_for_render(
         alt.Chart(df2)
         .mark_bar()
         .encode(
-            x=alt.X("sum(BUSCO_percentage)", stack="normalize", title="BUSCO fracc."),
+            x=alt.X(
+                "sum(BUSCO_percentage)",
+                stack="normalize",
+                title="BUSCO fracc."
+            ),
             y=alt.Y("mag_id", axis=alt.Axis(title="MAG ID")),
             color=alt.Color(
                 "category",
@@ -121,7 +127,8 @@ def _draw_busco_plots_for_render(
                 alt.Tooltip("mag_id", title="MAG ID"),
                 alt.Tooltip("dataset", title="Lineage dataset"),
                 alt.Tooltip(
-                    "fracc_markers", title="Aprox. number of markers in this category"
+                    "fracc_markers",
+                    title="Aprox. number of markers in this category"
                 ),
                 alt.Tooltip("BUSCO_percentage", title="Percentage [%]"),
             ],
@@ -169,8 +176,11 @@ def _run_busco(
     # Creates pandas df "manifest" from bins
     manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
 
-    # Make a new column in manifest with the directories of files listed in column "filename"
-    manifest["sample_dir"] = manifest.filename.apply(lambda x: os.path.dirname(x))
+    # Make a new column in manifest with the directories of files
+    # listed in column "filename"
+    manifest["sample_dir"] = manifest.filename.apply(
+        lambda x: os.path.dirname(x)
+    )
 
     # numpy.ndarray with unique dirs
     sample_dirs = manifest["sample_dir"].unique()
@@ -183,13 +193,23 @@ def _run_busco(
         # Get sample ide from tip dirname
         sample = os.path.split(sample_dir)[-1]
 
-        # Deep copy base comand extend it with the sample specific info and run it
+        # Deep copy base comand extend it with the sample specific
+        # info and run it
         cmd = deepcopy(base_cmd)
-        cmd.extend(["--in", sample_dir, "--out_path", output_dir, "-o", sample])
+        cmd.extend([
+            "--in",
+            sample_dir,
+            "--out_path",
+            output_dir,
+            "-o",
+            sample
+        ])
         run_command(cmd, env={**os.environ})
 
         # Check for output
-        path_to_run_summerie = os.path.join(output_dir, sample, "batch_summary.txt")
+        path_to_run_summerie = os.path.join(
+            output_dir, sample, "batch_summary.txt"
+        )
         if os.path.isfile(path_to_run_summerie):
             path_to_run_summeries[sample] = path_to_run_summerie
         else:
@@ -197,14 +217,17 @@ def _run_busco(
                 f"BUSCO batch summary file {path_to_run_summerie} not found."
             )
 
-    # Return a dict where key is sample name and value is path "tmp/sample/batch_summary.txt"
+    # Return a dict where key is sample name and value is path
+    # "tmp/sample/batch_summary.txt"
     return path_to_run_summeries
 
 
-def _draw_busco_plots(path_to_run_summeries: dict, output_dir: str) -> Dict[str, str]:
+def _draw_busco_plots(
+        path_to_run_summeries: dict, output_dir: str
+        ) -> Dict[str, str]:
     """
-    Generates plots for all `batch_summary.txt` (one for every sample) and saves
-    them to `output_dir`.
+    Generates plots for all `batch_summary.txt` (one for every sample)
+    and saves them to `output_dir`.
 
     Args:
         output_dir (str): Location where the final results should be stored.
@@ -213,7 +236,8 @@ def _draw_busco_plots(path_to_run_summeries: dict, output_dir: str) -> Dict[str,
 
     Returns:
         dict: Dictionary where keys are sample IDs and values are the paths
-            to the generated plots, e.g. `tmp/plots/<sampl_id>/plot_batch_summary.svg`.
+            to the generated plots, e.g.
+            `tmp/plots/<sampl_id>/plot_batch_summary.svg`.
     """
 
     # Initialize output dictionary
@@ -239,7 +263,9 @@ def _draw_busco_plots(path_to_run_summeries: dict, output_dir: str) -> Dict[str,
 
         # Create a horizontal stacked barplot
         plt.figure(figsize=(10, 6))
-        sns.barplot(data=df, y="input_file", x="missing", color="r", label="Missing")
+        sns.barplot(
+            data=df, y="input_file", x="missing", color="r", label="Missing"
+        )
         sns.barplot(
             data=df,
             y="input_file",
@@ -255,7 +281,11 @@ def _draw_busco_plots(path_to_run_summeries: dict, output_dir: str) -> Dict[str,
             label="Duplicated",
         )
         sns.barplot(
-            data=df, y="input_file", x="single", color="tab:blue", label="Single"
+            data=df,
+            y="input_file",
+            x="single",
+            color="tab:blue",
+            label="Single",
         )
 
         # Customize the plot
@@ -265,7 +295,9 @@ def _draw_busco_plots(path_to_run_summeries: dict, output_dir: str) -> Dict[str,
         plt.title(f"Sample ID: {sample_id}")
 
         # Save figure to file
-        output_name = os.path.join(output_dir, sample_id, "plot_batch_summary.svg")
+        output_name = os.path.join(
+            output_dir, sample_id, "plot_batch_summary.svg"
+        )
         os.makedirs(os.path.dirname(output_name), exist_ok=True)
         plt.savefig(output_name, format="svg")
 
@@ -282,7 +314,7 @@ def _zip_busco_plots(paths_to_plots: dict, zip_path: str) -> None:
     one for each sample.
 
     Args:
-        paths_to_plots: Dictionary containing the mapping of sample to plot path.
+        paths_to_plots: Dictionary mapping sample to plot path.
         zip_path (str): The path to the zip archive.
     """
 

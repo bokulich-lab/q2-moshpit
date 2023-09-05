@@ -62,7 +62,8 @@ def busco(
     version: bool = None,
 ) -> None:
     """
-    qiime2 vizualization for the BUSCO assessment tool <https://busco.ezlab.org/>.
+    qiime2 vizualization for the BUSCO assessment tool
+    <https://busco.ezlab.org/>.
 
     Args:
         see all possible inputs by running `qiime moshpit plot_busco`
@@ -73,9 +74,12 @@ def busco(
         qiime_html: html for rendering the output plots
     """
 
-    # Create dictionary with local varaibles (kwards passed to the function or their defaults)
-    # excluding "output_dir" and "bins"
-    kwargs = {k: v for k, v in locals().items() if k not in ["output_dir", "bins"]}
+    # Create dictionary with local varaibles
+    # (kwards passed to the function or their defaults) excluding
+    # "output_dir" and "bins"
+    kwargs = {
+        k: v for k, v in locals().items() if k not in ["output_dir", "bins"]
+    }
 
     # Filter out all kwards that are None, False or 0.0
     common_args = _process_common_input_params(
@@ -97,11 +101,13 @@ def busco(
             df["sample_id"] = sample_id
             all_summeries_list.append(df)
 
-        ## Concatenate
+        # Concatenate
         all_summeries_df = pd.concat(all_summeries_list)
 
-        ## Save to file
-        all_summeries_path = os.path.join(output_dir, "all_batch_summeries.csv")
+        # Save to file
+        all_summeries_path = os.path.join(
+            output_dir, "all_batch_summeries.csv"
+            )
         all_summeries_df.to_csv(all_summeries_path, index=False)
 
         # Draw BUSCO plots for all samples
@@ -115,7 +121,7 @@ def busco(
         _zip_busco_plots(paths_to_plots=paths_to_plots, zip_path=zip_name)
 
         # Render qiime html report
-        ## Prepare context for jinja2 template
+        # Prepare context for jinja2 template
         context = {
             "tabs": [{"title": "BUSCO Results", "url": "index.html"}],
             "samples": json.dumps(list(path_to_run_summeries.keys())),
@@ -142,8 +148,12 @@ def busco(
         # until Bootstrap 3 is replaced with v5, remove the v3 scripts as
         # the HTML files are adjusted to work with v5
         os.remove(
-            os.path.join(output_dir, "q2templateassets", "css", "bootstrap.min.css")
+            os.path.join(
+                output_dir, "q2templateassets", "css", "bootstrap.min.css"
+                )
         )
         os.remove(
-            os.path.join(output_dir, "q2templateassets", "js", "bootstrap.min.js")
+            os.path.join(
+                output_dir, "q2templateassets", "js", "bootstrap.min.js"
+                )
         )

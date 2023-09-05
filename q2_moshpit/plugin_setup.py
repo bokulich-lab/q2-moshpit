@@ -73,7 +73,10 @@ importlib.import_module("q2_moshpit.metabat2")
 
 plugin.methods.register_function(
     function=q2_moshpit.metabat2.bin_contigs_metabat,
-    inputs={"contigs": SampleData[Contigs], "alignment_maps": SampleData[AlignmentMap]},
+    inputs={
+        "contigs": SampleData[Contigs],
+        "alignment_maps": SampleData[AlignmentMap]
+    },
     parameters={
         "min_contig": Int % Range(1500, None),
         "max_p": Int % Range(1, 100),
@@ -94,7 +97,9 @@ plugin.methods.register_function(
         ("contig_map", FeatureMap[MAGtoContigs]),
         ("unbinned_contigs", SampleData[Contigs % Properties("unbinned")]),
     ],
-    input_descriptions={"contigs": "Placeholder.", "alignment_maps": "Placeholder."},
+    input_descriptions={
+        "contigs": "Placeholder.", "alignment_maps": "Placeholder."
+    },
     parameter_descriptions={
         "min_contig": "Minimum size of a contig for binning.",
         "max_p": 'Percentage of "good" contigs considered for binning '
@@ -107,7 +112,8 @@ plugin.methods.register_function(
         "p_tnf": "TNF probability cutoff for building TNF graph. Use it to "
         "skip the preparation step. (0: auto)",
         "no_add": "Turning off additional binning for lost or small contigs.",
-        "min_cv": "Minimum mean coverage of a contig in each library " "for binning.",
+        "min_cv": "Minimum mean coverage of a contig in each library for "
+        "binning.",
         "min_cv_sum": "Minimum total effective mean coverage of a contig "
         "(sum of depth over minCV) for binning.",
         "min_cls_size": "Minimum size of a bin as the output.",
@@ -123,7 +129,8 @@ plugin.methods.register_function(
         "unbinned_contigs": "Contigs that were not binned into any MAG.",
     },
     name="Bin contigs into MAGs using MetaBAT 2.",
-    description="This method uses MetaBAT 2 to bin provided contigs " "into MAGs.",
+    description="This method uses MetaBAT 2 to bin provided contigs "
+    "into MAGs.",
     citations=[citations["kang2019"]],
 )
 
@@ -237,7 +244,9 @@ plugin.methods.register_function(
         ("kraken2_database", Kraken2DB),
         ("bracken_database", BrackenDB),
     ],
-    input_descriptions={"seqs": "Sequences to be added to the Kraken 2 database."},
+    input_descriptions={
+        "seqs": "Sequences to be added to the Kraken 2 database."
+    },
     parameter_descriptions={
         "collection": "Name of the database collection to be fetched. "
         "Please check https://benlangmead.github.io/aws-"
@@ -311,7 +320,9 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.kraken2_to_features,
     inputs={"reports": SampleData[Kraken2Reports]},
-    parameters={"coverage_threshold": Float % Range(0, 100, inclusive_end=True)},
+    parameters={
+        "coverage_threshold": Float % Range(0, 100, inclusive_end=True)
+    },
     outputs=[
         ("table", FeatureTable[PresenceAbsence]),
         ("taxonomy", FeatureData[Taxonomy]),
@@ -384,16 +395,21 @@ plugin.methods.register_function(
     input_descriptions={
         "input_sequences": "Sequence data of the contigs we want to "
         "search for hits using the Diamond Database",
-        "diamond_db": "The filepath to an artifact containing the" "Diamond database",
+        "diamond_db": "The filepath to an artifact containing the"
+        "Diamond database",
     },
     parameter_descriptions={
-        "num_cpus": "Number of CPUs to utilize. '0' will " "use all available.",
+        "num_cpus": "Number of CPUs to utilize. '0' will "
+        "use all available.",
         "db_in_memory": "Read database into memory. The "
         "database can be very large, so this "
         "option should only be used on clusters or other "
         "machines with enough memory.",
     },
-    outputs=[("eggnog_hits", SampleData[BLAST6]), ("table", FeatureTable[Frequency])],
+    outputs=[
+        ("eggnog_hits", SampleData[BLAST6]),
+        ("table", FeatureTable[Frequency])
+    ],
     name="Run eggNOG search using diamond aligner",
     description="This method performs the steps by which we find our "
     "possible target sequences to annotate using the diamond "
@@ -468,49 +484,52 @@ busco_param_descriptions = {
     "Example: '--PARAM1=VALUE1,--PARAM2=VALUE2'.",
     "augustus_species": "Specify a species for Augustus training.",
     "auto_lineage": "Run auto-lineage to find optimum lineage path.",
-    "auto_lineage_euk": "Run auto-placement just on eukaryote tree to find optimum lineage"
-    "path.",
-    "auto_lineage_prok": "Run auto-lineage just on non-eukaryote trees to find optimum "
-    "lineage path.",
+    "auto_lineage_euk": "Run auto-placement just on eukaryote tree to find"
+    "optimum lineage path.",
+    "auto_lineage_prok": "Run auto-lineage just on non-eukaryote trees to "
+    "find optimum lineage path.",
     "cpu": "Specify the number (N=integer) of threads/cores to use.",
     "config": "Provide a config file.",
-    "contig_break": "Number of contiguous Ns to signify a break between contigs. "
-    "Default is n=10. See https://gitlab.com/ezlab/busco/-/issues/691 for a more"
-    "detailed explanation.",
+    "contig_break": "Number of contiguous Ns to signify a break between "
+    "contigs. "
+    "Default is n=10. See https://gitlab.com/ezlab/busco/-/issues/691 for a "
+    "more detailed explanation.",
     "datasets_version": "Specify the version of BUSCO datasets, e.g. odb10.",
-    "download": "Download dataset. Possible values are a specific dataset name, "
-    "'all', 'prokaryota', 'eukaryota', or 'virus'. If used together "
+    "download": "Download dataset. Possible values are a specific dataset "
+    "name, 'all', 'prokaryota', 'eukaryota', or 'virus'. If used together "
     "with other command line arguments, make sure to place this last. "
     "Example: '[dataset ...]'.",
     "download_base_url": "Set the url to the remote BUSCO dataset location.",
-    "download_path": "Specify local filepath for storing BUSCO dataset downloads.",
+    "download_path": "Specify local filepath for storing BUSCO dataset "
+    "downloads.",
     "evalue": "E-value cutoff for BLAST searches. "
     "Allowed formats, 0.001 or 1e-03, Default: 1e-03.",
-    "force": "Force rewriting of existing files. Must be used when output files "
-    "with the provided name already exist.",
+    "force": "Force rewriting of existing files. Must be used when output "
+    "files with the provided name already exist.",
     "help": "Show this help message and exit.",
-    "limit": "How many candidate regions (contig or transcript) to consider per"
-    "BUSCO. Default: 3.",
+    "limit": "How many candidate regions (contig or transcript) to consider "
+    "per BUSCO. Default: 3.",
     "list_datasets": "Print the list of available BUSCO datasets.",
     "long": "Optimization Augustus self-training mode (Default: Off); "
     "adds considerably to the run time, "
     "but can improve results for some non-model organisms.",
-    "metaeuk_parameters": "Pass additional arguments to Metaeuk for the first run. "
-    "All arguments should be contained within a single string"
+    "metaeuk_parameters": "Pass additional arguments to Metaeuk for the first "
+    "run. All arguments should be contained within a single string."
     "with no white space, with each argument separated by a comma."
     "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
-    "metaeuk_rerun_parameters": "Pass additional arguments to Metaeuk for the second run. "
-    "All arguments should be contained within a single string "
+    "metaeuk_rerun_parameters": "Pass additional arguments to Metaeuk for the "
+    "second run. All arguments should be contained within a single string "
     "with no white space, with each argument separated by a comma. "
     "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
     "miniprot": "Use miniprot gene predictor for eukaryote runs.",
     "offline": "To indicate that BUSCO cannot attempt to download files.",
     "quiet": "Disable the info logs, displays only errors.",
     "restart": "Continue a run that had already partially completed.",
-    "scaffold_composition": "Writes ACGTN content per scaffold to a file `scaffold_composition.txt`.",
+    "scaffold_composition": "Writes ACGTN content per scaffold to a file "
+    "`scaffold_composition.txt`.",
     "tar": "Compress some subdirectories with many files to save space.",
-    "update_data": "Download and replace with last versions all lineages datasets and "
-    "files necessary to their automated selection.",
+    "update_data": "Download and replace with last versions all lineages "
+    "datasets and files necessary to their automated selection.",
     "version": "Show this version and exit.",
 }
 

@@ -200,6 +200,28 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
+    function=q2_moshpit.helpers.collate_kraken2_reports,
+    inputs={"kraken2_reports":
+            List[SampleData[Kraken2Reports % Properties("reads")]]},
+    parameters={},
+    outputs={"collated_kraken2_reports":
+             SampleData[Kraken2Reports % Properties("reads")]},
+    name="Collate kraken2 reports",
+    description="Collates kraken2 reports"
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.helpers.collate_kraken2_outputs,
+    inputs={"kraken2_outputs":
+            List[SampleData[Kraken2Outputs % Properties("reads")]]},
+    parameters={},
+    outputs={"collated_kraken2_outputs":
+             SampleData[Kraken2Outputs % Properties("reads")]},
+    name="Collate kraken2 outputs",
+    description="Collates kraken2 outputs"
+)
+
+plugin.methods.register_function(
     function=q2_moshpit.kraken2.bracken.estimate_bracken,
     inputs={
         "kraken_reports": SampleData[Kraken2Reports % Properties('reads')],

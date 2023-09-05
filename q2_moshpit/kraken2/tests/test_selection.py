@@ -9,10 +9,11 @@ import shutil
 import tempfile
 
 import pandas as pd
+import pandas.testing
 from pandas._testing import assert_frame_equal
 import skbio
 from q2_moshpit.kraken2 import kraken2_to_features  # , kraken2_to_mag_features
-from q2_moshpit.kraken2.select import _kraken_to_ncbi_tree
+from q2_moshpit.kraken2.select import _kraken_to_ncbi_tree, _find_lcas
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_types_genomics.kraken2 import (
@@ -56,6 +57,19 @@ class TestKrakenSelect(TestPluginBase):
             fp, sep="\t", header=0, dtype={"Feature ID": "object", "Taxon": str}
         )
         self.kraken_taxonomy_filtered.set_index("Feature ID", inplace=True)
+
+        self.taxa_mag1 = pd.read_csv(
+            self.get_data_path('mag-taxa-1.csv'), index_col=0
+        )
+        self.taxa_mag2 = pd.read_csv(
+            self.get_data_path('mag-taxa-2.csv'), index_col=0
+        )
+        self.taxa_mag3 = pd.read_csv(
+            self.get_data_path('mag-taxa-3.csv'), index_col=0
+        )
+        self.taxa_mag4 = pd.read_csv(
+            self.get_data_path('mag-taxa-4.csv'), index_col=0
+        )
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
@@ -112,3 +126,81 @@ class TestKrakenSelect(TestPluginBase):
     #     obs_table, obs_taxonomy = kraken2_to_mag_features(
     #         reports, hits, 0.0
     #     )
+
+    def test_find_lcas_mode_lca(self):
+        taxa = [self.taxa_mag1, self.taxa_mag2, self.taxa_mag3, self.taxa_mag4]
+        obs = _find_lcas(taxa, mode='lca')
+        exp = pd.DataFrame.from_dict({
+            '0e514d88-16c4-4273-a1df-1a360eb2c823': [
+                'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+                'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium'
+            ],
+            '3acec411-b0d0-4441-b936-5b8b571fa328': [
+                'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+                'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium'
+            ],
+            '3af39f47-e90a-46f2-9b5f-b236ae6551f0': [
+                'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+                'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium'
+            ],
+            'fed92059-3222-4573-b0ec-726c49fbfabb': [
+                'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+                'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium;'
+                's__Mycobacterium florentinum'
+            ]
+        }, orient='index')
+        exp.columns = ['Taxon']
+        exp.index.name = 'Feature ID'
+        pandas.testing.assert_frame_equal(obs, exp)
+
+    # def test_find_lcas_mode_majority(self):
+    #     taxa = [
+    #       self.taxa_mag1, self.taxa_mag2, self.taxa_mag3, self.taxa_mag4
+    #     ]
+    #     obs = _find_lcas(taxa, mode='majority')
+    #     exp = pd.DataFrame.from_dict({
+    #         '0e514d88-16c4-4273-a1df-1a360eb2c823': [
+    #             'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+    #             'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium,'
+    #             's__Mycobacterium avium;'
+    #             'ssp__Mycobacterium avium subsp. hominissuis'
+    #         ],
+    #         '3acec411-b0d0-4441-b936-5b8b571fa328': [
+    #             'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+    #             'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium;'
+    #             's__Mycobacterium florentinum'
+    #         ],
+    #         '3af39f47-e90a-46f2-9b5f-b236ae6551f0': [
+    #             'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+    #             'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium;'
+    #             's__Mycobacterium avium;'
+    #             'ssp__Mycobacterium avium subsp. hominissuis'
+    #         ],
+    #         'fed92059-3222-4573-b0ec-726c49fbfabb': [
+    #             'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+    #             'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium;'
+    #             's__Mycobacterium florentinum'
+    #         ]
+    #     }, orient='index')
+    #     exp.columns = ['Taxon']
+    #     exp.index.name = 'Feature ID'
+    #     pandas.testing.assert_frame_equal(obs, exp)
+    #
+    # def test_find_lcas_mode_majority_terminal_none(self):
+    #     taxa = [self.taxa_mag2, self.taxa_mag4]
+    #     obs = _find_lcas(taxa, mode='majority')
+    #     exp = pd.DataFrame.from_dict({
+    #         '3acec411-b0d0-4441-b936-5b8b571fa328': [
+    #             'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+    #             'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium;'
+    #             's__Mycobacterium florentinum'
+    #         ],
+    #         'fed92059-3222-4573-b0ec-726c49fbfabb': [
+    #             'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+    #             'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium;'
+    #             's__Mycobacterium florentinum'
+    #         ]
+    #     }, orient='index')
+    #     exp.columns = ['Taxon']
+    #     exp.index.name = 'Feature ID'
+    #     pandas.testing.assert_frame_equal(obs, exp)

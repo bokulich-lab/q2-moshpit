@@ -64,6 +64,23 @@ setup(
             "data/kraken-to-ncbi-tree/*",
             "data/kraken-to-ncbi-tree/*/*/*",
         ],
+        'q2_moshpit.kraken2.tests': [
+            'data/*', 'data/mags-derep/*',
+            'data/single-end/*', 'data/paired-end/*',
+            'data/db/*', 'data/reports-mags/*',
+            'data/reports-mags/*/*', 'data/outputs-mags/*',
+            'data/outputs-mags/*/*', 'data/seqs/*',
+            'data/bracken-db/*', 'data/bracken-report/*',
+            'data/bracken-report/*/*', 'data/kraken2-report/*/*',
+            'data/kraken2-reports-select/*',
+            'data/kraken2-reports-select/*/*',
+            'data/kraken-to-ncbi-tree/*',
+            'data/kraken-to-ncbi-tree/*/*/*',
+        ],
+        'q2_moshpit.dereplication.tests': [
+            'data/*', 'data/mags/*', 'data/mags/*/*',
+            'data/mags-unique/*',
+        ]
     },
     zip_safe=False,
 )

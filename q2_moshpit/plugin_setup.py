@@ -5,32 +5,31 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import importlib
+
+from q2_types.distance_matrix import DistanceMatrix
+from q2_types.feature_data import FeatureData, Sequence, Taxonomy
+from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality,
     PairedEndSequencesWithQuality,
 )
-
-from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
-from q2_types_genomics.kraken2 import Kraken2Reports, Kraken2Outputs, Kraken2DB
-
-from qiime2.core.type import Properties, TypeMap
-from qiime2.plugin import Plugin, Citations
-
-import importlib
-import q2_moshpit
-
 from q2_types.sample_data import SampleData
-from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
-from q2_types.feature_data import FeatureData, Sequence, Taxonomy
+from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
+from qiime2.core.type import (Properties, TypeMap)
+from qiime2.plugin import (Plugin, Citations)
 
-from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
+import q2_moshpit
 from q2_types_genomics.feature_data import NOG, MAG
+from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.genome_data import BLAST6
+from q2_types_genomics.kraken2 import (
+    Kraken2Reports, Kraken2Outputs, Kraken2DB
+)
 from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-
-from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
+from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
 
 citations = Citations.load("citations.bib", package="q2_moshpit")
 
@@ -277,6 +276,39 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
+    function=q2_moshpit.dereplication.dereplicate_mags,
+    inputs={
+        "mags": SampleData[MAGs],
+        "distance_matrix": DistanceMatrix
+    },
+    parameters={
+        "threshold": Float % Range(0, 1, inclusive_end=True)
+    },
+    outputs=[
+        ('dereplicated_mags', FeatureData[MAG]),
+        ('feature_table', FeatureTable[PresenceAbsence])
+    ],
+    input_descriptions={
+        "mags": "MAGs to be dereplicated.",
+        "distance_matrix": "Matrix of distances between MAGs."
+    },
+    parameter_descriptions={
+        "threshold": "Similarity threshold required to consider "
+                     "two bins identical."
+    },
+    output_descriptions={
+        "dereplicated_mags": "Dereplicated MAGs.",
+        "feature_table": "Mapping between MAGs and samples."
+    },
+    name='Dereplicate MAGs from multiple samples.',
+    description='This method dereplicates MAGs from multiple samples '
+                'using distances between them found in the provided '
+                'distance matrix. For each cluster of similar MAGs, '
+                'the longest one will be selected as the representative.',
+    citations=[]
+)
+
+plugin.methods.register_function(
     function=q2_moshpit.kraken2.kraken2_to_features,
     inputs={"reports": SampleData[Kraken2Reports]},
     parameters={"coverage_threshold": Float % Range(0, 100, inclusive_end=True)},
@@ -305,42 +337,39 @@ plugin.methods.register_function(
     "analyses.",
 )
 
-# plugin.methods.register_function(
-#     function=q2_moshpit.kraken2.kraken2_to_mag_features,
-#     inputs={
-#         'reports': SampleData[Kraken2Reports % Properties('mags')],
-#         'hits': SampleData[Kraken2Outputs % Properties('mags')]
-#     },
-#     parameters={
-#         'coverage_threshold': Float % Range(0, 100, inclusive_end=True)
-#     },
-#     outputs=[
-#         ('table', FeatureTable[PresenceAbsence]),
-#         ('taxonomy', FeatureData[Taxonomy])
-#     ],
-#     input_descriptions={
-#         'reports': 'Per-sample Kraken 2 reports.',
-#         'hits': 'Per-sample Kraken 2 output files.'
-#     },
-#     parameter_descriptions={
-#         'coverage_threshold': 'The minimum percent coverage required to '
-#                               'produce a feature.'
-#     },
-#     output_descriptions={
-#         'table': 'A presence/absence table of selected features. The '
-#                  'features are not of even ranks, but will be the most '
-#                  'specific rank available.',
-#         'taxonomy': 'Infra-clade ranks are ignored'
-#                     'unless they are strain-level. Missing internal ranks '
-#                     'are annotated by their next most specific rank, '
-#                     'with the exception of k__Bacteria and k__Archaea which '
-#                     'match their domain\'s name.',
-#     },
-#     name='Select downstream MAG features from Kraken 2',
-#     description='Convert a Kraken 2 report, which is an annotated NCBI '
-#                 'taxonomy tree into generic artifacts for downstream '
-#                 'analyses.'
-# )
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.kraken2_to_mag_features,
+    inputs={
+        'reports': FeatureData[Kraken2Reports % Properties('mags')],
+        'hits': FeatureData[Kraken2Outputs % Properties('mags')],
+    },
+    parameters={
+        'coverage_threshold': Float % Range(0, 100, inclusive_end=True),
+        # 'lca_mode': Str % Choices(['lca', 'majority'])
+    },
+    outputs=[('taxonomy', FeatureData[Taxonomy])],
+    input_descriptions={
+        'reports': 'Per-sample Kraken 2 reports.',
+        'hits': 'Per-sample Kraken 2 output files.',
+    },
+    parameter_descriptions={
+        'coverage_threshold': 'The minimum percent coverage required to '
+                              'produce a feature.',
+        # 'lca_mode': 'The method used to determine the LCA of a MAG using '
+        #             'taxonomic assignments of its contigs. '
+    },
+    output_descriptions={
+        'taxonomy': 'Infra-clade ranks are ignored'
+                    'unless they are strain-level. Missing internal ranks '
+                    'are annotated by their next most specific rank, '
+                    'with the exception of k__Bacteria and k__Archaea which '
+                    'match their domain\'s name.',
+    },
+    name='Select downstream MAG features from Kraken 2',
+    description='Convert a Kraken 2 report, which is an annotated NCBI '
+                'taxonomy tree into generic artifacts for downstream '
+                'analyses.'
+)
 
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,

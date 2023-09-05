@@ -32,7 +32,9 @@ class TestKrakenSelect(TestPluginBase):
         super().setUp()
         self.temp_dir = tempfile.mkdtemp()
 
-        fp = self.get_data_path("kraken2-reports-select/kraken2_reads_table.json")
+        fp = self.get_data_path(
+            "kraken2-reports-select/kraken2_reads_table.json"
+        )
         self.kraken2_reads_table = pd.read_json(fp)
         self.kraken2_reads_table.columns = [
             str(x) for x in self.kraken2_reads_table.columns
@@ -46,16 +48,20 @@ class TestKrakenSelect(TestPluginBase):
             str(x) for x in self.kraken2_reads_table_filtered.columns
         ]
 
-        fp = self.get_data_path("kraken2-reports-select/kraken2_taxonomy.tsv")
-        self.kraken_taxonomy = pd.read_csv(
-            fp, sep="\t", header=0, dtype={"Feature ID": "object", "Taxon": str}
+        fp = self.get_data_path(
+            "kraken2-reports-select/kraken2_taxonomy.tsv"
         )
+        self.kraken_taxonomy = pd.read_csv(
+            fp, sep='\t', header=0,
+            dtype={"Feature ID": "object", "Taxon": str})
         self.kraken_taxonomy.set_index("Feature ID", inplace=True)
 
-        fp = self.get_data_path("kraken2-reports-select/kraken2_taxonomy_filtered.tsv")
-        self.kraken_taxonomy_filtered = pd.read_csv(
-            fp, sep="\t", header=0, dtype={"Feature ID": "object", "Taxon": str}
+        fp = self.get_data_path(
+            "kraken2-reports-select/kraken2_taxonomy_filtered.tsv"
         )
+        self.kraken_taxonomy_filtered = pd.read_csv(
+            fp, sep='\t', header=0,
+            dtype={"Feature ID": "object", "Taxon": str})
         self.kraken_taxonomy_filtered.set_index("Feature ID", inplace=True)
 
         self.taxa_mag1 = pd.read_csv(
@@ -78,7 +84,8 @@ class TestKrakenSelect(TestPluginBase):
         reports = Kraken2ReportDirectoryFormat(
             self.get_data_path("kraken2-reports-select/samples"), "r"
         )
-        obs_table, obs_taxonomy = kraken2_to_features(reports, coverage_threshold=0.1)
+        obs_table, obs_taxonomy = kraken2_to_features(
+            reports, coverage_threshold=0.1)
 
         assert_frame_equal(obs_table, self.kraken2_reads_table_filtered)
         assert_frame_equal(obs_taxonomy, self.kraken_taxonomy_filtered)
@@ -108,7 +115,7 @@ class TestKrakenSelect(TestPluginBase):
         # this test on newick strings (which is probably fragile)
         self.assertEqual(str(obs_tree), str(exp_tree))
 
-        raise NotImplementedError("Additional tests needed.")
+        raise NotImplementedError('Additional tests needed.')
 
     # The following test is currently failing b/c the format is looking
     # for file names that don't exist in the `outputs-mags` directory. It's

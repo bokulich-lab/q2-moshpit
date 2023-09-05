@@ -19,8 +19,7 @@ from qiime2 import Artifact
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
-    Kraken2OutputDirectoryFormat,
-    Kraken2DBDirectoryFormat,
+    Kraken2OutputDirectoryFormat, Kraken2DBDirectoryFormat,
 )
 
 from unittest.mock import patch, ANY, call
@@ -29,9 +28,7 @@ from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
 from q2_moshpit.kraken2.classification import (
-    _get_seq_paths,
-    _construct_output_paths,
-    _classify_kraken2,
+    _get_seq_paths, _construct_output_paths, _classify_kraken2
 )
 
 
@@ -46,8 +43,13 @@ class TestKraken2Classification(TestPluginBase):
             self.get_data_path("single-end"), mode="r"
         ).manifest.view(pd.DataFrame)
 
-        expected = [(f"sample{i}", f"reads{i}_R1.fastq.gz") for i in range(1, 3)]
-        for (index, row), (exp_sample, exp_fp) in zip(manifest.iterrows(), expected):
+        expected = [
+            (f"sample{i}", f"reads{i}_R1.fastq.gz")
+            for i in range(1, 3)
+        ]
+        for ((index, row), (exp_sample, exp_fp)) in zip(
+            manifest.iterrows(), expected
+        ):
             _sample, fn = _get_seq_paths(index, row, manifest.columns)
             self.assertEqual(_sample, exp_sample)
             self.assertTrue(fn[0].endswith(exp_fp))
@@ -64,7 +66,9 @@ class TestKraken2Classification(TestPluginBase):
             )
             for i in range(1, 3)
         ]
-        for (index, row), (exp_sample, exp_fp) in zip(manifest.iterrows(), expected):
+        for ((index, row), (exp_sample, exp_fp)) in zip(
+            manifest.iterrows(), expected
+        ):
             _sample, fn = _get_seq_paths(index, row, manifest.columns)
             self.assertEqual(_sample, exp_sample)
             self.assertTrue(fn[0].endswith(exp_fp[0]))
@@ -75,8 +79,12 @@ class TestKraken2Classification(TestPluginBase):
         reports_dir = Kraken2ReportDirectoryFormat()
         outputs_dir = Kraken2OutputDirectoryFormat()
 
-        exp_rep_fp = os.path.join(reports_dir.path, f"{_sample}.report.txt")
-        exp_out_fp = os.path.join(outputs_dir.path, f"{_sample}.output.txt")
+        exp_rep_fp = os.path.join(
+            reports_dir.path, f"{_sample}.report.txt"
+        )
+        exp_out_fp = os.path.join(
+            outputs_dir.path, f"{_sample}.output.txt"
+        )
         obs_out_fp, obs_rep_fp = _construct_output_paths(
             _sample, outputs_dir, reports_dir
         )
@@ -96,18 +104,22 @@ class TestKraken2Classification(TestPluginBase):
         fake_output_dir = Kraken2OutputDirectoryFormat()
         exp_out_fps = [
             os.path.join(
-                fake_output_dir.path, "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.output.txt"
+                fake_output_dir.path,
+                "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.output.txt"
             ),
             os.path.join(
-                fake_output_dir.path, "8894435a-c836-4c18-b475-8b38a9ab6c6b.output.txt"
+                fake_output_dir.path,
+                "8894435a-c836-4c18-b475-8b38a9ab6c6b.output.txt"
             ),
         ]
         exp_rep_fps = [
             os.path.join(
-                fake_report_dir.path, "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.report.txt"
+                fake_report_dir.path,
+                "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.report.txt"
             ),
             os.path.join(
-                fake_report_dir.path, "8894435a-c836-4c18-b475-8b38a9ab6c6b.report.txt"
+                fake_report_dir.path,
+                "8894435a-c836-4c18-b475-8b38a9ab6c6b.report.txt"
             ),
         ]
 
@@ -134,7 +146,8 @@ class TestKraken2Classification(TestPluginBase):
                         "--output",
                         exp_out_fps[0],
                         os.path.join(
-                            seqs.path, "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.fasta"
+                            seqs.path,
+                            "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.fasta"
                         ),
                     ],
                     verbose=True,
@@ -150,7 +163,8 @@ class TestKraken2Classification(TestPluginBase):
                         "--output",
                         exp_out_fps[1],
                         os.path.join(
-                            seqs.path, "8894435a-c836-4c18-b475-8b38a9ab6c6b.fasta"
+                            seqs.path,
+                            "8894435a-c836-4c18-b475-8b38a9ab6c6b.fasta"
                         ),
                     ],
                     verbose=True,
@@ -161,13 +175,11 @@ class TestKraken2Classification(TestPluginBase):
             [
                 call(
                     "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa",
-                    fake_output_dir,
-                    fake_report_dir,
+                    fake_output_dir, fake_report_dir
                 ),
                 call(
                     "8894435a-c836-4c18-b475-8b38a9ab6c6b",
-                    fake_output_dir,
-                    fake_report_dir,
+                    fake_output_dir, fake_report_dir
                 ),
             ]
         )
@@ -261,9 +273,13 @@ class TestKraken2Classification(TestPluginBase):
 
     @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
     @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
-    @patch("q2_moshpit.kraken2.classification._get_seq_paths", return_value=(1, 2, [3]))
     @patch(
-        "q2_moshpit.kraken2.classification._construct_output_paths", return_value=(1, 2)
+        "q2_moshpit.kraken2.classification._get_seq_paths",
+        return_value=(1, 2, [3])
+    )
+    @patch(
+        "q2_moshpit.kraken2.classification._construct_output_paths",
+        return_value=(1, 2)
     )
     @patch("q2_moshpit.kraken2.classification.run_command")
     def test_classify_kraken_exception(self, p1, p2, p3, p4, p5):
@@ -273,19 +289,24 @@ class TestKraken2Classification(TestPluginBase):
         # run kraken2
         p1.side_effect = CalledProcessError(returncode=123, cmd="abc")
         with self.assertRaisesRegex(
-            Exception, r"error was encountered .* \(return code 123\)"
+            Exception,
+            r'error was encountered .* \(return code 123\)'
         ):
             _classify_kraken2(seqs, common_args)
 
     @patch("q2_moshpit.kraken2.classification._classify_kraken2")
     def test_classify_kraken_action(self, p1):
         seqs = Artifact.import_data(
-            "FeatureData[MAG]", self.get_data_path("mags-derep")
+            'FeatureData[MAG]', self.get_data_path("mags-derep")
         )
-        db = Artifact.import_data("Kraken2DB", self.get_data_path("db"))
+        db = Artifact.import_data('Kraken2DB', self.get_data_path("db"))
         p1.return_value = (
-            Kraken2ReportDirectoryFormat(self.get_data_path("reports-mags"), "r"),
-            Kraken2OutputDirectoryFormat(self.get_data_path("outputs-mags"), "r"),
+            Kraken2ReportDirectoryFormat(
+                self.get_data_path("reports-mags"), "r"
+            ),
+            Kraken2OutputDirectoryFormat(
+                self.get_data_path("outputs-mags"), "r"
+            ),
         )
 
         moshpit.actions.classify_kraken2(
@@ -293,17 +314,9 @@ class TestKraken2Classification(TestPluginBase):
         )
 
         exp_args = [
-            "--threads",
-            "3",
-            "--confidence",
-            "0.9",
-            "--minimum-base-quality",
-            "0",
-            "--minimum-hit-groups",
-            "2",
-            "--quick",
-            "--db",
-            str(db.view(Kraken2DBDirectoryFormat).path),
+            '--threads', '3', '--confidence', '0.9',
+            '--minimum-base-quality', '0', '--minimum-hit-groups', '2',
+            '--quick', '--db', str(db.view(Kraken2DBDirectoryFormat).path)
         ]
         p1.assert_called_with(ANY, exp_args)
 

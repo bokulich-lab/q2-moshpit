@@ -11,18 +11,14 @@ from typing import List
 
 def run_command(cmd, env=None, verbose=True):
     if verbose:
-        print(
-            "Running external command line application(s). This may print "
-            "messages to stdout and/or stderr."
-        )
-        print(
-            "The command(s) being run are below. These commands cannot "
-            "be manually re-run as they will depend on temporary files that "
-            "no longer exist."
-        )
+        print("Running external command line application(s). This may print "
+              "messages to stdout and/or stderr.")
+        print("The command(s) being run are below. These commands cannot "
+              "be manually re-run as they will depend on temporary files that "
+              "no longer exist.")
     if verbose:
-        print("\nCommand:", end=" ")
-        print(" ".join(cmd), end="\n\n")
+        print("\nCommand:", end=' ')
+        print(" ".join(cmd), end='\n\n')
     if env:
         subprocess.run(cmd, env=env, check=True)
     else:
@@ -56,9 +52,13 @@ def _process_common_input_params(processing_func, params: dict) -> List[str]:
     """
     processed_args = []
     for arg_key, arg_val in params.items():
-        # This if condition excludes arguments which are falsy (False, None, "", []),
-        # except for integers and floats.
-        if type(arg_val) == int or type(arg_val) == float or arg_val:  # noqa: E721
+        # This if condition excludes arguments which are falsy
+        # (False, None, "", []), except for integers and floats.
+        if (  # noqa: E721
+            type(arg_val) == int or
+            type(arg_val) == float or
+            arg_val
+        ):
             processed_args.extend(processing_func(arg_key, arg_val))
         else:
             continue

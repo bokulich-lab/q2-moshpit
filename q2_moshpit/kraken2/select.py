@@ -14,8 +14,7 @@ from q2_moshpit.kraken2.utils import (
     _find_lca, _taxon_to_list, _join_ranks
 )
 from q2_types_genomics.kraken2 import (
-    Kraken2ReportDirectoryFormat,
-    Kraken2OutputDirectoryFormat,
+    Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat
 )
 
 import pandas as pd
@@ -99,15 +98,16 @@ def kraken2_to_mag_features(
     return _find_lcas(taxa_list, mode='lca')
 
 
-def kraken2_to_features(
-    reports: Kraken2ReportDirectoryFormat, coverage_threshold: float = 0.1
-) -> (pd.DataFrame, pd.DataFrame):
+def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
+                        coverage_threshold: float = 0.1) \
+        -> (pd.DataFrame, pd.DataFrame):
+
     rows = []
     trees = []
     for relpath, df in reports.reports.iter_views(pd.DataFrame):
         sample_id = os.path.basename(relpath).replace(".report.txt", "")
 
-        filtered = df[df["perc_frags_covered"] >= coverage_threshold]
+        filtered = df[df['perc_frags_covered'] >= coverage_threshold]
         tree = _kraken_to_ncbi_tree(filtered)
         tips = _ncbi_tree_to_tips(tree)
         if tips:
@@ -125,18 +125,18 @@ def kraken2_to_features(
 
 
 def _get_indentation(string, indent=2):
-    return (len(string) - len(string.lstrip(" "))) // indent
+    return (len(string) - len(string.lstrip(' '))) // indent
 
 
 def _kraken_to_ncbi_tree(df):
     tree = skbio.TreeNode()
     stack = deque([(0, tree)])
     for _, row in df.iterrows():
-        r = row["rank"]
-        label = row["name"]
-        otu = str(row["ncbi_tax_id"])
+        r = row['rank']
+        label = row['name']
+        otu = str(row['ncbi_tax_id'])
 
-        if r in ("U", "R"):
+        if r in ('U', 'R'):
             continue  # unclassified or root
 
         indent = _get_indentation(label)
@@ -144,7 +144,7 @@ def _kraken_to_ncbi_tree(df):
         node = skbio.TreeNode(name=name, length=0.0)
 
         # Don't include internal non-strain infra-clades as tips
-        if len(r) == 1 or r.startswith("S"):
+        if len(r) == 1 or r.startswith('S'):
             id_node = skbio.TreeNode(name=otu, length=0.0)
             node.length = 1.0  # not infra-clade, so give it a length
             node.append(id_node)
@@ -190,40 +190,41 @@ def _combine_ncbi_trees(trees):
 
 
 def _ncbi_tree_to_tips(tree):
-    return [n.name for n in tree.tips() if hasattr(n, "is_actual_tip")]
+    return [n.name for n in tree.tips() if hasattr(n, 'is_actual_tip')]
 
 
 def _pad_ranks(ranks):
-    order = ["d", "k", "p", "c", "o", "f", "g", "s"]
+    order = ['d', 'k', 'p', 'c', 'o', 'f', 'g', 's']
     available = {}
     taxonomy = []
 
     for rank in reversed(ranks):
-        r, label = rank.split("__", 1)
+        r, label = rank.split('__', 1)
         available[r] = label
-        if len(r) > 1 and r.startswith("s"):
+        if len(r) > 1 and r.startswith('s'):
             taxonomy.append(rank)
 
     for r in reversed(order):
         label = available.get(r)
 
         if label is not None:
-            taxonomy.append(f"{r}__{label}")
-            last_good_label = f"{r}__{label}"
+            taxonomy.append(f'{r}__{label}')
+            last_good_label = f'{r}__{label}'
         elif taxonomy:
-            if r == "k" and available.get("d") in ("Bacteria", "Archaea"):
+            if r == 'k' and available.get('d') in ('Bacteria', 'Archaea'):
                 # it is too strange to propogate upwards for these 'kingdoms'
                 taxonomy.append(f"k__{available['d']}")
             else:
                 # smear the most specific label we have upwards
-                taxonomy.append(f"{r}__containing {last_good_label}")
+                taxonomy.append(f'{r}__containing {last_good_label}')
 
-    return ";".join(reversed(taxonomy))
+    return ';'.join(reversed(taxonomy))
 
 
 def _to_taxonomy(tree):
-    rows = [(node.name, _pad_ranks(ranks)) for node, ranks in tree.to_taxonomy()]
-    taxonomy = pd.DataFrame(rows, columns=["Feature ID", "Taxon"])
-    taxonomy = taxonomy.set_index("Feature ID")
+    rows = [(node.name, _pad_ranks(ranks))
+            for node, ranks in tree.to_taxonomy()]
+    taxonomy = pd.DataFrame(rows, columns=['Feature ID', 'Taxon'])
+    taxonomy = taxonomy.set_index('Feature ID')
 
     return taxonomy

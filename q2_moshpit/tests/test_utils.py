@@ -23,42 +23,44 @@ def fake_processing_func(key, val):
 
 
 class TestUtils(TestPluginBase):
-    package = "q2_moshpit.tests"
+    package = 'q2_moshpit.tests'
 
     def test_construct_param_simple(self):
-        obs = _construct_param("test")
-        exp = "--test"
+        obs = _construct_param('test')
+        exp = '--test'
         self.assertEqual(obs, exp)
 
     def test_construct_param_complex(self):
-        obs = _construct_param("test_param")
-        exp = "--test-param"
+        obs = _construct_param('test_param')
+        exp = '--test-param'
         self.assertEqual(obs, exp)
 
     def test_process_common_inputs_bools(self):
-        kwargs = {"arg1": False, "arg2": True}
+        kwargs = {'arg1': False, 'arg2': True}
         obs = _process_common_input_params(fake_processing_func, kwargs)
-        exp = ["--arg2"]
+        exp = ['--arg2']
         self.assertListEqual(obs, exp)
 
     def test_process_common_inputs_nones(self):
-        kwargs = {"arg1": "some-value", "arg2": None}
+        kwargs = {'arg1': 'some-value', 'arg2': None}
         obs = _process_common_input_params(fake_processing_func, kwargs)
-        exp = ["--arg1", "some-value"]
+        exp = ['--arg1', 'some-value']
         self.assertListEqual(obs, exp)
 
     def test_process_common_inputs_with_values(self):
-        kwargs = {"arg1": "value1", "arg2": "value2"}
+        kwargs = {'arg1': 'value1', 'arg2': 'value2'}
         obs = _process_common_input_params(fake_processing_func, kwargs)
-        exp = ["--arg1", "value1", "--arg2", "value2"]
+        exp = ['--arg1', 'value1', '--arg2', 'value2']
         self.assertListEqual(obs, exp)
 
     def test_process_common_inputs_mix(self):
-        kwargs = {"arg1": None, "arg2": "some-value", "arg3": False, "arg4": True}
+        kwargs = {
+            'arg1': None, 'arg2': 'some-value', 'arg3': False, 'arg4': True
+        }
         obs = _process_common_input_params(fake_processing_func, kwargs)
-        exp = ["--arg2", "some-value", "--arg4"]
+        exp = ['--arg2', 'some-value', '--arg4']
         self.assertListEqual(obs, exp)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

@@ -13,13 +13,17 @@ from typing import Union, Optional
 
 import pandas as pd
 from q2_types.per_sample_sequences import (
+    SequencesWithQuality,
+    PairedEndSequencesWithQuality,
     SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt
 )
+from q2_types.sample_data import SampleData
+from q2_types.feature_data import FeatureData
 
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
-from q2_types_genomics.feature_data import MAGSequencesDirFmt
+from q2_types_genomics.feature_data import MAG, MAGSequencesDirFmt
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
@@ -63,11 +67,20 @@ def classify_kraken2(
               if k not in ["seqs", "kraken2_db", "ctx"]}
 
     _classify_kraken2 = ctx.get_action("moshpit", "_classify_kraken2")
+    collate_kraken2_reports = ctx.get_action("moshpit",
+                                             "collate_kraken2_reports")
+    collate_kraken2_outputs = ctx.get_action("moshpit",
+                                             "collate_kraken2_outputs")
 
     if seqs.type <= SampleData[SequencesWithQuality]:
         partition_method = ctx.get_action("demux", "partition_samples_single")
-    elif seqs.type <= SampleData[SequencesWithQuality]:
+    elif seqs.type <= SampleData[PairedEndSequencesWithQuality]:
         partition_method = ctx.get_action("demux", "partition_samples_paired")
+    # FeatureData[MAG] is not parallelized
+    elif seqs.type <= FeatureData[MAG]:
+        kraken2_reports, kraken2_outputs = \
+                _classify_kraken2(seqs, kraken2_db, **kwargs)
+        return kraken2_reports, kraken2_outputs
     else:
         raise NotImplementedError()
 
@@ -76,7 +89,7 @@ def classify_kraken2(
     kraken2_reports = []
     kraken2_outputs = []
     for seq in partitioned_seqs.values():
-        (kraken2_reports, kraken2_output) = _classify_kraken2(
+        (kraken2_report, kraken2_output) = _classify_kraken2(
                 seq, kraken2_db, **kwargs)
         kraken2_reports.append(kraken2_report)
         kraken2_outputs.append(kraken2_output)
@@ -84,7 +97,7 @@ def classify_kraken2(
     (collated_kraken2_reports,) = collate_kraken2_reports(kraken2_reports)
     (collated_kraken2_outputs,) = collate_kraken2_outputs(kraken2_outputs)
 
-    return collated_kraken_reports, collated_kraken_outputs
+    return collated_kraken2_reports, collated_kraken2_outputs
 
 
 def _classify_kraken2(
@@ -105,6 +118,9 @@ def _classify_kraken2(
         Kraken2ReportDirectoryFormat,
         Kraken2OutputDirectoryFormat,
 ):
+    kwargs = {k: v for k, v in locals().items()
+              if k not in ["seqs", "kraken2_db", "ctx"]}
+
     common_args = _process_common_input_params(
         processing_func=_process_kraken2_arg, params=kwargs
     )

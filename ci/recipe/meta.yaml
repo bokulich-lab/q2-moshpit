@@ -30,6 +30,7 @@ requirements:
     - tqdm
     - xmltodict
     - seaborn
+    - altair
     - busco >=5.0.0
 
 test:

@@ -39,7 +39,7 @@ setup(
             'data/bins-no-uuid/*/*'
         ],
         "q2_moshpit.busco.tests": [
-            "data/*",                       
+            "data/*",
         ],
         "q2_moshpit.eggnog": [
             "tests/data/*",

@@ -35,7 +35,7 @@ def _collate_kraken_tsvs(kraken2_results, kraken_type, output):
 
     for kraken2_result in kraken2_results:
         for fp in kraken2_result.path.iterdir():
-            # fp basename will be "sample_id.output/report.txt/tsv" we just
+            # fp basename will be "sample_id.{output/report}.{txt/tsv}" we just
             # want the id
             sample_id = os.path.basename(fp).split('.')[0]
             df = pd.read_csv(fp, sep='\t', header=None)

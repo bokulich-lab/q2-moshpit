@@ -136,7 +136,7 @@ def classify_kraken2_helper(
     else:
         manifest: Optional[pd.DataFrame] = seqs.manifest.view(pd.DataFrame)
 
-    base_cmd = ["kraken2", *common_args]
+    base_cmd = ["kraken2", *common_args, '--memory-mapping']
     if manifest is not None and "reverse" in manifest.columns:
         base_cmd.append("--paired")
 

@@ -41,9 +41,11 @@ def _collate_kraken_tsvs(kraken2_results, kraken_type, output):
             df = pd.read_csv(fp, sep='\t', header=None)
 
             if sample_id in collated_sample_outputs:
-                collated_sample_outputs[sample_id].append(df)
+                collated_sample_outputs[sample_id].append(
+                    df, ignore_index=True)
             else:
                 collated_sample_outputs[sample_id] = df
 
     for sample_id, df in collated_sample_outputs.items():
-        df.to_csv(output.path / f'{sample_id}.{kraken_type}.txt', sep='\t')
+        df.to_csv(output.path / f'{sample_id}.{kraken_type}.txt', sep='\t',
+                  index=False, header=False)

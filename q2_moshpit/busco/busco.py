@@ -12,7 +12,7 @@ import json
 import tempfile
 import q2templates
 import pandas as pd
-from distutils.dir_util import copy_tree
+from shutil import copytree
 from .utils import (
     _parse_busco_params,
     _draw_busco_plots_for_render,
@@ -141,8 +141,16 @@ def busco(
         )
         TEMPLATES = os.path.join(moshpit_path, "assets")
         index = os.path.join(TEMPLATES, "busco", "index.html")
-        copy_tree(os.path.join(TEMPLATES, "busco"), output_dir)
-        copy_tree(plots_dir, os.path.join(output_dir, "plots"))
+        copytree(
+            src=os.path.join(TEMPLATES, "busco"),
+            dst=output_dir,
+            dirs_exist_ok=True
+        )
+        copytree(
+            src=plots_dir,
+            dst=os.path.join(output_dir, "plots"),
+            dirs_exist_ok=True
+        )
 
         # Render
         templates = [index]

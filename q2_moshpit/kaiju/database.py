@@ -21,7 +21,8 @@ import pandas as pd
 CHUNK_SIZE = 8192
 KAIJU_SERVER_URL = "https://kaiju.binf.ku.dk/server"
 ERR_MSG = (
-    "Unable to connect to the Kaiju server. Please try again later. The error was: {}"
+    "Unable to connect to the Kaiju server. Please try again later. "
+    "The error was: {}"
 )
 
 
@@ -99,7 +100,9 @@ def fetch_kaiju_db(
     soup = BeautifulSoup(response.content, "html.parser")
     sidebox_db = soup.find("div", id="sidebox_db")
 
-    download_link = _find_latest_db_url(database_type, sidebox_db, KAIJU_SERVER_URL)
+    download_link = _find_latest_db_url(
+        database_type, sidebox_db, KAIJU_SERVER_URL
+    )
 
     db = KaijuDBDirectoryFormat()
     _fetch_and_extract_db(download_link, str(db.path))

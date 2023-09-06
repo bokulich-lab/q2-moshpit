@@ -451,9 +451,9 @@ plugin.methods.register_function(
     ],
     input_descriptions={},
     parameter_descriptions={
-        "database_type": "Type of database to be downloaded. For more information "
-        "on available types please see the list on Kaiju's web "
-        "server: https://kaiju.binf.ku.dk/server",
+        "database_type": "Type of database to be downloaded. For more "
+        "information on available types please see the list on "
+        "Kaiju's web server: https://kaiju.binf.ku.dk/server",
     },
     output_descriptions={"database": "Kaiju database."},
     name="Fetch Kaiju database.",

@@ -10,7 +10,6 @@
 import os
 import json
 import tempfile
-import pkg_resources
 import q2templates
 import pandas as pd
 from distutils.dir_util import copy_tree
@@ -135,7 +134,12 @@ def busco(
         }
 
         # Copy BUSCO results from tmp dir to output_dir
-        TEMPLATES = pkg_resources.resource_filename("q2_moshpit", "assets")
+        moshpit_path = os.path.dirname(  # Path to parent dir, q2_moshpit
+            os.path.dirname(  # Path to parent dir, e.g. busco
+                os.path.abspath(__file__)  # Path to this file
+            )
+        )
+        TEMPLATES = os.path.join(moshpit_path, "assets")
         index = os.path.join(TEMPLATES, "busco", "index.html")
         copy_tree(os.path.join(TEMPLATES, "busco"), output_dir)
         copy_tree(plots_dir, os.path.join(output_dir, "plots"))

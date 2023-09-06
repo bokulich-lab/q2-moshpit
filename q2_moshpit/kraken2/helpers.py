@@ -45,4 +45,4 @@ def _collate_kraken_tsvs(kraken2_results, kraken_type, output):
                 collated_sample_outputs[sample_id] = df
 
     for sample_id, df in collated_sample_outputs.items():
-        df.to_csv(output.path / sample_id / f'{sample_id}.{kraken_type}.txt')
+        df.to_csv(output.path / f'{sample_id}.{kraken_type}.txt')

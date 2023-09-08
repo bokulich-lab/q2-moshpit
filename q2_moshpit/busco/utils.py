@@ -1,4 +1,3 @@
-import json
 import os
 import pandas as pd
 import altair as alt
@@ -77,11 +76,16 @@ def _draw_busco_plots_for_render(
     # Rename column "input_file"
     df["mag_id"] = df["input_file"].str.split(".", expand=True)[0]
 
+    # Cast into percent_gaps col to float
+    df["percent_gaps"] = df["percent_gaps"].str.split(
+        '%', expand=True
+    )[0].map(float)
+
     # Get number of samples
     n_samples = len(df["mag_id"].unique())
 
-    # Pivot long
-    df2 = pd.melt(
+    # Format data for plotting
+    busco_plot_data = pd.melt(
         df,
         id_vars=["sample_id", "mag_id", "dataset", "n_markers"],
         value_vars=["single", "duplicated", "fragmented", "missing"],
@@ -89,15 +93,25 @@ def _draw_busco_plots_for_render(
         var_name="category",
     )
 
+    secondary_plot_data = df[[
+        "sample_id",
+        "mag_id",
+        'scaffold_n50',
+        'contigs_n50',
+        'percent_gaps',
+        'number_of_scaffolds',
+    ]]
+
     # Specify order
     mapping = {"single": 1, "duplicated": 2, "fragmented": 3, "missing": 4}
-    df2["order"] = df2["category"].map(mapping)
+    busco_plot_data["order"] = busco_plot_data["category"].map(mapping)
 
     # Estimate fraction of sequences in each BUSCO category
-    df2["fracc_markers"] = (
+    busco_plot_data["fracc_markers"] = (
         "~"
         + round(
-            df2["BUSCO_percentage"] * df2["n_markers"] / 100
+            busco_plot_data["BUSCO_percentage"] *
+            busco_plot_data["n_markers"] / 100
         ).map(int).map(str)
         + "/124"
     )
@@ -106,8 +120,8 @@ def _draw_busco_plots_for_render(
     domain = ["single", "duplicated", "fragmented", "missing"]
     range_ = ["#1E90FF", "#87CEFA", "#FFA500", "#FF7F50"]
 
-    output_plot = (
-        alt.Chart(df2)
+    busco_plot = (
+        alt.Chart(busco_plot_data)
         .mark_bar()
         .encode(
             x=alt.X(
@@ -119,7 +133,7 @@ def _draw_busco_plots_for_render(
             color=alt.Color(
                 "category",
                 scale=alt.Scale(domain=domain, range=range_),
-                legend=alt.Legend(title="BUSCO Category"),
+                legend=alt.Legend(title="BUSCO Category", orient="top"),
             ),
             order=alt.Order("order", sort="ascending"),
             tooltip=[
@@ -139,7 +153,49 @@ def _draw_busco_plots_for_render(
         .resolve_scale(y="independent")
     )
 
-    # Resize text and plot
+    # Secondary plot
+    # Drop down menu
+    dropdown = alt.binding_select(
+        options=[
+            'scaffold_n50',
+            'contigs_n50',
+            'percent_gaps',
+            'number_of_scaffolds',
+        ],
+        name="Assambly Statistics: "
+    )
+
+    xcol_param = alt.param(
+        value='scaffold_n50',
+        bind=dropdown
+    )
+
+    secondary_plot = alt.Chart(secondary_plot_data).mark_bar().encode(
+        x=alt.X('x:Q').title('Assambly Statistic'),
+        y=alt.Y('mag_id', axis=None),
+        tooltip=[alt.Tooltip('x:Q', title="value")],
+        opacity=alt.value(0.85)
+    ).transform_calculate(
+        x=f'datum[{xcol_param.name}]'
+    ).add_params(
+        xcol_param
+    ).properties(
+        width=width,
+        height=height * n_samples
+    ).facet(
+        row=alt.Row(
+            "sample_id",
+            title=None,
+            header=alt.Header(labelFontSize=0)
+        )
+    ).resolve_scale(
+        y="independent"
+    )
+
+    # concatenate plots horizontally
+    output_plot = alt.hconcat(busco_plot, secondary_plot, spacing=3)
+
+    # Resize text
     output_plot = output_plot.configure_axis(
         labelFontSize=labelFontSize, titleFontSize=titleFontSize
     )
@@ -151,7 +207,7 @@ def _draw_busco_plots_for_render(
     )
 
     # Return
-    return json.dumps(output_plot.to_dict())
+    return output_plot.to_json()
 
 
 def _run_busco(

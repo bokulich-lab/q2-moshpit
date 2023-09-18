@@ -52,10 +52,10 @@ def _draw_busco_plots_for_render(
     titleFontSize: int = None,
 ) -> str:
     """
-    Draws a hroizontal normalized bar plot for every sample for which BUSCO was
+    Draws a horizontal normalized bar plot for every sample for which BUSCO was
     run. Each barplot shows the BUSCO results for each of the MAGs in the
-    sample. The plots for all samples are drwan in one composite plot which
-    is then returned as a dictionary for rendering (but casted to a string).
+    sample. The plots for all samples are drawn in one composite plot which
+    is then returned as a dictionary for rendering (but cast to a string).
 
     Args:
         df (pd.core.frame.DataFrame): tabular batch summary for all samples

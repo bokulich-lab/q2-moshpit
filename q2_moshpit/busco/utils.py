@@ -246,7 +246,7 @@ def _run_busco(
 
     # For every unique sample dir run busco
     for sample_dir in sample_dirs:
-        # Get sample ide from tip dirname
+        # Get sample id from tip dirname
         sample = os.path.split(sample_dir)[-1]
 
         # Deep copy base comand extend it with the sample specific

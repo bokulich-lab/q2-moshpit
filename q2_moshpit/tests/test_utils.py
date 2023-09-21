@@ -61,6 +61,44 @@ class TestUtils(TestPluginBase):
         exp = ['--arg2', 'some-value', '--arg4']
         self.assertListEqual(obs, exp)
 
+    def test_process_common_inputs_mix_with_falsy_values(self):
+        data = {
+            "a": 0,
+            "b": 1,
+            "c": 0.0,
+            "d": 3.14,
+            "e": "",
+            "f": "Hello",
+            "g": None,
+            "h": 42,
+            "i": 0.0,
+            "j": [],
+            "k": "World",
+            "l": False,
+            "m": True,
+        }
+        observed = _process_common_input_params(fake_processing_func, data)
+        expected = [
+            "--a",
+            "0",
+            "--b",
+            "1",
+            "--c",
+            "0.0",
+            "--d",
+            "3.14",
+            "--f",
+            "Hello",
+            "--h",
+            "42",
+            "--i",
+            "0.0",
+            "--k",
+            "World",
+            "--m",
+        ]
+        self.assertSetEqual(set(observed), set(expected))
+
 
 if __name__ == '__main__':
     unittest.main()

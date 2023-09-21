@@ -136,3 +136,6 @@ dmypy.json
 
 # VS code settings
 .vscode
+
+# Ignore notebooks
+q2_moshpit/notebooks/

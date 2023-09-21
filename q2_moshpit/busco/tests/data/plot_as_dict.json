@@ -1,0 +1,630 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.14.1.json",
+  "config": {
+    "axis": {
+      "labelFontSize": 17,
+      "titleFontSize": 20
+    },
+    "header": {
+      "labelFontSize": 17,
+      "titleFontSize": 20
+    },
+    "legend": {
+      "labelFontSize": 17,
+      "titleFontSize": 20
+    },
+    "view": {
+      "continuousHeight": 300,
+      "continuousWidth": 300
+    }
+  },
+  "datasets": {
+    "data-86d6ccb2de4aae10868d6a86589fa41a": [
+      {
+        "BUSCO_percentage": 96.8,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~120/124",
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 96.0,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~119/124",
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 96.0,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~119/124",
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 96.0,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~119/124",
+        "mag_id": "fa0a025e-3fac-4e6b-8736-69a38c33b3f5",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 95.2,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~118/124",
+        "mag_id": "12f0542c-8375-4ec2-b25a-515962533a7a",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 96.0,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~119/124",
+        "mag_id": "971335f0-18b9-422e-81a7-5862c49b1e3d",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 96.0,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~119/124",
+        "mag_id": "040d5cd4-4230-4533-a0a9-f03e3263c338",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 96.0,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~119/124",
+        "mag_id": "e08a46f3-6fbe-4415-b10f-f11d0d187d17",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 96.8,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~120/124",
+        "mag_id": "e24225c7-6455-49b1-ad8d-86f95dfbfa2e",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "fa0a025e-3fac-4e6b-8736-69a38c33b3f5",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "12f0542c-8375-4ec2-b25a-515962533a7a",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "971335f0-18b9-422e-81a7-5862c49b1e3d",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "040d5cd4-4230-4533-a0a9-f03e3263c338",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "e08a46f3-6fbe-4415-b10f-f11d0d187d17",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "e24225c7-6455-49b1-ad8d-86f95dfbfa2e",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "fa0a025e-3fac-4e6b-8736-69a38c33b3f5",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "12f0542c-8375-4ec2-b25a-515962533a7a",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "971335f0-18b9-422e-81a7-5862c49b1e3d",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "040d5cd4-4230-4533-a0a9-f03e3263c338",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "e08a46f3-6fbe-4415-b10f-f11d0d187d17",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "e24225c7-6455-49b1-ad8d-86f95dfbfa2e",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "sample1"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "fa0a025e-3fac-4e6b-8736-69a38c33b3f5",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 3.2,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~4/124",
+        "mag_id": "12f0542c-8375-4ec2-b25a-515962533a7a",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "971335f0-18b9-422e-81a7-5862c49b1e3d",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "sample2"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "040d5cd4-4230-4533-a0a9-f03e3263c338",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "e08a46f3-6fbe-4415-b10f-f11d0d187d17",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "sample3"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "e24225c7-6455-49b1-ad8d-86f95dfbfa2e",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "sample3"
+      }
+    ],
+    "data-a93d7a0a94d75d2ace5979a9e91e0d4a": [
+      {
+        "contigs_n50": 170295,
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "number_of_scaffolds": 27,
+        "percent_gaps": 0.0,
+        "sample_id": "sample1",
+        "scaffold_n50": 170295
+      },
+      {
+        "contigs_n50": 109922,
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "number_of_scaffolds": 65,
+        "percent_gaps": 0.0,
+        "sample_id": "sample1",
+        "scaffold_n50": 109922
+      },
+      {
+        "contigs_n50": 111744,
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "number_of_scaffolds": 127,
+        "percent_gaps": 0.0,
+        "sample_id": "sample1",
+        "scaffold_n50": 111744
+      },
+      {
+        "contigs_n50": 114741,
+        "mag_id": "fa0a025e-3fac-4e6b-8736-69a38c33b3f5",
+        "number_of_scaffolds": 63,
+        "percent_gaps": 0.0,
+        "sample_id": "sample2",
+        "scaffold_n50": 114741
+      },
+      {
+        "contigs_n50": 171535,
+        "mag_id": "12f0542c-8375-4ec2-b25a-515962533a7a",
+        "number_of_scaffolds": 26,
+        "percent_gaps": 0.0,
+        "sample_id": "sample2",
+        "scaffold_n50": 171535
+      },
+      {
+        "contigs_n50": 104568,
+        "mag_id": "971335f0-18b9-422e-81a7-5862c49b1e3d",
+        "number_of_scaffolds": 127,
+        "percent_gaps": 0.0,
+        "sample_id": "sample2",
+        "scaffold_n50": 104568
+      },
+      {
+        "contigs_n50": 89358,
+        "mag_id": "040d5cd4-4230-4533-a0a9-f03e3263c338",
+        "number_of_scaffolds": 132,
+        "percent_gaps": 0.0,
+        "sample_id": "sample3",
+        "scaffold_n50": 89358
+      },
+      {
+        "contigs_n50": 114888,
+        "mag_id": "e08a46f3-6fbe-4415-b10f-f11d0d187d17",
+        "number_of_scaffolds": 60,
+        "percent_gaps": 0.0,
+        "sample_id": "sample3",
+        "scaffold_n50": 114888
+      },
+      {
+        "contigs_n50": 171506,
+        "mag_id": "e24225c7-6455-49b1-ad8d-86f95dfbfa2e",
+        "number_of_scaffolds": 27,
+        "percent_gaps": 0.0,
+        "sample_id": "sample3",
+        "scaffold_n50": 171506
+      }
+    ]
+  },
+  "hconcat": [
+    {
+      "data": {
+        "name": "data-86d6ccb2de4aae10868d6a86589fa41a"
+      },
+      "facet": {
+        "row": {
+          "field": "sample_id",
+          "title": "Sample ID",
+          "type": "nominal"
+        }
+      },
+      "resolve": {
+        "scale": {
+          "y": "independent"
+        }
+      },
+      "spec": {
+        "encoding": {
+          "color": {
+            "field": "category",
+            "legend": {
+              "orient": "top",
+              "title": "BUSCO Category"
+            },
+            "scale": {
+              "domain": [
+                "single",
+                "duplicated",
+                "fragmented",
+                "missing"
+              ],
+              "range": [
+                "#1E90FF",
+                "#87CEFA",
+                "#FFA500",
+                "#FF7F50"
+              ]
+            },
+            "type": "nominal"
+          },
+          "opacity": {
+            "value": 0.85
+          },
+          "order": {
+            "field": "order",
+            "sort": "ascending",
+            "type": "quantitative"
+          },
+          "tooltip": [
+            {
+              "field": "sample_id",
+              "title": "Sample ID",
+              "type": "nominal"
+            },
+            {
+              "field": "mag_id",
+              "title": "MAG ID",
+              "type": "nominal"
+            },
+            {
+              "field": "dataset",
+              "title": "Lineage dataset",
+              "type": "nominal"
+            },
+            {
+              "field": "fracc_markers",
+              "title": "Aprox. number of markers in this category",
+              "type": "nominal"
+            },
+            {
+              "field": "BUSCO_percentage",
+              "title": "Percentage [%]",
+              "type": "quantitative"
+            }
+          ],
+          "x": {
+            "aggregate": "sum",
+            "field": "BUSCO_percentage",
+            "stack": "normalize",
+            "title": "BUSCO fracc.",
+            "type": "quantitative"
+          },
+          "y": {
+            "axis": {
+              "title": "MAG ID"
+            },
+            "field": "mag_id",
+            "type": "nominal"
+          }
+        },
+        "height": 162,
+        "mark": {
+          "type": "bar"
+        },
+        "width": 600
+      }
+    },
+    {
+      "data": {
+        "name": "data-a93d7a0a94d75d2ace5979a9e91e0d4a"
+      },
+      "facet": {
+        "row": {
+          "field": "sample_id",
+          "header": {
+            "labelFontSize": 0
+          },
+          "title": null,
+          "type": "nominal"
+        }
+      },
+      "resolve": {
+        "scale": {
+          "y": "independent"
+        }
+      },
+      "spec": {
+        "encoding": {
+          "opacity": {
+            "value": 0.85
+          },
+          "tooltip": [
+            {
+              "field": "x",
+              "title": "value",
+              "type": "quantitative"
+            }
+          ],
+          "x": {
+            "field": "x",
+            "title": "Assembly Statistic",
+            "type": "quantitative"
+          },
+          "y": {
+            "axis": null,
+            "field": "mag_id",
+            "type": "nominal"
+          }
+        },
+        "height": 162,
+        "mark": {
+          "type": "bar"
+        },
+        "transform": [
+          {
+            "as": "x",
+            "calculate": "datum[param_1]"
+          }
+        ],
+        "width": 600
+      }
+    }
+  ],
+  "params": [
+    {
+      "bind": {
+        "input": "select",
+        "name": "Assambly Statistics: ",
+        "options": [
+          "scaffold_n50",
+          "contigs_n50",
+          "percent_gaps",
+          "number_of_scaffolds"
+        ]
+      },
+      "name": "param_1",
+      "value": "scaffold_n50"
+    }
+  ],
+  "spacing": 3
+}

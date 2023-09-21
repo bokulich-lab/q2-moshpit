@@ -46,13 +46,13 @@ kraken2_param_descriptions = {
     "threads": "Number of threads.",
     "confidence": "Confidence score threshold.",
     "minimum_base_quality": "Minimum base quality used in classification."
-    " Only applies when reads are used as input.",
+                            " Only applies when reads are used as input.",
     "memory_mapping": "Avoids loading the database into RAM.",
     "minimum_hit_groups": "Minimum number of hit groups (overlapping "
-    "k-mers sharing the same minimizer).",
+                          "k-mers sharing the same minimizer).",
     "quick": "Quick operation (use first hit or hits).",
     "report_minimizer_data": "Include number of read-minimizers per-taxon and"
-    " unique read-minimizers per-taxon in the repot.",
+                             " unique read-minimizers per-taxon in the repot.",
 }
 
 plugin = Plugin(
@@ -103,19 +103,19 @@ plugin.methods.register_function(
     parameter_descriptions={
         "min_contig": "Minimum size of a contig for binning.",
         "max_p": 'Percentage of "good" contigs considered for binning '
-        "decided by connection among contigs. The greater, the "
-        "more sensitive.",
+                 "decided by connection among contigs. The greater, the "
+                 "more sensitive.",
         "min_s": "Minimum score of a edge for binning. The greater, the "
-        "more specific.",
+                 "more specific.",
         "max_edges": "Maximum number of edges per node. The greater, the "
-        "more sensitive.",
+                     "more sensitive.",
         "p_tnf": "TNF probability cutoff for building TNF graph. Use it to "
-        "skip the preparation step. (0: auto)",
+                 "skip the preparation step. (0: auto)",
         "no_add": "Turning off additional binning for lost or small contigs.",
         "min_cv": "Minimum mean coverage of a contig in each library for "
-        "binning.",
+                  "binning.",
         "min_cv_sum": "Minimum total effective mean coverage of a contig "
-        "(sum of depth over minCV) for binning.",
+                      "(sum of depth over minCV) for binning.",
         "min_cls_size": "Minimum size of a bin as the output.",
         "num_threads": "Number of threads to use (0: use all cores).",
         "seed": "For exact reproducibility. (0: use random seed)",
@@ -196,7 +196,7 @@ plugin.methods.register_function(
     },
     parameter_descriptions={
         "threshold": "Bracken: number of reads required PRIOR to abundance "
-        "estimation to perform re-estimation.",
+                     "estimation to perform re-estimation.",
         "read_len": "Bracken: read length to get all classifications for.",
         "level": "Bracken: taxonomic level to estimate abundance at.",
     },
@@ -249,29 +249,29 @@ plugin.methods.register_function(
     },
     parameter_descriptions={
         "collection": "Name of the database collection to be fetched. "
-        "Please check https://benlangmead.github.io/aws-"
-        "indexes/k2 for the description of the available "
-        "options.",
+                      "Please check https://benlangmead.github.io/aws-"
+                      "indexes/k2 for the description of the available "
+                      "options.",
         "threads": "Number of threads. Only applicable when building a "
-        "custom database.",
+                   "custom database.",
         "kmer_len": "K-mer length in bp/aa.",
         "minimizer_len": "Minimizer length in bp/aa.",
         "minimizer_spaces": "Number of characters in minimizer that are "
-        "ignored in comparisons.",
+                            "ignored in comparisons.",
         "no_masking": "Avoid masking low-complexity sequences prior to "
-        "building; masking requires dustmasker or segmasker "
-        "to be installed in PATH",
+                      "building; masking requires dustmasker or segmasker "
+                      "to be installed in PATH",
         "max_db_size": "Maximum number of bytes for Kraken 2 hash table; "
-        "if the estimator determines more would normally be "
-        "needed, the reference library will be downsampled "
-        "to fit.",
+                       "if the estimator determines more would normally be "
+                       "needed, the reference library will be downsampled "
+                       "to fit.",
         "use_ftp": "Use FTP for downloading instead of RSYNC.",
         "load_factor": "Proportion of the hash table to be populated.",
         "fast_build": "Do not require database to be deterministically "
-        "built when using multiple threads. This is faster, "
-        "but does introduce variability in minimizer/LCA pairs.",
+                      "built when using multiple threads. This is faster, "
+                      "but does introduce variability in minimizer/LCA pairs.",
         "read_len": "Ideal read lengths to be used while building the Bracken "
-        "database.",
+                    "database.",
     },
     output_descriptions={
         "kraken2_database": "Kraken2 database.",
@@ -334,13 +334,13 @@ plugin.methods.register_function(
     },
     output_descriptions={
         "table": "A presence/absence table of selected features. The features"
-        " are not of even ranks, but will be the most specific rank"
-        " available.",
+                 " are not of even ranks, but will be the most specific rank"
+                 " available.",
         "taxonomy": "Infra-clade ranks are ignored "
-        "unless they are strain-level. Missing internal ranks "
-        "are annotated by their next most specific rank, "
-        "with the exception of k__Bacteria and k__Archaea which "
-        "match their domain's name.",
+                    "unless they are strain-level. Missing internal ranks "
+                    "are annotated by their next most specific rank, "
+                    "with the exception of k__Bacteria and k__Archaea which "
+                    "match their domain's name.",
     },
     name="Select downstream features from Kraken 2",
     description="Convert a Kraken 2 report, which is an annotated NCBI "
@@ -471,65 +471,71 @@ busco_params = {
 }
 busco_param_descriptions = {
     "mode": "Specify which BUSCO analysis mode to run."
-    "There are three valid modes: 1) 'geno' or 'genome', "
-    "for genome assemblies (DNA), 2) 'tran' or 'transcriptome', "
-    "for transcriptome assemblies (DNA) and 3) 'prot' or 'proteins' "
-    "for annotated gene sets (protein).",
+            "Currently only the 'genome' or 'geno' option is supported, "
+            "for genome assemblies. In the future modes for transcriptome"
+            "assemblies and for annotated gene sets (proteins) will be made"
+            "available.",
     "lineage_dataset": "Specify the name of the BUSCO lineage to be used. "
-    "To see all possible options run `busco --list-datasets`.",
+                       "To see all possible options run `busco "
+                       "--list-datasets`.",
     "augustus": "Use augustus gene predictor for eukaryote runs.",
     "augustus_parameters": "Pass additional arguments to Augustus. "
-    "All arguments should be contained within a single string with no "
-    "white space, with each argument separated by a comma. "
-    "Example: '--PARAM1=VALUE1,--PARAM2=VALUE2'.",
+                           "All arguments should be contained within a single "
+                           "string with no white space, with each argument "
+                           "separated by a comma. "
+                           "Example: '--PARAM1=VALUE1,--PARAM2=VALUE2'.",
     "augustus_species": "Specify a species for Augustus training.",
     "auto_lineage": "Run auto-lineage to find optimum lineage path.",
     "auto_lineage_euk": "Run auto-placement just on eukaryote tree to find"
-    "optimum lineage path.",
+                        "optimum lineage path.",
     "auto_lineage_prok": "Run auto-lineage just on non-eukaryote trees to "
-    "find optimum lineage path.",
+                         "find optimum lineage path.",
     "cpu": "Specify the number (N=integer) of threads/cores to use.",
     "config": "Provide a config file.",
     "contig_break": "Number of contiguous Ns to signify a break between "
-    "contigs. "
-    "Default is n=10. See https://gitlab.com/ezlab/busco/-/issues/691 for a "
-    "more detailed explanation.",
+                    "contigs. Default is n=10. "
+                    "See https://gitlab.com/ezlab/busco/-/issues/691 for a "
+                    "more detailed explanation.",
     "datasets_version": "Specify the version of BUSCO datasets, e.g. odb10.",
     "download": "Download dataset. Possible values are a specific dataset "
-    "name, 'all', 'prokaryota', 'eukaryota', or 'virus'. If used together "
-    "with other command line arguments, make sure to place this last. "
-    "Example: '[dataset ...]'.",
+                "name, 'all', 'prokaryota', 'eukaryota', or 'virus'. "
+                "If used together with other command line arguments, "
+                "make sure to place this last. Example: '[dataset ...]'.",
     "download_base_url": "Set the url to the remote BUSCO dataset location.",
     "download_path": "Specify local filepath for storing BUSCO dataset "
-    "downloads.",
+                     "downloads.",
     "evalue": "E-value cutoff for BLAST searches. "
-    "Allowed formats, 0.001 or 1e-03, Default: 1e-03.",
+              "Allowed formats, 0.001 or 1e-03, Default: 1e-03.",
     "force": "Force rewriting of existing files. Must be used when output "
-    "files with the provided name already exist.",
+             "files with the provided name already exist.",
     "help": "Show this help message and exit.",
     "limit": "How many candidate regions (contig or transcript) to consider "
-    "per BUSCO. Default: 3.",
+             "per BUSCO. Default: 3.",
     "list_datasets": "Print the list of available BUSCO datasets.",
     "long": "Optimization Augustus self-training mode (Default: Off); "
-    "adds considerably to the run time, "
-    "but can improve results for some non-model organisms.",
+            "adds considerably to the run time, "
+            "but can improve results for some non-model organisms.",
     "metaeuk_parameters": "Pass additional arguments to Metaeuk for the first "
-    "run. All arguments should be contained within a single string."
-    "with no white space, with each argument separated by a comma."
-    "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
+                          "run. All arguments should be contained within a "
+                          "single string with no white space, with each "
+                          "argument separated by a comma."
+                          "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
     "metaeuk_rerun_parameters": "Pass additional arguments to Metaeuk for the "
-    "second run. All arguments should be contained within a single string "
-    "with no white space, with each argument separated by a comma. "
-    "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
+                                "second run. All arguments should be "
+                                "contained within a single string with no"
+                                "white space, with each argument separated by "
+                                "a comma. "
+                                "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
     "miniprot": "Use miniprot gene predictor for eukaryote runs.",
     "offline": "To indicate that BUSCO cannot attempt to download files.",
     "quiet": "Disable the info logs, displays only errors.",
     "restart": "Continue a run that had already partially completed.",
     "scaffold_composition": "Writes ACGTN content per scaffold to a file "
-    "`scaffold_composition.txt`.",
+                            "`scaffold_composition.txt`.",
     "tar": "Compress some subdirectories with many files to save space.",
     "update_data": "Download and replace with last versions all lineages "
-    "datasets and files necessary to their automated selection.",
+                   "datasets and files necessary to their automated "
+                   "selection.",
     "version": "Show this version and exit.",
 }
 
@@ -546,8 +552,8 @@ plugin.visualizers.register_function(
     parameter_descriptions=busco_param_descriptions,
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-    "(Benchmarking Universal Single-Copy Ortholog assessment tool) "
-    "to assess the quality of assembled MAGs and generates "
-    "visualizations summarising the results.",
+                "(Benchmarking Universal Single-Copy Ortholog assessment tool)"
+                " to assess the quality of assembled MAGs and generates "
+                "visualizations summarising the results.",
     citations=[citations["manni_busco_2021"]],
 )

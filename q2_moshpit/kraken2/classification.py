@@ -61,10 +61,11 @@ def classify_kraken2(
         memory_mapping=False,
         minimum_hit_groups=2,
         quick=False,
-        report_minimizer_data=False
+        report_minimizer_data=False,
+        num_partitions=None
 ):
     kwargs = {k: v for k, v in locals().items()
-              if k not in ["seqs", "kraken2_db", "ctx"]}
+              if k not in ["seqs", "kraken2_db", "ctx", "num_partitions"]}
 
     _classify_kraken2 = ctx.get_action("moshpit", "_classify_kraken2")
     collate_kraken2_reports = ctx.get_action("moshpit",
@@ -84,7 +85,7 @@ def classify_kraken2(
     else:
         raise NotImplementedError()
 
-    (partitioned_seqs,) = partition_method(seqs)
+    (partitioned_seqs,) = partition_method(seqs, num_partitions)
 
     kraken2_reports = []
     kraken2_outputs = []

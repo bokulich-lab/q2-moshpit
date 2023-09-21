@@ -54,6 +54,13 @@ kraken2_param_descriptions = {
                              ' unique read-minimizers per-taxon in the repot.'
 }
 
+partition_params = {"num_partitions": Int % Range(1, None)}
+partition_param_descriptions = {
+        "num_partitions": "The number of partitions to split the contigs"
+        " into. Defaults to partitioning into individual"
+        " samples."
+}
+
 plugin = Plugin(
     name='moshpit',
     version=q2_moshpit.__version__,
@@ -151,7 +158,7 @@ plugin.pipelines.register_function(
         "seqs": T_kraken_in,
         "kraken2_db": Kraken2DB,
     },
-    parameters=kraken2_params,
+    parameters={**kraken2_params, **partition_params},
     outputs=[
         ('reports', T_kraken_out_rep),
         ('hits', T_kraken_out_hits),
@@ -161,7 +168,10 @@ plugin.pipelines.register_function(
                 "and assembled MAGs, can be provided.",
         "kraken2_db": "Kraken 2 database.",
     },
-    parameter_descriptions=kraken2_param_descriptions,
+    parameter_descriptions={
+        **kraken2_param_descriptions,
+        **partition_param_descriptions
+    },
     output_descriptions={
         'reports': 'Reports produced by Kraken2.',
         'hits': 'Output files produced by Kraken2.',

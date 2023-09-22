@@ -528,7 +528,7 @@
             },
             {
               "field": "BUSCO_percentage",
-              "title": "Percentage [%]",
+              "title": "% BUSCOs",
               "type": "quantitative"
             }
           ],

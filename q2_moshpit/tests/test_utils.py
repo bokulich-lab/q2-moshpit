@@ -22,6 +22,18 @@ def fake_processing_func(key, val):
         return [_construct_param(key), str(val)]
 
 
+def fake_processing_func_no_falsy_filtering(key, val):
+    """
+    NOTE: There is a need for a function that does this since
+    `_process_common_input_params` already filter falsy values.
+    If a second filter is applied then some parameters are omitted.
+    """
+    if isinstance(val, bool):
+        return [_construct_param(key)]
+    else:
+        return [_construct_param(key), str(val)]
+
+
 class TestUtils(TestPluginBase):
     package = 'q2_moshpit.tests'
 
@@ -77,7 +89,9 @@ class TestUtils(TestPluginBase):
             "l": False,
             "m": True,
         }
-        observed = _process_common_input_params(fake_processing_func, data)
+        observed = _process_common_input_params(
+            fake_processing_func_no_falsy_filtering, data
+        )
         expected = [
             "--a",
             "0",

@@ -3,7 +3,6 @@ import q2templates
 from shutil import copytree
 import pandas as pd
 import altair as alt
-import seaborn as sns
 import matplotlib.pyplot as plt
 from zipfile import ZipFile
 from .._utils import run_command
@@ -12,26 +11,36 @@ from typing import List, Dict
 from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
 
 
+arguments_with_hyphens = {
+    "auto_lineage": "auto-lineage",
+    "auto_lineage_euk": "auto-lineage-euk",
+    "auto_lineage_prok": "auto-lineage-prok",
+    "list_datasets": "list-datasets",
+    "update_data": "update-data",
+}
+
+
 def _parse_busco_params(arg_key, arg_val) -> List[str]:
     """Creates a list with argument and its value to be consumed by MetaBAT 2.
-
     Argument names will be converted to command line parameters by
     appending a '--' prefix and concatenating words separated by a '_',
     e.g.: 'some_parameter_x' -> '--someParameterX'.
-
     Args:
         arg_key (str): Argument name.
         arg_val: Argument value.
-
     Returns:
         [converted_arg, arg_value]: List containing a prepared command line
             parameter and, optionally, its value.
     """
 
+    # If the key is one of
+    if arg_key in arguments_with_hyphens.keys():
+        arg_key = arguments_with_hyphens[arg_key]
+
     if isinstance(arg_val, bool) and arg_val:
-        return [f"--{arg_key.replace('_', '-')}"]
+        return [f"--{arg_key}"]
     else:
-        return [f"--{arg_key.replace('_', '-')}", str(arg_val)]
+        return [f"--{arg_key}", str(arg_val)]
 
 
 def _draw_busco_plots_for_render(
@@ -292,58 +301,68 @@ def _draw_busco_plots(
         # Read in text file as data frame
         df = pd.read_csv(filepath_or_buffer=path_to_summary, sep="\t")
 
-        # Compute cumulative percentages
-        df["single"] = df["Single"]
-        df["duplicated"] = df["Single"] + df["Duplicated"]
-        df["fragmented"] = df["duplicated"] + df["Fragmented"]
-        df["missing"] = df["fragmented"] + df["Missing"]
+        # Clean column names
+        df.columns = df.columns.str.replace(' ', '_')
+        df.columns = df.columns.str.replace('[^a-zA-Z0-9_]', '', regex=True)
+        df.columns = df.columns.str.lower()
+        df["mag_id"] = df["input_file"].str.split('.', expand=True)[0]
 
-        # Get sample id without extension (.fasta)
-        df["input_file"] = df["Input_file"].str.split(".", expand=True)[0]
+        # Make new columns for plotting
+        df["single_"] = df["single"]
+        df["duplicated_"] = df["single_"] + df["duplicated"]
+        df["fragmented_"] = df["duplicated_"] + df["fragmented"]
+        df["missing_"] = df["fragmented_"] + df['missing']
 
-        # Set the style
-        sns.set(style="whitegrid")
-        sns.set_palette("colorblind")
+        # Create horizontal stacked bar plot
+        height = 0.9  # Height of the bars
+        a = 0.7
 
-        # Create a horizontal stacked barplot
-        plt.figure(figsize=(10, 6))
-        sns.barplot(
-            data=df, y="input_file", x="missing", color="r", label="Missing"
-        )
-        sns.barplot(
-            data=df,
-            y="input_file",
-            x="fragmented",
-            color="tab:orange",
-            label="Fragmented",
-        )
-        sns.barplot(
-            data=df,
-            y="input_file",
-            x="duplicated",
-            color="tab:cyan",
-            label="Duplicated",
-        )
-        sns.barplot(
-            data=df,
-            y="input_file",
-            x="single",
-            color="tab:blue",
-            label="Single",
-        )
+        for i, mag_id in enumerate(df.mag_id.unique()):
+            row = df[df["mag_id"] == mag_id]
+            plt.barh(
+                i, row["missing_"], height, color='r',
+                label='Missing', alpha=a
+            )
+            plt.barh(
+                i, row["fragmented_"], height, color='tab:orange',
+                label='Fragmented', alpha=a
+            )
+            plt.barh(
+                i, row["duplicated_"], height, color='tab:cyan',
+                label='Duplicated', alpha=a
+            )
+            plt.barh(
+                i, row["single_"], height, color='tab:blue',
+                label='Single', alpha=a
+            )
 
-        # Customize the plot
-        plt.xlabel("%BUSCO")
+        # Add vertical lines and adjust x-axis limit
+        plt.gca().xaxis.grid(True, linestyle='--', linewidth=0.5)
+        plt.xlim(0, 100)
+
+        # Add labels, title, and legend
         plt.ylabel("MAG ID's")
-        plt.legend(loc="lower right")
-        plt.title(f"Sample ID: {sample_id}")
+        plt.xlabel('% BUSCO')
+        plt.title('')
+
+        if len(df.mag_id.unique()[0]) > 8:
+            abbreviated_uuids = [
+                uuid[0:8] + "..." for uuid in df.mag_id.unique()
+            ]
+        else:
+            abbreviated_uuids = df.mag_id.unique()
+
+        plt.yticks(range(len(df.mag_id.unique())), abbreviated_uuids)
+        plt.legend(
+            ['Missing', 'Fragmented', 'Duplicated', 'Single'], loc='lower left'
+        )
 
         # Save figure to file
         output_name = os.path.join(
             plots_dir, sample_id, "plot_batch_summary.svg"
         )
         os.makedirs(os.path.dirname(output_name), exist_ok=True)
-        plt.savefig(output_name, format="svg")
+        plt.savefig(output_name, format="svg", bbox_inches='tight')
 
         # Save path to dictionary
         paths_to_plots[sample_id] = output_name

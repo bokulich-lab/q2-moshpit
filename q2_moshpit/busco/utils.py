@@ -143,7 +143,7 @@ def _draw_busco_plots_for_render(
                     "fracc_markers",
                     title="Aprox. number of markers in this category"
                 ),
-                alt.Tooltip("BUSCO_percentage", title="Percentage [%]"),
+                alt.Tooltip("BUSCO_percentage", title="% BUSCOs"),
             ],
             opacity=alt.value(0.85),
         )
@@ -242,7 +242,7 @@ def _run_busco(
 
     # For every unique sample dir run busco
     for sample_dir in sample_dirs:
-        # Get sample ide from tip dirname
+        # Get sample id from tip dirname
         sample = os.path.split(sample_dir)[-1]
 
         # Deep copy base command extend it with the sample specific

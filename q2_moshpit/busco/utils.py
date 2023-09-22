@@ -400,8 +400,8 @@ def _collect_summaries_and_save(
     pd.DataFrame, which is saved to file.
 
     Args:
-        all_summaries_path (str): Directory path where to write the 
-            pd.DataFrame 
+        all_summaries_path (str): Directory path where to write the
+            pd.DataFrame
         path_to_run_summaries (dict): dict where key is sample id
         and value is path "tmp/sample_id/batch_summary.txt"
 

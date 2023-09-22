@@ -29,7 +29,7 @@ class TestBUSCO(TestPluginBase):
 
     def get_dummy_mags(self):
         """
-        Fixture for BUSCO testing. Initializes a MultiMAGSequencesDirFmt which 
+        Fixture for BUSCO testing. Initializes a MultiMAGSequencesDirFmt which
         gets passed to the tests.
 
         Returns:

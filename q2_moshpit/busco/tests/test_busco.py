@@ -9,6 +9,7 @@
 import os
 import tempfile
 import pandas as pd
+# import shutil
 from q2_moshpit.busco.busco import busco
 from q2_moshpit.busco.utils import (
     _parse_busco_params,
@@ -329,8 +330,10 @@ class TestBUSCO(TestPluginBase):
             not_used_2 (unittest.mock): mock object for function
                 `_zip_busco_plots`. Not used.
             run_busco (unittest.mock): mock object for function
-                `_run_busco`. 
+                `_run_busco`.
         """
+        # path_to_look_at_html = "/Users/santiago/Downloads"
+
         with tempfile.TemporaryDirectory() as tmp_path:
             # Define sid effects and return arguments for patches
             # This side effect will return the path_to_run_summaries dict
@@ -348,6 +351,9 @@ class TestBUSCO(TestPluginBase):
 
             # Run busco
             busco(output_dir=str(tmp_path), bins=self.get_dummy_mags())
+
+            # For render debugging
+            # shutil.copy(f"{tmp_path}/index.html", path_to_look_at_html)
 
             # Check for the existence of the html file
             self.assertTrue(os.path.exists(f"{tmp_path}/index.html"))

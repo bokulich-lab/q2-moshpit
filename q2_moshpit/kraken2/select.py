@@ -124,7 +124,6 @@ def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
     # use list to avoid index name change
     taxonomy = taxonomy.loc[list(table.columns)]
 
-    print(table)
     return table, taxonomy
 
 

@@ -383,7 +383,6 @@ class TestKrakenSelectEdgeCases(unittest.TestCase):
         pandas.testing.assert_frame_equal(exp_table, table)
         pandas.testing.assert_frame_equal(exp_tax, taxonomy)
 
-
     def test_kraken_to_ncbi_tree_kingdom_promotion(self):
         dirfmt = self.make_dirfmt("""
         R;root

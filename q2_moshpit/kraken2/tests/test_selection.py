@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 import shutil
 import tempfile
+import unittest
 
 import pandas as pd
 import pandas.testing
@@ -112,10 +113,9 @@ class TestKrakenSelect(TestPluginBase):
         obs_tree = _kraken_to_ncbi_tree(report_df)
 
         # skbio.TreeNode doesn't define an equality operator, so performing
-        # this test on newick strings (which is probably fragile)
+        # this test on newick strings (there is only one ordering, so unless
+        # skbio changes its iteration order, this should be stable enough)
         self.assertEqual(str(obs_tree), str(exp_tree))
-
-        raise NotImplementedError('Additional tests needed.')
 
     # The following test is currently failing b/c the format is looking
     # for file names that don't exist in the `outputs-mags` directory. It's
@@ -211,3 +211,193 @@ class TestKrakenSelect(TestPluginBase):
     #     exp.columns = ['Taxon']
     #     exp.index.name = 'Feature ID'
     #     pandas.testing.assert_frame_equal(obs, exp)
+
+
+class TestKrakenSelectEdgeCases(unittest.TestCase):
+
+    def make_dirfmt(self, string, coverage=False):
+        """
+        This is a trivial format so that the indentation and rank can be
+        easily inspected by the reader.
+        """
+        rows = []
+        for idx, line in enumerate(string.split('\n')):
+            line = line.strip()
+            if not line:
+                continue
+            tax_id = idx  # we can pretend
+            if coverage:
+                cover, rank, taxonomy_fragment = line.split(';')
+            else:
+                rank, taxonomy_fragment = line.split(';')
+                cover = 0.5
+            rows.append(
+                dict(perc_frags_covered=cover,
+                     pad1=0,
+                     pad2=0,
+                     rank=rank,
+                     ncbi_tax_id=tax_id,
+                     name=taxonomy_fragment)
+            )
+        df = pd.DataFrame(rows)
+
+        dirfmt = Kraken2ReportDirectoryFormat()
+        with open(dirfmt.path / "sample1.report.txt", 'w') as fh:
+            df.to_csv(fh, header=False, index=False, sep='\t')
+
+        return dirfmt
+
+    def make_exp(self, rows):
+        taxonomy = pd.DataFrame(rows, columns=['Feature ID', 'Taxon'])
+        taxonomy['Feature ID'] = taxonomy['Feature ID'].apply(str)
+        taxonomy = taxonomy.set_index('Feature ID')
+
+        table = pd.DataFrame({str(idx): True for idx, _ in rows},
+                             index=['sample1'])
+        return taxonomy, table
+
+    def test_kraken_to_ncbi_tree_simple(self):
+        dirfmt = self.make_dirfmt("""
+        R;root
+        D;  a
+        D;  b
+        D;  c
+        """)
+        exp_tax, exp_table = self.make_exp([
+            (2, "d__a"),
+            (3, "d__b"),
+            (4, "d__c"),
+        ])
+
+        table, taxonomy = kraken2_to_features(dirfmt)
+
+        pandas.testing.assert_frame_equal(exp_table, table)
+        pandas.testing.assert_frame_equal(exp_tax, taxonomy)
+
+    def test_kraken_to_ncbi_tree_no_tricks(self):
+        dirfmt = self.make_dirfmt("""
+        R;root
+        D;  a
+        K;    a.a
+        K;    a.b
+        D;  b
+        K;    b.a
+        D;  c
+        """)
+        exp_tax, exp_table = self.make_exp([
+            (3, "d__a;k__a.a"),
+            (4, "d__a;k__a.b"),
+            (6, "d__b;k__b.a"),
+            (7, "d__c"),
+        ])
+
+        table, taxonomy = kraken2_to_features(dirfmt)
+
+        pandas.testing.assert_frame_equal(exp_table, table)
+        pandas.testing.assert_frame_equal(exp_tax, taxonomy)
+
+    def test_kraken_to_ncbi_tree_no_nested_end(self):
+        dirfmt = self.make_dirfmt("""
+        R;root
+        D;  a
+        K;    a.a
+        K;    a.b
+        D;  b
+        K;    b.a
+        P;      b.a.a
+        """)
+        exp_tax, exp_table = self.make_exp([
+            (3, "d__a;k__a.a"),
+            (4, "d__a;k__a.b"),
+            (7, "d__b;k__b.a;p__b.a.a"),
+        ])
+
+        table, taxonomy = kraken2_to_features(dirfmt)
+
+        pandas.testing.assert_frame_equal(exp_table, table)
+        pandas.testing.assert_frame_equal(exp_tax, taxonomy)
+
+    def test_kraken_to_ncbi_tree_infraclade_ranks(self):
+        dirfmt = self.make_dirfmt("""
+         R;root
+         D;  a
+        D1;    a.s
+         K;    a.b
+        K1;      a.b.s
+         P;        a.b.s.a
+         D;  b
+         K;    b.a
+         P;      b.a.a
+        P1;        b.a.a.a
+        """)
+        exp_tax, exp_table = self.make_exp([
+            (6, "d__a;k__a.b;p__a.b.s.a"),
+            (9, "d__b;k__b.a;p__b.a.a"),
+        ])
+
+        table, taxonomy = kraken2_to_features(dirfmt)
+
+        pandas.testing.assert_frame_equal(exp_table, table)
+        pandas.testing.assert_frame_equal(exp_tax, taxonomy)
+
+    def test_kraken_to_ncbi_tree_subspecies_and_skip(self):
+        dirfmt = self.make_dirfmt("""
+         R;root
+         K;  a
+        K1;    a.s
+         P;    a.b
+        P1;      a.b.s
+         C;        a.b.s.a
+         S;          a.b.s.a.a
+        S1;            a.b.s.a.a.a
+        """)
+
+        exp_tax, exp_table = self.make_exp([
+            (8, "d__containing k__a;k__a;p__a.b;c__a.b.s.a;"
+                "o__containing s__a.b.s.a.a;f__containing s__a.b.s.a.a;"
+                "g__containing s__a.b.s.a.a;s__a.b.s.a.a;s1__a.b.s.a.a.a"),
+        ])
+
+        table, taxonomy = kraken2_to_features(dirfmt)
+
+        pandas.testing.assert_frame_equal(exp_table, table)
+        pandas.testing.assert_frame_equal(exp_tax, taxonomy)
+
+    def test_kraken_to_ncbi_tree_with_coverage_filter(self):
+        dirfmt = self.make_dirfmt("""
+        .5;R;root
+        .4;K;  a
+        .4;P;    a.a
+        .0;P;    a.b
+        .2;K;  b
+        .0;P;    b.a
+        .0;K;  c
+        """, coverage=True)
+        exp_tax, exp_table = self.make_exp([
+            (3, "d__containing k__a;k__a;p__a.a"),
+            (5, "d__containing k__b;k__b"),
+        ])
+
+        table, taxonomy = kraken2_to_features(dirfmt)
+
+        pandas.testing.assert_frame_equal(exp_table, table)
+        pandas.testing.assert_frame_equal(exp_tax, taxonomy)
+
+
+    def test_kraken_to_ncbi_tree_kingdom_promotion(self):
+        dirfmt = self.make_dirfmt("""
+        R;root
+        D;  Bacteria
+        P;    A
+        D;  Archaea
+        P;    B
+        """)
+        exp_tax, exp_table = self.make_exp([
+            (3, "d__Bacteria;k__Bacteria;p__A"),
+            (5, "d__Archaea;k__Archaea;p__B"),
+        ])
+
+        table, taxonomy = kraken2_to_features(dirfmt)
+
+        pandas.testing.assert_frame_equal(exp_table, table)
+        pandas.testing.assert_frame_equal(exp_tax, taxonomy)

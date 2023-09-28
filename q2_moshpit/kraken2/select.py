@@ -120,6 +120,9 @@ def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
 
     table = pd.DataFrame(rows).fillna(False)
     taxonomy = _to_taxonomy(full_tree)
+    # filter taxonomy to only IDs in table
+    # use list to avoid index name change
+    taxonomy = taxonomy.loc[list(table.columns)]
 
     return table, taxonomy
 
@@ -162,9 +165,16 @@ def _kraken_to_ncbi_tree(df):
 
     # last entry is always a tip
     _, parent_node = stack[-1]
+    # It is possible for the last row to be an infra-clade tip,
+    # so walk backwards up the stack until a standard node (with length)
+    # is found
+    while stack and parent_node.length == 0:
+        _, parent_node = stack.pop()
+
     if parent_node.children:
         parent_node.children[0].is_actual_tip = True
 
+    print(tree)
     return tree
 
 
@@ -212,7 +222,7 @@ def _pad_ranks(ranks):
             last_good_label = f'{r}__{label}'
         elif taxonomy:
             if r == 'k' and available.get('d') in ('Bacteria', 'Archaea'):
-                # it is too strange to propogate upwards for these 'kingdoms'
+                # it is too strange to propagate upwards for these 'kingdoms'
                 taxonomy.append(f"k__{available['d']}")
             else:
                 # smear the most specific label we have upwards

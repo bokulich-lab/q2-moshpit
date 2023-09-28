@@ -13,6 +13,7 @@ from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
+from q2_types.feature_map import FeatureMap, MAGtoContigs
 from q2_types.sample_data import SampleData
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 from qiime2.core.type import (Properties, TypeMap)
@@ -20,7 +21,6 @@ from qiime2.plugin import (Plugin, Citations)
 
 import q2_moshpit
 from q2_types_genomics.feature_data import NOG, MAG
-from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.genome_data import BLAST6
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB

@@ -39,6 +39,7 @@ setup(
         'q2_moshpit.eggnog': [
             'tests/data/*',
             'tests/data/contig-sequences-1/*',
+            'tests/data/mag-sequences/*',
             'tests/data/random-db-1/*',
             'tests/data/good_hits/*',
             'tests/data/bad_hits/*',

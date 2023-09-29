@@ -376,16 +376,17 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,
-    inputs={'input_sequences': SampleData[Contigs],
-            'diamond_db': ReferenceDB[Diamond],
-            },
+    inputs={
+        'sequences': SampleData[Contigs] | FeatureData[MAG],
+        'diamond_db': ReferenceDB[Diamond],
+    },
     parameters={
         'num_cpus': Int,
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'input_sequences': 'Sequence data of the contigs we want to '
-                           'search for hits using the Diamond Database',
+        'sequences': 'Sequence data of the contigs we want to '
+                     'search for hits using the Diamond Database',
         'diamond_db': 'The filepath to an artifact containing the'
                       'Diamond database',
     },
@@ -397,9 +398,10 @@ plugin.methods.register_function(
                         'option should only be used on clusters or other '
                         'machines with enough memory.',
     },
-    outputs=[('eggnog_hits', SampleData[BLAST6]),
-             ('table', FeatureTable[Frequency])
-             ],
+    outputs=[
+        ('eggnog_hits', SampleData[BLAST6]),
+        ('table', FeatureTable[Frequency])
+    ],
     name='Run eggNOG search using diamond aligner',
     description="This method performs the steps by which we find our "
                 "possible target sequences to annotate using the diamond "

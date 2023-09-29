@@ -15,7 +15,9 @@ import pandas as pd
 
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from q2_types_genomics.feature_data import OrthologAnnotationDirFmt, MAGSequencesDirFmt
+from q2_types_genomics.feature_data import (
+    OrthologAnnotationDirFmt, MAGSequencesDirFmt
+)
 from q2_types_genomics.reference_db import EggnogRefDirFmt
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types_genomics.reference_db import DiamondDatabaseDirFmt

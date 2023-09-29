@@ -139,6 +139,10 @@ T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({
         SampleData[Kraken2Reports % Properties('reads')],
         SampleData[Kraken2Outputs % Properties('reads')]
     ),
+    SampleData[Contigs]: (
+        SampleData[Kraken2Reports % Properties('contigs')],
+        SampleData[Kraken2Outputs % Properties('contigs')]
+    ),
     FeatureData[MAG]: (
         FeatureData[Kraken2Reports % Properties('mags')],
         FeatureData[Kraken2Outputs % Properties('mags')]
@@ -157,8 +161,8 @@ plugin.methods.register_function(
         ('hits', T_kraken_out_hits),
     ],
     input_descriptions={
-        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
-                "and assembled MAGs, can be provided.",
+        "seqs": "The sequences to be classified. Single-end or paired-end "
+                "reads, contigs, or MAGs can be provided.",
         "kraken2_db": "Kraken 2 database.",
     },
     parameter_descriptions=kraken2_param_descriptions,

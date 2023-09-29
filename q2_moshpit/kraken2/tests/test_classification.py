@@ -10,26 +10,26 @@ import unittest
 from subprocess import CalledProcessError
 
 import pandas as pd
+from unittest.mock import patch, ANY, call
+
 from q2_types.per_sample_sequences import (
     SingleLanePerSampleSingleEndFastqDirFmt,
     SingleLanePerSamplePairedEndFastqDirFmt,
 )
-from qiime2 import Artifact
-
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
+from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat, Kraken2DBDirectoryFormat,
 )
+from q2_moshpit.kraken2.classification import (
+    _get_seq_paths, _construct_output_paths, _classify_kraken2,
+    classify_kraken2
+)
 
-from unittest.mock import patch, ANY, call
-
+from qiime2 import Artifact
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
-
-from q2_moshpit.kraken2.classification import (
-    _get_seq_paths, _construct_output_paths, _classify_kraken2
-)
 
 
 class TestKraken2Classification(TestPluginBase):
@@ -319,6 +319,122 @@ class TestKraken2Classification(TestPluginBase):
             '--quick', '--db', str(db.view(Kraken2DBDirectoryFormat).path)
         ]
         p1.assert_called_with(ANY, exp_args)
+
+
+class TestKraken2ClassifyContigs(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.datadir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'data'
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
+    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification._get_seq_paths")
+    @patch("q2_moshpit.kraken2.classification.run_command")
+    def test_classify_kraken2_contigs_has_correct_calls(
+        self,
+        run_command_mock,
+        _get_seq_paths_mock,
+        report_format_mock,
+        output_format_mock
+    ):
+        samples_dir = os.path.join(self.datadir, 'contigs', 'samples')
+        contigs = ContigSequencesDirFmt(samples_dir, "r")
+
+        common_args = ["--db", "/some/where/db", "--quick"]
+
+        fake_output_dir = Kraken2OutputDirectoryFormat()
+        fake_report_dir = Kraken2ReportDirectoryFormat()
+
+        samples = ('ba', 'mm', 'sa', 'se')
+        exp_output_fps = []
+        exp_report_fps = []
+        for sample in samples:
+            exp_output_fps.append(
+                os.path.join(fake_output_dir.path, f'{sample}.output.txt')
+            )
+            exp_report_fps.append(
+                os.path.join(fake_report_dir.path, f'{sample}.report.txt')
+            )
+
+        output_format_mock.return_value = fake_output_dir
+        report_format_mock.return_value = fake_report_dir
+
+        obs_reports, obs_outputs = _classify_kraken2(contigs, common_args)
+        self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
+        self.assertIsInstance(obs_outputs, Kraken2OutputDirectoryFormat)
+
+        calls = []
+        for i, sample in enumerate(samples):
+            calls.append(call(
+                cmd=[
+                    "kraken2",
+                    "--db",
+                    "/some/where/db",
+                    "--quick",
+                    "--report",
+                    exp_report_fps[i],
+                    "--output",
+                    exp_output_fps[i],
+                    os.path.join(
+                        contigs.path,
+                        f'{sample}_contigs.fasta'
+                    )
+                ],
+                verbose=True
+            ))
+        run_command_mock.assert_has_calls(calls, any_order=True)
+
+        _get_seq_paths_mock.assert_not_called()
+
+    def test_classify_kraken2_contigs(self):
+        db_path = os.path.join(self.datadir, 'contigs', 'small-kraken2-db')
+        contigs_path = os.path.join(self.datadir, 'contigs', 'samples')
+
+        db = Kraken2DBDirectoryFormat(db_path, 'r')
+        samples = ContigSequencesDirFmt(contigs_path, 'r')
+
+        reports, outputs = classify_kraken2(samples, db)
+
+        self.assertIsInstance(reports, Kraken2ReportDirectoryFormat)
+        self.assertIsInstance(outputs, Kraken2OutputDirectoryFormat)
+
+        sample_id_to_ncbi_id = {
+            'ba': 1392,   # bacillus anthracis
+            'mm': 10090,  # mus musculus
+            'sa': 1280,   # staph aureus
+            'se': 1282    # staph epidermidis
+        }
+
+        output_views = outputs.reports.iter_views(pd.DataFrame)
+        for path, df in output_views:
+            sample_id = str(path).rsplit('.output.txt')[0]
+
+            # no sequences are unclassified
+            self.assertNotIn('U', list(df['classification']))
+
+            # all classifications are correct
+            taxon_ids = [
+                sample_id_to_ncbi_id[sample_id] for _ in range(len(df))
+            ]
+            self.assertEqual(taxon_ids, list(df['ncbi_tax_id']))
+
+        report_views = reports.reports.iter_views(pd.DataFrame)
+        for path, df in report_views:
+            sample_id = str(path).rsplit('.report.txt')[0]
+
+            # the correct taxonomy id (feature id) is present somewhere in the
+            # classification tree, and none of the others are present
+            for current_sample_id, taxon_id in sample_id_to_ncbi_id.items():
+                if current_sample_id == sample_id:
+                    self.assertIn(taxon_id, list(df['ncbi_tax_id']))
+                else:
+                    self.assertNotIn(taxon_id, list(df['ncbi_tax_id']))
 
 
 if __name__ == "__main__":

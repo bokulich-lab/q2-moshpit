@@ -236,7 +236,7 @@ class TestKrakenSelectEdgeCases(unittest.TestCase):
                      pad1=0,
                      pad2=0,
                      rank=rank,
-                     taxon=tax_id,
+                     taxon_id=tax_id,
                      name=taxonomy_fragment)
             )
         df = pd.DataFrame(rows)

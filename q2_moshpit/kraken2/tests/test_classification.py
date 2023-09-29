@@ -422,7 +422,7 @@ class TestKraken2ClassifyContigs(unittest.TestCase):
             taxon_ids = [
                 sample_id_to_ncbi_id[sample_id] for _ in range(len(df))
             ]
-            self.assertEqual(taxon_ids, list(df['ncbi_tax_id']))
+            self.assertEqual(taxon_ids, list(df['taxon_id']))
 
         report_views = reports.reports.iter_views(pd.DataFrame)
         for path, df in report_views:
@@ -432,9 +432,9 @@ class TestKraken2ClassifyContigs(unittest.TestCase):
             # classification tree, and none of the others are present
             for current_sample_id, taxon_id in sample_id_to_ncbi_id.items():
                 if current_sample_id == sample_id:
-                    self.assertIn(taxon_id, list(df['ncbi_tax_id']))
+                    self.assertIn(taxon_id, list(df['taxon_id']))
                 else:
-                    self.assertNotIn(taxon_id, list(df['ncbi_tax_id']))
+                    self.assertNotIn(taxon_id, list(df['taxon_id']))
 
 
 if __name__ == "__main__":

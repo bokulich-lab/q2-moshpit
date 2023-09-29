@@ -174,7 +174,6 @@ def _kraken_to_ncbi_tree(df):
     if parent_node.children:
         parent_node.children[0].is_actual_tip = True
 
-    print(tree)
     return tree
 
 

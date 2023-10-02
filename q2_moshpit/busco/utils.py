@@ -439,7 +439,6 @@ def _render_html(
     """
     # Prepare context for jinja2 template
     context = {
-        "tabs": [{"title": "BUSCO Results", "url": "index.html"}],
         "vega_plots_overview": _draw_busco_plots_for_render(
             all_summaries_df,
             width=600,
@@ -462,8 +461,7 @@ def _render_html(
     )
 
     # Render
-    templates = [index]
-    q2templates.render(templates, output_dir, context=context)
+    q2templates.render(index, output_dir, context=context)
 
     # Remove unwanted files
     # until Bootstrap 3 is replaced with v5, remove the v3 scripts as

@@ -15,13 +15,13 @@ from q2_types.per_sample_sequences import (
     PairedEndSequencesWithQuality,
 )
 from q2_types.sample_data import SampleData
+from q2_types.feature_map import FeatureMap, MAGtoContigs
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 
 import q2_moshpit
 from q2_types_genomics.feature_data import NOG, MAG
-from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.genome_data import BLAST6
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
@@ -385,32 +385,32 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,
     inputs={
-        "input_sequences": SampleData[Contigs],
-        "diamond_db": ReferenceDB[Diamond],
+        'sequences': SampleData[Contigs] | FeatureData[MAG],
+        'diamond_db': ReferenceDB[Diamond],
     },
     parameters={
         "num_cpus": Int,
         "db_in_memory": Bool,
     },
     input_descriptions={
-        "input_sequences": "Sequence data of the contigs we want to "
-        "search for hits using the Diamond Database",
-        "diamond_db": "The filepath to an artifact containing the"
-        "Diamond database",
+        'sequences': 'Sequence data of the contigs we want to '
+                     'search for hits using the Diamond Database',
+        'diamond_db': 'The filepath to an artifact containing the'
+                      'Diamond database',
     },
     parameter_descriptions={
-        "num_cpus": "Number of CPUs to utilize. '0' will "
-        "use all available.",
-        "db_in_memory": "Read database into memory. The "
-        "database can be very large, so this "
-        "option should only be used on clusters or other "
-        "machines with enough memory.",
+        'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+                    'use all available.',
+        'db_in_memory': 'Read database into memory. The '
+                        'database can be very large, so this '
+                        'option should only be used on clusters or other '
+                        'machines with enough memory.',
     },
     outputs=[
-        ("eggnog_hits", SampleData[BLAST6]),
-        ("table", FeatureTable[Frequency])
+        ('eggnog_hits', SampleData[BLAST6]),
+        ('table', FeatureTable[Frequency])
     ],
-    name="Run eggNOG search using diamond aligner",
+    name='Run eggNOG search using diamond aligner',
     description="This method performs the steps by which we find our "
     "possible target sequences to annotate using the diamond "
     "search functionality from the eggnog `emapper.py` script",

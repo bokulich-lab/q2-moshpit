@@ -41,15 +41,16 @@ setup(
         "q2_moshpit.busco.tests": [
             "data/*",
         ],
-        "q2_moshpit.eggnog": [
-            "tests/data/*",
-            "tests/data/contig-sequences-1/*",
-            "tests/data/random-db-1/*",
-            "tests/data/good_hits/*",
-            "tests/data/bad_hits/*",
-            "tests/data/eggnog_db/*",
-            "tests/data/expected/*",
-            "citations.bib",
+        'q2_moshpit.eggnog': [
+            'tests/data/*',
+            'tests/data/contig-sequences-1/*',
+            'tests/data/mag-sequences/*',
+            'tests/data/random-db-1/*',
+            'tests/data/good_hits/*',
+            'tests/data/bad_hits/*',
+            'tests/data/eggnog_db/*',
+            'tests/data/expected/*',
+            'citations.bib',
         ],
         "q2_moshpit.kraken2.tests": [
             "data/*",

@@ -93,10 +93,66 @@ class TestKraken2Classification(TestPluginBase):
 
     @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
     @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
+    @patch(
+        "q2_moshpit.kraken2.classification._get_seq_paths",
+        return_value=(1, 2, [3])
+    )
+    @patch(
+        "q2_moshpit.kraken2.classification._construct_output_paths",
+        return_value=(1, 2)
+    )
+    @patch("q2_moshpit.kraken2.classification.run_command")
+    def test_classify_kraken_exception(self, p1, p2, p3, p4, p5):
+        seqs = MAGSequencesDirFmt(self.get_data_path("mags-derep"), "r")
+        common_args = ["--db", "/some/where/db", "--quick"]
+
+        # run kraken2
+        p1.side_effect = CalledProcessError(returncode=123, cmd="abc")
+        with self.assertRaisesRegex(
+            Exception,
+            r'error was encountered .* \(return code 123\)'
+        ):
+            _classify_kraken2(seqs, common_args)
+
+    @patch("q2_moshpit.kraken2.classification._classify_kraken2")
+    def test_classify_kraken_action(self, p1):
+        seqs = Artifact.import_data(
+            'FeatureData[MAG]', self.get_data_path("mags-derep")
+        )
+        db = Artifact.import_data('Kraken2DB', self.get_data_path("db"))
+        p1.return_value = (
+            Kraken2ReportDirectoryFormat(
+                self.get_data_path("reports-mags"), "r"
+            ),
+            Kraken2OutputDirectoryFormat(
+                self.get_data_path("outputs-mags"), "r"
+            ),
+        )
+
+        moshpit.actions.classify_kraken2(
+            seqs=seqs, kraken2_db=db, threads=3, confidence=0.9, quick=True
+        )
+
+        exp_args = [
+            '--threads', '3', '--confidence', '0.9',
+            '--minimum-base-quality', '0', '--minimum-hit-groups', '2',
+            '--quick', '--db', str(db.view(Kraken2DBDirectoryFormat).path)
+        ]
+        p1.assert_called_with(ANY, exp_args)
+
+
+class TestKraken2ClassifyMAGs(TestPluginBase):
+    package = "q2_moshpit.kraken2.tests"
+
+    def setUp(self):
+        super().setUp()
+
+    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
     @patch("q2_moshpit.kraken2.classification._get_seq_paths")
     @patch("q2_moshpit.kraken2.classification._construct_output_paths")
     @patch("q2_moshpit.kraken2.classification.run_command")
-    def test_classify_kraken_mags(self, p1, p2, p3, p4, p5):
+    def test_classify_kraken2_mags_has_correct_calls(self, p1, p2, p3, p4, p5):
         seqs = MAGSequencesDirFmt(self.get_data_path("mags-derep"), "r")
         common_args = ["--db", "/some/where/db", "--quick"]
 
@@ -185,12 +241,25 @@ class TestKraken2Classification(TestPluginBase):
         )
         p3.assert_not_called()
 
+    # TODO
+    def test_classify_kraken2_MAGs(self):
+        pass
+
+
+class TestKraken2ClassifyReads(TestPluginBase):
+    package = "q2_moshpit.kraken2.tests"
+
+    def setUp(self):
+        super().setUp()
+
     @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
     @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
     @patch("q2_moshpit.kraken2.classification._get_seq_paths")
     @patch("q2_moshpit.kraken2.classification._construct_output_paths")
     @patch("q2_moshpit.kraken2.classification.run_command")
-    def test_classify_kraken_reads(self, p1, p2, p3, p4, p5):
+    def test_classify_kraken2_reads_has_correct_calls(
+        self, p1, p2, p3, p4, p5
+    ):
         seqs = SingleLanePerSamplePairedEndFastqDirFmt(
             self.get_data_path("paired-end"), "r"
         )
@@ -271,54 +340,9 @@ class TestKraken2Classification(TestPluginBase):
             ]
         )
 
-    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
-    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
-    @patch(
-        "q2_moshpit.kraken2.classification._get_seq_paths",
-        return_value=(1, 2, [3])
-    )
-    @patch(
-        "q2_moshpit.kraken2.classification._construct_output_paths",
-        return_value=(1, 2)
-    )
-    @patch("q2_moshpit.kraken2.classification.run_command")
-    def test_classify_kraken_exception(self, p1, p2, p3, p4, p5):
-        seqs = MAGSequencesDirFmt(self.get_data_path("mags-derep"), "r")
-        common_args = ["--db", "/some/where/db", "--quick"]
-
-        # run kraken2
-        p1.side_effect = CalledProcessError(returncode=123, cmd="abc")
-        with self.assertRaisesRegex(
-            Exception,
-            r'error was encountered .* \(return code 123\)'
-        ):
-            _classify_kraken2(seqs, common_args)
-
-    @patch("q2_moshpit.kraken2.classification._classify_kraken2")
-    def test_classify_kraken_action(self, p1):
-        seqs = Artifact.import_data(
-            'FeatureData[MAG]', self.get_data_path("mags-derep")
-        )
-        db = Artifact.import_data('Kraken2DB', self.get_data_path("db"))
-        p1.return_value = (
-            Kraken2ReportDirectoryFormat(
-                self.get_data_path("reports-mags"), "r"
-            ),
-            Kraken2OutputDirectoryFormat(
-                self.get_data_path("outputs-mags"), "r"
-            ),
-        )
-
-        moshpit.actions.classify_kraken2(
-            seqs=seqs, kraken2_db=db, threads=3, confidence=0.9, quick=True
-        )
-
-        exp_args = [
-            '--threads', '3', '--confidence', '0.9',
-            '--minimum-base-quality', '0', '--minimum-hit-groups', '2',
-            '--quick', '--db', str(db.view(Kraken2DBDirectoryFormat).path)
-        ]
-        p1.assert_called_with(ANY, exp_args)
+    # TODO
+    def test_classify_kraken2_reads(self):
+        pass
 
 
 class TestKraken2ClassifyContigs(unittest.TestCase):
@@ -327,10 +351,6 @@ class TestKraken2ClassifyContigs(unittest.TestCase):
         cls.datadir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'data'
         )
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
 
     @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
     @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")

@@ -81,7 +81,7 @@ def _classify_kraken2(
         else:
             iterate_over = (
                 (os.path.basename(fp).split(".")[0], fp)
-                for fp in glob.glob(os.path.join(seqs.path, "*.fasta"))
+                for fp in sorted(glob.glob(os.path.join(seqs.path, "*.fasta")))
             )
             if type(seqs) is MAGSequencesDirFmt:
                 path_function = get_paths_for_mags

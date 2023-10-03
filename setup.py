@@ -57,8 +57,8 @@ setup(
             'data/bracken-report/*/*', 'data/kraken2-report/*/*',
             'data/kraken2-reports-select/*',
             'data/kraken2-reports-select/*/*',
-            'data/kraken-to-ncbi-tree/*',
-            'data/kraken-to-ncbi-tree/*/*/*',
+            'data/kraken2-to-ncbi-tree/*',
+            'data/kraken2-to-ncbi-tree/*/*/*',
             'data/contigs/*/*',
         ],
         'q2_moshpit.dereplication.tests': [

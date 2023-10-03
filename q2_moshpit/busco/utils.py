@@ -126,7 +126,7 @@ def _draw_busco_plots_for_render(
             x=alt.X(
                 "sum(BUSCO_percentage)",
                 stack="normalize",
-                title="BUSCO fracc."
+                title="BUSCO fraction"
             ),
             y=alt.Y("mag_id", axis=alt.Axis(title="MAG ID")),
             color=alt.Color(

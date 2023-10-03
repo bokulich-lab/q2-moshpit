@@ -51,7 +51,7 @@ def _construct_output_paths(
 def _classify_kraken2(
         seqs, common_args
 ) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
-    if type(seqs) is MAGSequencesDirFmt or type(seqs) is ContigSequencesDirFmt:
+    if isinstance(seqs, (MAGSequencesDirFmt, ContigSequencesDirFmt)):
         manifest = None
     else:
         manifest: Optional[pd.DataFrame] = seqs.manifest.view(pd.DataFrame)

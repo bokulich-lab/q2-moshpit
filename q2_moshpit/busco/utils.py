@@ -59,7 +59,7 @@ def _draw_busco_plots_for_render(
     Args:
         df (pd.DataFrame): tabular batch summary for all samples
         width (int): width of the plot
-        height (int): height of the plot
+        height (int): height of each bar in the plot
         labelFontSize (int): size of the labels in plot
         titleFontSize (int): size of titles in plot
 
@@ -442,7 +442,7 @@ def _render_html(
         "vega_plots_overview": _draw_busco_plots_for_render(
             all_summaries_df,
             width=600,
-            height=18,
+            height=9,
             titleFontSize=20,
             labelFontSize=17,
         ),

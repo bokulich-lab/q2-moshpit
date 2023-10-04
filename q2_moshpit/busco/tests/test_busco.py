@@ -8,6 +8,7 @@
 
 import os
 import tempfile
+import zipfile
 import pandas as pd
 from q2_moshpit.busco.busco import busco
 from q2_moshpit.busco.utils import (
@@ -207,7 +208,7 @@ class TestBUSCO(TestPluginBase):
             _zip_busco_plots(paths_to_plots=paths_to_plots, zip_path=zip_path)
 
             # Check for existence of file
-            self.assertTrue(os.path.exists(zip_path))
+            self.assertTrue(zipfile.is_zipfile(zip_path))
 
     def test_zip_busco_plots_one(self):
         """
@@ -223,7 +224,7 @@ class TestBUSCO(TestPluginBase):
             _zip_busco_plots(paths_to_plots=paths_to_plots, zip_path=zip_path)
 
             # Check for existence of file
-            self.assertTrue(os.path.exists(zip_path))
+            self.assertTrue(zipfile.is_zipfile(zip_path))
 
     # Test `_run_busco`
     def mock_run_busco(self, tmp_path, bins):

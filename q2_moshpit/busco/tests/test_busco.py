@@ -26,16 +26,9 @@ from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
 class TestBUSCO(TestPluginBase):
     package = "q2_moshpit.busco.tests"
 
-    def get_dummy_mags(self):
-        """
-        Fixture for BUSCO testing. Initializes a MultiMAGSequencesDirFmt which
-        gets passed to the tests.
-
-        Returns:
-            test_data (MultiMAGSequencesDirFmt): object with the data for tests
-        """
-        # Initialize object with path to unzipped files
-        return MultiMAGSequencesDirFmt(
+    @classmethod
+    def setUpClass(cls):
+        cls.mags = MultiMAGSequencesDirFmt(
             path=os.path.join(os.path.dirname(__file__), "data"),
             mode="r",
         )
@@ -152,7 +145,7 @@ class TestBUSCO(TestPluginBase):
         p = os.path.join(p, "data/plot_as_dict.json")
         with open(p, "r") as json_file:
             expected = json_file.read()
-        
+
         # self.maxDiff = None
         self.assertEqual(expected, observed)
 
@@ -277,13 +270,13 @@ class TestBUSCO(TestPluginBase):
             # Define command arguments and parse them
             fake_props = {"a": "b", "c": "d"}
             expected = self.mock_run_busco(
-                tmp_path=tmp_path, bins=self.get_dummy_mags()
+                tmp_path=tmp_path, bins=self.mags
             )
 
             # Run busco and save paths to run summaries
             observed = _run_busco(
                 output_dir=os.path.join(tmp_path, "busco_output"),
-                mags=self.get_dummy_mags(),
+                mags=self.mags,
                 params=fake_props,
             )
 
@@ -302,7 +295,7 @@ class TestBUSCO(TestPluginBase):
                 # Run busco and save paths to run summaries
                 _ = _run_busco(
                     output_dir=os.path.join(tmp_path, "busco_output"),
-                    mags=self.get_dummy_mags(),
+                    mags=self.mags,
                     params=fake_props,
                 )
 
@@ -340,7 +333,7 @@ class TestBUSCO(TestPluginBase):
             # This side effect will return the path_to_run_summaries dict
             run_busco.side_effect = self.mock_run_busco(
                 tmp_path=tmp_path,
-                bins=self.get_dummy_mags()
+                bins=self.mags
             )
 
             # This side effect will return the all_summaries_dfs
@@ -351,7 +344,7 @@ class TestBUSCO(TestPluginBase):
             collect_summaries.return_value = pd.read_csv(p)
 
             # Run busco
-            busco(output_dir=str(tmp_path), bins=self.get_dummy_mags())
+            busco(output_dir=str(tmp_path), bins=self.mags)
 
             # For render debugging
             # shutil.copytree(str(tmp_path), path_to_look_at_html)

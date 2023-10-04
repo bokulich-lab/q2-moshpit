@@ -23,8 +23,8 @@ from q2_types.feature_data import FeatureData
 
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
-from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
+from q2_types_genomics.feature_data import MAGSequencesDirFmt, MAG
+from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, Contigs
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
@@ -78,6 +78,8 @@ def classify_kraken2(
         partition_method = ctx.get_action("demux", "partition_samples_single")
     elif seqs.type <= SampleData[PairedEndSequencesWithQuality]:
         partition_method = ctx.get_action("demux", "partition_samples_paired")
+    elif seqs.type <= SampleData[Contigs]:
+        partition_method = ctx.get_action("assembly", "partition_contigs")
     # FeatureData[MAG] is not parallelized
     elif seqs.type <= FeatureData[MAG]:
         kraken2_reports, kraken2_outputs = \

@@ -96,7 +96,6 @@ class TestBUSCO(TestPluginBase):
             f"data/{filename}"
         )
         df = pd.read_csv(p, delimiter=delim)
-        print(df)
         grouped = df.groupby("sample_id")
 
         # Iterate through the groups and store each group as a

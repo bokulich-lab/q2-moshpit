@@ -23,7 +23,8 @@ from q2_types.feature_data import FeatureData
 
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
-from q2_types_genomics.feature_data import MAG, MAGSequencesDirFmt
+from q2_types_genomics.feature_data import MAGSequencesDirFmt
+from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
@@ -105,6 +106,7 @@ def _classify_kraken2(
         seqs: Union[
             SingleLanePerSamplePairedEndFastqDirFmt,
             SingleLanePerSampleSingleEndFastqDirFmt,
+            ContigSequencesDirFmt,
             MAGSequencesDirFmt,
         ],
         kraken2_db: Kraken2DBDirectoryFormat,
@@ -132,7 +134,7 @@ def _classify_kraken2(
 def classify_kraken2_helper(
         seqs, common_args
 ) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
-    if isinstance(seqs, MAGSequencesDirFmt):
+    if isinstance(seqs, (MAGSequencesDirFmt, ContigSequencesDirFmt)):
         manifest = None
     else:
         manifest: Optional[pd.DataFrame] = seqs.manifest.view(pd.DataFrame)
@@ -150,16 +152,24 @@ def classify_kraken2_helper(
     def get_paths_for_mags(mag_id, fp):
         return mag_id, [fp]
 
+    def get_paths_for_contigs(contig_id, fp):
+        # HACK: remove after adding manifest or other solution, see
+        # https://github.com/bokulich-lab/q2-types-genomics/issues/56
+        return contig_id.rstrip('_contigs'), [fp]
+
     try:
         if manifest is not None:  # we got reads - use the manifest
             iterate_over = manifest.iterrows()
             path_function = get_paths_for_reads
-        else:  # we got MAGs - use the filenames directly
+        else:
             iterate_over = (
                 (os.path.basename(fp).split(".")[0], fp)
-                for fp in glob.glob(os.path.join(seqs.path, "*.fasta"))
+                for fp in sorted(glob.glob(os.path.join(seqs.path, "*.fasta")))
             )
-            path_function = get_paths_for_mags
+            if type(seqs) is MAGSequencesDirFmt:
+                path_function = get_paths_for_mags
+            elif type(seqs) is ContigSequencesDirFmt:
+                path_function = get_paths_for_contigs
 
         for args in iterate_over:
             _sample, fn = path_function(*args)

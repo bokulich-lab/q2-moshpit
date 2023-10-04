@@ -39,6 +39,7 @@ setup(
         'q2_moshpit.eggnog': [
             'tests/data/*',
             'tests/data/contig-sequences-1/*',
+            'tests/data/mag-sequences/*',
             'tests/data/random-db-1/*',
             'tests/data/good_hits/*',
             'tests/data/bad_hits/*',
@@ -56,8 +57,9 @@ setup(
             'data/bracken-report/*/*', 'data/kraken2-report/*/*',
             'data/kraken2-reports-select/*',
             'data/kraken2-reports-select/*/*',
-            'data/kraken-to-ncbi-tree/*',
-            'data/kraken-to-ncbi-tree/*/*/*',
+            'data/kraken2-to-ncbi-tree/*',
+            'data/kraken2-to-ncbi-tree/*/*/*',
+            'data/contigs/*/*',
         ],
         'q2_moshpit.dereplication.tests': [
             'data/*', 'data/mags/*', 'data/mags/*/*',

@@ -17,6 +17,7 @@ from q2_moshpit.busco.utils import (
     _run_busco,
     _draw_busco_plots_for_render,
     _collect_summaries_and_save,
+    _parse_df_columns,
 )
 from unittest.mock import patch
 from qiime2.plugin.testing import TestPluginBase
@@ -357,3 +358,25 @@ class TestBUSCO(TestPluginBase):
 
             # Check for the existence of the html file
             self.assertTrue(os.path.exists(f"{tmp_path}/index.html"))
+
+    def test_parse_df_columns(self):
+        # This side effect will return the all_summaries_dfs
+        p1 = os.path.join(
+            os.path.dirname(__file__),
+            "data/all_batch_summaries.csv"
+        )
+        p2 = os.path.join(
+            os.path.dirname(__file__),
+            "data/all_batch_summaries_formatted.csv"
+        )
+        observed = pd.read_csv(p1)
+        observed = _parse_df_columns(observed)
+        expected = pd.read_csv(p2)
+
+        try:
+            pd.testing.assert_frame_equal(observed, expected)
+        except AssertionError as e:
+            print(e)
+            self.assertTrue(False)
+        else:
+            self.assertTrue(True)

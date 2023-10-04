@@ -437,7 +437,7 @@ plugin.methods.register_function(
 )
 
 busco_params = {
-    "mode": Str % Choices(["genome", "transcriptome", "proteins"]),
+    "mode": Str % Choices(["genome"]),
     "lineage_dataset": Str,
     "augustus": Bool,
     "augustus_parameters": Str,
@@ -554,6 +554,6 @@ plugin.visualizers.register_function(
     description="This method uses BUSCO "
                 "(Benchmarking Universal Single-Copy Ortholog assessment tool)"
                 " to assess the quality of assembled MAGs and generates "
-                "visualizations summarising the results.",
+                "visualizations summarizing the results.",
     citations=[citations["manni_busco_2021"]],
 )

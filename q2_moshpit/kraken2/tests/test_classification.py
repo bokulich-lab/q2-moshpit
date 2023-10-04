@@ -435,18 +435,23 @@ class TestKraken2ClassifyContigs(unittest.TestCase):
         for path, df in output_views:
             sample_id = str(path).rsplit('.output.txt')[0]
 
+            # the expected number of records are in the output
+            self.assertEqual(len(df), 20)
+
             # no sequences are unclassified
             self.assertNotIn('U', list(df['classification']))
 
             # all classifications are correct
-            taxon_ids = [
-                sample_id_to_ncbi_id[sample_id] for _ in range(len(df))
-            ]
-            self.assertEqual(taxon_ids, list(df['taxon_id']))
+            self.assertEqual(
+                pd.unique(df['taxon_id']), [sample_id_to_ncbi_id[sample_id]]
+            )
 
         report_views = reports.reports.iter_views(pd.DataFrame)
         for path, df in report_views:
             sample_id = str(path).rsplit('.report.txt')[0]
+
+            # the dataframe is non-empty
+            self.assertGreater(len(df), 0)
 
             # the correct taxonomy id (feature id) is present somewhere in the
             # classification tree, and none of the others are present

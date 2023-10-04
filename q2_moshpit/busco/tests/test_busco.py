@@ -67,7 +67,14 @@ class TestBUSCO(TestPluginBase):
             p = os.path.join(common_path, "all_batch_summaries.csv")
             expected = pd.read_csv(p)
             pd.set_option('display.max_columns', None)
-            self.assertTrue(observed.equals(expected))
+
+            try:
+                pd.testing.assert_frame_equal(observed, expected)
+            except AssertionError as e:
+                print(e)
+                self.assertTrue(False)
+            else:
+                self.assertTrue(True)
 
     # Test `_draw_busco_plots`
     def draw_n_busco_plots(self, filename, delim):

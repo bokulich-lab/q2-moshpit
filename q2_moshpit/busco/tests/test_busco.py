@@ -152,7 +152,8 @@ class TestBUSCO(TestPluginBase):
         p = os.path.join(p, "data/plot_as_dict.json")
         with open(p, "r") as json_file:
             expected = json_file.read()
-
+        
+        # self.maxDiff = None
         self.assertEqual(expected, observed)
 
     # Test `_draw_busco_plots`

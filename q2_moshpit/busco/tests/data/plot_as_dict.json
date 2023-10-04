@@ -1,5 +1,5 @@
 {
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.14.1.json",
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.15.1.json",
   "config": {
     "axis": {
       "labelFontSize": 17,
@@ -536,7 +536,7 @@
             "aggregate": "sum",
             "field": "BUSCO_percentage",
             "stack": "normalize",
-            "title": "BUSCO fracc.",
+            "title": "BUSCO fraction",
             "type": "quantitative"
           },
           "y": {

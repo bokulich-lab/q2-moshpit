@@ -29,13 +29,13 @@ class TestBUSCO(TestPluginBase):
     package = "q2_moshpit.busco.tests"
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(self):
 
         # Set base path
         p = os.path.join(os.path.dirname(__file__), "data")
 
         # Get MAGs fixture
-        cls.mags = MultiMAGSequencesDirFmt(
+        self.mags = MultiMAGSequencesDirFmt(
             path=p,
             mode="r",
         )
@@ -63,12 +63,10 @@ class TestBUSCO(TestPluginBase):
         """
         with tempfile.TemporaryDirectory() as tmp_path:
             path_to_summaries = {}
-            common_path = os.path.join(os.path.dirname(__file__), "data")
 
             for i in range(1, 4):
-                path_to_summaries[f"sample{i}"] = os.path.join(
-                    common_path,
-                    f"batch_summary_sample{i}.txt"
+                path_to_summaries[f"sample{i}"] = self.get_data_path(
+                    filename=f"batch_summary_sample{i}.txt"
                 )
 
             observed = _collect_summaries_and_save(
@@ -76,8 +74,9 @@ class TestBUSCO(TestPluginBase):
                 all_summaries_path=os.path.join(tmp_path, "aggregated.csv"),
             )
 
-            p = os.path.join(common_path, "all_batch_summaries.csv")
-            expected = pd.read_csv(p)
+            expected = pd.read_csv(
+                self.get_data_path(filename="all_batch_summaries.csv")
+            )
             pd.set_option('display.max_columns', None)
 
             try:
@@ -103,10 +102,7 @@ class TestBUSCO(TestPluginBase):
         path_to_run_summaries = {}
 
         # Group the DataFrame by the 'sample_id' column
-        p = os.path.join(
-            os.path.dirname(__file__),
-            f"data/{filename}"
-        )
+        p = self.get_data_path(f"{filename}")
         df = pd.read_csv(p, delimiter=delim)
         grouped = df.groupby("sample_id")
 
@@ -146,9 +142,8 @@ class TestBUSCO(TestPluginBase):
         Checks for dictionary equality.
         """
         # Load data
-        p = os.path.dirname(os.path.abspath(__file__))
-        p2 = os.path.join(p, "data/all_batch_summaries.csv")
-        all_summaries_df = pd.read_csv(p2)
+        p = self.get_data_path("all_batch_summaries.csv")
+        all_summaries_df = pd.read_csv(p)
 
         # Draw plot
         observed = _draw_busco_plots_for_render(
@@ -160,7 +155,7 @@ class TestBUSCO(TestPluginBase):
         )
 
         # Load expected data
-        p = os.path.join(p, "data/plot_as_dict.json")
+        p = self.get_data_path("plot_as_dict.json")
         with open(p, "r") as json_file:
             expected = json_file.read()
 
@@ -241,8 +236,7 @@ class TestBUSCO(TestPluginBase):
         """
         Test function `_run_busco`. Checks for dictionary equality.
         """
-        p = os.path.dirname(os.path.abspath(__file__))
-        p2 = os.path.join(p, "data", "busco_output")
+        p2 = self.get_data_path("busco_output")
 
         sample_ids = os.listdir(p2)
 
@@ -313,10 +307,7 @@ class TestBUSCO(TestPluginBase):
         with tempfile.TemporaryDirectory() as tmp_path:
             # Define side effects and return arguments for patches
             # This side effect will return the all_summaries_dfs
-            p = os.path.join(
-                os.path.dirname(__file__),
-                "data/all_batch_summaries.csv"
-            )
+            p = self.get_data_path("all_batch_summaries.csv")
             collect_summaries.return_value = pd.read_csv(p)
 
             # Run busco
@@ -330,16 +321,11 @@ class TestBUSCO(TestPluginBase):
 
     def test_parse_df_columns(self):
         # This side effect will return the all_summaries_dfs
-        p1 = os.path.join(
-            os.path.dirname(__file__),
-            "data/all_batch_summaries.csv"
-        )
-        p2 = os.path.join(
-            os.path.dirname(__file__),
-            "data/all_batch_summaries_formatted.csv"
-        )
+        p1 = self.get_data_path("all_batch_summaries.csv")
         observed = pd.read_csv(p1)
         observed = _parse_df_columns(observed)
+
+        p2 = self.get_data_path("all_batch_summaries_formatted.csv")
         expected = pd.read_csv(p2)
 
         try:

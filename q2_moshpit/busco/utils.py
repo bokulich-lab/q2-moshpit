@@ -21,10 +21,11 @@ arguments_with_hyphens = {
 
 
 def _parse_busco_params(arg_key, arg_val) -> List[str]:
-    """Creates a list with argument and its value to be consumed by MetaBAT 2.
+    """Creates a list with argument and its value to be consumed by BUSCO.
     Argument names will be converted to command line parameters by
-    appending a '--' prefix and concatenating words separated by a '_',
-    e.g.: 'some_parameter_x' -> '--someParameterX'.
+    appending a '--' prefix and in some cases replacing "_" for "-"
+    (only for e.g. `arguments_with_hyphens`)
+
     Args:
         arg_key (str): Argument name.
         arg_val: Argument value.

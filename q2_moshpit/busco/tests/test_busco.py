@@ -9,8 +9,9 @@
 import os
 import tempfile
 import zipfile
+import contextlib
 import pandas as pd
-from q2_moshpit.busco.busco import busco
+from q2_moshpit.busco.busco import evaluate_busco
 from q2_moshpit.busco.utils import (
     _parse_busco_params,
     _draw_busco_plots,
@@ -20,7 +21,7 @@ from q2_moshpit.busco.utils import (
     _collect_summaries_and_save,
     _parse_df_columns,
 )
-from unittest.mock import patch
+from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
 
@@ -39,6 +40,12 @@ class TestBUSCO(TestPluginBase):
             path=p,
             mode="r",
         )
+
+    def setUp(self):
+        super().setUp()
+        with contextlib.ExitStack() as stack:
+            self._tmp = stack.enter_context(tempfile.TemporaryDirectory())
+            self.addCleanup(stack.pop_all().close)
 
     # Test `_parse_busco_params`
     def test_parse_busco_params_1(self):
@@ -236,27 +243,47 @@ class TestBUSCO(TestPluginBase):
         """
         Test function `_run_busco`. Checks for dictionary equality.
         """
-        p2 = self.get_data_path("busco_output")
+        output_dir = self.get_data_path("busco_output")
+        sample_ids = os.listdir(output_dir)
 
-        sample_ids = os.listdir(p2)
-
+        # Initialize assertion objects
         expected = {}
-        for sample_id in sample_ids:
-            expected[sample_id] = os.path.join(
-                p2, sample_id, "batch_summary.txt"
-            )
+        calls = []
 
         # Define command arguments
-        fake_props = {"a": "b", "c": "d"}
+        fake_props = ["--a", "--b", "0.6"]
+
+        # Fabricate list of calls and the expected output
+        for sample_id in sample_ids:
+            # Make a dictionary to compare output
+            p = os.path.join(output_dir, sample_id, "batch_summary.txt")
+            expected[sample_id] = p
+
+            # Append call to list of calls to assert the patching
+            calls.append(call(
+                [
+                    "busco",
+                    "--a",
+                    "--b", "0.6",
+                    "--in", self.get_data_path(f"{sample_id}"),
+                    "--out_path", output_dir,
+                    "-o", sample_id
+                ],
+                check=True
+            ))
 
         # Run busco and save paths to run summaries
         observed = _run_busco(
-            output_dir=p2,
+            output_dir=output_dir,
             mags=self.mags,
             params=fake_props,
         )
 
+        # Assert output
         self.assertDictEqual(expected, observed)
+
+        # Check for appropiate calls
+        subp_run.assert_has_calls(calls, any_order=True)
 
     @patch("subprocess.run")
     def test_run_busco_exception(self, subp_run):
@@ -265,15 +292,27 @@ class TestBUSCO(TestPluginBase):
         """
         with tempfile.TemporaryDirectory() as tmp_path:
             # Define command arguments
-            fake_props = {"a": "b", "c": "d"}
+            fake_props = ["--a", "--b", "0.6"]
+            output_dir = os.path.join(tmp_path, "busco_output")
 
             with self.assertRaises(FileNotFoundError):
                 # Run busco and save paths to run summaries
                 _ = _run_busco(
-                    output_dir=os.path.join(tmp_path, "busco_output"),
+                    output_dir=output_dir,
                     mags=self.mags,
                     params=fake_props,
                 )
+
+        # Assert that the patch was called once.
+        cmd = [
+            "busco",
+            "--a",
+            "--b", "0.6",
+            "--in", self.get_data_path("sample1"),
+            "--out_path", output_dir,
+            "-o", "sample1"
+        ]
+        subp_run.assert_called_once_with(cmd, check=True)
 
     # Integration test busco.
     @patch('q2_moshpit.busco.utils._run_busco')
@@ -283,9 +322,9 @@ class TestBUSCO(TestPluginBase):
     def test_integration_busco(
         self,
         collect_summaries,
-        not_used_1,
-        not_used_2,
-        not_used_3
+        draw_busco_plots,
+        zip_busco_plots,
+        run_busco
     ):
         """
         Tests entire busco run and patches the previously tested functions.
@@ -294,11 +333,11 @@ class TestBUSCO(TestPluginBase):
         Args:
             collect_summaries (unittest.mock): mock object for function
                 `_collect_summaries_and_save`
-            not_used_1 (unittest.mock): mock object for function
-                `_draw_busco_plots`. Not used.
-            not_used_2 (unittest.mock): mock object for function
-                `_zip_busco_plots`. Not used.
-            not_used_3 (unittest.mock): mock object for function
+            zip_busco_plots (unittest.mock): mock object for function
+                `_draw_busco_plots`. 
+            zip_busco_plots (unittest.mock): mock object for function
+                `_zip_busco_plots`. 
+            run_busco (unittest.mock): mock object for function
                 `_run_busco`.
         """
         # import shutil
@@ -306,18 +345,51 @@ class TestBUSCO(TestPluginBase):
 
         with tempfile.TemporaryDirectory() as tmp_path:
             # Define side effects and return arguments for patches
+            run_busco.return_value = "path_to_run_summaries"
+            draw_busco_plots.return_value = "paths_to_plots"
+
             # This side effect will return the all_summaries_dfs
             p = self.get_data_path("all_batch_summaries.csv")
             collect_summaries.return_value = pd.read_csv(p)
 
             # Run busco
-            busco(output_dir=str(tmp_path), bins=self.mags)
+            evaluate_busco(output_dir=str(tmp_path), bins=self.mags)
 
             # For render debugging
             # shutil.copytree(str(tmp_path), path_to_look_at_html)
 
             # Check for the existence of the html file
             self.assertTrue(os.path.exists(f"{tmp_path}/index.html"))
+
+            # Assert that the calls where done properly
+            run_busco.assert_called_once_with(
+                output_dir=run_busco.call_args.kwargs['output_dir'],
+                mags=self.mags,
+                params=[
+                    '--mode', 'genome',
+                    '--cpu', '1',
+                    '--contig_break', '10',
+                    '--evalue', '0.001',
+                    '--limit', '3'
+                ]
+            )
+
+            collect_summaries.assert_called_once_with(
+                all_summaries_path=os.path.join(
+                    tmp_path, "all_batch_summaries.csv"
+                ),
+                path_to_run_summaries="path_to_run_summaries",
+            )
+
+            draw_busco_plots.assert_called_once_with(
+                path_to_run_summaries="path_to_run_summaries",
+                plots_dir=draw_busco_plots.call_args.kwargs["plots_dir"]
+            )
+
+            zip_busco_plots.assert_called_once_with(
+                paths_to_plots="paths_to_plots",
+                zip_path=os.path.join(tmp_path, "busco_plots.zip")
+            )
 
     def test_parse_df_columns(self):
         # This side effect will return the all_summaries_dfs

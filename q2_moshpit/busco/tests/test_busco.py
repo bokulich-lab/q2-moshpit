@@ -30,8 +30,13 @@ class TestBUSCO(TestPluginBase):
 
     @classmethod
     def setUpClass(cls):
+
+        # Set base path
+        p = os.path.join(os.path.dirname(__file__), "data")
+
+        # Get MAGs fixture
         cls.mags = MultiMAGSequencesDirFmt(
-            path=os.path.join(os.path.dirname(__file__), "data"),
+            path=p,
             mode="r",
         )
 
@@ -226,69 +231,33 @@ class TestBUSCO(TestPluginBase):
             # Check for existence of file
             self.assertTrue(zipfile.is_zipfile(zip_path))
 
-    # Test `_run_busco`
-    def mock_run_busco(self, tmp_path, bins):
-        """
-        This function mimics the _run_busco function by creating the files
-        that are supposed to be generated. These files are empty.
-
-        Args:
-            tmp_path (str): path where to write empty files
-            bins (MultiMAGSequencesDirFmt): fixture from which the sample ids
-                are extracted.
-        """
-        # Get output path
-        output_dir = os.path.join(tmp_path, "busco_output")
-
-        # Creates pandas df "manifest" from bins
-        manifest: pd.DataFrame = bins.manifest.view(pd.DataFrame)
-
-        # numpy.ndarray with unique dirs
-        sample_ids = manifest.index.get_level_values(0).unique()
-
-        # write files to output
-        # Loop to create the empty files
-        expected = {}
-        for sample_id in sample_ids:
-            # Specify the name of each empty file
-            path_to_run_summary = os.path.join(
-                output_dir, sample_id, "batch_summary.txt"
-            )
-            os.makedirs(
-                os.path.dirname(path_to_run_summary),
-                exist_ok=True
-            )
-
-            # Save to dict
-            expected[sample_id] = path_to_run_summary
-
-            # Create an empty file
-            with open(path_to_run_summary, 'w'):
-                pass
-
-        # Return expected output
-        return expected
-
     @patch('subprocess.run')
     def test_run_busco(self, subp_run):
         """
         Test function `_run_busco`. Checks for dictionary equality.
         """
-        with tempfile.TemporaryDirectory() as tmp_path:
-            # Define command arguments and parse them
-            fake_props = {"a": "b", "c": "d"}
-            expected = self.mock_run_busco(
-                tmp_path=tmp_path, bins=self.mags
+        p = os.path.dirname(os.path.abspath(__file__))
+        p2 = os.path.join(p, "data", "busco_output")
+
+        sample_ids = os.listdir(p2)
+
+        expected = {}
+        for sample_id in sample_ids:
+            expected[sample_id] = os.path.join(
+                p2, sample_id, "batch_summary.txt"
             )
 
-            # Run busco and save paths to run summaries
-            observed = _run_busco(
-                output_dir=os.path.join(tmp_path, "busco_output"),
-                mags=self.mags,
-                params=fake_props,
-            )
+        # Define command arguments
+        fake_props = {"a": "b", "c": "d"}
 
-            self.assertDictEqual(expected, observed)
+        # Run busco and save paths to run summaries
+        observed = _run_busco(
+            output_dir=p2,
+            mags=self.mags,
+            params=fake_props,
+        )
+
+        self.assertDictEqual(expected, observed)
 
     @patch("subprocess.run")
     def test_run_busco_exception(self, subp_run):
@@ -296,7 +265,7 @@ class TestBUSCO(TestPluginBase):
         Test function `_run_busco`. Checks for a raised exception.
         """
         with tempfile.TemporaryDirectory() as tmp_path:
-            # Define command arguments and parse them
+            # Define command arguments
             fake_props = {"a": "b", "c": "d"}
 
             with self.assertRaises(FileNotFoundError):
@@ -317,7 +286,7 @@ class TestBUSCO(TestPluginBase):
         collect_summaries,
         not_used_1,
         not_used_2,
-        run_busco
+        not_used_3
     ):
         """
         Tests entire busco run and patches the previously tested functions.
@@ -330,20 +299,14 @@ class TestBUSCO(TestPluginBase):
                 `_draw_busco_plots`. Not used.
             not_used_2 (unittest.mock): mock object for function
                 `_zip_busco_plots`. Not used.
-            run_busco (unittest.mock): mock object for function
+            not_used_3 (unittest.mock): mock object for function
                 `_run_busco`.
         """
         # import shutil
         # path_to_look_at_html = "/Users/santiago/Downloads/busco_debug_bench"
 
         with tempfile.TemporaryDirectory() as tmp_path:
-            # Define sid effects and return arguments for patches
-            # This side effect will return the path_to_run_summaries dict
-            run_busco.side_effect = self.mock_run_busco(
-                tmp_path=tmp_path,
-                bins=self.mags
-            )
-
+            # Define side effects and return arguments for patches
             # This side effect will return the all_summaries_dfs
             p = os.path.join(
                 os.path.dirname(__file__),

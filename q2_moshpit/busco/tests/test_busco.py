@@ -334,9 +334,9 @@ class TestBUSCO(TestPluginBase):
             collect_summaries (unittest.mock): mock object for function
                 `_collect_summaries_and_save`
             zip_busco_plots (unittest.mock): mock object for function
-                `_draw_busco_plots`. 
+                `_draw_busco_plots`.
             zip_busco_plots (unittest.mock): mock object for function
-                `_zip_busco_plots`. 
+                `_zip_busco_plots`.
             run_busco (unittest.mock): mock object for function
                 `_run_busco`.
         """

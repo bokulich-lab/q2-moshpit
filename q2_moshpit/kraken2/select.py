@@ -137,7 +137,7 @@ def _kraken_to_ncbi_tree(df):
     for _, row in df.iterrows():
         r = row['rank']
         label = row['name']
-        otu = str(row['ncbi_tax_id'])
+        otu = str(row['taxon_id'])
 
         if r in ('U', 'R'):
             continue  # unclassified or root
@@ -174,7 +174,6 @@ def _kraken_to_ncbi_tree(df):
     if parent_node.children:
         parent_node.children[0].is_actual_tip = True
 
-    print(tree)
     return tree
 
 

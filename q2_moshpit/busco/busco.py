@@ -19,7 +19,7 @@ from typing import List
 from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
 
 
-def busco(
+def evaluate_busco(
     output_dir: str,
     bins: MultiMAGSequencesDirFmt,
     mode: str = "genome",

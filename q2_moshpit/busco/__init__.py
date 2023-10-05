@@ -6,6 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .busco import busco
+from .busco import evaluate_busco
 
-__all__ = ["busco"]
+__all__ = ["evaluate_busco"]

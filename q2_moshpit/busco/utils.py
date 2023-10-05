@@ -33,12 +33,12 @@ def _parse_busco_params(arg_key, arg_val) -> List[str]:
             parameter and, optionally, its value.
     """
 
-    # If the key is one of
-    if arg_key in arguments_with_hyphens.keys():
-        arg_key = arguments_with_hyphens[arg_key]
-
-    if isinstance(arg_val, bool) and arg_val:
+    if isinstance(arg_val, bool):
+        # If the key is in arguments_with_hyphens, modify key
+        if arg_key in arguments_with_hyphens.keys():
+            arg_key = arguments_with_hyphens[arg_key]
         return [f"--{arg_key}"]
+
     else:
         return [f"--{arg_key}", str(arg_val)]
 

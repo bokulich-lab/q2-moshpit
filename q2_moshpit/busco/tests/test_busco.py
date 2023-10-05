@@ -51,6 +51,11 @@ class TestBUSCO(TestPluginBase):
         expected = ["--evalue", str(0.66)]
         self.assertSetEqual(set(observed), set(expected))
 
+    def test_parse_busco_params_3(self):
+        observed = _parse_busco_params("augustus", True)
+        expected = ["--augustus"]
+        self.assertSetEqual(set(observed), set(expected))
+
     def test_collect_summaries_and_save(self):
         """
         Test for `_collect_summaries_and_save` function.

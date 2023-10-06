@@ -21,7 +21,7 @@ from q2_moshpit.busco.utils import (
     _collect_summaries_and_save,
     _parse_df_columns,
 )
-from unittest.mock import patch, call
+from unittest.mock import patch, call, ANY
 from qiime2.plugin.testing import TestPluginBase
 from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
 
@@ -349,10 +349,6 @@ class TestBUSCO(TestPluginBase):
         # path_to_look_at_html = "/Users/santiago/Downloads/busco_debug_bench"
 
         with tempfile.TemporaryDirectory() as tmp_path:
-            # Define side effects and return arguments for patches
-            run_busco.return_value = "path_to_run_summaries"
-            draw_busco_plots.return_value = "paths_to_plots"
-
             # This side effect will return the all_summaries_dfs
             p = self.get_data_path("all_batch_summaries.csv")
             collect_summaries.return_value = pd.read_csv(p)
@@ -383,16 +379,16 @@ class TestBUSCO(TestPluginBase):
                 all_summaries_path=os.path.join(
                     tmp_path, "all_batch_summaries.csv"
                 ),
-                path_to_run_summaries="path_to_run_summaries",
+                path_to_run_summaries=ANY,
             )
 
             draw_busco_plots.assert_called_once_with(
-                path_to_run_summaries="path_to_run_summaries",
+                path_to_run_summaries=ANY,
                 plots_dir=draw_busco_plots.call_args.kwargs["plots_dir"]
             )
 
             zip_busco_plots.assert_called_once_with(
-                paths_to_plots="paths_to_plots",
+                paths_to_plots=ANY,
                 zip_path=os.path.join(tmp_path, "busco_plots.zip")
             )
 

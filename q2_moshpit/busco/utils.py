@@ -333,14 +333,7 @@ def _draw_busco_plots(
         plt.xlabel('% BUSCO')
         plt.title('')
 
-        if len(df.mag_id.unique()[0]) > 8:
-            abbreviated_uuids = [
-                uuid[0:8] + "..." for uuid in df.mag_id.unique()
-            ]
-        else:
-            abbreviated_uuids = df.mag_id.unique()
-
-        plt.yticks(range(len(df.mag_id.unique())), abbreviated_uuids)
+        plt.yticks(range(len(df.mag_id.unique())), df.mag_id.unique())
         plt.legend(
             ['Missing', 'Fragmented', 'Duplicated', 'Single'], loc='lower left'
         )

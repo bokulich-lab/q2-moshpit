@@ -24,7 +24,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Please complete the following information:**
  - OS: [e.g. macOS, Ubuntu]
- - QIIME 2 version [e.g. 2023.5]
+ - QIIME 2 version: [e.g. 2023.5]
 
 **Additional context**
 Anything else you want to share with us?

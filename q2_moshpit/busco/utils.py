@@ -295,12 +295,6 @@ def _draw_busco_plots(
         # Format data frame
         df = _parse_df_columns(df)
 
-        # Make new columns for plotting
-        df["single_"] = df["single"]
-        df["duplicated_"] = df["single_"] + df["duplicated"]
-        df["fragmented_"] = df["duplicated_"] + df["fragmented"]
-        df["missing_"] = df["fragmented_"] + df['missing']
-
         # Create horizontal stacked bar plot
         height = 0.9  # Height of the bars
         a = 0.7
@@ -490,5 +484,12 @@ def _parse_df_columns(df: pd.DataFrame) -> pd.DataFrame:
     df["percent_gaps"] = df["percent_gaps"].str.split(
         '%', expand=True
     )[0].map(float)
+
+    # Make new columns for downloadable plots
+    # (only used in _draw_busco_plots)
+    df["single_"] = df["single"]
+    df["duplicated_"] = df["single_"] + df["duplicated"]
+    df["fragmented_"] = df["duplicated_"] + df["fragmented"]
+    df["missing_"] = df["fragmented_"] + df['missing']
 
     return df

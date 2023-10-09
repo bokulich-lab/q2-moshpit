@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
-import pathlib
 import subprocess
 from copy import deepcopy
 from typing import Union, Optional
@@ -82,11 +81,9 @@ def _classify_kraken2(
             path_function = get_paths_for_reads
         else:
             # we got contigs or MAGs
-            def view_to_paths(view):
-                path = view[0]
-                stem = path.stem
-                absolute = str(pathlib.Path(seqs.path) / path)
-                return stem, absolute
+            def view_to_paths(arg):
+                relpath, _ = arg
+                return relpath.stem, str(seqs.path / relpath)
 
             iterate_over = map(
                 view_to_paths, seqs.sequences.iter_views(DNAFASTAFormat)

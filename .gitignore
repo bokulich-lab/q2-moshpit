@@ -137,4 +137,4 @@ dmypy.json
 .vscode
 
 # Ignore notebooks
-q2_moshpit/notebooks/
+**/*.ipynb

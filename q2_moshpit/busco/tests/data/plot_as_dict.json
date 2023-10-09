@@ -603,7 +603,7 @@
         "transform": [
           {
             "as": "x",
-            "calculate": "datum[param_1]"
+            "calculate": "datum[param_2]"
           }
         ],
         "width": 600
@@ -622,7 +622,7 @@
           "number_of_scaffolds"
         ]
       },
-      "name": "param_1",
+      "name": "param_2",
       "value": "scaffold_n50"
     }
   ],

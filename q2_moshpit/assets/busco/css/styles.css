@@ -1,0 +1,20 @@
+#plot {
+    margin-top: 50px;
+}
+
+.vega-bind {
+    margin-bottom: 15px;
+}
+
+.vega-bind-name {
+    margin-right: 10px;
+    white-space: nowrap
+}
+
+.header-inline {
+    display: inline-block;
+    float: left;
+    margin-right: 10px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}

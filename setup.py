@@ -25,16 +25,25 @@ setup(
         ['q2-moshpit=q2_moshpit.plugin_setup:plugin']
     },
     package_data={
-        'q2_moshpit': ['citations.bib', 'tests/data/*'],
+        'q2_moshpit': [
+            'citations.bib',
+            'tests/data/*',
+            "assets/busco/*",
+            "assets/busco/js/*",
+            "assets/busco/css/*",
+        ],
         'q2_moshpit.usage_examples': ['tests/data/*'],
         'q2_moshpit.metabat2.tests': [
             'data/*', 'data/bins/*/*', 'data/contigs/*',
             'data/depth/*', 'data/maps/*', 'data/bins-small/*/*',
             'data/bins-no-uuid/*/*'
         ],
-        'q2_moshpit.checkm.tests': [
-            'data/*', 'data/bins/*', 'data/bins/*/*',
-            'data/checkm_reports/*/*/*', 'data/plots/*/*/*'
+        "q2_moshpit.busco.tests": [
+            "data/*",
+            "data/busco_output/*",
+            "data/busco_output/sample1/*",
+            "data/busco_output/sample2/*",
+            "data/busco_output/sample3/*",
         ],
         'q2_moshpit.eggnog': [
             'tests/data/*',

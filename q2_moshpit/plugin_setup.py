@@ -45,14 +45,14 @@ kraken2_params = {
 kraken2_param_descriptions = {
     "threads": "Number of threads.",
     "confidence": "Confidence score threshold.",
-    "minimum_base_quality": "Minimum base quality used in classification."
-                            " Only applies when reads are used as input.",
+    "minimum_base_quality": "Minimum base quality used in classification. "
+                            "Only applies when reads are used as input.",
     "memory_mapping": "Avoids loading the database into RAM.",
     "minimum_hit_groups": "Minimum number of hit groups (overlapping "
                           "k-mers sharing the same minimizer).",
     "quick": "Quick operation (use first hit or hits).",
-    "report_minimizer_data": "Include number of read-minimizers per-taxon and"
-                             " unique read-minimizers per-taxon in the repot.",
+    "report_minimizer_data": "Include number of read-minimizers per-taxon and "
+                             "unique read-minimizers per-taxon in the repot.",
 }
 
 plugin = Plugin(
@@ -125,7 +125,7 @@ plugin.methods.register_function(
     output_descriptions={
         "mags": "The resulting MAGs.",
         "contig_map": "Mapping of MAG identifiers to the contig identifiers "
-        "contained in each MAG.",
+                      "contained in each MAG.",
         "unbinned_contigs": "Contigs that were not binned into any MAG.",
     },
     name="Bin contigs into MAGs using MetaBAT 2.",
@@ -173,7 +173,7 @@ plugin.methods.register_function(
     },
     name="Perform taxonomic classification of reads or MAGs using Kraken 2.",
     description="This method uses Kraken 2 to classify provided NGS reads "
-    "or MAGs into taxonomic groups.",
+                "or MAGs into taxonomic groups.",
     citations=[citations["wood2019"]],
 )
 
@@ -282,8 +282,8 @@ plugin.methods.register_function(
     },
     name="Build Kraken 2 database.",
     description="This method builds a Kraken 2/Bracken databases from "
-    "provided DNA sequences or simply fetches pre-built "
-    "versions from an online resource.",
+                "provided DNA sequences or simply fetches pre-built "
+                "versions from an online resource.",
     citations=[citations["wood2019"], citations["lu2017"]],
 )
 
@@ -332,13 +332,13 @@ plugin.methods.register_function(
     ],
     input_descriptions={"reports": "Per-sample Kraken 2 reports."},
     parameter_descriptions={
-        "coverage_threshold": "The minimum percent coverage required to"
-        " produce a feature."
+        "coverage_threshold": "The minimum percent coverage required to "
+                              "produce a feature."
     },
     output_descriptions={
-        "table": "A presence/absence table of selected features. The features"
-                 " are not of even ranks, but will be the most specific rank"
-                 " available.",
+        "table": "A presence/absence table of selected features. The features "
+                 "are not of even ranks, but will be the most specific rank "
+                 "available.",
         "taxonomy": "Infra-clade ranks are ignored "
                     "unless they are strain-level. Missing internal ranks "
                     "are annotated by their next most specific rank, "
@@ -347,8 +347,8 @@ plugin.methods.register_function(
     },
     name="Select downstream features from Kraken 2",
     description="Convert a Kraken 2 report, which is an annotated NCBI "
-    "taxonomy tree into generic artifacts for downstream "
-    "analyses.",
+                "taxonomy tree into generic artifacts for downstream "
+                "analyses.",
 )
 
 plugin.methods.register_function(
@@ -373,7 +373,7 @@ plugin.methods.register_function(
         #             'taxonomic assignments of its contigs. '
     },
     output_descriptions={
-        'taxonomy': 'Infra-clade ranks are ignored'
+        'taxonomy': 'Infra-clade ranks are ignored '
                     'unless they are strain-level. Missing internal ranks '
                     'are annotated by their next most specific rank, '
                     'with the exception of k__Bacteria and k__Archaea which '
@@ -398,7 +398,7 @@ plugin.methods.register_function(
     input_descriptions={
         'sequences': 'Sequence data of the contigs we want to '
                      'search for hits using the Diamond Database',
-        'diamond_db': 'The filepath to an artifact containing the'
+        'diamond_db': 'The filepath to an artifact containing the '
                       'Diamond database',
     },
     parameter_descriptions={
@@ -475,8 +475,8 @@ busco_params = {
 busco_param_descriptions = {
     "mode": "Specify which BUSCO analysis mode to run."
             "Currently only the 'genome' or 'geno' option is supported, "
-            "for genome assemblies. In the future modes for transcriptome"
-            "assemblies and for annotated gene sets (proteins) will be made"
+            "for genome assemblies. In the future modes for transcriptome "
+            "assemblies and for annotated gene sets (proteins) will be made "
             "available.",
     "lineage_dataset": "Specify the name of the BUSCO lineage to be used. "
                        "To see all possible options run `busco "
@@ -489,7 +489,7 @@ busco_param_descriptions = {
                            "Example: '--PARAM1=VALUE1,--PARAM2=VALUE2'.",
     "augustus_species": "Specify a species for Augustus training.",
     "auto_lineage": "Run auto-lineage to find optimum lineage path.",
-    "auto_lineage_euk": "Run auto-placement just on eukaryote tree to find"
+    "auto_lineage_euk": "Run auto-placement just on eukaryote tree to find "
                         "optimum lineage path.",
     "auto_lineage_prok": "Run auto-lineage just on non-eukaryote trees to "
                          "find optimum lineage path.",
@@ -521,11 +521,11 @@ busco_param_descriptions = {
     "metaeuk_parameters": "Pass additional arguments to Metaeuk for the first "
                           "run. All arguments should be contained within a "
                           "single string with no white space, with each "
-                          "argument separated by a comma."
+                          "argument separated by a comma. "
                           "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
     "metaeuk_rerun_parameters": "Pass additional arguments to Metaeuk for the "
                                 "second run. All arguments should be "
-                                "contained within a single string with no"
+                                "contained within a single string with no "
                                 "white space, with each argument separated by "
                                 "a comma. "
                                 "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
@@ -555,8 +555,8 @@ plugin.visualizers.register_function(
     parameter_descriptions=busco_param_descriptions,
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment tool)"
-                " to assess the quality of assembled MAGs and generates "
+                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "tool) to assess the quality of assembled MAGs and generates "
                 "visualizations summarizing the results.",
     citations=[citations["manni_busco_2021"]],
 )

@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-import glob
 import os
 import subprocess
 from copy import deepcopy
@@ -16,6 +15,7 @@ from q2_types.per_sample_sequences import (
     SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt
 )
+from q2_types.feature_data import DNAFASTAFormat
 
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
@@ -75,14 +75,20 @@ def _classify_kraken2(
         return contig_id.rstrip('_contigs'), [fp]
 
     try:
-        if manifest is not None:  # we got reads - use the manifest
+        if manifest is not None:
+            # we got reads - use the manifest
             iterate_over = manifest.iterrows()
             path_function = get_paths_for_reads
         else:
-            iterate_over = (
-                (os.path.basename(fp).split(".")[0], fp)
-                for fp in sorted(glob.glob(os.path.join(seqs.path, "*.fasta")))
+            # we got contigs or MAGs
+            def view_to_paths(arg):
+                relpath, _ = arg
+                return relpath.stem, str(seqs.path / relpath)
+
+            iterate_over = map(
+                view_to_paths, seqs.sequences.iter_views(DNAFASTAFormat)
             )
+
             if type(seqs) is MAGSequencesDirFmt:
                 path_function = get_paths_for_mags
             elif type(seqs) is ContigSequencesDirFmt:

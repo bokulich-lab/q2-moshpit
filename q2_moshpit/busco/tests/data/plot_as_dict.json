@@ -473,6 +473,7 @@
           "y": "independent"
         }
       },
+      "spacing": 20,
       "spec": {
         "encoding": {
           "color": {
@@ -547,11 +548,13 @@
             "type": "nominal"
           }
         },
-        "height": 162,
+        "height": {
+          "step": 30
+        },
         "mark": {
           "type": "bar"
         },
-        "width": 600
+        "width": 500
       }
     },
     {
@@ -573,6 +576,7 @@
           "y": "independent"
         }
       },
+      "spacing": 20,
       "spec": {
         "encoding": {
           "opacity": {
@@ -596,7 +600,9 @@
             "type": "nominal"
           }
         },
-        "height": 162,
+        "height": {
+          "step": 30
+        },
         "mark": {
           "type": "bar"
         },
@@ -606,7 +612,7 @@
             "calculate": "datum[param_2]"
           }
         ],
-        "width": 600
+        "width": 500
       }
     }
   ],
@@ -614,7 +620,7 @@
     {
       "bind": {
         "input": "select",
-        "name": "Assambly Statistics: ",
+        "name": "Assembly Statistics: ",
         "options": [
           "scaffold_n50",
           "contigs_n50",

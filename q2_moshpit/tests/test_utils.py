@@ -22,6 +22,18 @@ def fake_processing_func(key, val):
         return [_construct_param(key), str(val)]
 
 
+def fake_processing_func_no_falsy_filtering(key, val):
+    """
+    NOTE: There is a need for a function that does this since
+    `_process_common_input_params` already filter falsy values.
+    If a second filter is applied then some parameters are omitted.
+    """
+    if isinstance(val, bool):
+        return [_construct_param(key)]
+    else:
+        return [_construct_param(key), str(val)]
+
+
 class TestUtils(TestPluginBase):
     package = 'q2_moshpit.tests'
 
@@ -60,6 +72,46 @@ class TestUtils(TestPluginBase):
         obs = _process_common_input_params(fake_processing_func, kwargs)
         exp = ['--arg2', 'some-value', '--arg4']
         self.assertListEqual(obs, exp)
+
+    def test_process_common_inputs_mix_with_falsy_values(self):
+        data = {
+            "a": 0,
+            "b": 1,
+            "c": 0.0,
+            "d": 3.14,
+            "e": "",
+            "f": "Hello",
+            "g": None,
+            "h": 42,
+            "i": 0.0,
+            "j": [],
+            "k": "World",
+            "l": False,
+            "m": True,
+        }
+        observed = _process_common_input_params(
+            fake_processing_func_no_falsy_filtering, data
+        )
+        expected = [
+            "--a",
+            "0",
+            "--b",
+            "1",
+            "--c",
+            "0.0",
+            "--d",
+            "3.14",
+            "--f",
+            "Hello",
+            "--h",
+            "42",
+            "--i",
+            "0.0",
+            "--k",
+            "World",
+            "--m",
+        ]
+        self.assertSetEqual(set(observed), set(expected))
 
 
 if __name__ == '__main__':

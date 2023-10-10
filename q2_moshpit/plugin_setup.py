@@ -214,24 +214,44 @@ plugin.methods.register_function(
     citations=[citations["wood2019"]],
 )
 
+T_kraken_collate_reports_in, T_kraken_collate_reports_out = TypeMap({
+    SampleData[Kraken2Reports % Properties('reads', 'contigs')]: (
+        SampleData[Kraken2Reports % Properties('reads', 'contigs')],
+    ),
+    SampleData[Kraken2Reports % Properties('reads')]: (
+        SampleData[Kraken2Reports % Properties('reads')],
+    ),
+    SampleData[Kraken2Reports % Properties('contigs')]: (
+        SampleData[Kraken2Reports % Properties('contigs')],
+    )
+})
+
 plugin.methods.register_function(
     function=q2_moshpit.helpers.collate_kraken2_reports,
-    inputs={"kraken2_reports":
-            List[SampleData[Kraken2Reports % Properties("reads")]]},
+    inputs={"kraken2_reports": List[T_kraken_collate_reports_in]},
     parameters={},
-    outputs={"collated_kraken2_reports":
-             SampleData[Kraken2Reports % Properties("reads")]},
+    outputs={"collated_kraken2_reports": T_kraken_collate_reports_out},
     name="Collate kraken2 reports",
     description="Collates kraken2 reports"
 )
 
+T_kraken_collate_outputs_in, T_kraken_collate_outputs_out = TypeMap({
+    SampleData[Kraken2Outputs % Properties('reads', 'contigs')]: (
+        SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
+    ),
+    SampleData[Kraken2Outputs % Properties('reads')]: (
+        SampleData[Kraken2Outputs % Properties('reads')],
+    ),
+    SampleData[Kraken2Outputs % Properties('contigs')]: (
+        SampleData[Kraken2Outputs % Properties('contigs')],
+    )
+})
+
 plugin.methods.register_function(
     function=q2_moshpit.helpers.collate_kraken2_outputs,
-    inputs={"kraken2_outputs":
-            List[SampleData[Kraken2Outputs % Properties("reads")]]},
+    inputs={"kraken2_outputs": List[T_kraken_collate_outputs_in]},
     parameters={},
-    outputs={"collated_kraken2_outputs":
-             SampleData[Kraken2Outputs % Properties("reads")]},
+    outputs={"collated_kraken2_outputs": T_kraken_collate_outputs_out},
     name="Collate kraken2 outputs",
     description="Collates kraken2 outputs"
 )

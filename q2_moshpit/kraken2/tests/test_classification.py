@@ -28,6 +28,7 @@ from q2_moshpit.kraken2.classification import (
 )
 
 from qiime2 import Artifact
+from qiime2.sdk.parallel_config import ParallelConfig
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
@@ -345,7 +346,13 @@ class TestKraken2ClassifyReads(TestPluginBase):
         pass
 
 
-class TestKraken2ClassifyContigs(unittest.TestCase):
+class TestKraken2ClassifyContigs(TestPluginBase):
+    package = "q2_moshpit.kraken2.tests"
+
+    def setUp(self):
+        super().setUp()
+        self.classify_kraken2 = self.plugin.pipelines['classify_kraken2']
+
     @classmethod
     def setUpClass(cls):
         cls.datadir = os.path.join(
@@ -424,6 +431,59 @@ class TestKraken2ClassifyContigs(unittest.TestCase):
 
         self.assertIsInstance(reports, Kraken2ReportDirectoryFormat)
         self.assertIsInstance(outputs, Kraken2OutputDirectoryFormat)
+
+        sample_id_to_ncbi_id = {
+            'ba': 1392,   # bacillus anthracis
+            'mm': 10090,  # mus musculus
+            'sa': 1280,   # staph aureus
+            'se': 1282    # staph epidermidis
+        }
+
+        output_views = outputs.reports.iter_views(pd.DataFrame)
+        for path, df in output_views:
+            sample_id = str(path).rsplit('.output.txt')[0]
+
+            # the expected number of records are in the output
+            self.assertEqual(len(df), 20)
+
+            # no sequences are unclassified
+            self.assertNotIn('U', list(df['classification']))
+
+            # all classifications are correct
+            self.assertEqual(
+                pd.unique(df['taxon_id']), [sample_id_to_ncbi_id[sample_id]]
+            )
+
+        report_views = reports.reports.iter_views(pd.DataFrame)
+        for path, df in report_views:
+            sample_id = str(path).rsplit('.report.txt')[0]
+
+            # the dataframe is non-empty
+            self.assertGreater(len(df), 0)
+
+            # the correct taxonomy id (feature id) is present somewhere in the
+            # classification tree, and none of the others are present
+            for current_sample_id, taxon_id in sample_id_to_ncbi_id.items():
+                if current_sample_id == sample_id:
+                    self.assertIn(taxon_id, list(df['taxon_id']))
+                else:
+                    self.assertNotIn(taxon_id, list(df['taxon_id']))
+
+    def test_classify_kraken2_contigs_parallel(self):
+        db_path = os.path.join(self.datadir, 'contigs', 'small-kraken2-db')
+        contigs_path = os.path.join(self.datadir, 'contigs', 'samples')
+
+        db = Kraken2DBDirectoryFormat(db_path, 'r')
+        db = Artifact.import_data('Kraken2DB', db)
+        samples = ContigSequencesDirFmt(contigs_path, 'r')
+        samples = Artifact.import_data('SampleData[Contigs]', samples)
+
+        with ParallelConfig():
+            reports, outputs = \
+                self.classify_kraken2.parallel(samples, db)._result()
+
+        reports = reports.view(Kraken2ReportDirectoryFormat)
+        outputs = outputs.view(Kraken2OutputDirectoryFormat)
 
         sample_id_to_ncbi_id = {
             'ba': 1392,   # bacillus anthracis

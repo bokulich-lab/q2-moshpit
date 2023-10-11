@@ -247,7 +247,7 @@ class TestClassifyKraken2HasCorrectCalls(TestPluginBase):
         report_format_mock,
         output_format_mock
     ):
-        samples_dir = self.get_data_path(os.path.join('contigs', 'samples'))
+        samples_dir = self.get_data_path(os.path.join('new', 'contigs'))
         contigs = ContigSequencesDirFmt(samples_dir, "r")
 
         common_args = ["--db", "/some/where/db", "--quick"]
@@ -506,8 +506,8 @@ class TestClassifyKraken2Contigs(unittest.TestCase):
         )
 
     def test_contigs(self):
-        db_path = os.path.join(self.datadir, 'contigs', 'small-kraken2-db')
-        contigs_path = os.path.join(self.datadir, 'contigs', 'samples')
+        db_path = os.path.join(self.datadir, 'new', 'kraken2-db')
+        contigs_path = os.path.join(self.datadir, 'new', 'contigs')
 
         db = Kraken2DBDirectoryFormat(db_path, 'r')
         samples = ContigSequencesDirFmt(contigs_path, 'r')

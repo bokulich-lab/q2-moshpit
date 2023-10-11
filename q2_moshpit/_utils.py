@@ -52,9 +52,15 @@ def _process_common_input_params(processing_func, params: dict) -> List[str]:
     """
     processed_args = []
     for arg_key, arg_val in params.items():
-        # bool is a subclass of int so to only reject ints we need to do:
-        if type(arg_val) != int and not arg_val:  # noqa: E721
-            continue
-        else:
+        # This if condition excludes arguments which are falsy
+        # (False, None, "", []), except for integers and floats.
+        if (  # noqa: E721
+            type(arg_val) == int or
+            type(arg_val) == float or
+            arg_val
+        ):
             processed_args.extend(processing_func(arg_key, arg_val))
+        else:
+            continue
+
     return processed_args

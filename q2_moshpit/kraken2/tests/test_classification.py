@@ -33,7 +33,7 @@ from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
 
-class TestKraken2Classification(TestPluginBase):
+class TestClassifyKraken2Helpers(TestPluginBase):
     package = "q2_moshpit.kraken2.tests"
 
     def setUp(self):
@@ -92,6 +92,13 @@ class TestKraken2Classification(TestPluginBase):
         self.assertEqual(obs_rep_fp, exp_rep_fp)
         self.assertEqual(obs_out_fp, exp_out_fp)
 
+
+class TestClassifyKraken2HasCorrectCalls(TestPluginBase):
+    package = "q2_moshpit.kraken2.tests"
+
+    def setUp(self):
+        super().setUp()
+
     @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
     @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
     @patch(
@@ -103,7 +110,7 @@ class TestKraken2Classification(TestPluginBase):
         return_value=(1, 2)
     )
     @patch("q2_moshpit.kraken2.classification.run_command")
-    def test_classify_kraken_exception(self, p1, p2, p3, p4, p5):
+    def test_exception(self, p1, p2, p3, p4, p5):
         seqs = MAGSequencesDirFmt(self.get_data_path("mags-derep"), "r")
         common_args = ["--db", "/some/where/db", "--quick"]
 
@@ -116,7 +123,7 @@ class TestKraken2Classification(TestPluginBase):
             _classify_kraken2(seqs, common_args)
 
     @patch("q2_moshpit.kraken2.classification._classify_kraken2")
-    def test_classify_kraken_action(self, p1):
+    def test_action(self, p1):
         seqs = Artifact.import_data(
             'FeatureData[MAG]', self.get_data_path("mags-derep")
         )
@@ -141,19 +148,160 @@ class TestKraken2Classification(TestPluginBase):
         ]
         p1.assert_called_with(ANY, exp_args)
 
+    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification._get_seq_paths")
+    @patch("q2_moshpit.kraken2.classification._construct_output_paths")
+    @patch("q2_moshpit.kraken2.classification.run_command")
+    def test_reads(
+        self, p1, p2, p3, p4, p5
+    ):
+        seqs = SingleLanePerSamplePairedEndFastqDirFmt(
+            self.get_data_path("paired-end"), "r"
+        )
+        manifest = seqs.manifest.view(pd.DataFrame)
+        common_args = ["--db", "/some/where/db", "--quick"]
 
-class TestKraken2ClassifyMAGs(TestPluginBase):
-    package = "q2_moshpit.kraken2.tests"
+        fake_report_dir = Kraken2ReportDirectoryFormat()
+        fake_output_dir = Kraken2OutputDirectoryFormat()
+        exp_out_fps = [
+            os.path.join(fake_output_dir.path, "sample1.output.txt"),
+            os.path.join(fake_output_dir.path, "sample2.output.txt"),
+        ]
+        exp_rep_fps = [
+            os.path.join(fake_report_dir.path, "sample1.report.txt"),
+            os.path.join(fake_report_dir.path, "sample2.report.txt"),
+        ]
 
-    def setUp(self):
-        super().setUp()
+        p2.side_effect = list(zip(exp_out_fps, exp_rep_fps))
+        p3.side_effect = [
+            ("sample1", ["reads1_R1.fastq.gz", "reads1_R2.fastq.gz"]),
+            ("sample2", ["reads2_R1.fastq.gz", "reads2_R2.fastq.gz"]),
+        ]
+        p4.return_value = fake_report_dir
+        p5.return_value = fake_output_dir
+
+        # run kraken2
+        obs_reports, obs_outputs = _classify_kraken2(seqs, common_args)
+
+        self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
+        self.assertIsInstance(obs_outputs, Kraken2OutputDirectoryFormat)
+
+        p1.assert_has_calls(
+            [
+                call(
+                    cmd=[
+                        "kraken2",
+                        "--db",
+                        "/some/where/db",
+                        "--quick",
+                        "--paired",
+                        "--report",
+                        exp_rep_fps[0],
+                        "--output",
+                        exp_out_fps[0],
+                        "reads1_R1.fastq.gz",
+                        "reads1_R2.fastq.gz",
+                    ],
+                    verbose=True,
+                ),
+                call(
+                    cmd=[
+                        "kraken2",
+                        "--db",
+                        "/some/where/db",
+                        "--quick",
+                        "--paired",
+                        "--report",
+                        exp_rep_fps[1],
+                        "--output",
+                        exp_out_fps[1],
+                        "reads2_R1.fastq.gz",
+                        "reads2_R2.fastq.gz",
+                    ],
+                    verbose=True,
+                ),
+            ]
+        )
+        p2.assert_has_calls(
+            [
+                call("sample1", fake_output_dir, fake_report_dir),
+                call("sample2", fake_output_dir, fake_report_dir),
+            ]
+        )
+        p3.assert_has_calls(
+            [
+                call("sample1", ANY, list(manifest.columns)),
+                call("sample2", ANY, list(manifest.columns)),
+            ]
+        )
+
+    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification._get_seq_paths")
+    @patch("q2_moshpit.kraken2.classification.run_command")
+    def test_contigs(
+        self,
+        run_command_mock,
+        _get_seq_paths_mock,
+        report_format_mock,
+        output_format_mock
+    ):
+        samples_dir = self.get_data_path(os.path.join('contigs', 'samples'))
+        contigs = ContigSequencesDirFmt(samples_dir, "r")
+
+        common_args = ["--db", "/some/where/db", "--quick"]
+
+        fake_output_dir = Kraken2OutputDirectoryFormat()
+        fake_report_dir = Kraken2ReportDirectoryFormat()
+
+        samples = ('ba', 'mm', 'sa', 'se')
+        exp_output_fps = []
+        exp_report_fps = []
+        for sample in samples:
+            exp_output_fps.append(
+                os.path.join(fake_output_dir.path, f'{sample}.output.txt')
+            )
+            exp_report_fps.append(
+                os.path.join(fake_report_dir.path, f'{sample}.report.txt')
+            )
+
+        output_format_mock.return_value = fake_output_dir
+        report_format_mock.return_value = fake_report_dir
+
+        obs_reports, obs_outputs = _classify_kraken2(contigs, common_args)
+        self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
+        self.assertIsInstance(obs_outputs, Kraken2OutputDirectoryFormat)
+
+        calls = []
+        for i, sample in enumerate(samples):
+            calls.append(call(
+                cmd=[
+                    "kraken2",
+                    "--db",
+                    "/some/where/db",
+                    "--quick",
+                    "--report",
+                    exp_report_fps[i],
+                    "--output",
+                    exp_output_fps[i],
+                    os.path.join(
+                        contigs.path,
+                        f'{sample}_contigs.fasta'
+                    )
+                ],
+                verbose=True
+            ))
+        run_command_mock.assert_has_calls(calls, any_order=True)
+
+        _get_seq_paths_mock.assert_not_called()
 
     @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
     @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
     @patch("q2_moshpit.kraken2.classification._get_seq_paths")
     @patch("q2_moshpit.kraken2.classification._construct_output_paths")
     @patch("q2_moshpit.kraken2.classification.run_command")
-    def test_classify_kraken2_mags_has_correct_calls(self, p1, p2, p3, p4, p5):
+    def test_mags(self, p1, p2, p3, p4, p5):
         seqs = MAGSequencesDirFmt(self.get_data_path("mags-derep"), "r")
         common_args = ["--db", "/some/where/db", "--quick"]
 
@@ -242,105 +390,6 @@ class TestKraken2ClassifyMAGs(TestPluginBase):
         )
         p3.assert_not_called()
 
-    # TODO
-    def test_classify_kraken2_MAGs(self):
-        pass
-
-
-class TestKraken2ClassifyReads(TestPluginBase):
-    package = "q2_moshpit.kraken2.tests"
-
-    def setUp(self):
-        super().setUp()
-
-    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
-    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
-    @patch("q2_moshpit.kraken2.classification._get_seq_paths")
-    @patch("q2_moshpit.kraken2.classification._construct_output_paths")
-    @patch("q2_moshpit.kraken2.classification.run_command")
-    def test_classify_kraken2_reads_has_correct_calls(
-        self, p1, p2, p3, p4, p5
-    ):
-        seqs = SingleLanePerSamplePairedEndFastqDirFmt(
-            self.get_data_path("paired-end"), "r"
-        )
-        manifest = seqs.manifest.view(pd.DataFrame)
-        common_args = ["--db", "/some/where/db", "--quick"]
-
-        fake_report_dir = Kraken2ReportDirectoryFormat()
-        fake_output_dir = Kraken2OutputDirectoryFormat()
-        exp_out_fps = [
-            os.path.join(fake_output_dir.path, "sample1.output.txt"),
-            os.path.join(fake_output_dir.path, "sample2.output.txt"),
-        ]
-        exp_rep_fps = [
-            os.path.join(fake_report_dir.path, "sample1.report.txt"),
-            os.path.join(fake_report_dir.path, "sample2.report.txt"),
-        ]
-
-        p2.side_effect = list(zip(exp_out_fps, exp_rep_fps))
-        p3.side_effect = [
-            ("sample1", ["reads1_R1.fastq.gz", "reads1_R2.fastq.gz"]),
-            ("sample2", ["reads2_R1.fastq.gz", "reads2_R2.fastq.gz"]),
-        ]
-        p4.return_value = fake_report_dir
-        p5.return_value = fake_output_dir
-
-        # run kraken2
-        obs_reports, obs_outputs = _classify_kraken2(seqs, common_args)
-
-        self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
-        self.assertIsInstance(obs_outputs, Kraken2OutputDirectoryFormat)
-
-        p1.assert_has_calls(
-            [
-                call(
-                    cmd=[
-                        "kraken2",
-                        "--db",
-                        "/some/where/db",
-                        "--quick",
-                        "--paired",
-                        "--report",
-                        exp_rep_fps[0],
-                        "--output",
-                        exp_out_fps[0],
-                        "reads1_R1.fastq.gz",
-                        "reads1_R2.fastq.gz",
-                    ],
-                    verbose=True,
-                ),
-                call(
-                    cmd=[
-                        "kraken2",
-                        "--db",
-                        "/some/where/db",
-                        "--quick",
-                        "--paired",
-                        "--report",
-                        exp_rep_fps[1],
-                        "--output",
-                        exp_out_fps[1],
-                        "reads2_R1.fastq.gz",
-                        "reads2_R2.fastq.gz",
-                    ],
-                    verbose=True,
-                ),
-            ]
-        )
-        p2.assert_has_calls(
-            [
-                call("sample1", fake_output_dir, fake_report_dir),
-                call("sample2", fake_output_dir, fake_report_dir),
-            ]
-        )
-        p3.assert_has_calls(
-            [
-                call("sample1", ANY, list(manifest.columns)),
-                call("sample2", ANY, list(manifest.columns)),
-            ]
-        )
-
 
 class TestClassifyKraken2Reads(unittest.TestCase):
     @classmethod
@@ -371,7 +420,7 @@ class TestClassifyKraken2Reads(unittest.TestCase):
         self.assertIsInstance(self.reports, Kraken2ReportDirectoryFormat)
         self.assertIsInstance(self.outputs, Kraken2OutputDirectoryFormat)
 
-    def test_classify_reads(self):
+    def test_reads(self):
         samples_of_interest = ('ba', 'mm', 'sa', 'se', 'ba-mm-mixed')
 
         def filter_views(arg):
@@ -413,7 +462,7 @@ class TestClassifyKraken2Reads(unittest.TestCase):
             self.assertEqual(exp & obs, exp)
             self.assertFalse(exp_missing & obs)
 
-    def test_classify_nonsense_reads(self):
+    def test_nonsense_reads(self):
         samples_of_interest = ('nonsense')
 
         def filter_views(arg):
@@ -445,78 +494,18 @@ class TestClassifyKraken2Reads(unittest.TestCase):
     # raise a pandas EmptyDataError that makes validation fail
     # also, kraken2 doesnt output the output.txt file for empty inputs...
     # probably need to just disallow any empty input files
-    def test_classify_empty_reads(self):
+    def test_empty_reads(self):
         pass
 
 
-class TestKraken2ClassifyContigs(unittest.TestCase):
+class TestClassifyKraken2Contigs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.datadir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'data'
         )
 
-    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
-    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
-    @patch("q2_moshpit.kraken2.classification._get_seq_paths")
-    @patch("q2_moshpit.kraken2.classification.run_command")
-    def test_classify_kraken2_contigs_has_correct_calls(
-        self,
-        run_command_mock,
-        _get_seq_paths_mock,
-        report_format_mock,
-        output_format_mock
-    ):
-        samples_dir = os.path.join(self.datadir, 'contigs', 'samples')
-        contigs = ContigSequencesDirFmt(samples_dir, "r")
-
-        common_args = ["--db", "/some/where/db", "--quick"]
-
-        fake_output_dir = Kraken2OutputDirectoryFormat()
-        fake_report_dir = Kraken2ReportDirectoryFormat()
-
-        samples = ('ba', 'mm', 'sa', 'se')
-        exp_output_fps = []
-        exp_report_fps = []
-        for sample in samples:
-            exp_output_fps.append(
-                os.path.join(fake_output_dir.path, f'{sample}.output.txt')
-            )
-            exp_report_fps.append(
-                os.path.join(fake_report_dir.path, f'{sample}.report.txt')
-            )
-
-        output_format_mock.return_value = fake_output_dir
-        report_format_mock.return_value = fake_report_dir
-
-        obs_reports, obs_outputs = _classify_kraken2(contigs, common_args)
-        self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
-        self.assertIsInstance(obs_outputs, Kraken2OutputDirectoryFormat)
-
-        calls = []
-        for i, sample in enumerate(samples):
-            calls.append(call(
-                cmd=[
-                    "kraken2",
-                    "--db",
-                    "/some/where/db",
-                    "--quick",
-                    "--report",
-                    exp_report_fps[i],
-                    "--output",
-                    exp_output_fps[i],
-                    os.path.join(
-                        contigs.path,
-                        f'{sample}_contigs.fasta'
-                    )
-                ],
-                verbose=True
-            ))
-        run_command_mock.assert_has_calls(calls, any_order=True)
-
-        _get_seq_paths_mock.assert_not_called()
-
-    def test_classify_kraken2_contigs(self):
+    def test_contigs(self):
         db_path = os.path.join(self.datadir, 'contigs', 'small-kraken2-db')
         contigs_path = os.path.join(self.datadir, 'contigs', 'samples')
 

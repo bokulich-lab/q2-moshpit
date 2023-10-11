@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+from pathlib import Path
 import unittest
 from subprocess import CalledProcessError
 
@@ -340,8 +341,111 @@ class TestKraken2ClassifyReads(TestPluginBase):
             ]
         )
 
-    # TODO
-    def test_classify_kraken2_reads(self):
+
+class TestClassifyKraken2Reads(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.datadir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'data'
+        )
+
+        db_path = os.path.join(cls.datadir, 'new', 'kraken2-db')
+        reads_path = os.path.join(cls.datadir, 'new', 'reads')
+
+        db = Kraken2DBDirectoryFormat(db_path, 'r')
+        samples = SingleLanePerSamplePairedEndFastqDirFmt(reads_path, 'r')
+
+        cls.reports, cls.outputs = classify_kraken2(samples, db)
+        cls.output_views = cls.outputs.reports.iter_views(pd.DataFrame)
+        cls.report_views = cls.reports.reports.iter_views(pd.DataFrame)
+
+        cls.sample_id_to_ncbi_id = {
+            'ba': {1392},   # bacillus anthracis
+            'mm': {10090},  # mus musculus
+            'sa': {1280},   # staph aureus
+            'se': {1282},   # staph epidermidis
+            'ba-mm-mixed': {1392, 10090}
+        }
+
+    def test_formats(self):
+        self.assertIsInstance(self.reports, Kraken2ReportDirectoryFormat)
+        self.assertIsInstance(self.outputs, Kraken2OutputDirectoryFormat)
+
+    def test_classify_reads(self):
+        samples_of_interest = ('ba', 'mm', 'sa', 'se', 'ba-mm-mixed')
+
+        def filter_views(arg):
+            path, _ = arg
+            return Path(path.stem).stem in samples_of_interest
+
+        output_views = filter(filter_views, self.output_views)
+        report_views = filter(filter_views, self.report_views)
+
+        for path, df in output_views:
+            sample_id = str(path).rsplit('.output.txt')[0]
+
+            # the expected number of records are in the output
+            self.assertEqual(len(df), 25)
+
+            # all reads are classified
+            self.assertEqual({'C'}, set(df['classification']))
+
+            # all reads are classified correctly
+            self.assertEqual(
+                set(df['taxon_id']),
+                self.sample_id_to_ncbi_id[sample_id]
+            )
+
+        for path, df in report_views:
+            sample_id = str(path).rsplit('.report.txt')[0]
+
+            # the dataframe is non-empty
+            self.assertGreater(len(df), 0)
+
+            # the correct taxonomy id(s) is present somewhere in the
+            # classification tree, and none of the others are present
+            exp = self.sample_id_to_ncbi_id[sample_id]
+            obs = set(df['taxon_id'])
+            all_samples = set().union(
+                *[s for _, s in self.sample_id_to_ncbi_id.items()]
+            )
+            exp_missing = all_samples - exp
+            self.assertEqual(exp & obs, exp)
+            self.assertFalse(exp_missing & obs)
+
+    def test_classify_nonsense_reads(self):
+        samples_of_interest = ('nonsense')
+
+        def filter_views(arg):
+            path, _ = arg
+            return Path(path.stem).stem in samples_of_interest
+
+        output_views = filter(filter_views, self.output_views)
+        report_views = filter(filter_views, self.report_views)
+
+        _, df = list(output_views)[0]
+
+        # the expected number of records are in the output
+        self.assertEqual(len(df), 25)
+
+        # the sequences are unclassified
+        self.assertEqual({'U'}, set(df['classification']))
+
+        _, df = list(report_views)[0]
+
+        # the reports file has one line for all unclassified sequences
+        self.assertEqual(len(df), 1)
+
+        # none of the db taxonomy ids are present in the report
+        exp = {0}
+        obs = set(df['taxon_id'])
+        self.assertEqual(exp, obs)
+
+    # TODO: need to decide what to do here, currently empty report files
+    # raise a pandas EmptyDataError that makes validation fail
+    # also, kraken2 doesnt output the output.txt file for empty inputs...
+    # probably need to just disallow any empty input files
+    def test_classify_empty_reads(self):
         pass
 
 
@@ -453,7 +557,7 @@ class TestKraken2ClassifyContigs(unittest.TestCase):
             # the dataframe is non-empty
             self.assertGreater(len(df), 0)
 
-            # the correct taxonomy id (feature id) is present somewhere in the
+            # the correct taxonomy id is present somewhere in the
             # classification tree, and none of the others are present
             for current_sample_id, taxon_id in sample_id_to_ncbi_id.items():
                 if current_sample_id == sample_id:

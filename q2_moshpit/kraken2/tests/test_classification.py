@@ -394,12 +394,12 @@ class TestClassifyKraken2HasCorrectCalls(TestPluginBase):
 class TestClassifyKraken2Reads(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.datadir = os.path.join(
+        datadir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'data'
         )
 
-        db_path = os.path.join(cls.datadir, 'new', 'kraken2-db')
-        reads_path = os.path.join(cls.datadir, 'new', 'reads')
+        db_path = os.path.join(datadir, 'new', 'kraken2-db')
+        reads_path = os.path.join(datadir, 'new', 'reads')
 
         db = Kraken2DBDirectoryFormat(db_path, 'r')
         samples = SingleLanePerSamplePairedEndFastqDirFmt(reads_path, 'r')
@@ -419,6 +419,8 @@ class TestClassifyKraken2Reads(unittest.TestCase):
     def test_formats(self):
         self.assertIsInstance(self.reports, Kraken2ReportDirectoryFormat)
         self.assertIsInstance(self.outputs, Kraken2OutputDirectoryFormat)
+        self.reports.validate()
+        self.outputs.validate()
 
     def test_reads(self):
         samples_of_interest = ('ba', 'mm', 'sa', 'se', 'ba-mm-mixed')
@@ -501,58 +503,75 @@ class TestClassifyKraken2Reads(unittest.TestCase):
 class TestClassifyKraken2Contigs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.datadir = os.path.join(
+        datadir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'data'
         )
 
-    def test_contigs(self):
-        db_path = os.path.join(self.datadir, 'new', 'kraken2-db')
-        contigs_path = os.path.join(self.datadir, 'new', 'contigs')
+        db_path = os.path.join(datadir, 'new', 'kraken2-db')
+        contigs_path = os.path.join(datadir, 'new', 'contigs')
 
         db = Kraken2DBDirectoryFormat(db_path, 'r')
         samples = ContigSequencesDirFmt(contigs_path, 'r')
 
-        reports, outputs = classify_kraken2(samples, db)
+        cls.reports, cls.outputs = classify_kraken2(samples, db)
+        cls.output_views = cls.outputs.reports.iter_views(pd.DataFrame)
+        cls.report_views = cls.reports.reports.iter_views(pd.DataFrame)
 
-        self.assertIsInstance(reports, Kraken2ReportDirectoryFormat)
-        self.assertIsInstance(outputs, Kraken2OutputDirectoryFormat)
-
-        sample_id_to_ncbi_id = {
-            'ba': 1392,   # bacillus anthracis
-            'mm': 10090,  # mus musculus
-            'sa': 1280,   # staph aureus
-            'se': 1282    # staph epidermidis
+        cls.sample_id_to_ncbi_id = {
+            'ba': {1392},   # bacillus anthracis
+            'mm': {10090},  # mus musculus
+            'sa': {1280},   # staph aureus
+            'se': {1282},    # staph epidermidis
+            'ba-mm-mixed': {1392, 10090}
         }
 
-        output_views = outputs.reports.iter_views(pd.DataFrame)
+    def test_formats(self):
+        self.assertIsInstance(self.reports, Kraken2ReportDirectoryFormat)
+        self.assertIsInstance(self.outputs, Kraken2OutputDirectoryFormat)
+        self.reports.validate()
+        self.outputs.validate()
+
+    def test_contigs(self):
+        samples_of_interest = ('ba', 'mm', 'sa', 'se', 'ba-mm-mixed')
+
+        def filter_views(arg):
+            path, _ = arg
+            return Path(path.stem).stem in samples_of_interest
+
+        output_views = filter(filter_views, self.output_views)
+        report_views = filter(filter_views, self.report_views)
+
         for path, df in output_views:
             sample_id = str(path).rsplit('.output.txt')[0]
 
             # the expected number of records are in the output
             self.assertEqual(len(df), 20)
 
-            # no sequences are unclassified
-            self.assertNotIn('U', list(df['classification']))
+            # all reads are classified
+            self.assertEqual({'C'}, set(df['classification']))
 
-            # all classifications are correct
+            # all reads are classified correctly
             self.assertEqual(
-                pd.unique(df['taxon_id']), [sample_id_to_ncbi_id[sample_id]]
+                set(df['taxon_id']),
+                self.sample_id_to_ncbi_id[sample_id]
             )
 
-        report_views = reports.reports.iter_views(pd.DataFrame)
         for path, df in report_views:
             sample_id = str(path).rsplit('.report.txt')[0]
 
             # the dataframe is non-empty
             self.assertGreater(len(df), 0)
 
-            # the correct taxonomy id is present somewhere in the
+            # the correct taxonomy id(s) is present somewhere in the
             # classification tree, and none of the others are present
-            for current_sample_id, taxon_id in sample_id_to_ncbi_id.items():
-                if current_sample_id == sample_id:
-                    self.assertIn(taxon_id, list(df['taxon_id']))
-                else:
-                    self.assertNotIn(taxon_id, list(df['taxon_id']))
+            exp = self.sample_id_to_ncbi_id[sample_id]
+            obs = set(df['taxon_id'])
+            all_samples = set().union(
+                *[s for _, s in self.sample_id_to_ncbi_id.items()]
+            )
+            exp_missing = all_samples - exp
+            self.assertEqual(exp & obs, exp)
+            self.assertFalse(exp_missing & obs)
 
 
 if __name__ == "__main__":

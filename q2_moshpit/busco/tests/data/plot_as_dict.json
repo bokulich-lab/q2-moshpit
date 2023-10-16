@@ -1,5 +1,4 @@
 {
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.15.1.json",
   "config": {
     "axis": {
       "labelFontSize": 17,
@@ -603,7 +602,7 @@
         "transform": [
           {
             "as": "x",
-            "calculate": "datum[param_2]"
+            "calculate": "datum[param_i]"
           }
         ],
         "width": 600
@@ -622,7 +621,7 @@
           "number_of_scaffolds"
         ]
       },
-      "name": "param_2",
+      "name": "param_i",
       "value": "scaffold_n50"
     }
   ],

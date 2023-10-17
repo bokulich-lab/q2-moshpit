@@ -8,6 +8,7 @@
 import glob
 import re
 from uuid import uuid4
+from pathlib import Path
 
 import os.path
 import shutil
@@ -15,7 +16,7 @@ import tempfile
 from copy import deepcopy
 
 import skbio.io
-from q2_types.feature_data import DNAIterator
+from q2_types.feature_data import DNAIterator, DNAFASTAFormat
 
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
 from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
@@ -24,24 +25,26 @@ from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.metabat2.utils import _process_metabat2_arg
 
 
-def _get_sample_name_from_path(fp, suffix):
-    return os.path.basename(fp).rsplit(suffix, maxsplit=1)[0]
-
-
 def _assert_samples(contigs_fps, maps_fps) -> dict:
     contigs_fps, maps_fps = sorted(contigs_fps), sorted(maps_fps)
-    contig_samps = [_get_sample_name_from_path(x, '_contigs.fa')
-                    for x in contigs_fps]
-    map_samps = [_get_sample_name_from_path(x, '_alignment.bam')
-                 for x in maps_fps]
+    contig_samps = [
+        Path(fp).stem.rsplit('_contigs', 1)[0] for fp in contigs_fps
+    ]
+    map_samps = [
+       Path(fp).stem.rsplit('_alignment', 1)[0] for fp in maps_fps
+    ]
     if set(contig_samps) != set(map_samps):
-        raise Exception('Contigs and alignment maps should belong to the '
-                        'same sample set. You provided contigs for '
-                        f'samples: {",".join(contig_samps)} but maps for '
-                        f'samples: {",".join(map_samps)}. Please check '
-                        'your inputs and try again.')
-    return {s: {'contigs': contigs_fps[i], 'map': maps_fps[i]}
-            for i, s in enumerate(contig_samps)}
+        raise Exception(
+            'Contigs and alignment maps should belong to the same sample set. '
+            f'You provided contigs for samples: {",".join(contig_samps)} but '
+            f'maps for samples: {",".join(map_samps)}. Please check your '
+            'inputs and try again.'
+        )
+
+    return {
+        s: {'contigs': contigs_fps[i], 'map': maps_fps[i]}
+        for i, s in enumerate(contig_samps)
+    }
 
 
 def _sort_bams(samp_name, samp_props, loc):
@@ -129,10 +132,13 @@ def _generate_contig_map(
 
 
 def _bin_contigs_metabat(
-        contigs: ContigSequencesDirFmt, alignment_maps: BAMDirFmt,
-        common_args: list
+    contigs: ContigSequencesDirFmt,
+    alignment_maps: BAMDirFmt,
+    common_args: list
 ) -> (MultiFASTADirectoryFormat, dict, ContigSequencesDirFmt):
-    contigs_fps = sorted(glob.glob(os.path.join(str(contigs), '*.fa')))
+    contigs_fps = sorted(map(
+        lambda v: str(v[1].path), contigs.sequences.iter_views(DNAFASTAFormat)
+    ))
     maps_fps = sorted(glob.glob(os.path.join(str(alignment_maps), '*.bam')))
     sample_set = _assert_samples(contigs_fps, maps_fps)
 

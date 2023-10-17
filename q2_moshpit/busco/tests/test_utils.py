@@ -9,6 +9,7 @@
 import os
 import tempfile
 import zipfile
+import json
 import pandas as pd
 from q2_moshpit.busco.utils import (
     _parse_busco_params,
@@ -152,19 +153,33 @@ class TestBUSCO(TestPluginBase):
         # Draw plot
         observed = _draw_busco_plots_for_render(
             all_summaries_df,
-            width=600,
-            height=18,
+            width=500,
+            height=30,
             titleFontSize=20,
             labelFontSize=17,
+            spacing=20
         )
+
+        # Replace param value to make the dict altair version invariant
+        observed = observed.replace("param_1", "param_i")
+        observed = observed.replace("param_2", "param_i")
+
+        # Json string to dict
+        observed = json.loads(observed)
+
+        # Remove $schema k-v pair (also altair version variant)
+        observed.pop("$schema")
 
         # Load expected data
         p = self.get_data_path("plot_as_dict.json")
         with open(p, "r") as json_file:
             expected = json_file.read()
 
+        # Json string to dictionary
+        expected = json.loads(expected)
+
         self.maxDiff = None
-        self.assertEqual(expected, observed)
+        self.assertDictEqual(expected, observed)
 
     # Test `_draw_busco_plots`
     def mock_draw_busco_plots(self, tmp_path: str, num_files: int) -> dict:

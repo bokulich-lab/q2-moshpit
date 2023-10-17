@@ -153,10 +153,11 @@ class TestBUSCO(TestPluginBase):
         # Draw plot
         observed = _draw_busco_plots_for_render(
             all_summaries_df,
-            width=600,
-            height=18,
+            width=500,
+            height=30,
             titleFontSize=20,
             labelFontSize=17,
+            spacing=20
         )
 
         # Replace param value to make the dict altair version invariant

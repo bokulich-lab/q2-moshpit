@@ -15,4 +15,5 @@ Simulated contigs taken from the above reference genomes. Contigs are not
 overlapping. The ba-mm-mixed_contigs are also 75/25 ba/mm.  
 
 ## mags/
-Simulated MAGs constructed from the contigs. 
+Simulated MAGs constructed from the contigs by copying most contigs for each
+sample. 

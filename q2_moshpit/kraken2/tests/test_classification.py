@@ -547,10 +547,10 @@ class TestClassifyKraken2Contigs(unittest.TestCase):
             # the expected number of records are in the output
             self.assertEqual(len(df), 20)
 
-            # all reads are classified
+            # all contigs are classified
             self.assertEqual({'C'}, set(df['classification']))
 
-            # all reads are classified correctly
+            # all contigs are classified correctly
             self.assertEqual(
                 set(df['taxon_id']),
                 self.sample_id_to_ncbi_id[sample_id]
@@ -558,6 +558,78 @@ class TestClassifyKraken2Contigs(unittest.TestCase):
 
         for path, df in report_views:
             sample_id = str(path).rsplit('.report.txt')[0]
+
+            # the dataframe is non-empty
+            self.assertGreater(len(df), 0)
+
+            # the correct taxonomy id(s) is present somewhere in the
+            # classification tree, and none of the others are present
+            exp = self.sample_id_to_ncbi_id[sample_id]
+            obs = set(df['taxon_id'])
+            all_samples = set().union(
+                *[s for _, s in self.sample_id_to_ncbi_id.items()]
+            )
+            exp_missing = all_samples - exp
+            self.assertEqual(exp & obs, exp)
+            self.assertFalse(exp_missing & obs)
+
+
+class TestClassifyKraken2MAGs(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        datadir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'data'
+        )
+
+        db_path = os.path.join(datadir, 'new', 'kraken2-db')
+        mags_path = os.path.join(datadir, 'new', 'mags')
+
+        db = Kraken2DBDirectoryFormat(db_path, 'r')
+        samples = MAGSequencesDirFmt(mags_path, 'r')
+
+        cls.reports, cls.outputs = classify_kraken2(samples, db)
+        cls.output_views = cls.outputs.reports.iter_views(pd.DataFrame)
+        cls.report_views = cls.reports.reports.iter_views(pd.DataFrame)
+
+        cls.uuid_to_sample = {
+            '9231448e-b591-4afc-9d8a-5255b1a24f08': 'ba',
+            '7797bbd1-4f3c-4482-9828-fa4be13c9977': 'mm',
+            '5693d0e1-be8e-40ab-9427-94a0ffc62963': 'sa',
+            '8adb2c2f-bb49-4b1a-a9ac-daf985b35070': 'se',
+        }
+        cls.sample_id_to_ncbi_id = {
+            'ba': {1392},   # bacillus anthracis
+            'mm': {10090},  # mus musculus
+            'sa': {1280},   # staph aureus
+            'se': {1282},   # staph epidermidis
+        }
+
+    def test_formats(self):
+        self.assertIsInstance(self.reports, Kraken2ReportDirectoryFormat)
+        self.assertIsInstance(self.outputs, Kraken2OutputDirectoryFormat)
+        self.reports.validate()
+        self.outputs.validate()
+
+    def test_mags(self):
+        for path, df in self.output_views:
+            mag_id = str(path).rsplit('.output.txt')[0]
+            sample_id = self.uuid_to_sample[mag_id]
+
+            # the expected number of records are in the output
+            self.assertGreater(len(df), 1)
+
+            # all mags are classified
+            self.assertEqual({'C'}, set(df['classification']))
+
+            # all mags are classified correctly
+            self.assertEqual(
+                set(df['taxon_id']),
+                self.sample_id_to_ncbi_id[sample_id]
+            )
+
+        for path, df in self.report_views:
+            mag_id = str(path).rsplit('.report.txt')[0]
+            sample_id = self.uuid_to_sample[mag_id]
 
             # the dataframe is non-empty
             self.assertGreater(len(df), 0)

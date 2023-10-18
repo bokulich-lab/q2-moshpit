@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-import glob
 import os
 import subprocess
 from copy import deepcopy
@@ -16,10 +15,12 @@ from q2_types.per_sample_sequences import (
     SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt
 )
+from q2_types.feature_data import DNAFASTAFormat
 
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
+from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
@@ -50,7 +51,7 @@ def _construct_output_paths(
 def _classify_kraken2(
         seqs, common_args
 ) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
-    if isinstance(seqs, MAGSequencesDirFmt):
+    if isinstance(seqs, (MAGSequencesDirFmt, ContigSequencesDirFmt)):
         manifest = None
     else:
         manifest: Optional[pd.DataFrame] = seqs.manifest.view(pd.DataFrame)
@@ -68,16 +69,30 @@ def _classify_kraken2(
     def get_paths_for_mags(mag_id, fp):
         return mag_id, [fp]
 
+    def get_paths_for_contigs(contig_id, fp):
+        # HACK: remove after adding manifest or other solution, see
+        # https://github.com/bokulich-lab/q2-types-genomics/issues/56
+        return contig_id.rstrip('_contigs'), [fp]
+
     try:
-        if manifest is not None:  # we got reads - use the manifest
+        if manifest is not None:
+            # we got reads - use the manifest
             iterate_over = manifest.iterrows()
             path_function = get_paths_for_reads
-        else:  # we got MAGs - use the filenames directly
-            iterate_over = (
-                (os.path.basename(fp).split(".")[0], fp)
-                for fp in glob.glob(os.path.join(seqs.path, "*.fasta"))
+        else:
+            # we got contigs or MAGs
+            def view_to_paths(arg):
+                relpath, _ = arg
+                return relpath.stem, str(seqs.path / relpath)
+
+            iterate_over = map(
+                view_to_paths, seqs.sequences.iter_views(DNAFASTAFormat)
             )
-            path_function = get_paths_for_mags
+
+            if type(seqs) is MAGSequencesDirFmt:
+                path_function = get_paths_for_mags
+            elif type(seqs) is ContigSequencesDirFmt:
+                path_function = get_paths_for_contigs
 
         for args in iterate_over:
             _sample, fn = path_function(*args)
@@ -103,6 +118,7 @@ def classify_kraken2(
         seqs: Union[
             SingleLanePerSamplePairedEndFastqDirFmt,
             SingleLanePerSampleSingleEndFastqDirFmt,
+            ContigSequencesDirFmt,
             MAGSequencesDirFmt,
         ],
         kraken2_db: Kraken2DBDirectoryFormat,

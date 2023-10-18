@@ -14,14 +14,13 @@ from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
 from q2_types.sample_data import SampleData
-
+from q2_types.feature_map import FeatureMap, MAGtoContigs
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 
 import q2_moshpit
 from q2_types_genomics.feature_data import NOG, MAG
-from q2_types_genomics.feature_map import FeatureMap, MAGtoContigs
 from q2_types_genomics.genome_data import BLAST6
 from q2_types_genomics.kaiju import KaijuDB
 from q2_types_genomics.kraken2 import (
@@ -141,6 +140,10 @@ T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({
         SampleData[Kraken2Reports % Properties('reads')],
         SampleData[Kraken2Outputs % Properties('reads')]
     ),
+    SampleData[Contigs]: (
+        SampleData[Kraken2Reports % Properties('contigs')],
+        SampleData[Kraken2Outputs % Properties('contigs')]
+    ),
     FeatureData[MAG]: (
         FeatureData[Kraken2Reports % Properties('mags')],
         FeatureData[Kraken2Outputs % Properties('mags')]
@@ -159,8 +162,8 @@ plugin.methods.register_function(
         ('hits', T_kraken_out_hits),
     ],
     input_descriptions={
-        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
-                "and assembled MAGs, can be provided.",
+        "seqs": "The sequences to be classified. Single-end or paired-end "
+                "reads, contigs, or MAGs can be provided.",
         "kraken2_db": "Kraken 2 database.",
     },
     parameter_descriptions=kraken2_param_descriptions,
@@ -364,7 +367,7 @@ plugin.methods.register_function(
         #             'taxonomic assignments of its contigs. '
     },
     output_descriptions={
-        'taxonomy': 'Infra-clade ranks are ignored'
+        'taxonomy': 'Infra-clade ranks are ignored '
                     'unless they are strain-level. Missing internal ranks '
                     'are annotated by their next most specific rank, '
                     'with the exception of k__Bacteria and k__Archaea which '
@@ -378,17 +381,18 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,
-    inputs={'input_sequences': SampleData[Contigs],
-            'diamond_db': ReferenceDB[Diamond],
-            },
+    inputs={
+        'sequences': SampleData[Contigs] | FeatureData[MAG],
+        'diamond_db': ReferenceDB[Diamond],
+    },
     parameters={
         'num_cpus': Int,
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'input_sequences': 'Sequence data of the contigs we want to '
-                           'search for hits using the Diamond Database',
-        'diamond_db': 'The filepath to an artifact containing the'
+        'sequences': 'Sequence data of the contigs we want to '
+                     'search for hits using the Diamond Database',
+        'diamond_db': 'The filepath to an artifact containing the '
                       'Diamond database',
     },
     parameter_descriptions={
@@ -399,9 +403,10 @@ plugin.methods.register_function(
                         'option should only be used on clusters or other '
                         'machines with enough memory.',
     },
-    outputs=[('eggnog_hits', SampleData[BLAST6]),
-             ('table', FeatureTable[Frequency])
-             ],
+    outputs=[
+        ('eggnog_hits', SampleData[BLAST6]),
+        ('table', FeatureTable[Frequency])
+    ],
     name='Run eggNOG search using diamond aligner',
     description="This method performs the steps by which we find our "
                 "possible target sequences to annotate using the diamond "
@@ -426,6 +431,128 @@ plugin.methods.register_function(
     outputs=[('ortholog_annotations', FeatureData[NOG])],
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
+)
+
+busco_params = {
+    "mode": Str % Choices(["genome"]),
+    "lineage_dataset": Str,
+    "augustus": Bool,
+    "augustus_parameters": Str,
+    "augustus_species": Str,
+    "auto_lineage": Bool,
+    "auto_lineage_euk": Bool,
+    "auto_lineage_prok": Bool,
+    "cpu": Int % Range(1, None),
+    "config": Str,
+    "contig_break": Int % Range(0, None),
+    "datasets_version": Str,
+    "download": List[Str],
+    "download_base_url": Str,
+    "download_path": Str,
+    "evalue": Float % Range(0, None, inclusive_start=False),
+    "force": Bool,
+    "limit": Int % Range(1, 20),
+    "help": Bool,
+    "list_datasets": Bool,
+    "long": Bool,
+    "metaeuk_parameters": Str,
+    "metaeuk_rerun_parameters": Str,
+    "miniprot": Bool,
+    "offline": Bool,
+    "quiet": Bool,
+    "restart": Bool,
+    "scaffold_composition": Bool,
+    "tar": Bool,
+    "update_data": Bool,
+    "version": Bool,
+}
+busco_param_descriptions = {
+    "mode": "Specify which BUSCO analysis mode to run."
+            "Currently only the 'genome' or 'geno' option is supported, "
+            "for genome assemblies. In the future modes for transcriptome "
+            "assemblies and for annotated gene sets (proteins) will be made "
+            "available.",
+    "lineage_dataset": "Specify the name of the BUSCO lineage to be used. "
+                       "To see all possible options run `busco "
+                       "--list-datasets`.",
+    "augustus": "Use augustus gene predictor for eukaryote runs.",
+    "augustus_parameters": "Pass additional arguments to Augustus. "
+                           "All arguments should be contained within a single "
+                           "string with no white space, with each argument "
+                           "separated by a comma. "
+                           "Example: '--PARAM1=VALUE1,--PARAM2=VALUE2'.",
+    "augustus_species": "Specify a species for Augustus training.",
+    "auto_lineage": "Run auto-lineage to find optimum lineage path.",
+    "auto_lineage_euk": "Run auto-placement just on eukaryote tree to find "
+                        "optimum lineage path.",
+    "auto_lineage_prok": "Run auto-lineage just on non-eukaryote trees to "
+                         "find optimum lineage path.",
+    "cpu": "Specify the number (N=integer) of threads/cores to use.",
+    "config": "Provide a config file.",
+    "contig_break": "Number of contiguous Ns to signify a break between "
+                    "contigs. Default is n=10. "
+                    "See https://gitlab.com/ezlab/busco/-/issues/691 for a "
+                    "more detailed explanation.",
+    "datasets_version": "Specify the version of BUSCO datasets, e.g. odb10.",
+    "download": "Download dataset. Possible values are a specific dataset "
+                "name, 'all', 'prokaryota', 'eukaryota', or 'virus'. "
+                "If used together with other command line arguments, "
+                "make sure to place this last. Example: '[dataset ...]'.",
+    "download_base_url": "Set the url to the remote BUSCO dataset location.",
+    "download_path": "Specify local filepath for storing BUSCO dataset "
+                     "downloads.",
+    "evalue": "E-value cutoff for BLAST searches. "
+              "Allowed formats, 0.001 or 1e-03, Default: 1e-03.",
+    "force": "Force rewriting of existing files. Must be used when output "
+             "files with the provided name already exist.",
+    "help": "Show this help message and exit.",
+    "limit": "How many candidate regions (contig or transcript) to consider "
+             "per BUSCO. Default: 3.",
+    "list_datasets": "Print the list of available BUSCO datasets.",
+    "long": "Optimization Augustus self-training mode (Default: Off); "
+            "adds considerably to the run time, "
+            "but can improve results for some non-model organisms.",
+    "metaeuk_parameters": "Pass additional arguments to Metaeuk for the first "
+                          "run. All arguments should be contained within a "
+                          "single string with no white space, with each "
+                          "argument separated by a comma. "
+                          "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
+    "metaeuk_rerun_parameters": "Pass additional arguments to Metaeuk for the "
+                                "second run. All arguments should be "
+                                "contained within a single string with no "
+                                "white space, with each argument separated by "
+                                "a comma. "
+                                "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
+    "miniprot": "Use miniprot gene predictor for eukaryote runs.",
+    "offline": "To indicate that BUSCO cannot attempt to download files.",
+    "quiet": "Disable the info logs, displays only errors.",
+    "restart": "Continue a run that had already partially completed.",
+    "scaffold_composition": "Writes ACGTN content per scaffold to a file "
+                            "`scaffold_composition.txt`.",
+    "tar": "Compress some subdirectories with many files to save space.",
+    "update_data": "Download and replace with last versions all lineages "
+                   "datasets and files necessary to their automated "
+                   "selection.",
+    "version": "Show this version and exit.",
+}
+
+
+plugin.visualizers.register_function(
+    function=q2_moshpit.busco.evaluate_busco,
+    inputs={
+        "bins": SampleData[MAGs],
+    },
+    parameters=busco_params,
+    input_descriptions={
+        "bins": "MAGs to be analyzed.",
+    },
+    parameter_descriptions=busco_param_descriptions,
+    name="Evaluate quality of the generated MAGs using BUSCO.",
+    description="This method uses BUSCO "
+                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "tool) to assess the quality of assembled MAGs and generates "
+                "visualizations summarizing the results.",
+    citations=[citations["manni_busco_2021"]],
 )
 
 plugin.methods.register_function(

@@ -13,6 +13,7 @@ from .kraken2 import (
 )
 from .metabat2 import metabat2
 from . import eggnog
+from . import busco
 
 
 from ._version import get_versions
@@ -21,5 +22,5 @@ del get_versions
 
 __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
-    'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog'
+    'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog', 'busco'
 ]

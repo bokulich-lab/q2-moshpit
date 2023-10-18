@@ -19,15 +19,17 @@ requirements:
   run:
     - bracken
     - kraken2
-    - bracken
     - metabat2
     - samtools
     - qiime2 {{ qiime2_epoch }}.*
     - q2-types-genomics {{ qiime2_epoch }}.*
+    - q2templates {{ qiime2_epoch }}.*
     - eggnog-mapper >=2.1.10
     - diamond
     - tqdm
     - xmltodict
+    - altair
+    - busco >=5.0.0
 
 test:
   requires:
@@ -37,7 +39,7 @@ test:
     - q2_moshpit
     - qiime2.plugins.moshpit
   commands:
-    - pytest --cov q2_moshpit --pyargs q2_moshpit
+    - pytest --cov q2_moshpit --cov-report xml:coverage.xml --pyargs q2_moshpit
 
 about:
   home: https://github.com/bokulich-lab/q2-moshpit

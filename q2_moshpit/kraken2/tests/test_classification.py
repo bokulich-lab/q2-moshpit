@@ -247,7 +247,7 @@ class TestClassifyKraken2HasCorrectCalls(TestPluginBase):
         report_format_mock,
         output_format_mock
     ):
-        samples_dir = self.get_data_path(os.path.join('new', 'contigs'))
+        samples_dir = self.get_data_path(os.path.join('simulated-sequences', 'contigs'))
         contigs = ContigSequencesDirFmt(samples_dir, "r")
 
         common_args = ["--db", "/some/where/db", "--quick"]
@@ -398,8 +398,8 @@ class TestClassifyKraken2Reads(unittest.TestCase):
             os.path.dirname(os.path.abspath(__file__)), 'data'
         )
 
-        db_path = os.path.join(datadir, 'new', 'kraken2-db')
-        reads_path = os.path.join(datadir, 'new', 'reads')
+        db_path = os.path.join(datadir, 'simulated-sequences', 'kraken2-db')
+        reads_path = os.path.join(datadir, 'simulated-sequences', 'reads')
 
         db = Kraken2DBDirectoryFormat(db_path, 'r')
         samples = SingleLanePerSamplePairedEndFastqDirFmt(reads_path, 'r')
@@ -507,8 +507,8 @@ class TestClassifyKraken2Contigs(unittest.TestCase):
             os.path.dirname(os.path.abspath(__file__)), 'data'
         )
 
-        db_path = os.path.join(datadir, 'new', 'kraken2-db')
-        contigs_path = os.path.join(datadir, 'new', 'contigs')
+        db_path = os.path.join(datadir, 'simulated-sequences', 'kraken2-db')
+        contigs_path = os.path.join(datadir, 'simulated-sequences', 'contigs')
 
         db = Kraken2DBDirectoryFormat(db_path, 'r')
         samples = ContigSequencesDirFmt(contigs_path, 'r')
@@ -581,8 +581,8 @@ class TestClassifyKraken2MAGs(unittest.TestCase):
             os.path.dirname(os.path.abspath(__file__)), 'data'
         )
 
-        db_path = os.path.join(datadir, 'new', 'kraken2-db')
-        mags_path = os.path.join(datadir, 'new', 'mags')
+        db_path = os.path.join(datadir, 'simulated-sequences', 'kraken2-db')
+        mags_path = os.path.join(datadir, 'simulated-sequences', 'mags')
 
         db = Kraken2DBDirectoryFormat(db_path, 'r')
         samples = MAGSequencesDirFmt(mags_path, 'r')

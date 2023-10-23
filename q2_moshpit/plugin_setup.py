@@ -22,7 +22,9 @@ from qiime2.plugin import (Plugin, Citations)
 
 import q2_moshpit
 from q2_types_genomics.feature_data import NOG, MAG
-from q2_types_genomics.genome_data import BLAST6
+from q2_types_genomics.genome_data import (
+    BLAST6, GenomeData, Loci, Genes, Proteins
+)
 from q2_types_genomics.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB
 )
@@ -559,4 +561,49 @@ plugin.visualizers.register_function(
                 "tool) to assess the quality of assembled MAGs and generates "
                 "visualizations summarizing the results.",
     citations=[citations["manni_busco_2021"]],
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.prodigal.predict_genes_prodigal,
+    inputs={
+        'mags': FeatureData[MAG]
+    },
+    input_descriptions={
+        'mags': 'MAGs for which one wishes to predict genes.'
+    },
+    parameters={
+        "translation_table_number": Int % Range(1, 26)
+    },
+    parameter_descriptions={
+        'translation_table_number':
+            'Translation table to be used to '
+            'translate genes into a sequence of amino '
+            'acids. See '
+            'https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi '
+            'for reference. NOTE: not all tables are supported. '
+            'Supported tables: 1-6, 9-16 and 21-25.'
+    },
+    outputs=[
+        ('loci', GenomeData[Loci]),
+        ('genes', GenomeData[Genes]),
+        ('proteins', GenomeData[Proteins])
+    ],
+    output_descriptions={
+        'loci': "Gene coordinates files (one per MAG) listing the location of "
+                "each predicted gene as well as some additional scoring "
+                "information. File format: 'gff'. See "
+                "https://github.com/The-Sequence-Ontology/Specifications/blob/"
+                "master/gff3.md for reference.",
+        'genes': "Fasta files (one per MAG) with the nucleotide sequences of "
+                 "the predicted genes.",
+        'proteins': "Fasta files (one per MAG) with the protein translation "
+                    "of the predicted genes."
+    },
+    name='Predict gene sequences from MAGs using Prodigal.',
+    description="Prodigal (PROkaryotic DYnamic programming "
+                "Gene-finding ALgorithm), a gene prediction algorithm "
+                "designed for improved gene structure prediction, translation "
+                "initiation site recognition, and reduced false positives in "
+                "prokaryotic genomes.",
+    citations=[citations["hyatt_prodigal_2010"]]
 )

@@ -9,6 +9,7 @@
 from .dereplication import dereplicate_mags
 from .kraken2 import bracken, classification, database
 from .metabat2 import metabat2
+from . import prodigal
 from . import eggnog
 from . import busco
 
@@ -19,5 +20,5 @@ del get_versions
 
 __all__ = [
     'metabat2', 'bracken', 'classification', 'database',
-    'dereplicate_mags', 'eggnog', 'busco',
+    'dereplicate_mags', 'eggnog', 'busco', 'prodigal'
 ]

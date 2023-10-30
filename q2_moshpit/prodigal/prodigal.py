@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-import glob
 import re
 import os
 import copy as cp
@@ -34,7 +33,7 @@ def predict_genes_prodigal(
     # Define base command
     base_cmd = [
         "prodigal",
-        "-g", translation_table_number,
+        "-g", str(translation_table_number),
         "-f", "gff"
     ]
 
@@ -44,14 +43,23 @@ def predict_genes_prodigal(
         r"[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\.(fa|fasta)$"
     )
 
+    # Look for fasta files in input dir
+    fasta_files = [
+        file for file in os.listdir(mags.path) if pattern.match(file)
+    ]
+
+    # Raise exception if no fasta files are found
+    if len(fasta_files) == 0:
+        raise FileNotFoundError(f"No fasta files found in {mags.path}")
+
     # For every fasta file in dir_with_MAGs call prodigal and write
     # outputs corresponding directories.
-    for fasta_file in glob.glob(f'{mags.path}/{pattern}'):
+    for fasta_file in fasta_files:
         # Get the filename from the file path
-        filename = os.path.basename(fasta_file)
-        file_id = os.path.splitext(filename)[0]
+        file_id = os.path.splitext(fasta_file)[0]
 
-        # Build paths to outputs TODO: verify regex
+        # Build paths to outputs
+        i = os.path.join(mags.path, fasta_file)
         o = os.path.join(loci_dir, f"{file_id}_loci.gff")
         a = os.path.join(proteins_dir, f"{file_id}_proteins.fasta")
         d = os.path.join(genes_dir, f"{file_id}_genes.fasta")
@@ -59,6 +67,7 @@ def predict_genes_prodigal(
         # Adjust command and run
         cmd = cp.deepcopy(base_cmd)
         cmd.extend([
+            "-i", i,
             "-o", o,
             "-a", a,
             "-d", d

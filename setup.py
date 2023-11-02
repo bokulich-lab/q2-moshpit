@@ -73,6 +73,12 @@ setup(
         'q2_moshpit.dereplication.tests': [
             'data/*', 'data/mags/*', 'data/mags/*/*',
             'data/mags-unique/*',
+        ],
+        "q2_moshpit.prodigal.tests": [
+            "data/*",
+            "data/dir_with_0_mag/*",
+            "data/dir_with_1_mag/*",
+            "data/dir_with_3_mag/*",
         ]
     },
     zip_safe=False,

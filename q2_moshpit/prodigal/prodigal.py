@@ -25,19 +25,7 @@ def predict_genes_prodigal(
     genes = GenesDirectoryFormat()
     proteins = ProteinsDirectoryFormat()
 
-    # Get paths to directories (they already exist as tmp dirs)
-    loci_dir = str(loci)
-    genes_dir = str(genes)
-    proteins_dir = str(proteins)
-
-    # Define base command
-    base_cmd = [
-        "prodigal",
-        "-g", str(translation_table_number),
-        "-f", "gff"
-    ]
-
-    # Pattern for input files
+    # Pattern of fasta files in input dir
     pattern = re.compile(
         r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-"
         r"[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\.(fa|fasta)$"
@@ -52,7 +40,14 @@ def predict_genes_prodigal(
     if len(fasta_files) == 0:
         raise FileNotFoundError(f"No fasta files found in {mags.path}")
 
-    # For every fasta file in dir_with_MAGs call prodigal and write
+    # Define base command
+    base_cmd = [
+        "prodigal",
+        "-g", str(translation_table_number),
+        "-f", "gff"
+    ]
+
+    # For every fasta file in mags.path call prodigal and write
     # outputs corresponding directories.
     for fasta_file in fasta_files:
         # Get the filename from the file path
@@ -60,9 +55,9 @@ def predict_genes_prodigal(
 
         # Build paths to outputs
         i = os.path.join(mags.path, fasta_file)
-        o = os.path.join(loci_dir, f"{file_id}_loci.gff")
-        a = os.path.join(proteins_dir, f"{file_id}_proteins.fasta")
-        d = os.path.join(genes_dir, f"{file_id}_genes.fasta")
+        o = os.path.join(loci.path, f"{file_id}_loci.gff")
+        a = os.path.join(proteins.path, f"{file_id}_proteins.fasta")
+        d = os.path.join(genes.path, f"{file_id}_genes.fasta")
 
         # Adjust command and run
         cmd = cp.deepcopy(base_cmd)

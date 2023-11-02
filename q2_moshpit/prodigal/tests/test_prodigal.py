@@ -75,6 +75,15 @@ class TestBUSCO(TestPluginBase):
         # Assert that patch was called 3 times
         subp_run.assert_has_calls(three_calls)
 
-    # TODO
-    def test_no_mags_in_input(self):
-        pass
+    # Test weather exception is raised when the empty folder is used for input
+    @patch("subprocess.run")
+    def test_no_mags_in_input(self, subp_run):
+        # Run busco and save paths to run summaries
+        p = self.get_data_path("dir_with_0_mag")
+        mags = MAGSequencesDirFmt(path=p, mode="r")
+
+        with self.assertRaises(FileNotFoundError):
+            predict_genes_prodigal(mags=mags)
+
+        #  Assert that prodigal was not run
+        subp_run.assert_not_called()

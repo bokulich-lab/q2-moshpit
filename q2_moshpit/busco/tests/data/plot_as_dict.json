@@ -463,7 +463,7 @@
       "facet": {
         "row": {
           "field": "sample_id",
-          "title": "Sample ID",
+          "title": "Sample ID / MAG ID",
           "type": "nominal"
         }
       },
@@ -541,7 +541,7 @@
           },
           "y": {
             "axis": {
-              "title": "MAG ID"
+              "titleFontSize": 0
             },
             "field": "mag_id",
             "type": "nominal"

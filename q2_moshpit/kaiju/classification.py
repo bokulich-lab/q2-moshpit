@@ -63,6 +63,9 @@ def _construct_feature_table(table_fp: str) -> (pd.DataFrame, pd.DataFrame):
     table = table.groupby(["taxon_id", "sample"], as_index=False)["reads"].sum()
     table = table.pivot(index="sample", columns="taxon_id", values="reads")
 
+    # convert column names to strings
+    table.columns = table.columns.astype(str)
+
     return table, taxonomy
 
 

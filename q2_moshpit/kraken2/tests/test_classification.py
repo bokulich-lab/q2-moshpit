@@ -407,8 +407,8 @@ class TestClassifyKraken2Reads(unittest.TestCase):
         samples = SingleLanePerSamplePairedEndFastqDirFmt(reads_path, 'r')
 
         cls.reports, cls.outputs = classify_kraken2(samples, db)
-        cls.output_views = cls.outputs.reports.iter_views(pd.DataFrame)
-        cls.report_views = cls.reports.reports.iter_views(pd.DataFrame)
+        cls.output_views = list(cls.outputs.reports.iter_views(pd.DataFrame))
+        cls.report_views = list(cls.reports.reports.iter_views(pd.DataFrame))
 
         cls.sample_id_to_ncbi_id = {
             'ba': {1392},   # bacillus anthracis

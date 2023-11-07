@@ -1,5 +1,4 @@
 {
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.15.1.json",
   "config": {
     "axis": {
       "labelFontSize": 17,
@@ -464,7 +463,7 @@
       "facet": {
         "row": {
           "field": "sample_id",
-          "title": "Sample ID",
+          "title": "Sample ID / MAG ID",
           "type": "nominal"
         }
       },
@@ -473,6 +472,7 @@
           "y": "independent"
         }
       },
+      "spacing": 20,
       "spec": {
         "encoding": {
           "color": {
@@ -541,17 +541,19 @@
           },
           "y": {
             "axis": {
-              "title": "MAG ID"
+              "titleFontSize": 0
             },
             "field": "mag_id",
             "type": "nominal"
           }
         },
-        "height": 162,
+        "height": {
+          "step": 30
+        },
         "mark": {
           "type": "bar"
         },
-        "width": 600
+        "width": 500
       }
     },
     {
@@ -573,6 +575,7 @@
           "y": "independent"
         }
       },
+      "spacing": 20,
       "spec": {
         "encoding": {
           "opacity": {
@@ -596,17 +599,19 @@
             "type": "nominal"
           }
         },
-        "height": 162,
+        "height": {
+          "step": 30
+        },
         "mark": {
           "type": "bar"
         },
         "transform": [
           {
             "as": "x",
-            "calculate": "datum[param_2]"
+            "calculate": "datum[param_i]"
           }
         ],
-        "width": 600
+        "width": 500
       }
     }
   ],
@@ -614,7 +619,7 @@
     {
       "bind": {
         "input": "select",
-        "name": "Assambly Statistics: ",
+        "name": "Assembly Statistics: ",
         "options": [
           "scaffold_n50",
           "contigs_n50",
@@ -622,7 +627,7 @@
           "number_of_scaffolds"
         ]
       },
-      "name": "param_2",
+      "name": "param_i",
       "value": "scaffold_n50"
     }
   ],

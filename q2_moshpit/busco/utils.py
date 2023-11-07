@@ -50,6 +50,7 @@ def _draw_busco_plots_for_render(
     height: int = None,
     labelFontSize: int = None,
     titleFontSize: int = None,
+    spacing: int = None
 ) -> str:
     """
     Draws a horizontal normalized bar plot for every sample for which BUSCO was
@@ -70,9 +71,6 @@ def _draw_busco_plots_for_render(
 
     # Format data frame
     df = _parse_df_columns(df)
-
-    # Get number of samples
-    n_samples = len(df["mag_id"].unique())
 
     # Format data for plotting
     busco_plot_data = pd.melt(
@@ -119,7 +117,7 @@ def _draw_busco_plots_for_render(
                 stack="normalize",
                 title="BUSCO fraction"
             ),
-            y=alt.Y("mag_id", axis=alt.Axis(title="MAG ID")),
+            y=alt.Y("mag_id", axis=alt.Axis(titleFontSize=0)),
             color=alt.Color(
                 "category",
                 scale=alt.Scale(domain=domain, range=range_),
@@ -138,8 +136,17 @@ def _draw_busco_plots_for_render(
             ],
             opacity=alt.value(0.85),
         )
-        .properties(width=width, height=height * n_samples)
-        .facet(row=alt.Row("sample_id", title="Sample ID"))
+        .properties(
+            width=width,
+            height={"step": height}
+        )
+        .facet(
+            row=alt.Row(
+                "sample_id",
+                title="Sample ID / MAG ID"
+            ),
+            spacing=spacing
+        )
         .resolve_scale(y="independent")
     )
 
@@ -152,7 +159,7 @@ def _draw_busco_plots_for_render(
             'percent_gaps',
             'number_of_scaffolds',
         ],
-        name="Assambly Statistics: "
+        name="Assembly Statistics: "
     )
 
     xcol_param = alt.param(
@@ -171,13 +178,14 @@ def _draw_busco_plots_for_render(
         xcol_param
     ).properties(
         width=width,
-        height=height * n_samples
+        height={"step": height}
     ).facet(
         row=alt.Row(
             "sample_id",
             title=None,
-            header=alt.Header(labelFontSize=0)
-        )
+            header=alt.Header(labelFontSize=0),
+        ),
+        spacing=spacing
     ).resolve_scale(
         y="independent"
     )
@@ -417,9 +425,10 @@ def _render_html(
         "vega_plots_overview": _draw_busco_plots_for_render(
             all_summaries_df,
             width=600,
-            height=9,
+            height=30,
             titleFontSize=20,
             labelFontSize=17,
+            spacing=20
         ),
     }
 

@@ -395,20 +395,27 @@ class TestClassifyKraken2HasCorrectCalls(TestPluginBase):
         p3.assert_not_called()
 
 
-class TestClassifyKraken2Reads(unittest.TestCase):
+class TestClassifyKraken2Reads(TestPluginBase):
+    package = "q2_moshpit.kraken2.tests"
+
+    def setUp(self):
+        super().setUp()
+        self.classify_kraken2 = self.plugin.pipelines['classify_kraken2']
+
     @classmethod
     def setUpClass(cls):
-        datadir = os.path.join(
+        cls.datadir = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), 'data'
         )
 
-        db_path = os.path.join(datadir, 'simulated-sequences', 'kraken2-db')
-        reads_path = os.path.join(datadir, 'simulated-sequences', 'reads')
+        db_path = os.path.join(
+            cls.datadir, 'simulated-sequences', 'kraken2-db')
+        reads_path = os.path.join(cls.datadir, 'simulated-sequences', 'reads')
 
-        db = Kraken2DBDirectoryFormat(db_path, 'r')
+        cls.db = Kraken2DBDirectoryFormat(db_path, 'r')
         samples = SingleLanePerSamplePairedEndFastqDirFmt(reads_path, 'r')
 
-        cls.reports, cls.outputs = _classify_kraken2(samples, db)
+        cls.reports, cls.outputs = _classify_kraken2(samples, cls.db)
         cls.output_views = list(cls.outputs.reports.iter_views(pd.DataFrame))
         cls.report_views = list(cls.reports.reports.iter_views(pd.DataFrame))
 
@@ -446,6 +453,70 @@ class TestClassifyKraken2Reads(unittest.TestCase):
             self.assertEqual({'C'}, set(df['classification']))
 
             # all reads are classified correctly
+            self.assertEqual(
+                set(df['taxon_id']),
+                self.sample_id_to_ncbi_id[sample_id]
+            )
+
+        for path, df in report_views:
+            sample_id = str(path).rsplit('.report.txt')[0]
+
+            # the dataframe is non-empty
+            self.assertGreater(len(df), 0)
+
+            # the correct taxonomy id(s) is present somewhere in the
+            # classification tree, and none of the others are present
+            exp = self.sample_id_to_ncbi_id[sample_id]
+            obs = set(df['taxon_id'])
+            all_samples = set().union(
+                *[s for _, s in self.sample_id_to_ncbi_id.items()]
+            )
+            exp_missing = all_samples - exp
+            self.assertEqual(exp & obs, exp)
+            self.assertFalse(exp_missing & obs)
+
+    def test_paired_end_reads_parallel(self):
+        """ This test does not work right now because the sample data is not
+            formatted correctly to be loaded into an artifact
+        """
+        reads_path = os.path.join(
+            self.datadir, 'simulated-sequences', 'formatted-reads')
+
+        samples = SingleLanePerSamplePairedEndFastqDirFmt(reads_path, 'r')
+
+        db = Artifact.import_data('Kraken2DB', self.db)
+        samples = Artifact.import_data(
+            'SampleData[PairedEndSequencesWithQuality]', samples)
+
+        with ParallelConfig():
+            reports, outputs = \
+                self.classify_kraken2.parallel(samples, db)._result()
+
+        reports = reports.view(Kraken2ReportDirectoryFormat)
+        outputs = outputs.view(Kraken2OutputDirectoryFormat)
+
+        output_views = outputs.reports.iter_views(pd.DataFrame)
+        report_views = reports.reports.iter_views(pd.DataFrame)
+
+        samples_of_interest = ('ba', 'mm', 'sa', 'se', 'ba-mm-mixed')
+
+        def filter_views(arg):
+            path, _ = arg
+            return Path(path.stem).stem in samples_of_interest
+
+        output_views = filter(filter_views, output_views)
+        report_views = filter(filter_views, report_views)
+
+        for path, df in output_views:
+            sample_id = str(path).rsplit('.output.txt')[0]
+
+            # the expected number of records are in the output
+            self.assertEqual(len(df), 25)
+
+            # all contigs are classified
+            self.assertEqual({'C'}, set(df['classification']))
+
+            # all contigs are classified correctly
             self.assertEqual(
                 set(df['taxon_id']),
                 self.sample_id_to_ncbi_id[sample_id]
@@ -522,10 +593,10 @@ class TestClassifyKraken2Contigs(TestPluginBase):
         contigs_path = os.path.join(
             cls.datadir, 'simulated-sequences', 'contigs')
 
-        db = Kraken2DBDirectoryFormat(db_path, 'r')
-        samples = ContigSequencesDirFmt(contigs_path, 'r')
+        cls.db = Kraken2DBDirectoryFormat(db_path, 'r')
+        cls.samples = ContigSequencesDirFmt(contigs_path, 'r')
 
-        cls.reports, cls.outputs = _classify_kraken2(samples, db)
+        cls.reports, cls.outputs = _classify_kraken2(cls.samples, cls.db)
         cls.output_views = cls.outputs.reports.iter_views(pd.DataFrame)
         cls.report_views = cls.reports.reports.iter_views(pd.DataFrame)
 
@@ -586,15 +657,8 @@ class TestClassifyKraken2Contigs(TestPluginBase):
             self.assertFalse(exp_missing & obs)
 
     def test_contigs_parallel(self):
-        db_path = os.path.join(
-            self.datadir, 'simulated-sequences', 'kraken2-db')
-        contigs_path = os.path.join(
-            self.datadir, 'simulated-sequences', 'contigs')
-
-        db = Kraken2DBDirectoryFormat(db_path, 'r')
-        db = Artifact.import_data('Kraken2DB', db)
-        samples = ContigSequencesDirFmt(contigs_path, 'r')
-        samples = Artifact.import_data('SampleData[Contigs]', samples)
+        db = Artifact.import_data('Kraken2DB', self.db)
+        samples = Artifact.import_data('SampleData[Contigs]', self.samples)
 
         with ParallelConfig():
             reports, outputs = \

@@ -387,6 +387,8 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.fetch_eggnog_db,
+    inputs={},
+    parameters={},
     outputs=[
         ("eggnog_db", ReferenceDB[Eggnog]),
         ("diamond_db", ReferenceDB[Diamond])

@@ -135,7 +135,14 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
     subprocess.run(cmds, check=True)
 
 
-def fetch_eggnog_db():
+def fetch_eggnog_db() -> (EggnogRefDirFmt, DiamondDatabaseDirFmt):
+    """
+    Downloads eggnog and diamond reference databases using the
+    `download_eggnog_data.py` script from eggNOG. Here, this
+    script downloads 4 files; 3 are placed inside eggnog_db
+    and 1 inside diamond_db, amounting to 47Gb in total.
+    """
+
     # Initialize output objects
     db = EggnogRefDirFmt()  # All other files
     dmnd = DiamondDatabaseDirFmt()  # One file, e.g. ref_db.dmnd

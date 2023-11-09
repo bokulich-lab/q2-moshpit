@@ -8,7 +8,7 @@
 
 import pandas as pd
 import pandas.testing as pdt
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
 
@@ -90,12 +90,16 @@ class TestAnnotate(TestPluginBase):
 class TestFetchDB(TestPluginBase):
     package = 'q2_moshpit.eggnog.tests'
 
+    @patch("shutil.move")
     @patch("subprocess.run")
-    def test_fetch_db(self, subp_run):
+    def test_fetch_db(self, subp_run, mv):
         # Call function. Patching will make sure nothing is
         # actually ran
         eggnog_db, diamond_db = fetch_eggnog_db()
 
         # Check that command was called in the expected way
-        cmd = ["download_eggnog_data.py", "-y", "--data_dir", eggnog_db.path]
+        cmd = [
+            "download_eggnog_data.py", "-y", "--data_dir", str(eggnog_db.path)
+        ]
         subp_run.assert_called_once_with(cmd, check=True)
+        mv.assert_called_once_with(src=ANY, dst=ANY)

@@ -9,19 +9,19 @@ import glob
 import subprocess
 import os
 import tempfile
-from typing import Union
-
+import shutil
+import qiime2.util
 import pandas as pd
-
+from typing import Union
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from q2_types_genomics.feature_data import (
-    OrthologAnnotationDirFmt, MAGSequencesDirFmt
-)
 from q2_types_genomics.reference_db import EggnogRefDirFmt
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types_genomics.reference_db import DiamondDatabaseDirFmt
-import qiime2.util
+from .._utils import run_command
+from q2_types_genomics.feature_data import (
+    OrthologAnnotationDirFmt, MAGSequencesDirFmt
+)
 
 
 def eggnog_diamond_search(
@@ -133,3 +133,21 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
         cmds.append('--dbmem')
 
     subprocess.run(cmds, check=True)
+
+
+def fetch_eggnog_db():
+    # Initialize output objects
+    db = EggnogRefDirFmt()  # All other files
+    dmnd = DiamondDatabaseDirFmt()  # One file, e.g. ref_db.dmnd
+
+    # Define command. Output to db object then move one file to dmnd object
+    cmd = ["download_eggnog_data.py", "-y", "--data_dir", db.path]
+    run_command(cmd)
+
+    # Move eggnog_proteins.dmnd to dmnd dir and rename as ref_db.dmnd
+    source = os.path.join(db.path, "eggnog_proteins.dmnd")
+    destination = os.path.join(dmnd.path, "ref_db.dmnd")
+    shutil.move(src=source, dst=destination)
+
+    # Return objects
+    return db, dmnd

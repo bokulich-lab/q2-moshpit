@@ -7,6 +7,6 @@
 # ----------------------------------------------------------------------------
 
 
-from ._method import (eggnog_diamond_search, eggnog_annotate)
+from ._method import (eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db)
 
-__all__ = ['eggnog_diamond_search', 'eggnog_annotate']
+__all__ = ['eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db']

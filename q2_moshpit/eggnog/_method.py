@@ -148,7 +148,7 @@ def fetch_eggnog_db() -> (EggnogRefDirFmt, DiamondDatabaseDirFmt):
     dmnd = DiamondDatabaseDirFmt()  # One file, e.g. ref_db.dmnd
 
     # Define command. Output to db object then move one file to dmnd object
-    cmd = ["download_eggnog_data.py", "-y", "--data_dir", db.path]
+    cmd = ["download_eggnog_data.py", "-y", "--data_dir", str(db.path)]
     run_command(cmd)
 
     # Move eggnog_proteins.dmnd to dmnd dir and rename as ref_db.dmnd

@@ -407,10 +407,9 @@ plugin.methods.register_function(
                 "eggnog_db and 1 inside diamond_db, amounting to 47Gb in "
                 "total. "
                 "Specifically: "
-                "- 39Gb eggnog.db (eggnog_db) "
-                "- 265Mb eggnog.taxa.db (eggnog_db) "
-                "- 6.3Mb eggnog.taxa.db.traverse.pkl (eggnog_db) "
-                "- 8.6Gb eggnog_proteins.dmnd (diamond_db). "
+                "eggnog.db (39Gb), eggnog.taxa.db (265Mb), "
+                "eggnog.taxa.db.traverse.pkl (6.3Mb), "
+                "eggnog_proteins.dmnd (8.6Gb). "
                 "This last file is renamed to 'ref_db.dmnd'."
 )
 

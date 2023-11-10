@@ -117,7 +117,7 @@ def _draw_busco_plots_for_render(
                 stack="normalize",
                 title="BUSCO fraction"
             ),
-            y=alt.Y("mag_id", axis=alt.Axis(title="MAG ID")),
+            y=alt.Y("mag_id", axis=alt.Axis(titleFontSize=0)),
             color=alt.Color(
                 "category",
                 scale=alt.Scale(domain=domain, range=range_),
@@ -143,7 +143,7 @@ def _draw_busco_plots_for_render(
         .facet(
             row=alt.Row(
                 "sample_id",
-                title="Sample ID"
+                title="Sample ID / MAG ID"
             ),
             spacing=spacing
         )

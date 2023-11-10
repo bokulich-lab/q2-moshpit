@@ -9,14 +9,15 @@ import os
 import tempfile
 import unittest
 from unittest.mock import patch, Mock
-from urllib.parse import urlparse
 
 import pandas as pd
 from bs4 import BeautifulSoup
 from qiime2.plugin.testing import TestPluginBase
 
-from q2_moshpit.kaiju.database import _fetch_and_extract_db, _find_latest_db_url, _find_all_dbs, CHUNK_SIZE, ERR_MSG, \
-    fetch_kaiju_db, KAIJU_SERVER_URL
+from q2_moshpit.kaiju.database import (
+    _fetch_and_extract_db, _find_latest_db_url, _find_all_dbs,
+    fetch_kaiju_db, CHUNK_SIZE, ERR_MSG, KAIJU_SERVER_URL
+)
 from requests.exceptions import ConnectionError, RequestException
 
 from q2_types_genomics.kaiju import KaijuDBDirectoryFormat
@@ -121,7 +122,8 @@ class TestDatabaseFunctions(TestPluginBase):
              'https://hello.com/nr_euk_2022-01-11.tar.gz')
         ]
         mock_requests.return_value = Mock(
-            content='<html><body><div id="sidebox_db">{}</div></body></html>'.format(
+            content='<html><body><div id="sidebox_db">{}</div></body></html>'
+            .format(
                 ''.join('<a href={}>{}</a>'.format(d[1], d[0])
                         for d in databases)
             )

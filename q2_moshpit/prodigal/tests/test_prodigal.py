@@ -86,7 +86,7 @@ class TestBUSCO(TestPluginBase):
         # Assert that patch was called 3 times
         subp_run.assert_has_calls(three_calls)
 
-    # Test weather exception is raised when the empty folder is used for input
+    # Test whether exception is raised when the empty folder is used for input
     @patch("subprocess.run")
     def test_no_mags_in_input(self, subp_run):
         # Run busco and save paths to run summaries

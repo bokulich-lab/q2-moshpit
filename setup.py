@@ -76,9 +76,7 @@ setup(
         ],
         "q2_moshpit.prodigal.tests": [
             "data/*",
-            "data/dir_with_0_mag/*",
-            "data/dir_with_1_mag/*",
-            "data/dir_with_3_mag/*",
+            "data/*/*",
         ]
     },
     zip_safe=False,

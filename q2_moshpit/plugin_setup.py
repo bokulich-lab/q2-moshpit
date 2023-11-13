@@ -594,9 +594,7 @@ plugin.methods.register_function(
     output_descriptions={
         'loci': "Gene coordinates files (one per MAG) listing the location of "
                 "each predicted gene as well as some additional scoring "
-                "information. File format: 'gff'. See "
-                "https://github.com/The-Sequence-Ontology/Specifications/blob/"
-                "master/gff3.md for reference.",
+                "information. ",
         'genes': "Fasta files (one per MAG) with the nucleotide sequences of "
                  "the predicted genes.",
         'proteins': "Fasta files (one per MAG) with the protein translation "

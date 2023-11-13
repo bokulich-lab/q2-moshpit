@@ -47,19 +47,13 @@ def predict_genes_prodigal(
         # Get the filename from the file path
         file_id = os.path.splitext(fasta_file)[0]
 
-        # Build paths to outputs
-        i = os.path.join(mags.path, fasta_file)
-        o = os.path.join(loci.path, f"{file_id}_loci.gff")
-        a = os.path.join(proteins.path, f"{file_id}_proteins.fasta")
-        d = os.path.join(genes.path, f"{file_id}_genes.fasta")
-
         # Adjust command and run
         cmd = cp.deepcopy(base_cmd)
         cmd.extend([
-            "-i", i,
-            "-o", o,
-            "-a", a,
-            "-d", d
+            "-i", os.path.join(mags.path, fasta_file),
+            "-o", os.path.join(loci.path, f"{file_id}_loci.gff"),
+            "-a", os.path.join(proteins.path, f"{file_id}_proteins.fasta"),
+            "-d", os.path.join(genes.path, f"{file_id}_genes.fasta")
         ])
         run_command(cmd)
 

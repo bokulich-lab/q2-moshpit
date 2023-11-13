@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-import re
 import os
 import copy as cp
 from .._utils import run_command
@@ -25,15 +24,10 @@ def predict_genes_prodigal(
     genes = GenesDirectoryFormat()
     proteins = ProteinsDirectoryFormat()
 
-    # Pattern of fasta files in input dir
-    pattern = re.compile(
-        r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-"
-        r"[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\.(fa|fasta)$"
-    )
-
-    # Look for fasta files in input dir
+    # Get paths to fasta files in input dir
     fasta_files = [
-        file for file in os.listdir(mags.path) if pattern.match(file)
+        file for file in os.listdir(mags.path)
+        if file.endswith(".fa") or file.endswith(".fasta")
     ]
 
     # Raise exception if no fasta files are found
@@ -48,7 +42,7 @@ def predict_genes_prodigal(
     ]
 
     # For every fasta file in mags.path call prodigal and write
-    # outputs corresponding directories.
+    # outputs to the corresponding directories.
     for fasta_file in fasta_files:
         # Get the filename from the file path
         file_id = os.path.splitext(fasta_file)[0]

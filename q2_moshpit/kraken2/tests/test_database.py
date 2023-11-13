@@ -17,6 +17,8 @@ from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 from unittest.mock import patch, ANY, call, Mock, MagicMock
 
+import pandas as pd
+
 from q2_types.feature_data import DNAFASTAFormat
 from qiime2 import Artifact
 from qiime2.plugin.testing import TestPluginBase
@@ -26,10 +28,11 @@ from q2_moshpit.kraken2.database import (
     _fetch_taxonomy, _fetch_libraries, _add_seqs_to_library,
     _build_kraken2_database, _move_db_files, _build_bracken_database,
     _find_latest_db, _fetch_db_collection, S3_COLLECTIONS_URL,
-    _build_dbs_from_seqs, _fetch_prebuilt_dbs
+    _build_dbs_from_seqs, _fetch_prebuilt_dbs, inspect_kraken_db
 )
 from q2_types_genomics.kraken2 import (
-    Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat
+    Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat,
+    Kraken2DBReportFormat, Kraken2DBReportDirectoryFormat
 )
 
 
@@ -497,6 +500,50 @@ class TestKraken2Database(TestPluginBase):
             ValueError, r"You need to either provide a list .+"
         ):
             moshpit.actions.build_kraken_db()
+
+
+class TestInspectKraken2Database(unittest.TestCase):
+    package = "q2_moshpit.kraken2.tests"
+
+    @classmethod
+    def setUpClass(cls):
+        datadir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'data'
+        )
+        db_path = os.path.join(
+            datadir, 'simulated-sequences', 'kraken2-db'
+        )
+        db = Kraken2DBDirectoryFormat(db_path, 'r')
+        cls.report = inspect_kraken_db(db)
+        cls.report_view = cls.report.file.view(pd.DataFrame)
+
+        cls.species_to_ncbi_id = {
+            'Bacillus anthracis': 1392,
+            'Mus musculus': 10090,
+            'Staphylococcus aureus': 1280,
+            'Staphylococcus epidermidis': 1282,
+        }
+
+    def test_format(self):
+        self.assertIsInstance(self.report, Kraken2DBReportDirectoryFormat)
+        self.report.validate()
+
+    def test_report(self):
+        self.assertGreater(len(self.report_view), 0)
+        self.assertEqual(
+            list(self.report_view.columns),
+            list(Kraken2DBReportFormat.COLUMNS.keys())
+        )
+
+        self.report_view['name'] = self.report_view['name'].apply(
+            lambda cell: cell.strip()
+        )
+        for species, ncbi_id in self.species_to_ncbi_id.items():
+            self.assertIn(species, self.report_view['name'].values)
+            self.assertIn(ncbi_id, self.report_view['taxon_id'].values)
+
+        # now rows skipped when skipping header
+        self.assertEqual('root', self.report_view.loc[0, 'name'])
 
 
 if __name__ == "__main__":

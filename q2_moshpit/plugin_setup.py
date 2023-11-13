@@ -584,8 +584,7 @@ plugin.methods.register_function(
             'translate genes into a sequence of amino '
             'acids. See '
             'https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi '
-            'for reference. NOTE: not all tables are supported. '
-            'Supported tables: 1-6, 9-16 and 21-25.'
+            'for reference.'
     },
     outputs=[
         ('loci', GenomeData[Loci]),

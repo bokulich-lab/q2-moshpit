@@ -23,6 +23,7 @@ from tqdm import tqdm
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types_genomics.kraken2 import (
     Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat,
+    Kraken2DBReportDirectoryFormat
 )
 
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
@@ -299,3 +300,25 @@ def build_kraken_db(
             )
 
     return kraken2_db, bracken_db
+
+
+def inspect_kraken_db(
+    db: Kraken2DBDirectoryFormat,
+    threads: int = 1
+) -> Kraken2DBReportDirectoryFormat:
+    cmd = ['kraken2-inspect', '--db', str(db.path), '--threads', str(threads)]
+    try:
+        result = run_command(cmd=cmd, pipe=True)
+    except subprocess.CalledProcessError as e:
+        raise Exception(
+            "An error was encountered while building the database, "
+            f"(return code {e.returncode}), please inspect "
+            "stdout and stderr to learn more."
+        )
+
+    report_fmt = Kraken2DBReportDirectoryFormat()
+    report_fp = os.path.join(report_fmt.path, report_fmt.file.pathspec)
+    with open(report_fp, 'w') as fh:
+        fh.write(result.stdout)
+
+    return report_fmt

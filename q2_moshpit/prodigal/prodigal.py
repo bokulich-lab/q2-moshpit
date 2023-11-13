@@ -16,7 +16,7 @@ from q2_types_genomics.genome_data import (
 
 def predict_genes_prodigal(
         mags: MAGSequencesDirFmt,
-        translation_table_number: int = 11,
+        translation_table_number: str = "11",
 ) -> (LociDirectoryFormat, GenesDirectoryFormat, ProteinsDirectoryFormat):
 
     # Instantiate output directories
@@ -37,7 +37,7 @@ def predict_genes_prodigal(
     # Define base command
     base_cmd = [
         "prodigal",
-        "-g", str(translation_table_number),
+        "-g", translation_table_number,
         "-f", "gff"
     ]
 

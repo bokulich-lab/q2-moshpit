@@ -68,7 +68,7 @@ setup(
             'data/kraken2-reports-select/*/*',
             'data/kraken2-to-ncbi-tree/*',
             'data/kraken2-to-ncbi-tree/*/*/*',
-            'data/contigs/*/*',
+            'data/simulated-sequences/**/*',
         ],
         'q2_moshpit.dereplication.tests': [
             'data/*', 'data/mags/*', 'data/mags/*/*',

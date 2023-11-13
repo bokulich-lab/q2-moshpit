@@ -572,7 +572,9 @@ plugin.methods.register_function(
         'mags': 'MAGs for which one wishes to predict genes.'
     },
     parameters={
-        "translation_table_number": Int % Range(1, 26)
+        "translation_table_number": Str % Choices(['1', '2', '3', '4', '5', '6', '9',
+                                                   '10', '11', '12', '13', '14', '15',
+                                                   '16', '21', '22', '23', '24', '25'])
     },
     parameter_descriptions={
         'translation_table_number':

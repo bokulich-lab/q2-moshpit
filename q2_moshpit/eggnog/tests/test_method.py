@@ -6,9 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import os
 import pandas as pd
 import pandas.testing as pdt
-from unittest.mock import patch, ANY
+from unittest.mock import patch
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
 
@@ -102,4 +103,7 @@ class TestFetchDB(TestPluginBase):
             "download_eggnog_data.py", "-y", "--data_dir", str(eggnog_db.path)
         ]
         subp_run.assert_called_once_with(cmd, check=True)
-        mv.assert_called_once_with(src=ANY, dst=ANY)
+        mv.assert_called_once_with(
+            src=os.path.join(eggnog_db.path, "eggnog_proteins.dmnd"),
+            dst=os.path.join(diamond_db.path, "ref_db.dmnd")
+        )

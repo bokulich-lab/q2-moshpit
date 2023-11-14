@@ -397,7 +397,7 @@ plugin.methods.register_function(
         "eggnog_db": "Artifact containing the downloaded files "
                      "(eggnog.db, eggnog.taxa.db, "
                      "eggnog.taxa.db.traverse.pkl)",
-        "diamond_db": "Artifact containing the downloaded files "
+        "diamond_db": "Artifact containing the Diamond database "
                       "(eggnog_proteins.dmnd)"
     },
     name="Fetch the databases necessary to run eggNOG.",

@@ -394,8 +394,8 @@ plugin.methods.register_function(
         ("diamond_db", ReferenceDB[Diamond])
     ],
     output_descriptions={
-        "eggnog_db": "Artifact containing the downloaded files "
-                     "(eggnog.db, eggnog.taxa.db, "
+        "eggnog_db": "Artifact containing the eggNOG annotation "
+                     "database (eggnog.db, eggnog.taxa.db, "
                      "eggnog.taxa.db.traverse.pkl)",
         "diamond_db": "Artifact containing the Diamond database "
                       "(eggnog_proteins.dmnd)"

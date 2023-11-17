@@ -288,7 +288,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.database.inspect_kraken_db,
+    function=q2_moshpit.kraken2.database.inspect_kraken2_db,
     inputs={"db": Kraken2DB},
     parameters={"threads": Int % Range(1, None)},
     outputs=[("report", Kraken2DBReport)],

@@ -28,7 +28,7 @@ from q2_moshpit.kraken2.database import (
     _fetch_taxonomy, _fetch_libraries, _add_seqs_to_library,
     _build_kraken2_database, _move_db_files, _build_bracken_database,
     _find_latest_db, _fetch_db_collection, S3_COLLECTIONS_URL,
-    _build_dbs_from_seqs, _fetch_prebuilt_dbs, inspect_kraken_db
+    _build_dbs_from_seqs, _fetch_prebuilt_dbs, inspect_kraken2_db
 )
 from q2_types_genomics.kraken2 import (
     Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat,
@@ -514,7 +514,7 @@ class TestInspectKraken2Database(unittest.TestCase):
             datadir, 'simulated-sequences', 'kraken2-db'
         )
         db = Kraken2DBDirectoryFormat(db_path, 'r')
-        cls.report = inspect_kraken_db(db)
+        cls.report = inspect_kraken2_db(db)
         cls.report_view = cls.report.file.view(pd.DataFrame)
 
         cls.species_to_ncbi_id = {

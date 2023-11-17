@@ -302,7 +302,7 @@ def build_kraken_db(
     return kraken2_db, bracken_db
 
 
-def inspect_kraken_db(
+def inspect_kraken2_db(
     db: Kraken2DBDirectoryFormat,
     threads: int = 1
 ) -> Kraken2DBReportDirectoryFormat:

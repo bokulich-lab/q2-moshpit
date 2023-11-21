@@ -626,7 +626,9 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.kaiju.classify_kaiju,
     inputs={
-        "seqs": SampleData[SequencesWithQuality | PairedEndSequencesWithQuality],
+        "seqs": SampleData[
+            SequencesWithQuality | PairedEndSequencesWithQuality
+            ],
         "db": KaijuDB,
     },
     parameters={
@@ -637,7 +639,9 @@ plugin.methods.register_function(
         "s": Int % Range(1, None),
         "evalue": Float % Range(0, 1),
         "x": Bool,
-        "r": Str % Choices(["phylum", "class", "order", "family", "genus", "species"]),
+        "r": Str % Choices(
+            ["phylum", "class", "order", "family", "genus", "species"]
+        ),
         "c": Float % Range(0, 100, inclusive_start=True),
         "exp": Bool,
         "u": Bool,
@@ -667,8 +671,11 @@ plugin.methods.register_function(
         "u": "Do not count unclassified reads for the total reads "
              "when calculating percentages for classified reads."
     },
-    output_descriptions={"abundances": "Read abundances.", "taxonomy": "Linked taxonomy."},
+    output_descriptions={
+        "abundances": "Read abundances.", "taxonomy": "Linked taxonomy."
+    },
     name="Classify reads using Kaiju.",
-    description="This method uses Kaiju to perform taxonomic classification of NGS reads.",
+    description="This method uses Kaiju to perform taxonomic "
+                "classification of NGS reads.",
     citations=[citations["menzel2016"]],
 )

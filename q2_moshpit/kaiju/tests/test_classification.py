@@ -13,11 +13,15 @@ from unittest.mock import patch, Mock, ANY
 import numpy as np
 import pandas as pd
 from pandas._testing import assert_frame_equal
-from q2_types.per_sample_sequences import SingleLanePerSamplePairedEndFastqDirFmt, \
+from q2_types.per_sample_sequences import (
+    SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt
+)
 
-from q2_moshpit.kaiju.classification import _construct_feature_table, _rename_taxon, _clean_terminal_ranks, \
-    _encode_unclassified_ids, _fix_id_types, _process_kaiju_reports, classify_kaiju
+from q2_moshpit.kaiju.classification import (
+    _construct_feature_table, _rename_taxon, _encode_unclassified_ids,
+    _fix_id_types, _process_kaiju_reports, classify_kaiju
+)
 from qiime2.plugin.testing import TestPluginBase
 
 
@@ -34,17 +38,23 @@ class TestKaijuClassification(TestPluginBase):
             table_fp=self.get_data_path('kaiju-table.tsv')
         )
 
-        exp_table = pd.read_csv(self.get_data_path('kaiju-ft-ok.csv'), index_col=0)
+        exp_table = pd.read_csv(
+            self.get_data_path('kaiju-ft-ok.csv'), index_col=0
+        )
         exp_table.columns.name = "taxon_id"
-        exp_taxonomy = pd.read_csv(self.get_data_path('kaiju-taxonomy-ok.csv'), index_col=0)
+        exp_taxonomy = pd.read_csv(
+            self.get_data_path('kaiju-taxonomy-ok.csv'), index_col=0
+        )
 
         assert_frame_equal(exp_table, obs_table)
         assert_frame_equal(exp_taxonomy, obs_taxonomy)
 
     def test_rename_taxon_unspecified(self):
         obs_taxon = _rename_taxon("1236", self.taxa_map)
-        exp_taxon = ("d__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Unspecified;"
-                     "f__Unspecified;g__Unspecified;s__Unspecified")
+        exp_taxon = (
+            "d__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;"
+            "o__Unspecified;f__Unspecified;g__Unspecified;s__Unspecified"
+        )
 
         self.assertEqual(exp_taxon, obs_taxon)
 
@@ -99,8 +109,12 @@ class TestKaijuClassification(TestPluginBase):
     @patch("subprocess.run")
     @patch("q2_moshpit.kaiju.classification._construct_feature_table")
     def test_process_kaiju_reports_c_float(self, p1, p2):
-        _ = open(os.path.join(str(self.temp_dir.name), "sample1.out"), "w").close()
-        _ = open(os.path.join(str(self.temp_dir.name), "sample2.out"), "w").close()
+        open(
+            os.path.join(str(self.temp_dir.name), "sample1.out"), "w"
+        ).close()
+        open(
+            os.path.join(str(self.temp_dir.name), "sample2.out"), "w"
+        ).close()
         args = {
             "r": "species",
             "db": Mock(path=self.temp_dir.name),
@@ -129,8 +143,12 @@ class TestKaijuClassification(TestPluginBase):
     @patch("subprocess.run")
     @patch("q2_moshpit.kaiju.classification._construct_feature_table")
     def test_process_kaiju_reports_c_int(self, p1, p2):
-        _ = open(os.path.join(str(self.temp_dir.name), "sample1.out"), "w").close()
-        _ = open(os.path.join(str(self.temp_dir.name), "sample2.out"), "w").close()
+        open(
+            os.path.join(str(self.temp_dir.name), "sample1.out"), "w"
+        ).close()
+        open(
+            os.path.join(str(self.temp_dir.name), "sample2.out"), "w"
+        ).close()
         args = {
             "r": "species",
             "db": Mock(path=self.temp_dir.name),
@@ -166,7 +184,7 @@ class TestKaijuClassification(TestPluginBase):
         open(os.path.join(db_path, "kaiju_123.fmi"), "w").close()
         p1.return_value = [pd.DataFrame(), pd.DataFrame()]
 
-        with patch("tempfile.TemporaryDirectory") as p_tmp:
+        with patch("tempfile.TemporaryDirectory"):
             classify_kaiju(
                 seqs=seqs, db=Mock(path=self.temp_dir.name),
                 z=3, a="greedy", e=2, m=10, s=66, evalue=0, x=False,
@@ -200,7 +218,7 @@ class TestKaijuClassification(TestPluginBase):
         open(os.path.join(db_path, "kaiju_123.fmi"), "w").close()
         p1.return_value = [pd.DataFrame(), pd.DataFrame()]
 
-        with patch("tempfile.TemporaryDirectory") as p_tmp:
+        with patch("tempfile.TemporaryDirectory"):
             classify_kaiju(
                 seqs=seqs, db=Mock(path=self.temp_dir.name),
                 z=3, a="greedy", e=2, m=10, s=66, evalue=0, x=True,

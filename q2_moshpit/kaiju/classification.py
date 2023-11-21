@@ -19,7 +19,7 @@ from q2_types.per_sample_sequences import (
     SingleLanePerSampleSingleEndFastqDirFmt,
 )
 
-from q2_moshpit._utils import run_command, _process_common_input_params
+from q2_moshpit._utils import run_command
 from q2_types_genomics.kaiju import KaijuDBDirectoryFormat
 
 DEFAULT_PREFIXES = ["d__", "p__", "c__", "o__", "f__", "g__", "s__", "ssp__"]
@@ -47,9 +47,13 @@ def _clean_terminal_ranks(x: str) -> str:
 
 
 def _encode_unclassified_ids(table: pd.DataFrame, text: str) -> pd.DataFrame:
-    taxon = table.loc[table["taxon_name"].str.startswith(text), "taxon_name"].iloc[0]
+    taxon = table.loc[
+        table["taxon_name"].str.startswith(text), "taxon_name"
+    ].iloc[0]
     encoded = base64.b64encode(taxon.encode()).decode()
-    table.loc[table["taxon_name"].str.startswith(text), "taxon_id"] = encoded[:8]
+    table.loc[
+        table["taxon_name"].str.startswith(text), "taxon_id"
+    ] = encoded[:8]
     return table
 
 
@@ -75,8 +79,9 @@ def _construct_feature_table(table_fp: str) -> (pd.DataFrame, pd.DataFrame):
 
     # rename taxon IDs to taxon names and clean up
     taxa = table.set_index('taxon_id')['taxon_name'].to_dict()
-    table["taxon_name"] = table["taxon_id"].map(lambda x: _rename_taxon(x, taxa))
-    # table["taxon_name"] = table["taxon_name"].map(lambda x: _clean_terminal_ranks(x))
+    table["taxon_name"] = table["taxon_id"].map(
+        lambda x: _rename_taxon(x, taxa)
+    )
 
     # create taxonomy table
     taxonomy = table[["taxon_id", "taxon_name"]].drop_duplicates()
@@ -86,7 +91,9 @@ def _construct_feature_table(table_fp: str) -> (pd.DataFrame, pd.DataFrame):
     taxonomy.columns = ["Taxon"]
 
     # convert to sample x feature format
-    table = table.groupby(["taxon_id", "sample"], as_index=False)["reads"].sum()
+    table = table.groupby(
+        ["taxon_id", "sample"], as_index=False
+    )["reads"].sum()
     table = table.pivot(index="sample", columns="taxon_id", values="reads")
 
     # convert column names to strings
@@ -129,7 +136,9 @@ def _process_kaiju_reports(tmpdir, all_args):
     return _construct_feature_table(table_fp)
 
 
-def _classify_kaiju(manifest: pd.DataFrame, all_args: dict) -> (pd.DataFrame, pd.DataFrame):
+def _classify_kaiju(
+        manifest: pd.DataFrame, all_args: dict
+) -> (pd.DataFrame, pd.DataFrame):
     kaiju_args = [
         "-z", str(all_args["z"]),
         "-a", str(all_args["a"]),
@@ -139,7 +148,9 @@ def _classify_kaiju(manifest: pd.DataFrame, all_args: dict) -> (pd.DataFrame, pd
         "-E", str(all_args["evalue"]),
         "-x" if all_args["x"] else "-X",
         "-t", os.path.join(str(all_args["db"].path), "nodes.dmp"),
-        "-f", glob.glob(os.path.join(str(all_args["db"].path), "kaiju_*.fmi"))[0],
+        "-f", glob.glob(
+            os.path.join(str(all_args["db"].path), "kaiju_*.fmi")
+        )[0],
     ]
 
     base_cmd = ["kaiju-multi", "-v", *kaiju_args]

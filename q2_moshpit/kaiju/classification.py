@@ -39,13 +39,6 @@ def _rename_taxon(_id: str, id_to_taxon: dict) -> str:
     return ";".join([f"{prefix}{taxon}" for taxon, prefix in x])
 
 
-def _clean_terminal_ranks(x: str) -> str:
-    taxa = x.split(";")
-    while taxa[-1].endswith('__'):
-        taxa = taxa[:-1]
-    return ";".join(taxa)
-
-
 def _encode_unclassified_ids(table: pd.DataFrame, text: str) -> pd.DataFrame:
     taxon = table.loc[
         table["taxon_name"].str.startswith(text), "taxon_name"

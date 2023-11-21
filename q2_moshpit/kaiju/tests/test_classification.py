@@ -8,6 +8,7 @@
 import json
 import os
 import unittest
+from subprocess import CalledProcessError
 from unittest.mock import patch, Mock, ANY
 
 import numpy as np
@@ -244,6 +245,22 @@ class TestKaijuClassification(TestPluginBase):
         self.assertRegex(
             obs_cmd[-5], r".*reads1_R1.fastq.gz,.*reads2_R1.fastq.gz"
         )
+
+    @patch("subprocess.run", side_effect=CalledProcessError(1, "hello"))
+    def test_classify_kaiju_exception(self, p1):
+        seqs = SingleLanePerSampleSingleEndFastqDirFmt(
+            self.get_data_path("single-end"), "r"
+        )
+        open(os.path.join(self.temp_dir.name, "kaiju_123.fmi"), "w").close()
+
+        with self.assertRaisesRegex(
+                Exception, r"\(return code 1\), please inspect"
+        ):
+            classify_kaiju(
+                seqs=seqs, db=Mock(path=self.temp_dir.name),
+                z=3, a="greedy", e=2, m=10, s=66, evalue=0, x=False,
+                r="class", c=0.1, exp=True, u=True
+            )
 
 
 if __name__ == "__main__":

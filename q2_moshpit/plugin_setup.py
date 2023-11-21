@@ -8,8 +8,8 @@
 import importlib
 
 from q2_types.distance_matrix import DistanceMatrix
-from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
+from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
 )
@@ -553,6 +553,40 @@ plugin.visualizers.register_function(
                 "tool) to assess the quality of assembled MAGs and generates "
                 "visualizations summarizing the results.",
     citations=[citations["manni_busco_2021"]],
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kaiju.fetch_kaiju_db,
+    inputs={},
+    parameters={
+        "database_type": Str
+        % Choices(
+            [
+                "nr",
+                "nr_euk",
+                "refseq",
+                "fungi",
+                "viruses",
+                "plasmids",
+                "progenomes",
+                "rvdb",
+            ]
+        ),
+    },
+    outputs=[
+        ("database", KaijuDB),
+    ],
+    input_descriptions={},
+    parameter_descriptions={
+        "database_type": "Type of database to be downloaded. For more "
+        "information on available types please see the list on "
+        "Kaiju's web server: https://kaiju.binf.ku.dk/server",
+    },
+    output_descriptions={"database": "Kaiju database."},
+    name="Fetch Kaiju database.",
+    description="This method fetches the latest Kaiju database from "
+                "https://kaiju.binf.ku.dk/server.",
+    citations=[citations["menzel2016"]],
 )
 
 plugin.methods.register_function(

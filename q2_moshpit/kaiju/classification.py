@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import base64
 import glob
 import os
 import subprocess
@@ -21,7 +22,7 @@ from q2_types.per_sample_sequences import (
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_types_genomics.kaiju import KaijuDBDirectoryFormat
 
-DEFAULT_PREFIXES = ["d__", "p__", "c__", "o__", "f__", "g__", "s__", "strain__"]
+DEFAULT_PREFIXES = ["d__", "p__", "c__", "o__", "f__", "g__", "s__", "ssp__"]
 
 
 def _get_sample_paths(df_index, df_row, paired):
@@ -32,30 +33,55 @@ def _get_sample_paths(df_index, df_row, paired):
     return sample_name, fps
 
 
-def _rename_taxon(x: str, id_to_taxon: dict) -> str:
-    x = id_to_taxon[x].split(";")
-    x = zip(x, DEFAULT_PREFIXES)
+def _rename_taxon(_id: str, id_to_taxon: dict) -> str:
+    _id = id_to_taxon[_id].rstrip(";").split(";")
+    x = zip(_id, DEFAULT_PREFIXES)
     return ";".join([f"{prefix}{taxon}" for taxon, prefix in x])
+
+
+def _clean_terminal_ranks(x: str) -> str:
+    taxa = x.split(";")
+    while taxa[-1].endswith('__'):
+        taxa = taxa[:-1]
+    return ";".join(taxa)
+
+
+def _encode_unclassified_ids(table: pd.DataFrame, text: str) -> pd.DataFrame:
+    taxon = table.loc[table["taxon_name"].str.startswith(text), "taxon_name"].iloc[0]
+    encoded = base64.b64encode(taxon.encode()).decode()
+    table.loc[table["taxon_name"].str.startswith(text), "taxon_id"] = encoded[:8]
+    return table
+
+
+def _fix_id_types(table: pd.DataFrame) -> pd.DataFrame:
+    table["taxon_id"].fillna(0, inplace=True)
+    table['taxon_id'] = table['taxon_id'].astype(int)
+    table = _encode_unclassified_ids(table, "cannot be assigned")
+    table = _encode_unclassified_ids(table, "unclassified")
+    return table
 
 
 def _construct_feature_table(table_fp: str) -> (pd.DataFrame, pd.DataFrame):
     table = pd.read_csv(table_fp, sep="\t")
 
     # clean up taxon IDs
-    table.loc[table["taxon_name"].str.startswith("cannot be assigned"), "taxon_id"] = 1
-    table.loc[table["taxon_name"].str.startswith("unclassified"), "taxon_id"] = 0
-    table['taxon_id'] = table['taxon_id'].astype(int)
+    table = _fix_id_types(table)
 
     # extract sample name from the file path
     table["sample"] = table["file"].map(lambda x: Path(x).stem)
 
-    # rename taxon IDs to taxon names
+    # clean up all the NAs
+    table["taxon_name"] = table["taxon_name"].str.replace("NA", "Unspecified")
+
+    # rename taxon IDs to taxon names and clean up
     taxa = table.set_index('taxon_id')['taxon_name'].to_dict()
     table["taxon_name"] = table["taxon_id"].map(lambda x: _rename_taxon(x, taxa))
+    # table["taxon_name"] = table["taxon_name"].map(lambda x: _clean_terminal_ranks(x))
 
     # create taxonomy table
     taxonomy = table[["taxon_id", "taxon_name"]].drop_duplicates()
     taxonomy.set_index("taxon_id", inplace=True, drop=True)
+    taxonomy.index = taxonomy.index.astype(str)
     taxonomy.index.name = "Feature ID"
     taxonomy.columns = ["Taxon"]
 
@@ -85,7 +111,7 @@ def _process_kaiju_reports(tmpdir, all_args):
     else:
         table_args.extend(["-c", str(all_args["c"])])
 
-    report_fps = glob.glob(os.path.join(tmpdir, "*.out"))
+    report_fps = sorted(glob.glob(os.path.join(tmpdir, "*.out")))
     table_fp = os.path.join(tmpdir, "results.tsv")
 
     cmd = [

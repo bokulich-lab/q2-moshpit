@@ -14,9 +14,10 @@ import pandas as pd
 from typing import Union
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from q2_types_genomics.reference_db import EggnogRefDirFmt
+from q2_types_genomics.reference_db import (
+    EggnogRefDirFmt, DiamondDatabaseDirFmt
+)
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types_genomics.reference_db import DiamondDatabaseDirFmt
 from .._utils import run_command
 from q2_types_genomics.feature_data import (
     OrthologAnnotationDirFmt, MAGSequencesDirFmt
@@ -158,3 +159,35 @@ def fetch_eggnog_db() -> EggnogRefDirFmt:
 
     # Return objects
     return eggnog_db
+
+
+def fetch_diamond_db() -> DiamondDatabaseDirFmt:
+    """
+    Downloads diamond reference database using the
+    `download_eggnog_data.py` script from eggNOG. Here, this
+    script downloads 1 file (8.6 Gb).
+    """
+
+    # Initialize output objects
+    diamond_db = DiamondDatabaseDirFmt()
+
+    # Define command.
+    # 'printf "n\nn\ny" will answer the prompts thrown by
+    # download_eggnog_data.py, effectively only downloading the
+    # Diamond DB
+    cmd = [
+        'printf "n\nn\ny" | download_eggnog_data.py',
+        '--data_dir', str(diamond_db)
+    ]
+    run_command(cmd)
+
+    # Rename file
+    os.rename(
+        src="eggnog_proteins.dmnd",
+        dst="ref_db.dmnd",
+        src_dir_fd=str(diamond_db),
+        dst_dir_fd=str(diamond_db)
+    )
+
+    # Return objects
+    return diamond_db

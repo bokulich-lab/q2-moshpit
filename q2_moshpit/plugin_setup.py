@@ -389,8 +389,8 @@ plugin.methods.register_function(
                      "database (eggnog.db, eggnog.taxa.db, "
                      "eggnog.taxa.db.traverse.pkl)"
     },
-    name="Fetch the databases necessary to run eggNOG.",
-    description="Downloads eggnog and diamond reference databases  "
+    name="Fetch one of the databases necessary to run eggNOG.",
+    description="Downloads eggnog reference database  "
                 "using the `download_eggnog_data.py` script from eggNOG. "
                 "Here, this script downloads 3 files, specifically: "
                 "eggnog.db (39Gb), "

@@ -119,7 +119,7 @@ class TestFetchDB(TestPluginBase):
         ]
 
         # Check that commands is ran as expected
-        subp_run.assert_called_once_with(cmd, check=True)
+        subp_run.assert_called_once_with(cmd, check=True, shell=True)
         os_rename.assert_called_once_with(
             src="eggnog_proteins.dmnd",
             dst="ref_db.dmnd",

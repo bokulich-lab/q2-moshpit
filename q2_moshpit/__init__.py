@@ -23,6 +23,6 @@ del get_versions
 
 __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
-    'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog', 
+    'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog',
     'busco', 'prodigal'
 ]

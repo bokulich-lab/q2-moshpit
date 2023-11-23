@@ -85,4 +85,3 @@ class TestBUSCO(TestPluginBase):
 
         # Assert that patch was called 3 times
         subp_run.assert_has_calls(three_calls)
-

@@ -178,7 +178,7 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
         'printf "n\nn\ny" | download_eggnog_data.py',
         '--data_dir', str(diamond_db)
     ]
-    run_command(cmd)
+    run_command(cmd, shell=True)
 
     # Rename file
     os.rename(

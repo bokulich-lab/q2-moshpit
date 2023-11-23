@@ -30,10 +30,6 @@ def predict_genes_prodigal(
         if file.endswith(".fa") or file.endswith(".fasta")
     ]
 
-    # Raise exception if no fasta files are found
-    if len(fasta_files) == 0:
-        raise FileNotFoundError(f"No fasta files found in {mags.path}")
-
     # Define base command
     base_cmd = [
         "prodigal",

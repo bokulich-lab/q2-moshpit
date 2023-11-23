@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
 import pandas as pd
 import pandas.testing as pdt
 from unittest.mock import patch
@@ -91,19 +90,15 @@ class TestAnnotate(TestPluginBase):
 class TestFetchDB(TestPluginBase):
     package = 'q2_moshpit.eggnog.tests'
 
-    @patch("shutil.move")
     @patch("subprocess.run")
-    def test_fetch_db(self, subp_run, mv):
+    def test_fetch_eggnog_db(self, subp_run):
         # Call function. Patching will make sure nothing is
         # actually ran
-        eggnog_db, diamond_db = fetch_eggnog_db()
+        eggnog_db = fetch_eggnog_db()
 
         # Check that command was called in the expected way
         cmd = [
-            "download_eggnog_data.py", "-y", "--data_dir", str(eggnog_db.path)
+            "download_eggnog_data.py", "-y", "-D",
+            "--data_dir", str(eggnog_db.path)
         ]
         subp_run.assert_called_once_with(cmd, check=True)
-        mv.assert_called_once_with(
-            src=os.path.join(eggnog_db.path, "eggnog_proteins.dmnd"),
-            dst=os.path.join(diamond_db.path, "ref_db.dmnd")
-        )

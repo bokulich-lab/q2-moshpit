@@ -389,28 +389,19 @@ plugin.methods.register_function(
     function=q2_moshpit.eggnog.fetch_eggnog_db,
     inputs={},
     parameters={},
-    outputs=[
-        ("eggnog_db", ReferenceDB[Eggnog]),
-        ("diamond_db", ReferenceDB[Diamond])
-    ],
+    outputs=[("eggnog_db", ReferenceDB[Eggnog])],
     output_descriptions={
         "eggnog_db": "Artifact containing the eggNOG annotation "
                      "database (eggnog.db, eggnog.taxa.db, "
-                     "eggnog.taxa.db.traverse.pkl)",
-        "diamond_db": "Artifact containing the Diamond database "
-                      "(eggnog_proteins.dmnd)"
+                     "eggnog.taxa.db.traverse.pkl)"
     },
     name="Fetch the databases necessary to run eggNOG.",
     description="Downloads eggnog and diamond reference databases  "
                 "using the `download_eggnog_data.py` script from eggNOG. "
-                "Here, this script downloads 4 files; 3 are placed inside "
-                "eggnog_db and 1 inside diamond_db, amounting to 47Gb in "
-                "total. "
-                "Specifically: "
-                "eggnog.db (39Gb), eggnog.taxa.db (265Mb), "
-                "eggnog.taxa.db.traverse.pkl (6.3Mb), "
-                "eggnog_proteins.dmnd (8.6Gb). "
-                "This last file is renamed to 'ref_db.dmnd'."
+                "Here, this script downloads 3 files, specifically: "
+                "eggnog.db (39Gb), "
+                "eggnog.taxa.db (265Mb), and"
+                "eggnog.taxa.db.traverse.pkl (6.3Mb)."
 )
 
 plugin.methods.register_function(

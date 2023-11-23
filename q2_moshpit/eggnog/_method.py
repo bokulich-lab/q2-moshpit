@@ -9,7 +9,6 @@ import glob
 import subprocess
 import os
 import tempfile
-import shutil
 import qiime2.util
 import pandas as pd
 from typing import Union
@@ -135,7 +134,7 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
     subprocess.run(cmds, check=True)
 
 
-def fetch_eggnog_db() -> (EggnogRefDirFmt, DiamondDatabaseDirFmt):
+def fetch_eggnog_db() -> EggnogRefDirFmt:
     """
     Downloads eggnog and diamond reference databases using the
     `download_eggnog_data.py` script from eggNOG. Here, this
@@ -144,17 +143,18 @@ def fetch_eggnog_db() -> (EggnogRefDirFmt, DiamondDatabaseDirFmt):
     """
 
     # Initialize output objects
-    db = EggnogRefDirFmt()  # All other files
-    dmnd = DiamondDatabaseDirFmt()  # One file, e.g. ref_db.dmnd
+    eggnog_db = EggnogRefDirFmt()  # All other files
 
     # Define command. Output to db object then move one file to dmnd object
-    cmd = ["download_eggnog_data.py", "-y", "--data_dir", str(db.path)]
+    # Meaning of flags:
+    # y: Answer yest to all prompts thrown by download_eggnog_data.py
+    # D: Do not download the Diamond database
+    # data_dir: location where to save downloads
+    cmd = [
+        "download_eggnog_data.py", "-y", "-D",
+        "--data_dir", str(eggnog_db.path)
+    ]
     run_command(cmd)
 
-    # Move eggnog_proteins.dmnd to dmnd dir and rename as ref_db.dmnd
-    source = os.path.join(db.path, "eggnog_proteins.dmnd")
-    destination = os.path.join(dmnd.path, "ref_db.dmnd")
-    shutil.move(src=source, dst=destination)
-
     # Return objects
-    return db, dmnd
+    return eggnog_db

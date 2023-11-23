@@ -13,7 +13,9 @@ import qiime2
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from .._method import eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db
+from .._method import (
+    eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db, fetch_diamond_db
+)
 from q2_types_genomics.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt)
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
@@ -102,3 +104,25 @@ class TestFetchDB(TestPluginBase):
             "--data_dir", str(eggnog_db.path)
         ]
         subp_run.assert_called_once_with(cmd, check=True)
+
+    @patch("os.rename")
+    @patch("subprocess.run")
+    def test_fetch_diamond_db(self, subp_run, os_rename):
+        # Call function. Patching will make sure nothing is
+        # actually ran
+        diamond_db = fetch_diamond_db()
+
+        # Check that command was called in the expected way
+        cmd = [
+            'printf "n\nn\ny" | download_eggnog_data.py',
+            '--data_dir', str(diamond_db)
+        ]
+
+        # Check that commands is ran as expected
+        subp_run.assert_called_once_with(cmd, check=True)
+        os_rename.assert_called_once_with(
+            src="eggnog_proteins.dmnd",
+            dst="ref_db.dmnd",
+            src_dir_fd=str(diamond_db),
+            dst_dir_fd=str(diamond_db)
+        )

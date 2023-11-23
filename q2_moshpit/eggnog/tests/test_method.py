@@ -99,6 +99,6 @@ class TestFetchDB(TestPluginBase):
         # Check that command was called in the expected way
         cmd = [
             "download_eggnog_data.py", "-y", "-D",
-            "--data_dir", str(eggnog_db.path)
+            "--data_dir", str(eggnog_db)
         ]
         subp_run.assert_called_once_with(cmd, check=True)

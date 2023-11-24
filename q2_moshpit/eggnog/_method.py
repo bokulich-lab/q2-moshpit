@@ -175,18 +175,15 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
     # download_eggnog_data.py, effectively only downloading the
     # Diamond DB
     cmd = [
-        'printf "n\nn\ny" | download_eggnog_data.py',
-        '--data_dir', str(diamond_db)
+        f'cd {str(diamond_db)} && wget -nH '
+        '--user-agent=Mozilla/5.0 --relative --no-parent '
+        '--reject "index.html*" --cut-dirs=4 -e robots=off '
+        '-O ref_db.dmnd.gz '
+        'http://eggnogdb.embl.de/download/emapperdb-5.0.2/'
+        'eggnog_proteins.dmnd.gz && echo Decompressing... && '
+        'gunzip ref_db.dmnd.gz'
     ]
     run_command(cmd, shell=True)
-
-    # Rename file
-    os.rename(
-        src="eggnog_proteins.dmnd",
-        dst="ref_db.dmnd",
-        src_dir_fd=str(diamond_db),
-        dst_dir_fd=str(diamond_db)
-    )
 
     # Return objects
     return diamond_db

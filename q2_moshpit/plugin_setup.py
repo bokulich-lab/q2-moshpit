@@ -405,13 +405,13 @@ plugin.methods.register_function(
     outputs=[("diamond_db", ReferenceDB[Diamond])],
     output_descriptions={
         "diamond_db": "Artifact containing the Diamond "
-                      "database (ref_db.dmnd)"
+                      "database."
     },
     name="Fetch one of the databases necessary to run eggNOG.",
-    description="Downloads Diamond reference database  "
-                "using the `download_eggnog_data.py` script from eggNOG. "
-                "Here, this script downloads 1 files, specifically: "
-                "eggnog_proteins.dmnd renamed as ref_db.dmnd (8.6 Gb)."
+    description="Downloads Diamond reference database.  "
+                "This action downloads 1 file and places it "
+                "inside an artifact. The file is named: "
+                "ref_db.dmnd (8.6 Gb)."
 )
 
 plugin.methods.register_function(

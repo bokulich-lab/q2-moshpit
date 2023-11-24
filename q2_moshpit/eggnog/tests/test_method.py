@@ -105,24 +105,22 @@ class TestFetchDB(TestPluginBase):
         ]
         subp_run.assert_called_once_with(cmd, check=True)
 
-    @patch("os.rename")
     @patch("subprocess.run")
-    def test_fetch_diamond_db(self, subp_run, os_rename):
+    def test_fetch_diamond_db(self, subp_run):
         # Call function. Patching will make sure nothing is
         # actually ran
         diamond_db = fetch_diamond_db()
 
         # Check that command was called in the expected way
         cmd = [
-            'printf "n\nn\ny" | download_eggnog_data.py',
-            '--data_dir', str(diamond_db)
+            f'cd {str(diamond_db)} && wget -nH '
+            '--user-agent=Mozilla/5.0 --relative --no-parent '
+            '--reject "index.html*" --cut-dirs=4 -e robots=off '
+            '-O ref_db.dmnd.gz '
+            'http://eggnogdb.embl.de/download/emapperdb-5.0.2/'
+            'eggnog_proteins.dmnd.gz && echo Decompressing... && '
+            'gunzip ref_db.dmnd.gz'
         ]
 
         # Check that commands is ran as expected
         subp_run.assert_called_once_with(cmd, check=True, shell=True)
-        os_rename.assert_called_once_with(
-            src="eggnog_proteins.dmnd",
-            dst="ref_db.dmnd",
-            src_dir_fd=str(diamond_db),
-            dst_dir_fd=str(diamond_db)
-        )

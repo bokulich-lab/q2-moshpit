@@ -175,13 +175,16 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
     # download_eggnog_data.py, effectively only downloading the
     # Diamond DB
     cmd = [
-        f'cd {str(diamond_db)} && wget -nH '
-        '--user-agent=Mozilla/5.0 --relative --no-parent '
-        '--reject "index.html*" --cut-dirs=4 -e robots=off '
-        '-O ref_db.dmnd.gz '
+        'echo "Starting download..." && '
+        f'cd {str(diamond_db)} && wget -nH --user-agent=Mozilla/5.0 '
+        '--relative --no-parent --reject "index.html*" --cut-dirs=4 '
+        '-e robots=off -O ref_db.dmnd.gz '
         'http://eggnogdb.embl.de/download/emapperdb-5.0.2/'
-        'eggnog_proteins.dmnd.gz && echo Decompressing... && '
-        'gunzip ref_db.dmnd.gz'
+        'eggnog_proteins.dmnd.gz && '
+        'echo Decompressing... && '
+        'gunzip ref_db.dmnd.gz && '
+        'echo "Copying file from temporary directory to final location '
+        '(this will take a few minutes)..."'
     ]
     run_command(cmd, shell=True)
 

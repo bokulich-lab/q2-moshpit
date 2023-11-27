@@ -18,8 +18,11 @@ from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 from q2_types_genomics.feature_data import (
     OrthologAnnotationDirFmt, MAGSequencesDirFmt
 )
+from .._utils import run_command
 from q2_types_genomics.reference_db import EggnogRefDirFmt
-from q2_types.feature_data import DNAFASTAFormat
+from q2_types.feature_data import (
+    DNAFASTAFormat, ProteinSequencesDirectoryFormat
+)
 from q2_types_genomics.reference_db import DiamondDatabaseDirFmt
 import qiime2.util
 
@@ -133,3 +136,30 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
         cmds.append('--dbmem')
 
     subprocess.run(cmds, check=True)
+
+
+def build_diamond_db(
+        sequences: ProteinSequencesDirectoryFormat
+        ) -> DiamondDatabaseDirFmt:
+    '''
+    Builds diamond database from protein reference database file in FASTA
+    format.
+    '''
+
+    # Instantiate output object
+    diamond_db = DiamondDatabaseDirFmt()
+
+    # Instantiate path to in/output file
+    path_in = os.path.join(str(sequences), "protein-sequences.fasta")
+    path_out = os.path.join(str(diamond_db), "ref_db.dmnd")
+
+    # Run diamond makedb
+    cmd = [
+        "diamond makedb "
+        f"--in {path_in} "
+        f"--db {path_out}"
+    ]
+    run_command(cmd, shell=True)
+
+    # Return diamond database
+    return diamond_db

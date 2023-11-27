@@ -8,7 +8,9 @@
 import importlib
 
 from q2_types.distance_matrix import DistanceMatrix
-from q2_types.feature_data import FeatureData, Sequence, Taxonomy
+from q2_types.feature_data import (
+    FeatureData, Sequence, Taxonomy, ProteinSequence
+)
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality,
@@ -383,6 +385,27 @@ plugin.methods.register_function(
     description='Convert a Kraken 2 report, which is an annotated NCBI '
                 'taxonomy tree into generic artifacts for downstream '
                 'analyses.'
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.build_diamond_db,
+    inputs={
+        'sequences': FeatureData[ProteinSequence],
+    },
+    parameters={},
+    outputs=[('diamond_db', ReferenceDB[Diamond])],
+    input_descriptions={
+        'sequences': "Artifact containing protein reference database file "
+                     "in FASTA format."
+    },
+    output_descriptions={
+        'diamond_db': "Artifact containing a binary DIAMOND database file."
+    },
+    name="Create a DIAMOND formatted reference database from a FASTA input "
+         "file.",
+    description="Creates an artifact containing a binary DIAMOND database "
+                "file (ref_db.dmnd) from a protein reference database "
+                "file in FASTA format."
 )
 
 plugin.methods.register_function(

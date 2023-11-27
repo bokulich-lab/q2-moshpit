@@ -8,16 +8,18 @@
 
 import pandas as pd
 import pandas.testing as pdt
-
+import os
+from unittest.mock import patch
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from .._method import eggnog_diamond_search, eggnog_annotate
+from .._method import eggnog_diamond_search, eggnog_annotate, build_diamond_db
 from q2_types_genomics.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt)
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.feature_data import ProteinSequencesDirectoryFormat
 
 
 class TestDiamond(TestPluginBase):
@@ -85,3 +87,30 @@ class TestAnnotate(TestPluginBase):
         self.assertEqual(len(objs), 1)
         df = objs[0][1].view(pd.DataFrame)
         pdt.assert_frame_equal(df, exp)
+
+
+class TestBuildDiamondDB(TestPluginBase):
+    package = 'q2_moshpit.eggnog.tests'
+
+    @patch("subprocess.run")
+    def test_build_diamond_db(self, subp_run):
+        # Instantiate input
+        sequences = ProteinSequencesDirectoryFormat()
+
+        # Call function. Patching will make sure nothing is
+        # actually ran
+        diamond_db = build_diamond_db(sequences)
+
+        # Paths to inputs and outputs
+        path_in = os.path.join(str(sequences), "protein-sequences.fasta")
+        path_out = os.path.join(str(diamond_db), "ref_db.dmnd")
+
+        # Check that command was called in the expected way
+        cmd = [
+            "diamond makedb "
+            f"--in {path_in} "
+            f"--db {path_out}"
+        ]
+
+        # Check that commands is ran as expected
+        subp_run.assert_called_once_with(cmd, check=True, shell=True)

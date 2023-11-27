@@ -19,26 +19,13 @@ from unittest.mock import patch, ANY, call
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_moshpit.metabat2.metabat2 import (
-    _assert_samples, _get_sample_name_from_path, _sort_bams,
-    _estimate_depth, _run_metabat2, _process_sample, _bin_contigs_metabat,
-    _generate_contig_map
+    _assert_samples, _sort_bams, _estimate_depth, _run_metabat2,
+    _process_sample, _bin_contigs_metabat, _generate_contig_map
 )
 
 
 class TestMetabat2(TestPluginBase):
     package = 'q2_moshpit.metabat2.tests'
-
-    def test_get_sample_name_from_path(self):
-        obs = _get_sample_name_from_path('/a/b/sampleX.fasta',
-                                         '.fasta')
-        exp = 'sampleX'
-        self.assertEqual(exp, obs)
-
-    def test_get_sample_name_from_path_underscores(self):
-        obs = _get_sample_name_from_path('/a/b/sampleX_something.fasta',
-                                         '_something.fasta')
-        exp = 'sampleX'
-        self.assertEqual(exp, obs)
 
     def test_assert_samples_ok(self):
         contigs = ['/a/b/s1_contigs.fa', '/a/b/s3_contigs.fa',

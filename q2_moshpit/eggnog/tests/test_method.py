@@ -12,9 +12,10 @@ import os
 from unittest.mock import patch
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
-
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from .._method import eggnog_diamond_search, eggnog_annotate, build_diamond_db
+from .._method import (
+  eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db, build_diamond_db
+)
 from q2_types_genomics.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt)
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
@@ -114,3 +115,20 @@ class TestBuildDiamondDB(TestPluginBase):
 
         # Check that commands is ran as expected
         subp_run.assert_called_once_with(cmd, check=True, shell=True)
+
+        
+class TestFetchDB(TestPluginBase):
+    package = 'q2_moshpit.eggnog.tests'
+
+    @patch("subprocess.run")
+    def test_fetch_eggnog_db(self, subp_run):
+        # Call function. Patching will make sure nothing is
+        # actually ran
+        eggnog_db = fetch_eggnog_db()
+
+        # Check that command was called in the expected way
+        cmd = [
+            "download_eggnog_data.py", "-y", "-D",
+            "--data_dir", str(eggnog_db)
+        ]
+        subp_run.assert_called_once_with(cmd, check=True)

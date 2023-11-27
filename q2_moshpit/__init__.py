@@ -12,6 +12,7 @@ from .kraken2 import (
     classification as kraken_class, database as kraken_db, bracken
 )
 from .metabat2 import metabat2
+from . import prodigal
 from . import eggnog
 from . import busco
 
@@ -22,5 +23,6 @@ del get_versions
 
 __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
-    'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog', 'busco'
+    'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog',
+    'busco', 'prodigal'
 ]

@@ -12,6 +12,6 @@ from ._method import (
 )
 
 __all__ = [
-  'eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db', 
+  'eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db',
   'build_diamond_db'
 ]

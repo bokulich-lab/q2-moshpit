@@ -21,7 +21,6 @@ from q2_types.feature_data import (
     DNAFASTAFormat, ProteinSequencesDirectoryFormat
 )
 from q2_types_genomics.reference_db import DiamondDatabaseDirFmt
-from .._utils import run_command
 from q2_types_genomics.feature_data import (
     OrthologAnnotationDirFmt, MAGSequencesDirFmt
 )

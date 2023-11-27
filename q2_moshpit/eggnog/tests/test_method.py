@@ -116,7 +116,7 @@ class TestBuildDiamondDB(TestPluginBase):
         # Check that commands is ran as expected
         subp_run.assert_called_once_with(cmd, check=True, shell=True)
 
-        
+
 class TestFetchDB(TestPluginBase):
     package = 'q2_moshpit.eggnog.tests'
 

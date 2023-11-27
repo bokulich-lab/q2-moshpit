@@ -392,14 +392,32 @@ plugin.methods.register_function(
     inputs={
         'sequences': FeatureData[ProteinSequence],
     },
-    parameters={},
     outputs=[('diamond_db', ReferenceDB[Diamond])],
+    parameters={
+        "threads": Int % Range(1, None),
+    },
     input_descriptions={
         'sequences': "Artifact containing protein reference database file "
                      "in FASTA format."
     },
     output_descriptions={
         'diamond_db': "Artifact containing a binary DIAMOND database file."
+    },
+    parameter_descriptions={
+        "threads": "Number of CPU threads. By default, the program will "
+                   "auto-detect and use all available virtual cores on the "
+                   "machine.",  # Expose
+        # "verbose": "verbose console output",  # Dont? Simply default no?
+        # "log": "enable debug log",  # Dont?
+        # "quiet": "disable console output",  # Dont? Already managed by qiime
+        # "taxonmap": "protein accession to taxid mapping file",  # Expose?
+        # "taxonnodes": "taxonomy nodes.dmp from NCBI",  # Expose?
+        # "taxonnames": "taxonomy names.dmp from NCBI",  # Expose?
+        # "file-buffer-size": "file buffer size in bytes (default=67108864)",
+        #                     # Expose?
+        # "no-unlink": "Do not unlink temporary files.",  # Expose?
+        # "ignore-warnings": "Ignore warnings",  # Expose?
+        # "no-parse-seqids": "Print raw seqids without parsing"  # Expose?
     },
     name="Create a DIAMOND formatted reference database from a FASTA input "
          "file.",

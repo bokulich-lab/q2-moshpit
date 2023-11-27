@@ -389,13 +389,14 @@ plugin.methods.register_function(
                      "database (eggnog.db, eggnog.taxa.db, "
                      "eggnog.taxa.db.traverse.pkl)"
     },
-    name="Fetch one of the databases necessary to run eggNOG.",
+    name="Fetch the databases necessary to run to run the "
+         "eggnog-annotate action.",
     description="Downloads eggnog reference database  "
                 "using the `download_eggnog_data.py` script from eggNOG. "
-                "Here, this script downloads 3 files, specifically: "
-                "eggnog.db (39Gb), "
-                "eggnog.taxa.db (265Mb), and"
-                "eggnog.taxa.db.traverse.pkl (6.3Mb)."
+                "Here, this script downloads 3 files "
+                "(eggnog.db, eggnog.taxa.db, and eggnog.taxa.db.traverse.pkl) "
+                "and creates and artifact with them. At least 80 Gb of "
+                "storage space is required to run this action. "
 )
 
 plugin.methods.register_function(

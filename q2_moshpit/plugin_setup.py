@@ -382,6 +382,26 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_eggnog_db,
+    inputs={},
+    parameters={},
+    outputs=[("eggnog_db", ReferenceDB[Eggnog])],
+    output_descriptions={
+        "eggnog_db": "Artifact containing the eggNOG annotation "
+                     "database (eggnog.db, eggnog.taxa.db, "
+                     "eggnog.taxa.db.traverse.pkl)"
+    },
+    name="Fetch the databases necessary to run to run the "
+         "eggnog-annotate action.",
+    description="Downloads eggnog reference database  "
+                "using the `download_eggnog_data.py` script from eggNOG. "
+                "Here, this script downloads 3 files "
+                "(eggnog.db, eggnog.taxa.db, and eggnog.taxa.db.traverse.pkl) "
+                "and creates and artifact with them. At least 80 Gb of "
+                "storage space is required to run this action. "
+)
+
+plugin.methods.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,
     inputs={
         'sequences': SampleData[Contigs] | FeatureData[MAG],

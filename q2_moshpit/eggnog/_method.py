@@ -190,4 +190,3 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
 
     # Return objects
     return diamond_db
-

@@ -10,6 +10,7 @@ import subprocess
 import os
 import tempfile
 import qiime2.util
+# import pdb here for debugging purposes
 import pandas as pd
 from typing import Union
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
@@ -139,16 +140,23 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
 
 def build_diamond_db(
         sequences: ProteinSequencesDirectoryFormat,
+        taxonomy_data: ProteinSequencesDirectoryFormat = None,
         threads: int = None,
+        verbose: bool = False,
+        log: bool = False,
+        file_buffer_size: int = 67108864,
+        ignore_warnings: bool = False,
+        no_parse_seqids: bool = False
         ) -> DiamondDatabaseDirFmt:
     '''
     Builds diamond database from protein reference database file in FASTA
     format.
     '''
     # Process input parameters
-    kwargs = {
-        k: v for k, v in locals().items() if k not in ["sequences"]
-    }
+    kwargs = {}
+    for key, value in locals().items():
+        if key not in ["sequences", "taxonomy_data", "kwargs"]:
+            kwargs[key] = value
 
     # Filter out all kwargs that are falsy (except 0 and 0.0)
     parsed_args = _process_common_input_params(

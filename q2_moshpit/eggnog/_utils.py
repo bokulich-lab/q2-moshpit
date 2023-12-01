@@ -19,6 +19,8 @@ def _parse_build_diamond_db_params(arg_key, arg_val) -> List[str]:
         [converted_arg, arg_value]: List containing a prepared command line
             parameter and, optionally, its value.
     """
+    # Change "_" in arg_key for "-"
+    arg_key = arg_key.replace("_", "-")
 
     if isinstance(arg_val, bool):
         return [f"--{arg_key}"]

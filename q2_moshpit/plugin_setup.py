@@ -20,7 +20,7 @@ from q2_types.feature_map import FeatureMap, MAGtoContigs
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
-
+import q2_moshpit._examples as ex
 import q2_moshpit
 from q2_types_genomics.feature_data import NOG, MAG
 from q2_types_genomics.genome_data import (
@@ -449,7 +449,11 @@ plugin.methods.register_function(
          "file.",
     description="Creates an artifact containing a binary DIAMOND database "
                 "file (ref_db.dmnd) from a protein reference database "
-                "file in FASTA format."
+                "file in FASTA format.",
+    citations=[citations["buchfink_sensitive_2021"]],
+    examples={
+        "Minimum working example": ex.diamond_makedb
+    }
 )
 
 plugin.methods.register_function(

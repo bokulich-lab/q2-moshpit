@@ -21,7 +21,9 @@ from q2_types_genomics.reference_db import EggnogRefDirFmt
 from q2_types.feature_data import (
     DNAFASTAFormat, ProteinSequencesDirectoryFormat
 )
-from q2_types_genomics.reference_db import DiamondDatabaseDirFmt
+from q2_types_genomics.reference_db import (
+    DiamondDatabaseDirFmt, NCBITaxonomyDirFmt
+)
 from q2_types_genomics.feature_data import (
     OrthologAnnotationDirFmt, MAGSequencesDirFmt
 )
@@ -140,7 +142,7 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
 
 def build_diamond_db(
         sequences: ProteinSequencesDirectoryFormat,
-        taxonomy_data: ProteinSequencesDirectoryFormat = None,
+        taxonomy_data: NCBITaxonomyDirFmt = None,
         threads: int = None,
         verbose: bool = False,
         log: bool = False,
@@ -157,6 +159,14 @@ def build_diamond_db(
     for key, value in locals().items():
         if key not in ["sequences", "taxonomy_data", "kwargs"]:
             kwargs[key] = value
+
+    # Add paths to taxonomy data if provided
+    if taxonomy_data is not None:
+        kwargs["taxonmap"] = os.path.join(
+            str(taxonomy_data), "prot.accession2taxid.FULL.gz"
+            )
+        kwargs["taxonnodes"] = os.path.join(str(taxonomy_data), "nodes.dmp")
+        kwargs["taxonnames"] = os.path.join(str(taxonomy_data), "names.dmp")
 
     # Filter out all kwargs that are falsy (except 0 and 0.0)
     parsed_args = _process_common_input_params(

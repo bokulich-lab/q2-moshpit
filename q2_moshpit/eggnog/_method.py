@@ -163,7 +163,7 @@ def build_diamond_db(
     # Add paths to taxonomy data if provided
     if taxonomy_data is not None:
         kwargs["taxonmap"] = os.path.join(
-            str(taxonomy_data), "prot.accession2taxid.FULL.gz"
+            str(taxonomy_data), "prot.accession2taxid.gz"
             )
         kwargs["taxonnodes"] = os.path.join(str(taxonomy_data), "nodes.dmp")
         kwargs["taxonnames"] = os.path.join(str(taxonomy_data), "names.dmp")
@@ -182,12 +182,12 @@ def build_diamond_db(
 
     # Run diamond makedb
     cmd = [
-        "diamond makedb "
-        f"--in {path_in} "
-        f"--db {path_out}"
+        "diamond", "makedb",
+        "--in", f"{path_in}",
+        "--db", f"{path_out}"
     ]
     cmd.extend(parsed_args)
-    run_command(cmd, shell=True)
+    run_command(cmd)
 
     # Return output artifact
     return diamond_db

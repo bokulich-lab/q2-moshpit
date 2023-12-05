@@ -108,14 +108,14 @@ class TestBuildDiamondDB(TestPluginBase):
 
         # Check that command was called in the expected way
         cmd = [
-            "diamond makedb "
-            f"--in {path_in} "
-            f"--db {path_out}",
+            "diamond", "makedb",
+            "--in", f"{path_in}",
+            "--db", f"{path_out}",
             '--file-buffer-size', '67108864'
         ]
 
         # Check that commands is ran as expected
-        subp_run.assert_called_once_with(cmd, check=True, shell=True)
+        subp_run.assert_called_once_with(cmd, check=True)
 
 
 class TestFetchDB(TestPluginBase):

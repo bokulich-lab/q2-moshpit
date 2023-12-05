@@ -17,7 +17,7 @@ from .._method import (
   eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db, build_diamond_db
 )
 from q2_types_genomics.reference_db import (
-    DiamondDatabaseDirFmt, EggnogRefDirFmt)
+    DiamondDatabaseDirFmt, EggnogRefDirFmt, NCBITaxonomyDirFmt)
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
@@ -94,7 +94,7 @@ class TestBuildDiamondDB(TestPluginBase):
     package = 'q2_moshpit.eggnog.tests'
 
     @patch("subprocess.run")
-    def test_build_diamond_db(self, subp_run):
+    def test_build_diamond_db_simple(self, subp_run):
         # Instantiate input
         sequences = ProteinSequencesDirectoryFormat()
 
@@ -112,6 +112,39 @@ class TestBuildDiamondDB(TestPluginBase):
             "--in", f"{path_in}",
             "--db", f"{path_out}",
             '--file-buffer-size', '67108864'
+        ]
+
+        # Check that commands is ran as expected
+        subp_run.assert_called_once_with(cmd, check=True)
+
+    @patch("subprocess.run")
+    def test_build_diamond_db_with_taxonomy(self, subp_run):
+        # Instantiate input
+        sequences = ProteinSequencesDirectoryFormat()
+        taxonomy_data = NCBITaxonomyDirFmt()
+
+        # Call function. Patching will make sure nothing is
+        # actually ran
+        diamond_db = build_diamond_db(sequences, taxonomy_data)
+
+        # Paths to inputs and outputs
+        path_in = os.path.join(str(sequences), "protein-sequences.fasta")
+        path_tax_map = os.path.join(
+            str(taxonomy_data), "prot.accession2taxid.gz"
+            )
+        path_tax_nodes = os.path.join(str(taxonomy_data), "nodes.dmp")
+        path_tax_names = os.path.join(str(taxonomy_data), "names.dmp")
+        path_out = os.path.join(str(diamond_db), "ref_db.dmnd")
+
+        # Check that command was called in the expected way
+        cmd = [
+            "diamond", "makedb",
+            "--in", f"{path_in}",
+            "--db", f"{path_out}",
+            '--file-buffer-size', '67108864',
+            "--taxonmap", f"{path_tax_map}",
+            "--taxonnodes", f"{path_tax_nodes}",
+            "--taxonnames", f"{path_tax_names}",
         ]
 
         # Check that commands is ran as expected

@@ -8,10 +8,11 @@
 
 
 from ._method import (
-  eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db, build_diamond_db
+  eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db,
+  build_custom_diamond_db
 )
 
 __all__ = [
   'eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db',
-  'build_diamond_db'
+  'build_custom_diamond_db'
 ]

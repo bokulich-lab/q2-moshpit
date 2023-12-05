@@ -14,7 +14,8 @@ import qiime2
 from qiime2.plugin.testing import TestPluginBase
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
 from .._method import (
-  eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db, build_diamond_db
+  eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db,
+  build_custom_diamond_db
 )
 from q2_types_genomics.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt, NCBITaxonomyDirFmt)
@@ -94,13 +95,13 @@ class TestBuildDiamondDB(TestPluginBase):
     package = 'q2_moshpit.eggnog.tests'
 
     @patch("subprocess.run")
-    def test_build_diamond_db_simple(self, subp_run):
+    def test_build_custom_diamond_db_simple(self, subp_run):
         # Instantiate input
         sequences = ProteinSequencesDirectoryFormat()
 
         # Call function. Patching will make sure nothing is
         # actually ran
-        diamond_db = build_diamond_db(sequences)
+        diamond_db = build_custom_diamond_db(sequences)
 
         # Paths to inputs and outputs
         path_in = os.path.join(str(sequences), "protein-sequences.fasta")
@@ -118,14 +119,14 @@ class TestBuildDiamondDB(TestPluginBase):
         subp_run.assert_called_once_with(cmd, check=True)
 
     @patch("subprocess.run")
-    def test_build_diamond_db_with_taxonomy(self, subp_run):
+    def test_build_custom_diamond_db_with_taxonomy(self, subp_run):
         # Instantiate input
         sequences = ProteinSequencesDirectoryFormat()
         taxonomy_data = NCBITaxonomyDirFmt()
 
         # Call function. Patching will make sure nothing is
         # actually ran
-        diamond_db = build_diamond_db(sequences, taxonomy_data)
+        diamond_db = build_custom_diamond_db(sequences, taxonomy_data)
 
         # Paths to inputs and outputs
         path_in = os.path.join(str(sequences), "protein-sequences.fasta")

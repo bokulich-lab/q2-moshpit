@@ -15,7 +15,6 @@ from q2_types.per_sample_sequences import (
     SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt
 )
-from q2_types.feature_data import DNAFASTAFormat
 
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
@@ -74,13 +73,7 @@ def _classify_kraken2(
         iterate_over = seqs.sample_dict().items()
 
     elif isinstance(seqs, MAGSequencesDirFmt):
-        def view_to_paths(arg):
-            relpath, _ = arg
-            return relpath.stem, str(seqs.path / relpath)
-
-        iterate_over = map(
-            view_to_paths, seqs.sequences.iter_views(DNAFASTAFormat)
-        )
+        iterate_over = seqs.feature_dict().items()
 
     kraken2_reports_dir = Kraken2ReportDirectoryFormat()
     kraken2_outputs_dir = Kraken2OutputDirectoryFormat()

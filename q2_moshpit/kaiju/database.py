@@ -27,6 +27,14 @@ ERR_MSG = (
 
 
 def _fetch_and_extract_db(db_uri: str, db_dir: str):
+    """
+    Fetches and extracts the Kaiju database.
+
+    Args:
+        db_uri (str): The URI of the database to fetch.
+        db_dir (str): The directory where the database will be saved.
+
+    """
     latest_db = os.path.basename(db_uri)
     db_path = os.path.join(db_dir, latest_db)
     try:
@@ -61,6 +69,17 @@ def _fetch_and_extract_db(db_uri: str, db_dir: str):
 
 
 def _find_latest_db_url(database_type, sidebox_element, url):
+    """
+    Finds the latest database URL based on the database type.
+
+    Args:
+        database_type (str): The target database type to filter.
+        sidebox_element (object): The element containing the databases.
+        url (str): The base URL.
+
+    Returns:
+        str: The latest database URL.
+    """
     # Extract the databases and dates
     df = _find_all_dbs(sidebox_element)
 
@@ -77,6 +96,18 @@ def _find_latest_db_url(database_type, sidebox_element, url):
 
 
 def _find_all_dbs(sidebox_element):
+    """
+    Args:
+        sidebox_element: A BeautifulSoup element containing the sidebox
+            element on the page.
+
+    Returns:
+        df: A pandas DataFrame with columns "Database" and "Date".
+         The "Database" column contains the names of the databases
+         found in the sidebox_element, while the "Date" column contains
+         the corresponding dates.
+
+    """
     databases, dates = [], []
     for link in sidebox_element.find_all("a"):
         database = link.get_text()

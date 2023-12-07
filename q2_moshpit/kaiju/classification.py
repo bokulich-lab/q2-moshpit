@@ -110,8 +110,8 @@ def _construct_feature_table(table_fp: str) -> (pd.DataFrame, pd.DataFrame):
         pd.DataFrame, pd.DataFrame: A tuple containing two pandas DataFrames.
             The first DataFrame is the feature table, where the rows
             represent samples and the columns represent features (taxon IDs).
-            The second DataFrame contains the taxonomy, where the index contains
-            taxon IDs and the only column represents taxon names.
+            The second DataFrame contains the taxonomy, where the index
+            contains taxon IDs and the only column represents taxon names.
 
     """
     table = pd.read_csv(table_fp, sep="\t")

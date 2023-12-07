@@ -76,6 +76,9 @@ setup(
         ],
         'q2_moshpit.kaiju.tests': [
             'data/*', 'data/*/*'
+        ],
+        'q2_moshpit.prodigal.tests': [
+            'data/*', 'data/*/*',
         ]
     },
     zip_safe=False,

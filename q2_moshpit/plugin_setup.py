@@ -99,8 +99,8 @@ plugin.methods.register_function(
         ('unbinned_contigs', SampleData[Contigs % Properties('unbinned')])
     ],
     input_descriptions={
-        'contigs': 'Placeholder.',
-        'alignment_maps': 'Placeholder.'
+        'contigs': 'Contigs to be binned.',
+        'alignment_maps': 'Reads-to-contig alignment maps.'
     },
     parameter_descriptions={
         'min_contig': 'Minimum size of a contig for binning.',

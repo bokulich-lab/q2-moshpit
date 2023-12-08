@@ -18,7 +18,7 @@ from q2_types.per_sample_sequences import (
     SingleLanePerSampleSingleEndFastqDirFmt
 )
 from q2_types.sample_data import SampleData
-from q2_types.feature_data import FeatureData, DNAFASTAFormat
+from q2_types.feature_data import FeatureData
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
 from q2_types_genomics.feature_data import MAGSequencesDirFmt, MAG

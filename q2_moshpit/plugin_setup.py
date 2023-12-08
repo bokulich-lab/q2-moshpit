@@ -204,7 +204,7 @@ plugin.methods.register_function(
                      'estimation to perform re-estimation.',
         'read_len': ('Bracken: read length to get all classifications for. '
                      'For paired end data (e.g., 2x150) this should be set '
-                     'to the length of the single-end reads (e.g., 150)'.),
+                     'to the length of the single-end reads (e.g., 150).'),
         'level': 'Bracken: taxonomic level to estimate abundance at.'
     },
     output_descriptions={

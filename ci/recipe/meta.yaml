@@ -23,6 +23,7 @@ requirements:
     - busco >=5.0.0
     - diamond
     - eggnog-mapper >=2.1.10
+    - kaiju
     - kraken2
     - metabat2
     - qiime2 {{ qiime2_epoch }}.*

@@ -10,6 +10,7 @@ import glob
 import shutil
 
 import os
+from pathlib import Path
 import tempfile
 import unittest
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
@@ -28,46 +29,68 @@ class TestMetabat2(TestPluginBase):
     package = 'q2_moshpit.metabat2.tests'
 
     def test_assert_samples_ok(self):
-        contigs = ['/a/b/s1_contigs.fa', '/a/b/s3_contigs.fa',
-                   '/a/b/s2_contigs.fa']
-        maps = ['/a/b/s3_alignment.bam', '/a/b/s2_alignment.bam',
-                '/a/b/s1_alignment.bam']
+        contigs_path = self.get_data_path('contigs')
+        maps_path = self.get_data_path('maps')
+
+        contigs = ContigSequencesDirFmt(contigs_path, mode='r')
+        maps = BAMDirFmt(maps_path, mode='r')
 
         obs_samples = _assert_samples(contigs, maps)
+
         exp_samples = {
-            's1': {'contigs': '/a/b/s1_contigs.fa',
-                   'map': '/a/b/s1_alignment.bam'},
-            's2': {'contigs': '/a/b/s2_contigs.fa',
-                   'map': '/a/b/s2_alignment.bam'},
-            's3': {'contigs': '/a/b/s3_contigs.fa',
-                   'map': '/a/b/s3_alignment.bam'}
+            'samp1': {
+                'contigs': str(Path(contigs_path) / 'samp1_contigs.fa'),
+                'map': str(Path(maps_path) / 'samp1_alignment.bam')
+            },
+            'samp2': {
+                'contigs': str(Path(contigs_path) / 'samp2_contigs.fa'),
+                'map': str(Path(maps_path) / 'samp2_alignment.bam')
+            },
         }
         self.assertDictEqual(exp_samples, obs_samples)
 
     def test_assert_samples_uneven(self):
-        contigs = ['/a/b/s1_contigs.fa', '/a/b/s3_contigs.fa']
-        maps = ['/a/b/s3_alignment.bam', '/a/b/s2_alignment.bam',
-                '/a/b/s1_alignment.bam']
+        contigs_path = self.get_data_path('contigs')
+        with tempfile.TemporaryDirectory() as maps_path:
+            map_path = Path(self.get_data_path('maps')) / 'samp1_alignment.bam'
+            shutil.copy(map_path, maps_path)
 
-        with self.assertRaisesRegex(
+            contigs = ContigSequencesDirFmt(contigs_path, mode='r')
+            maps = BAMDirFmt(maps_path, mode='r')
+
+            with self.assertRaisesRegex(
                 Exception,
                 'Contigs and alignment maps should belong to the same sample'
-                ' set. You provided contigs for samples: s1,s3 but maps for'
-                ' samples: s1,s2,s3. Please check your inputs and try again.'
-        ):
-            _assert_samples(contigs, maps)
+                ' set. You provided contigs for samples: samp1,samp2 but maps '
+                'for samples: samp1. Please check your inputs and try again.'
+            ):
+                _assert_samples(contigs, maps)
 
     def test_assert_samples_non_matching(self):
-        contigs = ['/a/b/s1_contigs.fa', '/a/b/s4_contigs.fa',
-                   '/a/b/s2_contigs.fa']
-        maps = ['/a/b/s3_alignment.bam', '/a/b/s2_alignment.bam',
-                '/a/b/s1_alignment.bam']
+        with tempfile.TemporaryDirectory() as tempdir:
+            contigs_path = Path(tempdir) / 'contigs-path'
+            maps_path = Path(tempdir) / 'maps-path'
+            os.makedirs(contigs_path)
+            os.makedirs(maps_path)
 
-        with self.assertRaisesRegex(
+            contig_path = \
+                Path(self.get_data_path('contigs')) / 'samp1_contigs.fa'
+            map_path = \
+                Path(self.get_data_path('maps')) / 'samp2_alignment.bam'
+
+            shutil.copy(contig_path, contigs_path)
+            shutil.copy(map_path, maps_path)
+
+            contigs = ContigSequencesDirFmt(contigs_path, mode='r')
+            maps = BAMDirFmt(maps_path, mode='r')
+
+            with self.assertRaisesRegex(
                 Exception,
-                'contigs for samples: s1,s2,s4 but maps for samples: s1,s2,s3'
-        ):
-            _assert_samples(contigs, maps)
+                'Contigs and alignment maps should belong to the same sample'
+                ' set. You provided contigs for samples: samp1 but maps '
+                'for samples: samp2. Please check your inputs and try again.'
+            ):
+                _assert_samples(contigs, maps)
 
     @patch('subprocess.run')
     def test_sort_bams_ok(self, p1):

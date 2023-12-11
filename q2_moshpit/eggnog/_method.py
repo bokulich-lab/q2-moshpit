@@ -14,8 +14,6 @@ import pandas as pd
 from typing import Union
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from .._utils import run_command, _process_common_input_params
-from ._utils import _parse_build_diamond_db_params
 from q2_types_genomics.reference_db import EggnogRefDirFmt
 from q2_types.feature_data import (
     DNAFASTAFormat, ProteinSequencesDirectoryFormat
@@ -26,6 +24,8 @@ from q2_types_genomics.reference_db import (
 from q2_types_genomics.feature_data import (
     OrthologAnnotationDirFmt, MAGSequencesDirFmt
 )
+from .._utils import run_command, _process_common_input_params
+from ._utils import _parse_build_diamond_db_params
 
 
 def eggnog_diamond_search(

@@ -140,7 +140,7 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
 
 
 def build_custom_diamond_db(
-        sequences: ProteinSequencesDirectoryFormat,
+        seqs: ProteinSequencesDirectoryFormat,
         taxonomy_data: NCBITaxonomyDirFmt = None,
         threads: int = None,
         verbose: bool = False,
@@ -156,7 +156,7 @@ def build_custom_diamond_db(
     # Process input parameters
     kwargs = {}
     for key, value in locals().items():
-        if key not in ["sequences", "taxonomy_data", "kwargs"]:
+        if key not in ["seqs", "taxonomy_data", "kwargs"]:
             kwargs[key] = value
 
     # Add paths to taxonomy data if provided
@@ -176,7 +176,7 @@ def build_custom_diamond_db(
     diamond_db = DiamondDatabaseDirFmt()
 
     # Define path to in/output file
-    path_in = os.path.join(str(sequences), "protein-sequences.fasta")
+    path_in = os.path.join(str(seqs), "protein-sequences.fasta")
     path_out = os.path.join(str(diamond_db), "ref_db.dmnd")
 
     # Run diamond makedb

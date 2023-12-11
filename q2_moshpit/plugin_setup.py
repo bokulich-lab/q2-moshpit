@@ -411,7 +411,7 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.build_custom_diamond_db,
     inputs={
-        'sequences': FeatureData[ProteinSequence],
+        'seqs': FeatureData[ProteinSequence],
         'taxonomy_data': ReferenceDB[NCBITaxonomy],
     },
     input_descriptions={

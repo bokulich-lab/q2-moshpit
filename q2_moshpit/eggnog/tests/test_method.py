@@ -6,22 +6,22 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import qiime2
+import os
 import pandas as pd
 import pandas.testing as pdt
-import os
 from unittest.mock import patch
-import qiime2
 from qiime2.plugin.testing import TestPluginBase
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
+from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
+from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.feature_data import ProteinSequencesDirectoryFormat
+from q2_types_genomics.reference_db import (
+    DiamondDatabaseDirFmt, EggnogRefDirFmt, NCBITaxonomyDirFmt)
 from .._method import (
   eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db,
   build_custom_diamond_db
 )
-from q2_types_genomics.reference_db import (
-    DiamondDatabaseDirFmt, EggnogRefDirFmt, NCBITaxonomyDirFmt)
-from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
-from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from q2_types.feature_data import ProteinSequencesDirectoryFormat
 
 
 class TestDiamond(TestPluginBase):

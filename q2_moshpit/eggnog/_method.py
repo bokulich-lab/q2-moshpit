@@ -10,7 +10,6 @@ import subprocess
 import os
 import tempfile
 import qiime2.util
-# import pdb here for debugging purposes
 import pandas as pd
 from typing import Union
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt

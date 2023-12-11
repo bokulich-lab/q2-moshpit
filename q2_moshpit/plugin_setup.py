@@ -683,40 +683,6 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.kaiju.fetch_kaiju_db,
-    inputs={},
-    parameters={
-        "database_type": Str
-        % Choices(
-            [
-                "nr",
-                "nr_euk",
-                "refseq",
-                "fungi",
-                "viruses",
-                "plasmids",
-                "progenomes",
-                "rvdb",
-            ]
-        ),
-    },
-    outputs=[
-        ("database", KaijuDB),
-    ],
-    input_descriptions={},
-    parameter_descriptions={
-        "database_type": "Type of database to be downloaded. For more "
-        "information on available types please see the list on "
-        "Kaiju's web server: https://kaiju.binf.ku.dk/server",
-    },
-    output_descriptions={"database": "Kaiju database."},
-    name="Fetch Kaiju database.",
-    description="This method fetches the latest Kaiju database from "
-                "https://kaiju.binf.ku.dk/server.",
-    citations=[citations["menzel2016"]],
-)
-
-plugin.methods.register_function(
     function=q2_moshpit.kaiju.classify_kaiju,
     inputs={
         "seqs": SampleData[

@@ -143,7 +143,6 @@ def build_custom_diamond_db(
         seqs: ProteinSequencesDirectoryFormat,
         taxonomy_data: NCBITaxonomyDirFmt = None,
         threads: int = None,
-        verbose: bool = False,
         log: bool = False,
         file_buffer_size: int = 67108864,
         ignore_warnings: bool = False,
@@ -182,6 +181,7 @@ def build_custom_diamond_db(
     # Run diamond makedb
     cmd = [
         "diamond", "makedb",
+        "--verbose",
         "--in", f"{path_in}",
         "--db", f"{path_out}"
     ]

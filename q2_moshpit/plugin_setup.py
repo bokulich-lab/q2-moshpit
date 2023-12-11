@@ -415,8 +415,8 @@ plugin.methods.register_function(
         'taxonomy_data': ReferenceDB[NCBITaxonomy],
     },
     input_descriptions={
-        'sequences': "Artifact containing protein reference database file "
-                     "in FASTA format.",
+        'seqs': "Artifact containing protein reference database file "
+                "in FASTA format.",
         'taxonomy_data': "Artifact containing taxonomy data. "
                          "Needed in order to provide taxonomy features. "
                          "Can be generated through name_of_action."
@@ -428,7 +428,6 @@ plugin.methods.register_function(
     },
     parameters={
         "threads": Int % Range(1, None),
-        "verbose": Bool,
         "log": Bool,
         "file_buffer_size": Int % Range(1, None),
         "ignore_warnings": Bool,
@@ -438,7 +437,6 @@ plugin.methods.register_function(
         "threads": "Number of CPU threads. By default, the program will "
                    "auto-detect and use all available virtual cores on the "
                    "machine.",
-        "verbose": "Enable more verbose terminal output.",
         "log": "Enable even more verbose terminal output, which is also "
                "written to a file named diamond.log is the current working "
                "directory.",

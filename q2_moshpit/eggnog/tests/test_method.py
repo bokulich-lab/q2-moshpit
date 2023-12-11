@@ -110,6 +110,7 @@ class TestBuildDiamondDB(TestPluginBase):
         # Check that command was called in the expected way
         cmd = [
             "diamond", "makedb",
+            "--verbose",
             "--in", f"{path_in}",
             "--db", f"{path_out}",
             '--file-buffer-size', '67108864'
@@ -140,6 +141,7 @@ class TestBuildDiamondDB(TestPluginBase):
         # Check that command was called in the expected way
         cmd = [
             "diamond", "makedb",
+            "--verbose",
             "--in", f"{path_in}",
             "--db", f"{path_out}",
             '--file-buffer-size', '67108864',

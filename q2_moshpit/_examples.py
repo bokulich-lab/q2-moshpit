@@ -15,9 +15,9 @@ def diamond_makedb(use):
     fasta_input = use.init_artifact_from_url('sequences', url)
 
     _ = use.action(
-        use.UsageAction('moshpit', 'build_diamond_db'),
+        use.UsageAction('moshpit', 'build_custom_diamond_db'),
         use.UsageInputs(
-            sequences=fasta_input,
+            seqs=fasta_input,
         ),
         use.UsageOutputNames(
             diamond_db='diamond_db',

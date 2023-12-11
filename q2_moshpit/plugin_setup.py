@@ -34,7 +34,7 @@ from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from q2_types_genomics.reference_db import (
-    ReferenceDB, Diamond, Eggnog, TaxonomyNCBI
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -412,7 +412,7 @@ plugin.methods.register_function(
     function=q2_moshpit.eggnog.build_custom_diamond_db,
     inputs={
         'sequences': FeatureData[ProteinSequence],
-        'taxonomy_data': ReferenceDB[TaxonomyNCBI],
+        'taxonomy_data': ReferenceDB[NCBITaxonomy],
     },
     input_descriptions={
         'sequences': "Artifact containing protein reference database file "

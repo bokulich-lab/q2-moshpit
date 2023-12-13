@@ -476,9 +476,6 @@ class TestClassifyKraken2Reads(TestPluginBase):
             self.assertFalse(exp_missing & obs)
 
     def test_paired_end_reads_parallel(self):
-        """ This test does not work right now because the sample data is not
-            formatted correctly to be loaded into an artifact
-        """
         reads_path = os.path.join(
             self.datadir, 'simulated-sequences', 'formatted-reads')
 

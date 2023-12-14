@@ -57,6 +57,13 @@ kraken2_param_descriptions = {
                              ' unique read-minimizers per-taxon in the repot.'
 }
 
+partition_params = {"num_partitions": Int % Range(1, None)}
+partition_param_descriptions = {
+        "num_partitions": "The number of partitions to split the contigs"
+        " into. Defaults to partitioning into individual"
+        " samples."
+}
+
 plugin = Plugin(
     name='moshpit',
     version=q2_moshpit.__version__,
@@ -152,8 +159,38 @@ T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({
     ),
 })
 
-plugin.methods.register_function(
+plugin.pipelines.register_function(
     function=q2_moshpit.kraken2.classification.classify_kraken2,
+    inputs={
+        "seqs": T_kraken_in,
+        "kraken2_db": Kraken2DB,
+    },
+    parameters={**kraken2_params, **partition_params},
+    outputs=[
+        ('reports', T_kraken_out_rep),
+        ('hits', T_kraken_out_hits),
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
+                "and assembled MAGs, can be provided.",
+        "kraken2_db": "Kraken 2 database.",
+    },
+    parameter_descriptions={
+        **kraken2_param_descriptions,
+        **partition_param_descriptions
+    },
+    output_descriptions={
+        'reports': 'Reports produced by Kraken2.',
+        'hits': 'Output files produced by Kraken2.',
+    },
+    name='Perform taxonomic classification of reads or MAGs using Kraken 2.',
+    description='This method uses Kraken 2 to classify provided NGS reads '
+                'or MAGs into taxonomic groups.',
+    citations=[citations["wood2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.classification._classify_kraken2,
     inputs={
         "seqs": T_kraken_in,
         "kraken2_db": Kraken2DB,
@@ -177,6 +214,48 @@ plugin.methods.register_function(
     description='This method uses Kraken 2 to classify provided NGS reads '
                 'or MAGs into taxonomic groups.',
     citations=[citations["wood2019"]]
+)
+
+T_kraken_collate_reports_in, T_kraken_collate_reports_out = TypeMap({
+    SampleData[Kraken2Reports % Properties('reads', 'contigs')]: (
+        SampleData[Kraken2Reports % Properties('reads', 'contigs')],
+    ),
+    SampleData[Kraken2Reports % Properties('reads')]: (
+        SampleData[Kraken2Reports % Properties('reads')],
+    ),
+    SampleData[Kraken2Reports % Properties('contigs')]: (
+        SampleData[Kraken2Reports % Properties('contigs')],
+    )
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.helpers.collate_kraken2_reports,
+    inputs={"kraken2_reports": List[T_kraken_collate_reports_in]},
+    parameters={},
+    outputs={"collated_kraken2_reports": T_kraken_collate_reports_out},
+    name="Collate kraken2 reports",
+    description="Collates kraken2 reports"
+)
+
+T_kraken_collate_outputs_in, T_kraken_collate_outputs_out = TypeMap({
+    SampleData[Kraken2Outputs % Properties('reads', 'contigs')]: (
+        SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
+    ),
+    SampleData[Kraken2Outputs % Properties('reads')]: (
+        SampleData[Kraken2Outputs % Properties('reads')],
+    ),
+    SampleData[Kraken2Outputs % Properties('contigs')]: (
+        SampleData[Kraken2Outputs % Properties('contigs')],
+    )
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.helpers.collate_kraken2_outputs,
+    inputs={"kraken2_outputs": List[T_kraken_collate_outputs_in]},
+    parameters={},
+    outputs={"collated_kraken2_outputs": T_kraken_collate_outputs_out},
+    name="Collate kraken2 outputs",
+    description="Collates kraken2 outputs"
 )
 
 plugin.methods.register_function(

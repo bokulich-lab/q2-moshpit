@@ -415,8 +415,7 @@ plugin.methods.register_function(
         'taxonomy': ReferenceDB[NCBITaxonomy],
     },
     input_descriptions={
-        'seqs': "Artifact containing protein reference database file "
-                "in FASTA format.",
+        'seqs': "Artifact containing protein reference database.",
         'taxonomy': "Artifact containing taxonomy data. "
                     "Needed in order to provide taxonomy features. "
                     "Can be generated through name_of_action."

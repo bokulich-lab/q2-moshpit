@@ -183,9 +183,9 @@ def build_custom_diamond_db(
         "diamond", "makedb",
         "--verbose",
         "--in", f"{path_in}",
-        "--db", f"{path_out}"
+        "--db", f"{path_out}",
+        *parsed_args
     ]
-    cmd.extend(parsed_args)
     run_command(cmd)
 
     # Return output artifact

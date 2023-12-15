@@ -5,17 +5,12 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
 import pandas as pd
 import pandas.testing as pdt
-from unittest.mock import patch, call
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
-
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from .._method import (
-    eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db, fetch_diamond_db
-)
+from .._method import eggnog_diamond_search, eggnog_annotate
 from q2_types_genomics.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt)
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
@@ -87,44 +82,3 @@ class TestAnnotate(TestPluginBase):
         self.assertEqual(len(objs), 1)
         df = objs[0][1].view(pd.DataFrame)
         pdt.assert_frame_equal(df, exp)
-
-
-class TestFetchDB(TestPluginBase):
-    package = 'q2_moshpit.eggnog.tests'
-
-    @patch("subprocess.run")
-    def test_fetch_eggnog_db(self, subp_run):
-        # Call function. Patching will make sure nothing is
-        # actually ran
-        eggnog_db = fetch_eggnog_db()
-
-        # Check that command was called in the expected way
-        cmd = [
-            "download_eggnog_data.py", "-y", "-D",
-            "--data_dir", str(eggnog_db)
-        ]
-        subp_run.assert_called_once_with(cmd, check=True)
-
-    @patch("subprocess.run")
-    def test_fetch_diamond_db(self, subp_run):
-        # Call function. Patching will make sure nothing is
-        # actually ran
-        diamond_db = fetch_diamond_db()
-
-        # Check that command was called in the expected way
-        first_call = call(
-            [
-                f"cd {str(diamond_db)} && ",
-                "wget -e robots=off -O ref_db.dmnd.gz ",
-                'http://eggnogdb.embl.de/download/emapperdb-5.0.2/'
-                'eggnog_proteins.dmnd.gz'
-            ],
-            check=True
-        )
-        second_call = call(
-            ["gunzip", "ref_db.dmnd.gz"],
-            check=True
-        )
-
-        # Check that commands are ran as expected
-        subp_run.assert_has_calls([first_call, second_call], any_order=False)

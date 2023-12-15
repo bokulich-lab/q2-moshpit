@@ -113,6 +113,7 @@ class TestBuildDiamondDB(TestPluginBase):
             "--verbose",
             "--in", f"{path_in}",
             "--db", f"{path_out}",
+            "--threads", "1",
             '--file-buffer-size', '67108864'
         ]
 
@@ -144,6 +145,7 @@ class TestBuildDiamondDB(TestPluginBase):
             "--verbose",
             "--in", f"{path_in}",
             "--db", f"{path_out}",
+            "--threads", "1",
             '--file-buffer-size', '67108864',
             "--taxonmap", f"{path_tax_map}",
             "--taxonnodes", f"{path_tax_nodes}",

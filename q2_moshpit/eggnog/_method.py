@@ -142,7 +142,7 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
 def build_custom_diamond_db(
         seqs: ProteinSequencesDirectoryFormat,
         taxonomy: NCBITaxonomyDirFmt = None,
-        threads: int = None,
+        threads: int = 1,
         log: bool = False,
         file_buffer_size: int = 67108864,
         ignore_warnings: bool = False,

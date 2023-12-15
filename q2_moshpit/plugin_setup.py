@@ -431,9 +431,7 @@ plugin.methods.register_function(
         "no_parse_seqids": Bool
     },
     parameter_descriptions={
-        "threads": "Number of CPU threads. By default, the program will "
-                   "auto-detect and use all available virtual cores on the "
-                   "machine.",
+        "threads": "Number of CPU threads.",
         "log": "Enable even more verbose terminal output, which is also "
                "written to a file named diamond.log is the current working "
                "directory.",

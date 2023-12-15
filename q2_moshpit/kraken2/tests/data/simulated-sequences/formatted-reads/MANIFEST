@@ -1,0 +1,13 @@
+sample-id,filename,direction
+nonsense,nonsense_f_L001_R1_001.fastq.gz,forward
+nonsense,nonsense_r_L001_R2_001.fastq.gz,reverse
+ba,ba_f_L001_R1_001.fastq.gz,forward
+ba,ba_r_L001_R2_001.fastq.gz,reverse
+mm,mm_f_L001_R1_001.fastq.gz,forward
+mm,mm_r_L001_R2_001.fastq.gz,reverse
+sa,sa_f_L001_R1_001.fastq.gz,forward
+sa,sa_r_L001_R2_001.fastq.gz,reverse
+se,se_f_L001_R1_001.fastq.gz,forward
+se,se_r_L001_R2_001.fastq.gz,reverse
+ba-mm-mixed,ba-mm-mixed_f_L001_R1_001.fastq.gz,forward
+ba-mm-mixed,ba-mm-mixed_r_L001_R2_001.fastq.gz,reverse

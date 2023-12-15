@@ -9,7 +9,7 @@
 from .dereplication import dereplicate_mags
 from .kaiju import classification as kaiju_class, database as kaiju_db
 from .kraken2 import (
-    classification as kraken_class, database as kraken_db, bracken
+    classification as kraken_class, database as kraken_db, bracken, helpers
 )
 from .metabat2 import metabat2
 from . import prodigal
@@ -24,5 +24,5 @@ del get_versions
 __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
     'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog',
-    'busco', 'prodigal'
+    'busco', 'prodigal', 'helpers'
 ]

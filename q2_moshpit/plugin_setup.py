@@ -412,15 +412,15 @@ plugin.methods.register_function(
     function=q2_moshpit.eggnog.build_custom_diamond_db,
     inputs={
         'seqs': FeatureData[ProteinSequence],
-        'taxonomy_data': ReferenceDB[NCBITaxonomy],
+        'taxonomy': ReferenceDB[NCBITaxonomy],
     },
     input_descriptions={
         'seqs': "Artifact containing protein reference database file "
                 "in FASTA format.",
-        'taxonomy_data': "Artifact containing taxonomy data. "
-                         "Needed in order to provide taxonomy features. "
-                         "Can be generated through name_of_action."
-                         # TODO: update action name here
+        'taxonomy': "Artifact containing taxonomy data. "
+                    "Needed in order to provide taxonomy features. "
+                    "Can be generated through name_of_action."
+                    # TODO: update action name here
     },
     outputs=[('diamond_db', ReferenceDB[Diamond])],
     output_descriptions={

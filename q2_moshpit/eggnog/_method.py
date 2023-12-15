@@ -141,7 +141,7 @@ def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
 
 def build_custom_diamond_db(
         seqs: ProteinSequencesDirectoryFormat,
-        taxonomy_data: NCBITaxonomyDirFmt = None,
+        taxonomy: NCBITaxonomyDirFmt = None,
         threads: int = None,
         log: bool = False,
         file_buffer_size: int = 67108864,
@@ -155,16 +155,16 @@ def build_custom_diamond_db(
     # Process input parameters
     kwargs = {}
     for key, value in locals().items():
-        if key not in ["seqs", "taxonomy_data", "kwargs"]:
+        if key not in ["seqs", "taxonomy", "kwargs"]:
             kwargs[key] = value
 
     # Add paths to taxonomy data if provided
-    if taxonomy_data is not None:
+    if taxonomy is not None:
         kwargs["taxonmap"] = os.path.join(
-            str(taxonomy_data), "prot.accession2taxid.gz"
+            str(taxonomy), "prot.accession2taxid.gz"
             )
-        kwargs["taxonnodes"] = os.path.join(str(taxonomy_data), "nodes.dmp")
-        kwargs["taxonnames"] = os.path.join(str(taxonomy_data), "names.dmp")
+        kwargs["taxonnodes"] = os.path.join(str(taxonomy), "nodes.dmp")
+        kwargs["taxonnames"] = os.path.join(str(taxonomy), "names.dmp")
 
     # Filter out all kwargs that are falsy (except 0 and 0.0)
     parsed_args = _process_common_input_params(

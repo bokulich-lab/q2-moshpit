@@ -435,9 +435,9 @@ plugin.methods.register_function(
         "log": "Enable even more verbose terminal output, which is also "
                "written to a file named diamond.log is the current working "
                "directory.",
-        "file_buffer_size": "file buffer size in bytes (default=67108864)",
-        "ignore_warnings": "Ignore warnings",
-        "no_parse_seqids": "Print raw seqids without parsing"
+        "file_buffer_size": "File buffer size in bytes.",
+        "ignore_warnings": "Ignore warnings.",
+        "no_parse_seqids": "Print raw seqids without parsing."
     },
     name="Create a DIAMOND formatted reference database from a FASTA input "
          "file.",

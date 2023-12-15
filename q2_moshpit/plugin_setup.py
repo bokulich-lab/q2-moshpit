@@ -421,7 +421,7 @@ plugin.methods.register_function(
     },
     outputs=[('diamond_db', ReferenceDB[Diamond])],
     output_descriptions={
-        'diamond_db': "Artifact containing a binary DIAMOND database file."
+        'diamond_db': "Artifact containing the DIAMOND database."
     },
     parameters={
         "threads": Int % Range(1, None),

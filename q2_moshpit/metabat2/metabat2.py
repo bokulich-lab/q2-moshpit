@@ -16,7 +16,7 @@ import tempfile
 from copy import deepcopy
 
 import skbio.io
-from q2_types.feature_data import DNAIterator, DNAFASTAFormat
+from q2_types.feature_data import DNAIterator
 
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
 from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
@@ -25,25 +25,26 @@ from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.metabat2.utils import _process_metabat2_arg
 
 
-def _assert_samples(contigs_fps, maps_fps) -> dict:
-    contigs_fps, maps_fps = sorted(contigs_fps), sorted(maps_fps)
-    contig_samps = [
-        Path(fp).stem.rsplit('_contigs', 1)[0] for fp in contigs_fps
+def _assert_samples(contigs, maps) -> dict:
+    contig_fps = contigs.sample_dict().values()
+    map_fps = glob.glob(os.path.join(str(maps), '*.bam'))
+    contig_fps, map_fps = sorted(contig_fps), sorted(map_fps)
+
+    contig_samples = contigs.sample_dict().keys()
+    map_samples = [
+       Path(fp).stem.rsplit('_alignment', 1)[0] for fp in map_fps
     ]
-    map_samps = [
-       Path(fp).stem.rsplit('_alignment', 1)[0] for fp in maps_fps
-    ]
-    if set(contig_samps) != set(map_samps):
+    if set(contig_samples) != set(map_samples):
         raise Exception(
             'Contigs and alignment maps should belong to the same sample set. '
-            f'You provided contigs for samples: {",".join(contig_samps)} but '
-            f'maps for samples: {",".join(map_samps)}. Please check your '
-            'inputs and try again.'
+            f'You provided contigs for samples: {",".join(contig_samples)} '
+            f'but maps for samples: {",".join(map_samples)}. Please check '
+            'your inputs and try again.'
         )
 
     return {
-        s: {'contigs': contigs_fps[i], 'map': maps_fps[i]}
-        for i, s in enumerate(contig_samps)
+        s: {'contigs': contig_fps[i], 'map': map_fps[i]}
+        for i, s in enumerate(contig_samples)
     }
 
 
@@ -136,11 +137,7 @@ def _bin_contigs_metabat(
     alignment_maps: BAMDirFmt,
     common_args: list
 ) -> (MultiFASTADirectoryFormat, dict, ContigSequencesDirFmt):
-    contigs_fps = sorted(map(
-        lambda v: str(v[1].path), contigs.sequences.iter_views(DNAFASTAFormat)
-    ))
-    maps_fps = sorted(glob.glob(os.path.join(str(alignment_maps), '*.bam')))
-    sample_set = _assert_samples(contigs_fps, maps_fps)
+    sample_set = _assert_samples(contigs, alignment_maps)
 
     bins = MultiFASTADirectoryFormat()
     unbinned = ContigSequencesDirFmt()

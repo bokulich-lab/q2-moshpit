@@ -7,6 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from .database import fetch_kaiju_db
-# from .classification import classify_kaiju
+from .classification import classify_kaiju
 
-__all__ = ["fetch_kaiju_db", ]
+__all__ = ["fetch_kaiju_db", "classify_kaiju"]

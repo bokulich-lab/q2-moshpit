@@ -499,9 +499,17 @@ plugin.methods.register_function(
     description="Downloads eggnog reference database  "
                 "using the `download_eggnog_data.py` script from eggNOG. "
                 "Here, this script downloads 3 files "
-                "(eggnog.db, eggnog.taxa.db, and eggnog.taxa.db.traverse.pkl) "
                 "and creates and artifact with them. At least 80 Gb of "
                 "storage space is required to run this action. "
+                "Links to files: "
+                "eggnog.db: "
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/eggnog.db.gz"
+                "eggnog.taxa.db: "
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
+                "eggnog.taxa.tar.gz"
+                "eggnog.taxa.db.traverse.pkl: "
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
+                "eggnog_proteins.dmnd.gz"
 )
 
 plugin.methods.register_function(
@@ -510,16 +518,17 @@ plugin.methods.register_function(
     parameters={},
     outputs=[("diamond_db", ReferenceDB[Diamond])],
     output_descriptions={
-        "diamond_db": "Artifact containing the Diamond reference "
-                      "database."
+        "diamond_db": "Complete Diamond reference database."
     },
-    name="Fetch the databases necessary to run the "
-         "eggnog_diamond_search action.",
+    name="Fetch the complete Diamond database necessary to run the "
+         "eggnog-diamond-search action.",
     description="Downloads Diamond reference database.  "
-                "This action downloads 1 file (ref_db.dmnd) "
-                "and places it inside an artifact. "
+                "This action downloads 1 file (ref_db.dmnd). "
                 "At least 18 Gb of storage space is "
                 "required to run this action."
+                "Link to database: "
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
+                "eggnog_proteins.dmnd.gz"
 )
 
 plugin.methods.register_function(

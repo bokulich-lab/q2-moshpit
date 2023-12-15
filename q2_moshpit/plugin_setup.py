@@ -416,10 +416,8 @@ plugin.methods.register_function(
     },
     input_descriptions={
         'seqs': "Artifact containing protein reference database.",
-        'taxonomy': "Artifact containing taxonomy data. "
-                    "Needed in order to provide taxonomy features. "
-                    "Can be generated through name_of_action."
-                    # TODO: update action name here
+        'taxonomy': "Artifact containing reference taxonomy, "
+                    "needed to provide taxonomy features."
     },
     outputs=[('diamond_db', ReferenceDB[Diamond])],
     output_descriptions={

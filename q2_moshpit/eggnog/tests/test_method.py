@@ -8,7 +8,7 @@
 
 import pandas as pd
 import pandas.testing as pdt
-from unittest.mock import patch
+from unittest.mock import patch, call
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
 
@@ -112,18 +112,19 @@ class TestFetchDB(TestPluginBase):
         diamond_db = fetch_diamond_db()
 
         # Check that command was called in the expected way
-        cmd = [
-            'echo "Starting download..." && '
-            f'cd {str(diamond_db)} && wget -nH --user-agent=Mozilla/5.0 '
-            '--relative --no-parent --reject "index.html*" --cut-dirs=4 '
-            '-e robots=off -O ref_db.dmnd.gz '
-            'http://eggnogdb.embl.de/download/emapperdb-5.0.2/'
-            'eggnog_proteins.dmnd.gz && '
-            'echo Decompressing... && '
-            'gunzip ref_db.dmnd.gz && '
-            'echo "Copying file from temporary directory to final location '
-            '(this will take a few minutes)..."'
-        ]
+        first_call = call(
+            [
+                f"cd {str(diamond_db)} && ",
+                "wget -e robots=off -O ref_db.dmnd.gz ",
+                'http://eggnogdb.embl.de/download/emapperdb-5.0.2/'
+                'eggnog_proteins.dmnd.gz'
+            ],
+            check=True
+        )
+        second_call = call(
+            ["gunzip", "ref_db.dmnd.gz"],
+            check=True
+        )
 
-        # Check that commands is ran as expected
-        subp_run.assert_called_once_with(cmd, check=True, shell=True)
+        # Check that commands are ran as expected
+        subp_run.assert_has_calls([first_call, second_call], any_order=False)

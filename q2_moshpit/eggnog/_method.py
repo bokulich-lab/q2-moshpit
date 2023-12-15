@@ -170,23 +170,29 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
     # Initialize output objects
     diamond_db = DiamondDatabaseDirFmt()
 
-    # Define command.
-    # 'printf "n\nn\ny" will answer the prompts thrown by
-    # download_eggnog_data.py, effectively only downloading the
-    # Diamond DB
-    cmd = [
-        'echo "Starting download..." && '
-        f'cd {str(diamond_db)} && wget -nH --user-agent=Mozilla/5.0 '
-        '--relative --no-parent --reject "index.html*" --cut-dirs=4 '
-        '-e robots=off -O ref_db.dmnd.gz '
+    # Download Diamond DB
+    print("Starting download...")
+    run_command([
+        f"cd {str(diamond_db)} && ",
+        "wget -e robots=off -O ref_db.dmnd.gz ",
         'http://eggnogdb.embl.de/download/emapperdb-5.0.2/'
-        'eggnog_proteins.dmnd.gz && '
-        'echo Decompressing... && '
-        'gunzip ref_db.dmnd.gz && '
-        'echo "Copying file from temporary directory to final location '
-        '(this will take a few minutes)..."'
-    ]
-    run_command(cmd, shell=True)
+        'eggnog_proteins.dmnd.gz'
+    ])
 
-    # Return objects
+    # Decompressing file
+    print("Download completed. \nDecompressing file...")
+    run_command([
+        "gunzip", "ref_db.dmnd.gz"
+    ])
+
+    # Let user know that the process is done.
+    # The actual copying wil be taken care of by qiime behind the
+    # scenes.
+    print(
+        "Decompression completed. \n"
+        "Copying file from temporary directory to final location "
+        "(this will take a few minutes)..."
+    )
+
+    # Return object
     return diamond_db

@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from .._utils import run_command
+from .._utils import run_command, colorify
 from q2_types_genomics.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt
 )
@@ -48,34 +48,42 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
 
     # Download Diamond DB
     print(
-        "Starting download...", "lgreen"
+        colorify(
+            "Starting download...", "lgreen"
+        )
     )
     run_command(
         cmd=[
             "wget", "-e", "robots=off", "-O", "ref_db.dmnd.gz",
             "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
             "eggnog_proteins.dmnd.gz"
-        ]
+        ],
+        cwd=str(diamond_db)
     )
 
     # Decompressing file
     print(
-        "Download completed.\n"
-        "Decompressing file...",
-        "lgreen"
+        colorify(
+            "Download completed.\n"
+            "Decompressing file...",
+            "lgreen"
+        )
     )
     run_command(
-        cmd=["gunzip", "ref_db.dmnd.gz"]
+        cmd=["gunzip", "ref_db.dmnd.gz"],
+        cwd=str(diamond_db)
     )
 
     # Let user know that the process is done.
     # The actual copying wil be taken care of by qiime behind the
     # scenes.
     print(
-        "Decompression completed. \n"
-        "Copying file from temporary directory to final location "
-        "(this will take a few minutes)...",
-        "lgreen"
+        colorify(
+            "Decompression completed. \n"
+            "Copying file from temporary directory to final location "
+            "(this will take a few minutes)...",
+            "lgreen"
+        )
     )
 
     # Return object

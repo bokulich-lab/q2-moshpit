@@ -162,7 +162,7 @@ def build_custom_diamond_db(
     if taxonomy is not None:
         kwargs["taxonmap"] = os.path.join(
             str(taxonomy), "prot.accession2taxid.gz"
-            )
+        )
         kwargs["taxonnodes"] = os.path.join(str(taxonomy), "nodes.dmp")
         kwargs["taxonnames"] = os.path.join(str(taxonomy), "names.dmp")
 
@@ -174,16 +174,12 @@ def build_custom_diamond_db(
     # Instantiate output object
     diamond_db = DiamondDatabaseDirFmt()
 
-    # Define path to in/output file
-    path_in = os.path.join(str(seqs), "protein-sequences.fasta")
-    path_out = os.path.join(str(diamond_db), "ref_db.dmnd")
-
     # Run diamond makedb
     cmd = [
         "diamond", "makedb",
         "--verbose",
-        "--in", f"{path_in}",
-        "--db", f"{path_out}",
+        "--in", f"{os.path.join(str(seqs), 'protein-sequences.fasta')}",
+        "--db", f"{os.path.join(str(diamond_db), 'ref_db.dmnd')}",
         *parsed_args
     ]
     run_command(cmd)

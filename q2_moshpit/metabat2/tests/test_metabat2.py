@@ -105,7 +105,7 @@ class TestMetabat2(TestPluginBase):
         self.assertDictEqual(exp_props, obs_props)
         p1.assert_called_once_with(
             ['samtools', 'sort', fake_props['map'], '-o',
-             '/new/location/samp1_alignment_sorted.bam'], check=True
+             '/new/location/samp1_alignment_sorted.bam'], cwd=None, check=True
         )
 
     @patch('subprocess.run')
@@ -118,7 +118,7 @@ class TestMetabat2(TestPluginBase):
         self.assertEqual(exp_fp, obs_fp)
         p1.assert_called_once_with(
             ['jgi_summarize_bam_contig_depths', '--outputDepth',
-             exp_fp, fake_props['map']], check=True
+             exp_fp, fake_props['map']], cwd=None, check=True
         )
 
     @patch('subprocess.run')
@@ -140,7 +140,7 @@ class TestMetabat2(TestPluginBase):
                 '--unbinned'
             ]
             exp_cmd.extend(fake_args)
-            p1.assert_called_once_with(exp_cmd, check=True)
+            p1.assert_called_once_with(exp_cmd, cwd=None, check=True)
 
     @patch('tempfile.TemporaryDirectory')
     @patch('q2_moshpit.metabat2.uuid4')

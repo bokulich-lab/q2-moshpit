@@ -49,6 +49,7 @@ class TestBUSCO(TestPluginBase):
             "-o", os.path.join(loci.path, f"{fasta_file}_loci.gff"),
             "-a", os.path.join(proteins.path, f"{fasta_file}_proteins.fasta"),
             "-d", os.path.join(genes.path, f"{fasta_file}_genes.fasta")],
+            cwd=None,
             check=True
         )
 
@@ -79,7 +80,7 @@ class TestBUSCO(TestPluginBase):
             "-o", os.path.join(loci.path, f"{fasta_file}_loci.gff"),
             "-a", os.path.join(proteins.path, f"{fasta_file}_proteins.fasta"),
             "-d", os.path.join(genes.path, f"{fasta_file}_genes.fasta")],
-            check=True)
+             cwd=None, check=True)
             for fasta_file in fasta_files
         ]
 

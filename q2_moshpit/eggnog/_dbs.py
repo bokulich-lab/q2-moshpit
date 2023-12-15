@@ -47,11 +47,7 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
     diamond_db = DiamondDatabaseDirFmt()
 
     # Download Diamond DB
-    print(
-        colorify(
-            "Starting download...", "lgreen"
-        )
-    )
+    print(colorify("Starting download...", "lgreen"))
     run_command(
         cmd=[
             "wget", "-e", "robots=off", "-O", "ref_db.dmnd.gz",

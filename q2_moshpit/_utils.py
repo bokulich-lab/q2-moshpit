@@ -30,7 +30,7 @@ SHELL_COLORS = {
 }
 
 
-def run_command(cmd, env=None, verbose=True, pipe=False):
+def run_command(cmd, env=None, verbose=True, pipe=False, cwd=None):
     if verbose:
         print("Running external command line application(s). This may print "
               "messages to stdout and/or stderr.")
@@ -42,14 +42,14 @@ def run_command(cmd, env=None, verbose=True, pipe=False):
 
     if pipe:
         result = subprocess.run(
-            cmd, env=env, check=True, capture_output=True, text=True
+            cmd, cwd=cwd, env=env, check=True, capture_output=True, text=True
         )
         return result
 
     if env:
-        subprocess.run(cmd, env=env, check=True)
+        subprocess.run(cmd, cwd=cwd, env=env, check=True)
     else:
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, cwd=cwd, check=True)
 
 
 def _construct_param(arg_name):

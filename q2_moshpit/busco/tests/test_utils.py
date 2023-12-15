@@ -281,7 +281,8 @@ class TestBUSCO(TestPluginBase):
                     "--out_path", output_dir,
                     "-o", sample_id
                 ],
-                check=True
+                check=True,
+                cwd=None
             ))
 
         # Run busco and save paths to run summaries
@@ -324,7 +325,7 @@ class TestBUSCO(TestPluginBase):
             "--out_path", output_dir,
             "-o", "sample1"
         ]
-        subp_run.assert_called_once_with(cmd, check=True)
+        subp_run.assert_called_once_with(cmd, cwd=None, check=True)
 
     def test_parse_df_columns(self):
         # This side effect will return the all_summaries_dfs

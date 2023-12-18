@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import os
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from .._dbs import fetch_eggnog_db, fetch_diamond_db
@@ -31,18 +32,19 @@ class TestFetchDB(TestPluginBase):
         # Call function. Patching will make sure nothing is
         # actually ran
         diamond_db = fetch_diamond_db()
+        path_out = os.path.join(str(diamond_db), "ref_db.dmnd.gz")
 
         # Check that command was called in the expected way
         first_call = call(
             [
-                "wget", "-e", "robots=off", "-O", "ref_db.dmnd.gz",
+                "wget", "-e", "robots=off", "-O", f"{path_out}",
                 "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
                 "eggnog_proteins.dmnd.gz"
             ],
             check=True
         )
         second_call = call(
-            ["gunzip", "ref_db.dmnd.gz"],
+            ["gunzip", f"{path_out}"],
             check=True,
         )
 

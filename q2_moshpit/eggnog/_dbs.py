@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import os
 from .._utils import run_command, colorify
 from q2_types_genomics.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt
@@ -45,6 +46,7 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
 
     # Initialize output objects
     diamond_db = DiamondDatabaseDirFmt()
+    path_out = os.path.join(str(diamond_db), "ref_db.dmnd.gz")
 
     # Download Diamond DB
     print(
@@ -54,11 +56,10 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
     )
     run_command(
         cmd=[
-            "wget", "-e", "robots=off", "-O", "ref_db.dmnd.gz",
+            "wget", "-e", "robots=off", "-O", f"{path_out}",
             "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
             "eggnog_proteins.dmnd.gz"
-        ],
-        cwd=str(diamond_db)
+        ]
     )
 
     # Decompressing file
@@ -70,8 +71,7 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
         )
     )
     run_command(
-        cmd=["gunzip", "ref_db.dmnd.gz"],
-        cwd=str(diamond_db)
+        cmd=["gunzip", f"{path_out}"]
     )
 
     # Let user know that the process is done.

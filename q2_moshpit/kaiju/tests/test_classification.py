@@ -139,7 +139,7 @@ class TestKaijuClassification(TestPluginBase):
         ]
 
         p1.assert_called_once_with(f"{self.temp_dir.name}/results.tsv")
-        p2.assert_called_once_with(exp_cmd, cwd=None, check=True)
+        p2.assert_called_once_with(exp_cmd, check=True)
 
     @patch("subprocess.run")
     @patch("q2_moshpit.kaiju.classification._construct_feature_table")
@@ -173,7 +173,7 @@ class TestKaijuClassification(TestPluginBase):
         ]
 
         p1.assert_called_once_with(f"{self.temp_dir.name}/results.tsv")
-        p2.assert_called_once_with(exp_cmd, cwd=None, check=True)
+        p2.assert_called_once_with(exp_cmd, check=True)
 
     @patch("subprocess.run")
     @patch("q2_moshpit.kaiju.classification._process_kaiju_reports")
@@ -201,7 +201,7 @@ class TestKaijuClassification(TestPluginBase):
         ]
         obs_cmd = p2.call_args.args[0]
 
-        p2.assert_called_once_with(exp_cmd, cwd=None, check=True)
+        p2.assert_called_once_with(exp_cmd, check=True)
         self.assertRegex(
             obs_cmd[-1], r".*sample1.out,.*sample2.out"
         )
@@ -235,7 +235,7 @@ class TestKaijuClassification(TestPluginBase):
         ]
         obs_cmd = p2.call_args.args[0]
 
-        p2.assert_called_once_with(exp_cmd, cwd=None, check=True)
+        p2.assert_called_once_with(exp_cmd, check=True)
         self.assertRegex(
             obs_cmd[-1], r".*sample1.out,.*sample2.out"
         )

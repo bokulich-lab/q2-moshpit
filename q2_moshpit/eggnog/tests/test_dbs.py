@@ -24,7 +24,7 @@ class TestFetchDB(TestPluginBase):
             "download_eggnog_data.py", "-y", "-D",
             "--data_dir", str(eggnog_db)
         ]
-        subp_run.assert_called_once_with(cmd, cwd=None, check=True)
+        subp_run.assert_called_once_with(cmd, check=True)
 
     @patch("subprocess.run")
     def test_fetch_diamond_db(self, subp_run):
@@ -39,12 +39,10 @@ class TestFetchDB(TestPluginBase):
                 "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
                 "eggnog_proteins.dmnd.gz"
             ],
-            cwd=str(diamond_db),
             check=True
         )
         second_call = call(
             ["gunzip", "ref_db.dmnd.gz"],
-            cwd=str(diamond_db),
             check=True,
         )
 

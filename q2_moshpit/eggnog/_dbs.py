@@ -5,8 +5,11 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from q2_types_genomics.reference_db import EggnogRefDirFmt
-from .._utils import run_command
+import os
+from q2_types_genomics.reference_db import (
+    EggnogRefDirFmt, EggnogSequenceTaxaDirFmt
+)
+from .._utils import run_command, colorify
 
 
 def fetch_eggnog_db() -> EggnogRefDirFmt:
@@ -32,3 +35,53 @@ def fetch_eggnog_db() -> EggnogRefDirFmt:
 
     # Return objects
     return eggnog_db
+
+
+def fetch_eggnog_fasta() -> EggnogSequenceTaxaDirFmt:
+    """
+    # TODO: Add description
+    """
+    # Initialize output objects
+    eggnog_fa = EggnogSequenceTaxaDirFmt()
+    fasta_file = os.path.join(str(eggnog_fa), "e5.proteomes.faa")
+    taxonomy_file = os.path.join(str(eggnog_fa), "e5.taxid_info.tsv")
+
+    # Download Diamond DB
+    print(
+        colorify(
+            "Downloading fasta file...", "lgreen"
+        )
+    )
+    run_command(
+        cmd=[
+            "wget", "-e", "robots=off", "-O", f"{fasta_file}",
+            "http://eggnog5.embl.de/download/eggnog_5.0/e5.proteomes.faa"
+        ]
+    )
+
+    # Decompressing file
+    print(
+        colorify(
+            "Download completed.\n"
+            "Downloading taxonomy file...",
+            "lgreen"
+        )
+    )
+    run_command(
+        cmd=[
+            "wget", "-e", "robots=off", "-O", f"{taxonomy_file}",
+            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv"
+        ]
+    )
+
+    # Let user know that the process is done.
+    # The actual copying wil be taken care of by qiime behind the
+    # scenes.
+    print(
+        colorify(
+            "Download completed. \n"
+            "Copying file from temporary directory to final location "
+            "(this will take a few minutes)...",
+            "lgreen"
+        )
+    )

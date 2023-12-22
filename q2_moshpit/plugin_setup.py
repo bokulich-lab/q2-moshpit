@@ -31,7 +31,9 @@ from q2_types_genomics.kraken2 import (
 from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
-from q2_types_genomics.reference_db import ReferenceDB, Diamond, Eggnog
+from q2_types_genomics.reference_db import (
+    ReferenceDB, Diamond, Eggnog, EggnogSequenceTaxa
+)
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
 
@@ -421,6 +423,25 @@ plugin.methods.register_function(
                 "Here, this script downloads 3 files "
                 "(eggnog.db, eggnog.taxa.db, and eggnog.taxa.db.traverse.pkl) "
                 "and creates and artifact with them. At least 80 Gb of "
+                "storage space is required to run this action. "
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_eggnog_fasta,
+    inputs={},
+    parameters={},
+    outputs=[("eggnog_fasta", ReferenceDB[EggnogSequenceTaxa])],
+    output_descriptions={
+        "eggnog_fasta": "Artifact containing the eggNOG database "
+                        "of protein sequences and their corresponding"
+                        "taxonomy information."
+    },
+    name="Fetch the databases necessary to run to run the "
+         "build-eggnog-diamond-db action.",
+    description="Downloads eggnog proteome database  "
+                "This script downloads 2 files: "
+                "(e5.proteomes.faa and e5.taxid_info.tsv) "
+                "and creates and artifact with them. At least 18 Gb of "
                 "storage space is required to run this action. "
 )
 

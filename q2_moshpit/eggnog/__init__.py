@@ -7,6 +7,10 @@
 # ----------------------------------------------------------------------------
 
 
-from ._method import (eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db)
+from ._method import (eggnog_diamond_search, eggnog_annotate)
+from ._dbs import fetch_eggnog_db, fetch_eggnog_fasta
 
-__all__ = ['eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db']
+__all__ = [
+    'eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db',
+    'fetch_eggnog_fasta'
+]

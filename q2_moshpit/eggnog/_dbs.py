@@ -80,8 +80,10 @@ def fetch_eggnog_fasta() -> EggnogSequenceTaxaDirFmt:
     print(
         colorify(
             "Download completed. \n"
-            "Copying file from temporary directory to final location "
+            "Copying files from temporary directory to final location "
             "(this will take a few minutes)...",
             "lgreen"
         )
     )
+
+    return eggnog_fa

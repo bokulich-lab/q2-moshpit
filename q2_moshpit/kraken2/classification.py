@@ -12,15 +12,17 @@ from typing import Union, Optional
 
 import pandas as pd
 from q2_types.per_sample_sequences import (
+    SequencesWithQuality,
+    PairedEndSequencesWithQuality,
     SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt
 )
-from q2_types.feature_data import DNAFASTAFormat
-
+from q2_types.sample_data import SampleData
+from q2_types.feature_data import FeatureData
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
-from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
+from q2_types_genomics.feature_data import MAGSequencesDirFmt, MAG
+from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, Contigs
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
@@ -48,73 +50,59 @@ def _construct_output_paths(
     return output_fp, report_fp
 
 
-def _classify_kraken2(
-        seqs, common_args
-) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
-    if isinstance(seqs, (MAGSequencesDirFmt, ContigSequencesDirFmt)):
-        manifest = None
-    else:
-        manifest: Optional[pd.DataFrame] = seqs.manifest.view(pd.DataFrame)
-
-    base_cmd = ["kraken2", *common_args]
-    if manifest is not None and "reverse" in manifest.columns:
-        base_cmd.append("--paired")
-
-    kraken2_reports_dir = Kraken2ReportDirectoryFormat()
-    kraken2_outputs_dir = Kraken2OutputDirectoryFormat()
-
-    def get_paths_for_reads(index, row):
-        return _get_seq_paths(index, row, list(manifest.columns))
-
-    def get_paths_for_mags(mag_id, fp):
-        return mag_id, [fp]
-
-    def get_paths_for_contigs(contig_id, fp):
-        # HACK: remove after adding manifest or other solution, see
-        # https://github.com/bokulich-lab/q2-types-genomics/issues/56
-        return contig_id.rstrip('_contigs'), [fp]
-
-    try:
-        if manifest is not None:
-            # we got reads - use the manifest
-            iterate_over = manifest.iterrows()
-            path_function = get_paths_for_reads
-        else:
-            # we got contigs or MAGs
-            def view_to_paths(arg):
-                relpath, _ = arg
-                return relpath.stem, str(seqs.path / relpath)
-
-            iterate_over = map(
-                view_to_paths, seqs.sequences.iter_views(DNAFASTAFormat)
-            )
-
-            if type(seqs) is MAGSequencesDirFmt:
-                path_function = get_paths_for_mags
-            elif type(seqs) is ContigSequencesDirFmt:
-                path_function = get_paths_for_contigs
-
-        for args in iterate_over:
-            _sample, fn = path_function(*args)
-            output_fp, report_fp = _construct_output_paths(
-                _sample, kraken2_outputs_dir, kraken2_reports_dir
-            )
-            cmd = deepcopy(base_cmd)
-            cmd.extend(
-                ["--report", report_fp, "--output", output_fp, *fn]
-            )
-            run_command(cmd=cmd, verbose=True)
-    except subprocess.CalledProcessError as e:
-        raise Exception(
-            "An error was encountered while running Kraken 2, "
-            f"(return code {e.returncode}), please inspect "
-            "stdout and stderr to learn more."
-        )
-
-    return kraken2_reports_dir, kraken2_outputs_dir
-
-
 def classify_kraken2(
+        ctx,
+        seqs,
+        kraken2_db,
+        threads=1,
+        confidence=0.0,
+        minimum_base_quality=0,
+        memory_mapping=False,
+        minimum_hit_groups=2,
+        quick=False,
+        report_minimizer_data=False,
+        num_partitions=None
+):
+    kwargs = {k: v for k, v in locals().items()
+              if k not in ["seqs", "kraken2_db", "ctx", "num_partitions"]}
+
+    _classify_kraken2 = ctx.get_action("moshpit", "_classify_kraken2")
+    collate_kraken2_reports = ctx.get_action("moshpit",
+                                             "collate_kraken2_reports")
+    collate_kraken2_outputs = ctx.get_action("moshpit",
+                                             "collate_kraken2_outputs")
+
+    if seqs.type <= SampleData[SequencesWithQuality]:
+        partition_method = ctx.get_action("demux", "partition_samples_single")
+    elif seqs.type <= SampleData[PairedEndSequencesWithQuality]:
+        partition_method = ctx.get_action("demux", "partition_samples_paired")
+    elif seqs.type <= SampleData[Contigs]:
+        partition_method = ctx.get_action("assembly", "partition_contigs")
+    # FeatureData[MAG] is not parallelized
+    elif seqs.type <= FeatureData[MAG]:
+        kraken2_reports, kraken2_outputs = \
+                _classify_kraken2(seqs, kraken2_db, **kwargs)
+        return kraken2_reports, kraken2_outputs
+    else:
+        raise NotImplementedError()
+
+    (partitioned_seqs,) = partition_method(seqs, num_partitions)
+
+    kraken2_reports = []
+    kraken2_outputs = []
+    for seq in partitioned_seqs.values():
+        (kraken2_report, kraken2_output) = _classify_kraken2(
+                seq, kraken2_db, **kwargs)
+        kraken2_reports.append(kraken2_report)
+        kraken2_outputs.append(kraken2_output)
+
+    (collated_kraken2_reports,) = collate_kraken2_reports(kraken2_reports)
+    (collated_kraken2_outputs,) = collate_kraken2_outputs(kraken2_outputs)
+
+    return collated_kraken2_reports, collated_kraken2_outputs
+
+
+def _classify_kraken2(
         seqs: Union[
             SingleLanePerSamplePairedEndFastqDirFmt,
             SingleLanePerSampleSingleEndFastqDirFmt,
@@ -134,9 +122,68 @@ def classify_kraken2(
         Kraken2OutputDirectoryFormat,
 ):
     kwargs = {k: v for k, v in locals().items()
-              if k not in ["seqs", "kraken2_db"]}
+              if k not in ["seqs", "kraken2_db", "ctx"]}
+
     common_args = _process_common_input_params(
         processing_func=_process_kraken2_arg, params=kwargs
     )
     common_args.extend(["--db", str(kraken2_db.path)])
-    return _classify_kraken2(seqs, common_args)
+    return classify_kraken2_helper(seqs, common_args)
+
+
+def classify_kraken2_helper(
+        seqs, common_args
+) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
+    base_cmd = ["kraken2", *common_args]
+
+    read_types = (
+        SingleLanePerSampleSingleEndFastqDirFmt,
+        SingleLanePerSamplePairedEndFastqDirFmt
+    )
+
+    if isinstance(seqs, read_types):
+        manifest: Optional[pd.DataFrame] = seqs.manifest.view(pd.DataFrame)
+        if manifest is not None and "reverse" in manifest.columns:
+            base_cmd.append("--paired")
+
+        iterate_over = manifest.iterrows()
+
+        def get_paths_for_reads(index, row):
+            return _get_seq_paths(index, row, list(manifest.columns))
+
+        path_function = get_paths_for_reads
+
+    elif isinstance(seqs, ContigSequencesDirFmt):
+        iterate_over = seqs.sample_dict().items()
+
+    elif isinstance(seqs, MAGSequencesDirFmt):
+        iterate_over = seqs.feature_dict().items()
+
+    kraken2_reports_dir = Kraken2ReportDirectoryFormat()
+    kraken2_outputs_dir = Kraken2OutputDirectoryFormat()
+
+    try:
+        for args in iterate_over:
+            if isinstance(seqs, read_types):
+                _sample, fps = path_function(*args)
+            else:
+                _sample, fps = args
+                fps = [fps]
+
+            output_fp, report_fp = _construct_output_paths(
+                _sample, kraken2_outputs_dir, kraken2_reports_dir
+            )
+            cmd = deepcopy(base_cmd)
+            cmd.extend(
+                ["--report", report_fp, "--output", output_fp, *fps]
+            )
+            run_command(cmd=cmd, verbose=True)
+
+    except subprocess.CalledProcessError as e:
+        raise Exception(
+            "An error was encountered while running Kraken 2, "
+            f"(return code {e.returncode}), please inspect "
+            "stdout and stderr to learn more."
+        )
+
+    return kraken2_reports_dir, kraken2_outputs_dir

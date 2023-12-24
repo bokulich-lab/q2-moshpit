@@ -59,6 +59,13 @@ kraken2_param_descriptions = {
                              ' unique read-minimizers per-taxon in the repot.'
 }
 
+partition_params = {"num_partitions": Int % Range(1, None)}
+partition_param_descriptions = {
+        "num_partitions": "The number of partitions to split the contigs"
+        " into. Defaults to partitioning into individual"
+        " samples."
+}
+
 plugin = Plugin(
     name='moshpit',
     version=q2_moshpit.__version__,
@@ -101,8 +108,8 @@ plugin.methods.register_function(
         ('unbinned_contigs', SampleData[Contigs % Properties('unbinned')])
     ],
     input_descriptions={
-        'contigs': 'Placeholder.',
-        'alignment_maps': 'Placeholder.'
+        'contigs': 'Contigs to be binned.',
+        'alignment_maps': 'Reads-to-contig alignment maps.'
     },
     parameter_descriptions={
         'min_contig': 'Minimum size of a contig for binning.',
@@ -154,8 +161,38 @@ T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({
     ),
 })
 
-plugin.methods.register_function(
+plugin.pipelines.register_function(
     function=q2_moshpit.kraken2.classification.classify_kraken2,
+    inputs={
+        "seqs": T_kraken_in,
+        "kraken2_db": Kraken2DB,
+    },
+    parameters={**kraken2_params, **partition_params},
+    outputs=[
+        ('reports', T_kraken_out_rep),
+        ('hits', T_kraken_out_hits),
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
+                "and assembled MAGs, can be provided.",
+        "kraken2_db": "Kraken 2 database.",
+    },
+    parameter_descriptions={
+        **kraken2_param_descriptions,
+        **partition_param_descriptions
+    },
+    output_descriptions={
+        'reports': 'Reports produced by Kraken2.',
+        'hits': 'Output files produced by Kraken2.',
+    },
+    name='Perform taxonomic classification of reads or MAGs using Kraken 2.',
+    description='This method uses Kraken 2 to classify provided NGS reads '
+                'or MAGs into taxonomic groups.',
+    citations=[citations["wood2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.classification._classify_kraken2,
     inputs={
         "seqs": T_kraken_in,
         "kraken2_db": Kraken2DB,
@@ -181,6 +218,48 @@ plugin.methods.register_function(
     citations=[citations["wood2019"]]
 )
 
+T_kraken_collate_reports_in, T_kraken_collate_reports_out = TypeMap({
+    SampleData[Kraken2Reports % Properties('reads', 'contigs')]: (
+        SampleData[Kraken2Reports % Properties('reads', 'contigs')],
+    ),
+    SampleData[Kraken2Reports % Properties('reads')]: (
+        SampleData[Kraken2Reports % Properties('reads')],
+    ),
+    SampleData[Kraken2Reports % Properties('contigs')]: (
+        SampleData[Kraken2Reports % Properties('contigs')],
+    )
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.helpers.collate_kraken2_reports,
+    inputs={"kraken2_reports": List[T_kraken_collate_reports_in]},
+    parameters={},
+    outputs={"collated_kraken2_reports": T_kraken_collate_reports_out},
+    name="Collate kraken2 reports",
+    description="Collates kraken2 reports"
+)
+
+T_kraken_collate_outputs_in, T_kraken_collate_outputs_out = TypeMap({
+    SampleData[Kraken2Outputs % Properties('reads', 'contigs')]: (
+        SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
+    ),
+    SampleData[Kraken2Outputs % Properties('reads')]: (
+        SampleData[Kraken2Outputs % Properties('reads')],
+    ),
+    SampleData[Kraken2Outputs % Properties('contigs')]: (
+        SampleData[Kraken2Outputs % Properties('contigs')],
+    )
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.helpers.collate_kraken2_outputs,
+    inputs={"kraken2_outputs": List[T_kraken_collate_outputs_in]},
+    parameters={},
+    outputs={"collated_kraken2_outputs": T_kraken_collate_outputs_out},
+    name="Collate kraken2 outputs",
+    description="Collates kraken2 outputs"
+)
+
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.bracken.estimate_bracken,
     inputs={
@@ -204,7 +283,9 @@ plugin.methods.register_function(
     parameter_descriptions={
         'threshold': 'Bracken: number of reads required PRIOR to abundance '
                      'estimation to perform re-estimation.',
-        'read_len': 'Bracken: read length to get all classifications for.',
+        'read_len': ('Bracken: read length to get all classifications for. '
+                     'For paired end data (e.g., 2x150) this should be set '
+                     'to the length of the single-end reads (e.g., 150).'),
         'level': 'Bracken: taxonomic level to estimate abundance at.'
     },
     output_descriptions={
@@ -698,5 +779,62 @@ plugin.methods.register_function(
     name="Fetch Kaiju database.",
     description="This method fetches the latest Kaiju database from "
                 "https://kaiju.binf.ku.dk/server.",
+    citations=[citations["menzel2016"]],
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.kaiju.classify_kaiju,
+    inputs={
+        "seqs": SampleData[
+            SequencesWithQuality | PairedEndSequencesWithQuality
+            ],
+        "db": KaijuDB,
+    },
+    parameters={
+        "z": Int % Range(1, None),
+        "a": Str % Choices(["greedy", "mem"]),
+        "e": Int % Range(1, None),
+        "m": Int % Range(1, None),
+        "s": Int % Range(1, None),
+        "evalue": Float % Range(0, 1),
+        "x": Bool,
+        "r": Str % Choices(
+            ["phylum", "class", "order", "family", "genus", "species"]
+        ),
+        "c": Float % Range(0, 100, inclusive_start=True),
+        "exp": Bool,
+        "u": Bool,
+    },
+    outputs=[
+        ("abundances", FeatureTable[Frequency]),
+        ("taxonomy", FeatureData[Taxonomy])
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified.",
+        "db": "Kaiju database.",
+    },
+    parameter_descriptions={
+        "z": "Number of threads.",
+        "a": "Run mode.",
+        "e": "Number of mismatches allowed in Greedy mode.",
+        "m": "Minimum match length.",
+        "s": "Minimum match score in Greedy mode.",
+        "evalue": "Minimum E-value in Greedy mode.",
+        "x": "Enable SEG low complexity filter.",
+        "r": "Taxonomic rank.",
+        "c": "Minimum required number or fraction of reads for "
+             "the taxon  (except viruses) to be reported.",
+        "exp": "Expand viruses, which are always shown as full "
+               "taxon path and read counts are not summarized in "
+               "higher taxonomic levels.",
+        "u": "Do not count unclassified reads for the total reads "
+             "when calculating percentages for classified reads."
+    },
+    output_descriptions={
+        "abundances": "Read abundances.", "taxonomy": "Linked taxonomy."
+    },
+    name="Classify reads using Kaiju.",
+    description="This method uses Kaiju to perform taxonomic "
+                "classification of NGS reads.",
     citations=[citations["menzel2016"]],
 )

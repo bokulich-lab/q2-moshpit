@@ -10,7 +10,7 @@ from unittest.mock import patch
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types_genomics.reference_db import NCBITaxonomyDirFmt
-from .._method import fetch_eggnog_db, build_custom_diamond_db
+from .._dbs import fetch_eggnog_db, build_custom_diamond_db
 
 
 class TestFetchDB(TestPluginBase):

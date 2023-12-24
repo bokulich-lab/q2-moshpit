@@ -7,10 +7,8 @@
 # ----------------------------------------------------------------------------
 
 
-from ._method import (
-  eggnog_diamond_search, eggnog_annotate, fetch_eggnog_db,
-  build_custom_diamond_db
-)
+from ._method import eggnog_diamond_search, eggnog_annotate
+from ._dbs import fetch_eggnog_db, build_custom_diamond_db
 
 __all__ = [
   'eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db',

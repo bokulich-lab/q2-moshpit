@@ -24,7 +24,7 @@ def fetch_eggnog_db() -> EggnogRefDirFmt:
 
     # Define command.
     # Meaning of flags:
-    # y: Answer yest to all prompts thrown by download_eggnog_data.py
+    # y: Answer yes to all prompts thrown by download_eggnog_data.py
     # D: Do not download the Diamond database
     # data_dir: location where to save downloads
     cmd = [

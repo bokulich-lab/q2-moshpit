@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 import os
 from q2_types_genomics.reference_db import (
-    EggnogRefDirFmt, EggnogSequenceTaxaDirFmt
+    EggnogRefDirFmt, EggnogProteinSequencesDirFmt
 )
 from .._utils import run_command, colorify
 
@@ -37,12 +37,12 @@ def fetch_eggnog_db() -> EggnogRefDirFmt:
     return eggnog_db
 
 
-def fetch_eggnog_fasta() -> EggnogSequenceTaxaDirFmt:
+def fetch_eggnog_fasta() -> EggnogProteinSequencesDirFmt:
     """
     # TODO: Add description
     """
     # Initialize output objects
-    eggnog_fa = EggnogSequenceTaxaDirFmt()
+    eggnog_fa = EggnogProteinSequencesDirFmt()
     fasta_file = os.path.join(str(eggnog_fa), "e5.proteomes.faa")
     taxonomy_file = os.path.join(str(eggnog_fa), "e5.taxid_info.tsv")
 

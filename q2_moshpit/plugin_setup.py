@@ -525,7 +525,7 @@ plugin.methods.register_function(
     description="Downloads Diamond reference database.  "
                 "This action downloads 1 file (ref_db.dmnd). "
                 "At least 18 Gb of storage space is "
-                "required to run this action."
+                "required to run this action. "
                 "Link to database: "
                 "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
                 "eggnog_proteins.dmnd.gz"

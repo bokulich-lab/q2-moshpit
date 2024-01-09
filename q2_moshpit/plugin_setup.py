@@ -492,17 +492,43 @@ plugin.methods.register_function(
     outputs=[("eggnog_db", ReferenceDB[Eggnog])],
     output_descriptions={
         "eggnog_db": "Artifact containing the eggNOG annotation "
-                     "database (eggnog.db, eggnog.taxa.db, "
-                     "eggnog.taxa.db.traverse.pkl)"
+                     "database."
     },
-    name="Fetch the databases necessary to run to run the "
+    name="Fetch the databases necessary to run the "
          "eggnog-annotate action.",
     description="Downloads eggnog reference database  "
                 "using the `download_eggnog_data.py` script from eggNOG. "
                 "Here, this script downloads 3 files "
-                "(eggnog.db, eggnog.taxa.db, and eggnog.taxa.db.traverse.pkl) "
                 "and creates and artifact with them. At least 80 Gb of "
                 "storage space is required to run this action. "
+                "Links to files: "
+                "eggnog.db: "
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/eggnog.db.gz"
+                "eggnog.taxa.db: "
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
+                "eggnog.taxa.tar.gz"
+                "eggnog.taxa.db.traverse.pkl: "
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
+                "eggnog_proteins.dmnd.gz"
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_diamond_db,
+    inputs={},
+    parameters={},
+    outputs=[("diamond_db", ReferenceDB[Diamond])],
+    output_descriptions={
+        "diamond_db": "Complete Diamond reference database."
+    },
+    name="Fetch the complete Diamond database necessary to run the "
+         "eggnog-diamond-search action.",
+    description="Downloads Diamond reference database.  "
+                "This action downloads 1 file (ref_db.dmnd). "
+                "At least 18 Gb of storage space is "
+                "required to run this action. "
+                "Link to database: "
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
+                "eggnog_proteins.dmnd.gz"
 )
 
 plugin.methods.register_function(

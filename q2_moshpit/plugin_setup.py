@@ -506,16 +506,12 @@ plugin.methods.register_function(
     },
     parameters={
         "threads": Int % Range(1, None),
-        "log": Bool,
         "file_buffer_size": Int % Range(1, None),
         "ignore_warnings": Bool,
         "no_parse_seqids": Bool
     },
     parameter_descriptions={
         "threads": "Number of CPU threads.",
-        "log": "Enable even more verbose terminal output, which is also "
-               "written to a file named diamond.log is the current working "
-               "directory.",
         "file_buffer_size": "File buffer size in bytes.",
         "ignore_warnings": "Ignore warnings.",
         "no_parse_seqids": "Print raw seqids without parsing."

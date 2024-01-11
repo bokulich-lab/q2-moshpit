@@ -43,7 +43,6 @@ def build_custom_diamond_db(
         seqs: ProteinSequencesDirectoryFormat,
         taxonomy: NCBITaxonomyDirFmt = None,
         threads: int = 1,
-        log: bool = False,
         file_buffer_size: int = 67108864,
         ignore_warnings: bool = False,
         no_parse_seqids: bool = False
@@ -77,7 +76,7 @@ def build_custom_diamond_db(
     # Run diamond makedb
     cmd = [
         "diamond", "makedb",
-        "--verbose",
+        "--verbose", "--log",
         "--in", f"{os.path.join(str(seqs), 'protein-sequences.fasta')}",
         "--db", f"{os.path.join(str(diamond_db), 'ref_db.dmnd')}",
         *parsed_args

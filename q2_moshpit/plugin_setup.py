@@ -534,7 +534,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.eggnog.fetch_eggnog_fasta,
+    function=q2_moshpit.eggnog.fetch_eggnog_proteins,
     inputs={},
     parameters={},
     outputs=[("eggnog_fasta", ReferenceDB[EggnogSequenceTaxa])],

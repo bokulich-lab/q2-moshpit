@@ -8,7 +8,7 @@
 import os
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
-from .._dbs import fetch_eggnog_db, fetch_eggnog_fasta, fetch_diamond_db
+from .._dbs import fetch_eggnog_db, fetch_eggnog_proteins, fetch_diamond_db
 
 
 class TestFetchDB(TestPluginBase):
@@ -55,7 +55,7 @@ class TestFetchDB(TestPluginBase):
     def test_fetch_eggnog_fasta(self, subp_run):
         # Call function. Patching will make sure nothing is
         # actually ran
-        eggnog_fa = fetch_eggnog_fasta()
+        eggnog_fa = fetch_eggnog_proteins()
         fasta_file = os.path.join(str(eggnog_fa), "e5.proteomes.faa")
         taxonomy_file = os.path.join(str(eggnog_fa), "e5.taxid_info.tsv")
 

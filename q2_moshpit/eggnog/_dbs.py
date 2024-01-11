@@ -80,7 +80,7 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
     return diamond_db
 
 
-def fetch_eggnog_fasta() -> EggnogProteinSequencesDirFmt:
+def fetch_eggnog_proteins() -> EggnogProteinSequencesDirFmt:
     """
     # TODO: Add description
     """

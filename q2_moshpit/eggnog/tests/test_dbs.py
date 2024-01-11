@@ -8,7 +8,7 @@
 import os
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
-from .._dbs import fetch_eggnog_db, fetch_eggnog_fasta
+from .._dbs import fetch_eggnog_db, fetch_eggnog_fasta, fetch_diamond_db
 
 
 class TestFetchDB(TestPluginBase):
@@ -26,6 +26,30 @@ class TestFetchDB(TestPluginBase):
             "--data_dir", str(eggnog_db)
         ]
         subp_run.assert_called_once_with(cmd, check=True)
+
+    @patch("subprocess.run")
+    def test_fetch_diamond_db(self, subp_run):
+        # Call function. Patching will make sure nothing is
+        # actually ran
+        diamond_db = fetch_diamond_db()
+        path_out = os.path.join(str(diamond_db), "ref_db.dmnd.gz")
+
+        # Check that command was called in the expected way
+        first_call = call(
+            [
+                "wget", "-e", "robots=off", "-O", f"{path_out}",
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
+                "eggnog_proteins.dmnd.gz"
+            ],
+            check=True
+        )
+        second_call = call(
+            ["gunzip", f"{path_out}"],
+            check=True,
+        )
+
+        # Check that commands are ran as expected
+        subp_run.assert_has_calls([first_call, second_call], any_order=False)
 
     @patch("subprocess.run")
     def test_fetch_eggnog_fasta(self, subp_run):

@@ -5,12 +5,10 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
-
-from ._method import (eggnog_diamond_search, eggnog_annotate)
-from ._dbs import fetch_eggnog_db, fetch_eggnog_fasta
+from ._method import eggnog_diamond_search, eggnog_annotate
+from ._dbs import fetch_eggnog_db, fetch_diamond_db, fetch_eggnog_fasta
 
 __all__ = [
     'eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db',
-    'fetch_eggnog_fasta'
+    'fetch_diamond_db', fetch_eggnog_fasta
 ]

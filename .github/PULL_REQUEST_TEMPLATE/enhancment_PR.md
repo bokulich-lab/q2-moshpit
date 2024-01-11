@@ -1,6 +1,6 @@
 ---
-name: PR template
-about: Submit a PR
+name: Enhancement PR
+about: Submit a PR for an enhancement
 title: 'ENH: '
 labels: enhancement
 assignees: ''

@@ -1,6 +1,6 @@
 ---
-name: PR template
-about: Submit a PR
+name: Bug PR
+about: Submit a PR for a bug
 title: 'BUG: '
 labels: bug
 assignees: ''

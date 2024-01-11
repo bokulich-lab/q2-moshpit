@@ -604,9 +604,9 @@ plugin.methods.register_function(
     name="Fetch the databases necessary to run to run the "
          "build-eggnog-diamond-db action.",
     description="Downloads eggnog proteome database  "
-                "This script downloads 2 files: "
+                "This script downloads 2 files "
                 "(e5.proteomes.faa and e5.taxid_info.tsv) "
-                "and creates and artifact with them. At least 18 Gb of "
+                "and creates and artifact with them. At least 18 GB of "
                 "storage space is required to run this action. "
 )
 

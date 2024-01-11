@@ -8,6 +8,27 @@
 import subprocess
 from typing import List
 
+# CONVERT shell colors to the same curses palette
+SHELL_COLORS = {
+    "wr": '\033[1;37;41m',  # white on red
+    "wo": '\033[1;37;43m',  # white on orange
+    "wm": '\033[1;37;45m',  # white on magenta
+    "wb": '\033[1;37;46m',  # white on blue
+    "bw": '\033[1;37;40m',  # black on white
+    "lblue": '\033[1;34m',  # light blue
+    "lred": '\033[1;31m',  # light red
+    "lgreen": '\033[1;32m',  # light green
+    "yellow": '\033[1;33m',  # yellow
+    "cyan": '\033[36m',  # cyan
+    "blue": '\033[34m',  # blue
+    "green": '\033[32m',  # green
+    "orange": '\033[33m',  # orange
+    "red": '\033[31m',  # red
+    "magenta": "\033[35m",  # magenta
+    "white": "\033[0m",  # white
+    None: "\033[0m",  # end
+}
+
 
 def run_command(cmd, env=None, verbose=True, pipe=False, **kwargs):
     if verbose:
@@ -70,3 +91,7 @@ def _process_common_input_params(processing_func, params: dict) -> List[str]:
             continue
 
     return processed_args
+
+
+def colorify(string, color):
+    return "%s%s%s" % (SHELL_COLORS[color], string, SHELL_COLORS[None])

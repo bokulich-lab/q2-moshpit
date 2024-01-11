@@ -6,11 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
-from unittest.mock import patch
+from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types_genomics.reference_db import NCBITaxonomyDirFmt
-from .._dbs import fetch_eggnog_db, build_custom_diamond_db
+from .._dbs import fetch_eggnog_db, build_custom_diamond_db, fetch_diamond_db
 
 
 class TestFetchDB(TestPluginBase):
@@ -93,3 +93,27 @@ class TestBuildDiamondDB(TestPluginBase):
 
         # Check that commands is ran as expected
         subp_run.assert_called_once_with(cmd, check=True)
+
+    @patch("subprocess.run")
+    def test_fetch_diamond_db(self, subp_run):
+        # Call function. Patching will make sure nothing is
+        # actually ran
+        diamond_db = fetch_diamond_db()
+        path_out = os.path.join(str(diamond_db), "ref_db.dmnd.gz")
+
+        # Check that command was called in the expected way
+        first_call = call(
+            [
+                "wget", "-e", "robots=off", "-O", f"{path_out}",
+                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
+                "eggnog_proteins.dmnd.gz"
+            ],
+            check=True
+        )
+        second_call = call(
+            ["gunzip", f"{path_out}"],
+            check=True,
+        )
+
+        # Check that commands are ran as expected
+        subp_run.assert_has_calls([first_call, second_call], any_order=False)

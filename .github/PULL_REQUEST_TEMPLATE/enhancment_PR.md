@@ -70,6 +70,7 @@ pytest -W ignore -vv --pyargs q2_moshpit
 ```
 
 ### TODO
+<!---Feel free to eliminate sections that are not relevant to you PR.-->
 - [ ] Fill in *About this repo* section.
 - [ ] Fill in *Whats new* section. Erase any bullet points that are not used.
 - [ ] In the *Set up an environment* Make sure to adjust the environment to the latest version possible of all involved dependencies.

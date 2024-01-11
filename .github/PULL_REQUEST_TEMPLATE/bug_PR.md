@@ -38,7 +38,7 @@ gh pr checkout <PR_number>
 - Make sure you have gh (GitHub CLI) installed in your environment.
 -->
 
-2. Lets get you some data to play with: 
+2. Let's get you some data to play with: 
 <!---In the next steps provide terminal commands that get the reviewer the necessary inputs to run a working example.-->
 ```bash
 <your code here>
@@ -70,7 +70,7 @@ pytest -W ignore -vv --pyargs q2_moshpit
 ```
 
 ### TODO
-<!---Feel free to eliminate sections that are not relevant to you PR.-->
+<!---Feel free to eliminate sections that are not relevant to your PR.-->
 - [ ] Fill in *About this repo* section.
 - [ ] Fill in *Whats new* section. Erase any bullet points that are not used.
 - [ ] In the *Set up an environment* Make sure to adjust the environment to the latest version possible of all involved dependencies.

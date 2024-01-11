@@ -496,13 +496,13 @@ plugin.methods.register_function(
         'taxonomy': ReferenceDB[NCBITaxonomy],
     },
     input_descriptions={
-        'seqs': "Artifact containing protein reference database.",
-        'taxonomy': "Artifact containing reference taxonomy, "
+        'seqs': "Protein reference database.",
+        'taxonomy': "Reference taxonomy, "
                     "needed to provide taxonomy features."
     },
     outputs=[('diamond_db', ReferenceDB[Diamond])],
     output_descriptions={
-        'diamond_db': "Artifact containing the DIAMOND database."
+        'diamond_db': "DIAMOND database."
     },
     parameters={
         "threads": Int % Range(1, None),

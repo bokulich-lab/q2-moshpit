@@ -68,7 +68,7 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
     )
 
     # Let user know that the process is done.
-    # The actual copying wil be taken care of by qiime behind the
+    # The actual copying will be taken care of by qiime behind the
     # scenes.
     print(colorify(
         "Decompression completed. \n"
@@ -89,7 +89,7 @@ def fetch_eggnog_fasta() -> EggnogProteinSequencesDirFmt:
     fasta_file = os.path.join(str(eggnog_fa), "e5.proteomes.faa")
     taxonomy_file = os.path.join(str(eggnog_fa), "e5.taxid_info.tsv")
 
-    # Download Diamond DB
+    # Download fasta file
     print(colorify("Downloading fasta file..."))
     run_command(
         cmd=[
@@ -98,7 +98,7 @@ def fetch_eggnog_fasta() -> EggnogProteinSequencesDirFmt:
         ]
     )
 
-    # Decompressing file
+    # Download taxonomy file
     print(colorify(
         "Download completed.\n"
         "Downloading taxonomy file..."
@@ -111,7 +111,7 @@ def fetch_eggnog_fasta() -> EggnogProteinSequencesDirFmt:
     )
 
     # Let user know that the process is done.
-    # The actual copying wil be taken care of by qiime behind the
+    # The actual copying will be taken care of by qiime behind the
     # scenes.
     print(colorify(
         "Download completed. \n"

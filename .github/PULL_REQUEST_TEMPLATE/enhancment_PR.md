@@ -21,10 +21,15 @@ assignees: ''
 - The following commands should get the reviewer a working environment where they can test the PR changes. 
 - Keep in mind that if you PR depends on newer versions of the dependencies you will have to install these manually, e.g: pip install git+https://github.com/username/repository.git or pip install -e . your_local_dependency
 -->
+For Mac:
 ```bash
-wget https://data.qiime2.org/distro/shotgun/qiime2-shotgun-2023.9-py38-osx-conda.yml
+# For linux: export MY_OS="qiime2-shotgun-2023.9-py38-linux-conda.yml"
+# For windows: export MY_OS="qiime2-shotgun-2023.9-py38-linux-conda.yml"
+# For mac:
+export MY_OS="qiime2-shotgun-2023.9-py38-osx-conda.yml"
+wget "https://data.qiime2.org/distro/shotgun/"$MY_OS
 conda env create -n q2-shotgun --file qiime2-shotgun-2023.9-py38-osx-conda.yml
-rm qiime2-shotgun-2023.9-py38-osx-conda.yml
+rm $MY_OS
 ```
 
 ### Run it locally 

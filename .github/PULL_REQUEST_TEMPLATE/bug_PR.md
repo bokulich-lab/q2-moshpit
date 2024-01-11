@@ -17,14 +17,14 @@ assignees: ''
 - <!--- Is the PR blocked by another PR? If so, disclose it here. You can use the syntax user/repo_name/pull/PR_number to reference PRs in other repos. To reference PRs in the same repo simply use #PR_number -->
 
 ### Set up an environment
-<!--- The following commands should get the reviewer a working environment where they can test the PR changes. -->
+<!---
+- The following commands should get the reviewer a working environment where they can test the PR changes. 
+- Keep in mind that if you PR depends on newer versions of the dependencies you will have to install these manually, e.g: pip install git+https://github.com/username/repository.git or pip install -e . your_local_dependency
+-->
 ```bash
-mamba create -yn q2-shotgun \
-    -c conda-forge -c bioconda -c https://packages.qiime2.org/qiime2/2023.5/tested -c defaults \
-    q2cli q2-moshpit gh
-
-conda run -n q2-shotgun \
-    pip install --no-deps --force-reinstall git+https://github.com/misialq/quast.git@issue-230
+wget https://data.qiime2.org/distro/shotgun/qiime2-shotgun-2023.9-py38-osx-conda.yml
+conda env create -n q2-shotgun --file qiime2-shotgun-2023.9-py38-osx-conda.yml
+rm qiime2-shotgun-2023.9-py38-osx-conda.yml
 ```
 
 ### Run it locally 

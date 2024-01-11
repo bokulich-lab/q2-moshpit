@@ -30,8 +30,15 @@ conda run -n q2-shotgun \
 ### Run it locally 
 1. Clone the repo and checkout the PR branch (skip this step if you already have a local copy of the PR branch):
 ```bash
+# Remove q2-moshpit so you can install your local version.
+conda activate q2-shotgun
+conda remove q2-moshpit
+
+# clone from GitHub
 git clone git@github.com:bokulich-lab/q2-moshpit.git
+cd q2-moshpit
 gh pr checkout <PR_number>
+pip install -e .
 ```
 <!---
 - The PR_number will be created after you submit the PR, therefore it can only be set after, by editing the PR message.

@@ -537,11 +537,10 @@ plugin.methods.register_function(
     function=q2_moshpit.eggnog.fetch_eggnog_proteins,
     inputs={},
     parameters={},
-    outputs=[("eggnog_fasta", ReferenceDB[EggnogSequenceTaxa])],
+    outputs=[("eggnog_proteins", ReferenceDB[EggnogSequenceTaxa])],
     output_descriptions={
-        "eggnog_fasta": "Artifact containing the eggNOG database "
-                        "of protein sequences and their corresponding"
-                        "taxonomy information."
+        "eggnog_proteins": "eggNOG database of protein sequences and "
+                           "their corresponding taxonomy information."
     },
     name="Fetch the databases necessary to run to run the "
          "build-eggnog-diamond-db action.",

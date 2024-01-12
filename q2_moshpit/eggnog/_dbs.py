@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 import os
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
+import shutil
 from q2_types_genomics.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
     EggnogProteinSequencesDirFmt
@@ -174,3 +175,34 @@ def fetch_eggnog_proteins() -> EggnogProteinSequencesDirFmt:
     ))
 
     return eggnog_fa
+
+
+def build_eggnog_diamond_db(
+        eggnog_proteins: EggnogProteinSequencesDirFmt,
+        taxon: str
+) -> DiamondDatabaseDirFmt:
+    """
+    Creates an DIAMOND database which contains the protein
+    sequences that belong to the specified taxon.
+    """
+
+    # Initialize output objects
+    diamond_db = DiamondDatabaseDirFmt()
+
+    # Define command.
+    cmd = [
+        "create_dbs.py",
+        "--data_dir", str(eggnog_proteins),
+        "--taxids", taxon,
+        "--dbname", "ref_db"
+    ]
+    run_command(cmd)
+
+    # The script will create the diamond DB in side the directory of
+    # eggnog_proteins object, so we need to move it to diamond_db
+    source_path = os.path.join(str(eggnog_proteins), "ref_db.dmnd")
+    destination_path = os.path.join(str(diamond_db), "ref_db.dmnd")
+    shutil.move(source_path, destination_path)
+
+    # Return objects
+    return diamond_db

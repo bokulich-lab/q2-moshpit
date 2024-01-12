@@ -10,5 +10,5 @@ from ._dbs import fetch_eggnog_db, fetch_diamond_db, fetch_eggnog_proteins
 
 __all__ = [
     'eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db',
-    'fetch_diamond_db', fetch_eggnog_proteins
+    'fetch_diamond_db', 'fetch_eggnog_proteins'
 ]

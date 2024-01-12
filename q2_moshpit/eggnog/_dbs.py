@@ -82,7 +82,10 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
 
 def fetch_eggnog_proteins() -> EggnogProteinSequencesDirFmt:
     """
-    # TODO: Add description
+    Downloads eggnog proteome database.
+    This script downloads 2 files (e5.proteomes.faa and e5.taxid_info.tsv)
+    and creates and artifact with them. At least 18 GB of storage space is
+    required to run this action.
     """
     # Initialize output objects
     eggnog_fa = EggnogProteinSequencesDirFmt()

@@ -179,7 +179,7 @@ def fetch_eggnog_proteins() -> EggnogProteinSequencesDirFmt:
 
 def build_eggnog_diamond_db(
         eggnog_proteins: EggnogProteinSequencesDirFmt,
-        taxon: str
+        taxon: int
 ) -> DiamondDatabaseDirFmt:
     """
     Creates an DIAMOND database which contains the protein
@@ -193,7 +193,7 @@ def build_eggnog_diamond_db(
     cmd = [
         "create_dbs.py",
         "--data_dir", str(eggnog_proteins),
-        "--taxids", taxon,
+        "--taxids", str(taxon),
         "--dbname", "ref_db"
     ]
     run_command(cmd)

@@ -10,10 +10,12 @@ from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from .._dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
-    fetch_diamond_db
+    fetch_diamond_db, build_eggnog_diamond_db
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
-from q2_types_genomics.reference_db import NCBITaxonomyDirFmt
+from q2_types_genomics.reference_db import (
+    NCBITaxonomyDirFmt, EggnogProteinSequencesDirFmt
+)
 
 
 class TestFetchDB(TestPluginBase):
@@ -147,3 +149,29 @@ class TestBuildDiamondDB(TestPluginBase):
 
         # Check that commands are ran as expected
         subp_run.assert_has_calls([first_call, second_call], any_order=False)
+
+    @patch("subprocess.run")
+    @patch("shutil.move")
+    def test_build_eggnog_diamond_db(self, shut_mv, subp_run):
+        # Instantiate input
+        proteins_and_taxa = EggnogProteinSequencesDirFmt()
+
+        # Call function. Patching will make sure nothing is
+        # actually ran
+        diamond_db = build_eggnog_diamond_db(proteins_and_taxa, taxon=2)
+
+        # Check that command was called in the expected way
+        cmd = [
+            "create_dbs.py",
+            "--data_dir", str(proteins_and_taxa),
+            "--taxids", "2",
+            "--dbname", "ref_db"
+        ]
+
+        # Check that subprocess.run is run as expected
+        subp_run.assert_called_once_with(cmd, check=True)
+
+        # Check that shutil.move is run as expected
+        source_path = os.path.join(str(proteins_and_taxa), "ref_db.dmnd")
+        destination_path = os.path.join(str(diamond_db), "ref_db.dmnd")
+        shut_mv.assert_called_once_with(source_path, destination_path)

@@ -32,7 +32,7 @@ from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from q2_types_genomics.reference_db import (
-    ReferenceDB, Diamond, Eggnog, EggnogSequenceTaxa
+    ReferenceDB, Diamond, Eggnog, EggnogProteinSequences
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -537,7 +537,7 @@ plugin.methods.register_function(
     function=q2_moshpit.eggnog.fetch_eggnog_proteins,
     inputs={},
     parameters={},
-    outputs=[("eggnog_proteins", ReferenceDB[EggnogSequenceTaxa])],
+    outputs=[("eggnog_proteins", ReferenceDB[EggnogProteinSequences])],
     output_descriptions={
         "eggnog_proteins": "eggNOG database of protein sequences and "
                            "their corresponding taxonomy information."

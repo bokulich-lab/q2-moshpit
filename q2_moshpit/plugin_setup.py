@@ -612,7 +612,7 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.build_eggnog_diamond_db,
     inputs={
-        'eggnog_proteins': ReferenceDB[EggnogSequenceTaxa],
+        'eggnog_proteins': ReferenceDB[EggnogProteinSequences],
     },
     input_descriptions={
         'eggnog_proteins': "eggNOG database of protein sequences and "

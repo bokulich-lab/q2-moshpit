@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+import pandas as pd
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 import shutil
 from q2_types_genomics.reference_db import (
@@ -185,6 +186,8 @@ def build_eggnog_diamond_db(
     Creates an DIAMOND database which contains the protein
     sequences that belong to the specified taxon.
     """
+    # Validate taxon ID
+    _validate_taxon_id(eggnog_proteins, taxon)
 
     # Initialize output objects
     diamond_db = DiamondDatabaseDirFmt()
@@ -206,3 +209,29 @@ def build_eggnog_diamond_db(
 
     # Return objects
     return diamond_db
+
+
+def _validate_taxon_id(eggnog_proteins, taxon):
+    # Validate taxon id number
+    # Read in valid taxon ids
+    taxid_info = pd.read_csv(
+        os.path.join(str(eggnog_proteins), "e5.taxid_info.tsv"),
+        sep="\t"
+    )
+
+    # Convert them into a set
+    tax_ids = set()
+    for lineage in taxid_info["Taxid Lineage"]:
+        tax_ids.update(
+            set(
+                lineage.strip().split(",")
+            )
+        )
+
+    # Check for overlap with provided taxon id
+    if not tax_ids.intersection(set(str(taxon))):
+        raise ValueError(
+            f"'{taxon}' is not valid taxon ID. "
+            "To view all valid taxon IDs inspect e5.taxid_info.tsv "
+            "file in the input eggnog_proteins input."
+        )

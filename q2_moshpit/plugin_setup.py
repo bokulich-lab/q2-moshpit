@@ -8,7 +8,9 @@
 import importlib
 
 from q2_types.distance_matrix import DistanceMatrix
-from q2_types.feature_data import FeatureData, Sequence, Taxonomy
+from q2_types.feature_data import (
+    FeatureData, Sequence, Taxonomy, ProteinSequence
+)
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality
@@ -18,7 +20,7 @@ from q2_types.feature_map import FeatureMap, MAGtoContigs
 from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
-
+import q2_moshpit._examples as ex
 import q2_moshpit
 from q2_types_genomics.feature_data import NOG, MAG
 from q2_types_genomics.genome_data import (
@@ -32,7 +34,7 @@ from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from q2_types_genomics.reference_db import (
-    ReferenceDB, Diamond, Eggnog, EggnogProteinSequences
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -485,6 +487,44 @@ plugin.methods.register_function(
     description='Convert a Kraken 2 report, which is an annotated NCBI '
                 'taxonomy tree into generic artifacts for downstream '
                 'analyses.'
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.build_custom_diamond_db,
+    inputs={
+        'seqs': FeatureData[ProteinSequence],
+        'taxonomy': ReferenceDB[NCBITaxonomy],
+    },
+    input_descriptions={
+        'seqs': "Protein reference database.",
+        'taxonomy': "Reference taxonomy, "
+                    "needed to provide taxonomy features."
+    },
+    outputs=[('diamond_db', ReferenceDB[Diamond])],
+    output_descriptions={
+        'diamond_db': "DIAMOND database."
+    },
+    parameters={
+        "threads": Int % Range(1, None),
+        "file_buffer_size": Int % Range(1, None),
+        "ignore_warnings": Bool,
+        "no_parse_seqids": Bool
+    },
+    parameter_descriptions={
+        "threads": "Number of CPU threads.",
+        "file_buffer_size": "File buffer size in bytes.",
+        "ignore_warnings": "Ignore warnings.",
+        "no_parse_seqids": "Print raw seqids without parsing."
+    },
+    name="Create a DIAMOND formatted reference database from a FASTA input "
+         "file.",
+    description="Creates an artifact containing a binary DIAMOND database "
+                "file (ref_db.dmnd) from a protein reference database "
+                "file in FASTA format.",
+    citations=[citations["buchfink_sensitive_2021"]],
+    examples={
+        "Minimum working example": ex.diamond_makedb
+    }
 )
 
 plugin.methods.register_function(

@@ -5,14 +5,15 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import qiime2
 import pandas as pd
 import pandas.testing as pdt
-import qiime2
 from qiime2.plugin.testing import TestPluginBase
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
 from .._method import eggnog_diamond_search, eggnog_annotate
 from q2_types_genomics.reference_db import (
-    DiamondDatabaseDirFmt, EggnogRefDirFmt)
+    DiamondDatabaseDirFmt, EggnogRefDirFmt
+)
 from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
 from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 

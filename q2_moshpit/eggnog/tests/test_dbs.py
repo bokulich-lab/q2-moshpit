@@ -150,9 +150,10 @@ class TestBuildDiamondDB(TestPluginBase):
         # Check that commands are ran as expected
         subp_run.assert_has_calls([first_call, second_call], any_order=False)
 
+    @patch("q2_moshpit.eggnog._dbs._validate_taxon_id")
     @patch("subprocess.run")
     @patch("shutil.move")
-    def test_build_eggnog_diamond_db(self, shut_mv, subp_run):
+    def test_build_eggnog_diamond_db(self, shut_mv, subp_run, _val):
         # Instantiate input
         proteins_and_taxa = EggnogProteinSequencesDirFmt()
 
@@ -175,3 +176,15 @@ class TestBuildDiamondDB(TestPluginBase):
         source_path = os.path.join(str(proteins_and_taxa), "ref_db.dmnd")
         destination_path = os.path.join(str(diamond_db), "ref_db.dmnd")
         shut_mv.assert_called_once_with(source_path, destination_path)
+
+    def test_build_eggnog_diamond_db_invalid_taxon_id(self):
+        # Init input data
+        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
+        eggnog_proteins = EggnogProteinSequencesDirFmt(path_to_data, 'r')
+
+        # Call function exception error since taxon 0 is invalid
+        with self.assertRaisesRegex(
+            ValueError,
+            "'0' is not valid taxon ID. "
+        ):
+            _ = build_eggnog_diamond_db(eggnog_proteins, taxon=0)

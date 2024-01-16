@@ -11,10 +11,17 @@ assignees: ''
 - <!--- What part of the repo is the current PR concerned with? E.g. The current PR addressed a bug in action X, which runs a Y analysis on the inputs. -->
 
 ### What's new
+- <!--- Describe what was changed in the code and why it is useful or necessary-->
 - <!--- Does this PR fully address an existing issue? If so write: Closes #issue_number -->
-- <!--- Describe what was changed in the code -->
-- <!--- Describe why the changes are useful or necessary -->
-- <!--- Is the PR blocked by another PR? If so, disclose it here. You can use the syntax user/repo_name/pull/PR_number to reference PRs in other repos. To reference PRs in the same repo simply use #PR_number -->
+
+### Additional Info
+<!--- Is the PR blocked by another PR? If so, disclose it here. You can use the syntax user/repo_name/pull/PR_number to reference PRs in other repos. To reference PRs in the same repo simply use #PR_number. Do so inside the ```[tasklist]``` context as shown below.
+```[tasklist]
+### Blocked by
+- [ ] user/repo_name/pull/PR_number
+- [ ] #PR_number
+```
+-->
 
 ### Set up an environment
 <!---
@@ -22,17 +29,17 @@ assignees: ''
 - Keep in mind that if you PR depends on newer versions of the dependencies you will have to install these manually, e.g: pip install git+https://github.com/username/repository.git or pip install -e . your_local_dependency
 -->
 ```bash
-# For linux: export MY_OS="qiime2-shotgun-2023.9-py38-linux-conda.yml"
-# For windows: export MY_OS="qiime2-shotgun-2023.9-py38-linux-conda.yml"
+# For linux: 
+# export MY_OS="linux"
 # For mac:
-export MY_OS="qiime2-shotgun-2023.9-py38-osx-conda.yml"
-wget "https://data.qiime2.org/distro/shotgun/"$MY_OS
+export MY_OS="osx" 
+wget "https://data.qiime2.org/distro/shotgun/qiime2-shotgun-2023.9-py38-"$MY_OS"-conda.yml"
 conda env create -n q2-shotgun --file qiime2-shotgun-2023.9-py38-osx-conda.yml
-rm $MY_OS
+rm "qiime2-shotgun-2023.9-py38-"$MY_OS"-conda.yml"
 ```
 
 ### Run it locally 
-1. Clone the repo and checkout the PR branch (skip this step if you already have a local copy of the PR branch):
+1. Clone the repo and checkout the PR branch (skip this step if you already have a local copy of the code):
 ```bash
 # Remove q2-moshpit so you can install your local version.
 conda activate q2-shotgun

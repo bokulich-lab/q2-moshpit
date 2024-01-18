@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+import datetime
 import pandas as pd
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 import shutil
@@ -235,3 +236,94 @@ def _validate_taxon_id(eggnog_proteins, taxon):
             "To view all valid taxon IDs inspect e5.taxid_info.tsv "
             "file in the input eggnog_proteins input."
         )
+
+
+def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
+    """
+    Script fetches 3 files from the internet and puts them into the folder of
+    a NCBITaxonomyDirFmt object.
+    """
+    # Initialize output object and paths
+    ncbi_data = NCBITaxonomyDirFmt()
+    zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
+    proteins_path = os.path.join(str(ncbi_data), "prot.accession2taxid.gz")
+    version_path = os.path.join(str(ncbi_data), "version.tsv")
+
+    # Download zip file
+    print(colorify("Downloading *.dmp files"))
+    run_command(
+        cmd=[
+            "wget", "-O", zip_path,
+            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip"
+        ]
+    )
+
+    # Unzip
+    run_command(
+        cmd=[
+            "unzip", "-j", zip_path, "names.dmp", "nodes.dmp",
+            "-d", str(ncbi_data)
+        ]
+    )
+
+    # Remove zip file
+    run_command(
+        cmd=[
+            "rm", zip_path
+        ]
+    )
+
+    # Download proteins
+    print(colorify("Downloading proteins file (~15 GB)"))
+    run_command(
+        cmd=[
+            "wget", "-O", proteins_path,
+            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+            "prot.accession2taxid.gz"
+        ]
+    )
+
+    # Get last modification times
+    print(colorify("Constructing version file"))
+    names_time = _get_last_modified_time(str(ncbi_data), "names.dmp")
+    nodes_time = _get_last_modified_time(str(ncbi_data), "nodes.dmp")
+    proteins_time = _get_last_modified_time(
+        str(ncbi_data), "prot.accession2taxid.gz"
+    )
+
+    # Create a DataFrame with file names and last modification times
+    data = {'file_name': [
+                'names.dmp',
+                'nodes.dmp',
+                'prot.accession2taxid.gz'
+                ],
+            'date': [
+                names_time.strftime('%d/%m/%Y'),
+                nodes_time.strftime('%d/%m/%Y'),
+                proteins_time.strftime('%d/%m/%Y')
+                ],
+            'time': [
+                names_time.strftime('%H:%M:%S'),
+                nodes_time.strftime('%H:%M:%S'),
+                proteins_time.strftime('%H:%M:%S')
+                ]
+            }
+    version = pd.DataFrame(data)
+
+    # Write version file
+    version.to_csv(version_path, sep='\t', index=False)
+
+    # Return completed object
+    print(colorify(
+        "Done! Moving data from temporary directory to final location."
+    ))
+    return ncbi_data
+
+
+# Get the date and time modified of a file
+def _get_last_modified_time(dir, file):
+    return datetime.date.fromtimestamp(
+        os.path.getmtime(
+            os.path.join(dir, file)
+        )
+    )

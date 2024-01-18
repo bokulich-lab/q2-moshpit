@@ -252,7 +252,7 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     version_path = os.path.join(str(ncbi_data), "version.tsv")
 
     # Download zip file
-    print(colorify("Downloading *.dmp files"))
+    print(colorify("Downloading *.dmp files..."))
     run_command(
         cmd=[
             "wget", "-O", zip_path,
@@ -272,7 +272,7 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     run_command(cmd=["rm", zip_path])
 
     # Download proteins
-    print(colorify("Downloading proteins file (~15 GB)"))
+    print(colorify("Downloading proteins file (~15 GB)..."))
     run_command(
         cmd=[
             "wget", "-O", proteins_path,
@@ -282,12 +282,12 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     )
 
     # Constructing version file
-    print(colorify("Constructing version file"))
+    print(colorify("Constructing version file..."))
     _write_version_tsv(nodes_path, names_path, proteins_path, version_path)
 
     # Return object
     print(colorify(
-        "Done! Moving data from temporary directory to final location."
+        "Done! Moving data from temporary directory to final location..."
     ))
     return ncbi_data
 

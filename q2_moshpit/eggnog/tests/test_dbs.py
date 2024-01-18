@@ -152,9 +152,9 @@ class TestBuildDiamondDB(TestPluginBase):
         # Check that commands are ran as expected
         subp_run.assert_has_calls([first_call, second_call], any_order=False)
 
-    @patch("q2_moshpit.eggnog._dbs._make_version_df")
+    @patch("q2_moshpit.eggnog._dbs._write_version_tsv")
     @patch("subprocess.run")
-    def test_fetch_ncbi_taxonomy(self, subp_run, mk_v_df):
+    def test_fetch_ncbi_taxonomy(self, subp_run, w_v_tsv):
         # Call function. Patching will make sure nothing is actually ran
         ncbi_data = fetch_ncbi_taxonomy()
         zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
@@ -196,7 +196,7 @@ class TestBuildDiamondDB(TestPluginBase):
             [first_call, second_call, third_call, forth_call],
             any_order=False
         )
-        mk_v_df.assert_called_once_with(
+        w_v_tsv.assert_called_once_with(
             nodes_path,
             names_path,
             proteins_path,

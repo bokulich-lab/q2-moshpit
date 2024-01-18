@@ -6,15 +6,17 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+import tempfile
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from .._dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
-    fetch_diamond_db, build_eggnog_diamond_db
+    fetch_diamond_db, build_eggnog_diamond_db, fetch_ncbi_taxonomy,
+    _write_version_tsv
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types_genomics.reference_db import (
-    NCBITaxonomyDirFmt, EggnogProteinSequencesDirFmt
+    NCBITaxonomyDirFmt, EggnogProteinSequencesDirFmt, NCBITaxonomyVersionFormat
 )
 
 
@@ -149,6 +151,68 @@ class TestBuildDiamondDB(TestPluginBase):
 
         # Check that commands are ran as expected
         subp_run.assert_has_calls([first_call, second_call], any_order=False)
+
+    @patch("q2_moshpit.eggnog._dbs._make_version_df")
+    @patch("subprocess.run")
+    def test_fetch_ncbi_taxonomy(self, subp_run, mk_v_df):
+        # Call function. Patching will make sure nothing is actually ran
+        ncbi_data = fetch_ncbi_taxonomy()
+        zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
+        nodes_path = os.path.join(str(ncbi_data), "nodes.dmp")
+        names_path = os.path.join(str(ncbi_data), "names.dmp")
+        proteins_path = os.path.join(str(ncbi_data), "prot.accession2taxid.gz")
+        version_path = os.path.join(str(ncbi_data), "version.tsv")
+
+        # Check that command was called in the expected way
+        first_call = call(
+            [
+                "wget", "-O", zip_path,
+                "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip"
+            ],
+            check=True
+        )
+        second_call = call(
+            [
+                "unzip", "-j", zip_path, "names.dmp", "nodes.dmp",
+                "-d", str(ncbi_data)
+            ],
+            check=True,
+        )
+        third_call = call(
+            ["rm", zip_path],
+            check=True,
+        )
+        forth_call = call(
+            [
+                "wget", "-O", proteins_path,
+                "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+                "prot.accession2taxid.gz"
+            ],
+            check=True,
+        )
+
+        # Check that commands are ran as expected
+        subp_run.assert_has_calls(
+            [first_call, second_call, third_call, forth_call],
+            any_order=False
+        )
+        mk_v_df.assert_called_once_with(
+            nodes_path,
+            names_path,
+            proteins_path,
+            version_path
+        )
+
+    def test_make_version_df(self):
+        nodes = self.get_data_path('ncbi/nodes.dmp')
+        names = self.get_data_path('ncbi/names.dmp')
+        proteins = self.get_data_path('ncbi/prot.accession2taxid.gz')
+
+        with tempfile.TemporaryDirectory() as tmp:
+            version = os.path.join(tmp, 'version.tsv')
+            _write_version_tsv(nodes, names, proteins, version)
+            format = NCBITaxonomyVersionFormat(version, mode="r")
+            format.validate()
 
     @patch("q2_moshpit.eggnog._dbs._validate_taxon_id")
     @patch("subprocess.run")

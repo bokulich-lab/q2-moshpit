@@ -610,6 +610,24 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_ncbi_taxonomy,
+    inputs={},
+    parameters={},
+    outputs=[("taxonomy", ReferenceDB[NCBITaxonomy])],
+    output_descriptions={
+        "taxonomy": "NCBI reference taxonomy."
+    },
+    name="Fetch NCBI reference taxonomy",
+    description="Downloads NCBI reference taxonomy for the NCBI ftp server. "
+                "The resulting artifact is required in the "
+                "build-custom-diamond-db action if one whished to "
+                "create a Diamond data base with taxonomy features. "
+                "At least 30 GB of "
+                "storage space is required to run this action.",
+    citations=[citations["NCBI"]]
+)
+
+plugin.methods.register_function(
     function=q2_moshpit.eggnog.build_eggnog_diamond_db,
     inputs={
         'eggnog_proteins': ReferenceDB[EggnogProteinSequences],

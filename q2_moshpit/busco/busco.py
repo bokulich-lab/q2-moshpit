@@ -40,19 +40,12 @@ def evaluate_busco(
     evalue: float = 1e-03,
     force: bool = False,
     limit: int = 3,
-    help: bool = False,
-    list_datasets: bool = False,
     long: bool = False,
     metaeuk_parameters: str = None,
     metaeuk_rerun_parameters: str = None,
     miniprot: bool = False,
-    offline: bool = False,
     quiet: bool = False,
-    restart: bool = False,
     scaffold_composition: bool = False,
-    tar: bool = False,
-    update_data: bool = False,
-    version: bool = False,
 ) -> None:
     """
     qiime2 visualization for the BUSCO assessment tool

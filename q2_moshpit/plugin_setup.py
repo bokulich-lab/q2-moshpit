@@ -664,23 +664,17 @@ busco_params = {
     "evalue": Float % Range(0, None, inclusive_start=False),
     "force": Bool,
     "limit": Int % Range(1, 20),
-    "help": Bool,
-    "list_datasets": Bool,
     "long": Bool,
     "metaeuk_parameters": Str,
     "metaeuk_rerun_parameters": Str,
     "miniprot": Bool,
-    "offline": Bool,
     "quiet": Bool,
-    "restart": Bool,
     "scaffold_composition": Bool,
-    "tar": Bool,
-    "update_data": Bool,
     "version": Bool,
 }
 busco_param_descriptions = {
     "mode": "Specify which BUSCO analysis mode to run."
-            "Currently only the 'genome' or 'geno' option is supported, "
+            "Currently only the 'genome' option is supported, "
             "for genome assemblies. In the future modes for transcriptome "
             "assemblies and for annotated gene sets (proteins) will be made "
             "available.",
@@ -717,10 +711,8 @@ busco_param_descriptions = {
               "Allowed formats, 0.001 or 1e-03, Default: 1e-03.",
     "force": "Force rewriting of existing files. Must be used when output "
              "files with the provided name already exist.",
-    "help": "Show this help message and exit.",
     "limit": "How many candidate regions (contig or transcript) to consider "
              "per BUSCO. Default: 3.",
-    "list_datasets": "Print the list of available BUSCO datasets.",
     "long": "Optimization Augustus self-training mode (Default: Off); "
             "adds considerably to the run time, "
             "but can improve results for some non-model organisms.",
@@ -736,16 +728,9 @@ busco_param_descriptions = {
                                 "a comma. "
                                 "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
     "miniprot": "Use miniprot gene predictor for eukaryote runs.",
-    "offline": "To indicate that BUSCO cannot attempt to download files.",
     "quiet": "Disable the info logs, displays only errors.",
-    "restart": "Continue a run that had already partially completed.",
     "scaffold_composition": "Writes ACGTN content per scaffold to a file "
                             "`scaffold_composition.txt`.",
-    "tar": "Compress some subdirectories with many files to save space.",
-    "update_data": "Download and replace with last versions all lineages "
-                   "datasets and files necessary to their automated "
-                   "selection.",
-    "version": "Show this version and exit.",
 }
 
 

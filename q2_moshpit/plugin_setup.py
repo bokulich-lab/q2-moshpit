@@ -582,7 +582,7 @@ plugin.methods.register_function(
         "eggnog_proteins": "eggNOG database of protein sequences and "
                            "their corresponding taxonomy information."
     },
-    name="Fetch the databases necessary to run to run the "
+    name="Fetch the databases necessary to run the "
          "build-eggnog-diamond-db action.",
     description="Downloads eggnog proteome database  "
                 "This script downloads 2 files "

@@ -664,7 +664,6 @@ busco_params = {
     "metaeuk_parameters": Str,
     "metaeuk_rerun_parameters": Str,
     "miniprot": Bool,
-    "quiet": Bool,
     "scaffold_composition": Bool,
 }
 busco_param_descriptions = {
@@ -715,7 +714,6 @@ busco_param_descriptions = {
                                 "a comma. "
                                 "Example: `--PARAM1=VALUE1,--PARAM2=VALUE2`.",
     "miniprot": "Use miniprot gene predictor for eukaryote runs.",
-    "quiet": "Disable the info logs, displays only errors.",
     "scaffold_composition": "Writes ACGTN content per scaffold to a file "
                             "`scaffold_composition.txt`.",
 }

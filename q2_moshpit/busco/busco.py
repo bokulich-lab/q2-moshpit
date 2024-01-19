@@ -39,7 +39,6 @@ def evaluate_busco(
     metaeuk_parameters: str = None,
     metaeuk_rerun_parameters: str = None,
     miniprot: bool = False,
-    quiet: bool = False,
     scaffold_composition: bool = False,
 ) -> None:
     """

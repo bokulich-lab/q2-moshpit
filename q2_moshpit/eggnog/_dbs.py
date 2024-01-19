@@ -8,7 +8,8 @@
 import os
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types_genomics.reference_db import (
-    EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt
+    EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
+    EggnogProteinSequencesDirFmt
 )
 from .._utils import run_command, _process_common_input_params, colorify
 from ._utils import _parse_build_diamond_db_params
@@ -99,11 +100,7 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
     path_out = os.path.join(str(diamond_db), "ref_db.dmnd.gz")
 
     # Download Diamond DB
-    print(
-        colorify(
-            "Starting download...", "lgreen"
-        )
-    )
+    print(colorify("Starting download..."))
     run_command(
         cmd=[
             "wget", "-e", "robots=off", "-O", f"{path_out}",
@@ -113,28 +110,67 @@ def fetch_diamond_db() -> DiamondDatabaseDirFmt:
     )
 
     # Decompressing file
-    print(
-        colorify(
+    print(colorify(
             "Download completed.\n"
-            "Decompressing file...",
-            "lgreen"
-        )
-    )
+            "Decompressing file..."
+    ))
     run_command(
         cmd=["gunzip", f"{path_out}"]
     )
 
     # Let user know that the process is done.
-    # The actual copying wil be taken care of by qiime behind the
+    # The actual copying will be taken care of by qiime behind the
     # scenes.
-    print(
-        colorify(
-            "Decompression completed. \n"
-            "Copying file from temporary directory to final location "
-            "(this will take a few minutes)...",
-            "lgreen"
-        )
-    )
+    print(colorify(
+        "Decompression completed. \n"
+        "Copying file from temporary directory to final location "
+        "(this will take a few minutes)..."
+    ))
 
     # Return object
     return diamond_db
+
+
+def fetch_eggnog_proteins() -> EggnogProteinSequencesDirFmt:
+    """
+    Downloads eggnog proteome database.
+    This script downloads 2 files (e5.proteomes.faa and e5.taxid_info.tsv)
+    and creates and artifact with them. At least 18 GB of storage space is
+    required to run this action.
+    """
+    # Initialize output objects
+    eggnog_fa = EggnogProteinSequencesDirFmt()
+    fasta_file = os.path.join(str(eggnog_fa), "e5.proteomes.faa")
+    taxonomy_file = os.path.join(str(eggnog_fa), "e5.taxid_info.tsv")
+
+    # Download fasta file
+    print(colorify("Downloading fasta file..."))
+    run_command(
+        cmd=[
+            "wget", "-e", "robots=off", "-O", f"{fasta_file}",
+            "http://eggnog5.embl.de/download/eggnog_5.0/e5.proteomes.faa"
+        ]
+    )
+
+    # Download taxonomy file
+    print(colorify(
+        "Download completed.\n"
+        "Downloading taxonomy file..."
+    ))
+    run_command(
+        cmd=[
+            "wget", "-e", "robots=off", "-O", f"{taxonomy_file}",
+            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv"
+        ]
+    )
+
+    # Let user know that the process is done.
+    # The actual copying will be taken care of by qiime behind the
+    # scenes.
+    print(colorify(
+        "Download completed. \n"
+        "Copying files from temporary directory to final location "
+        "(this will take a few minutes)..."
+    ))
+
+    return eggnog_fa

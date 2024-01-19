@@ -34,7 +34,7 @@ from q2_types_genomics.kraken2._type import BrackenDB
 from q2_types_genomics.per_sample_data import MAGs, Contigs
 from q2_types_genomics.per_sample_data._type import AlignmentMap
 from q2_types_genomics.reference_db import (
-    ReferenceDB, Diamond, Eggnog, NCBITaxonomy
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -571,6 +571,24 @@ plugin.methods.register_function(
                 "Link to database: "
                 "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
                 "eggnog_proteins.dmnd.gz"
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_eggnog_proteins,
+    inputs={},
+    parameters={},
+    outputs=[("eggnog_proteins", ReferenceDB[EggnogProteinSequences])],
+    output_descriptions={
+        "eggnog_proteins": "eggNOG database of protein sequences and "
+                           "their corresponding taxonomy information."
+    },
+    name="Fetch the databases necessary to run the "
+         "build-eggnog-diamond-db action.",
+    description="Downloads eggnog proteome database  "
+                "This script downloads 2 files "
+                "(e5.proteomes.faa and e5.taxid_info.tsv) "
+                "and creates and artifact with them. At least 18 GB of "
+                "storage space is required to run this action. "
 )
 
 plugin.methods.register_function(

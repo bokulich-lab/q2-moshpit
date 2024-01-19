@@ -601,9 +601,9 @@ plugin.methods.register_function(
         "taxonomy": "NCBI reference taxonomy."
     },
     name="Fetch NCBI reference taxonomy",
-    description="Downloads NCBI reference taxonomy for the NCBI ftp server. "
-                "The resulting artifact is required in the "
-                "build-custom-diamond-db action if one whished to "
+    description="Downloads NCBI reference taxonomy from the NCBI FTP server. "
+                "The resulting artifact is required by the "
+                "build-custom-diamond-db action if one wished to "
                 "create a Diamond data base with taxonomy features. "
                 "At least 30 GB of "
                 "storage space is required to run this action.",

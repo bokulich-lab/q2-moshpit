@@ -10,7 +10,7 @@ from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from .._dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
-    fetch_diamond_db, build_eggnog_diamond_db
+    fetch_diamond_db, build_eggnog_diamond_db, _validate_taxon_id
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types_genomics.reference_db import (
@@ -177,7 +177,7 @@ class TestBuildDiamondDB(TestPluginBase):
         destination_path = os.path.join(str(diamond_db), "ref_db.dmnd")
         shut_mv.assert_called_once_with(source_path, destination_path)
 
-    def test_build_eggnog_diamond_db_invalid_taxon_id(self):
+    def test_validate_taxon_id_invalid(self):
         # Init input data
         path_to_data = self.get_data_path('build_eggnog_diamond_db/')
         eggnog_proteins = EggnogProteinSequencesDirFmt(path_to_data, 'r')
@@ -187,4 +187,10 @@ class TestBuildDiamondDB(TestPluginBase):
             ValueError,
             "'0' is not valid taxon ID. "
         ):
-            _ = build_eggnog_diamond_db(eggnog_proteins, taxon=0)
+            _validate_taxon_id(eggnog_proteins, 0)
+
+    def test_validate_taxon_id_valid(self):
+        # Init input data
+        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
+        eggnog_proteins = EggnogProteinSequencesDirFmt(path_to_data, 'r')
+        _validate_taxon_id(eggnog_proteins, 2)

@@ -599,7 +599,7 @@ plugin.methods.register_function(
     input_descriptions={
         'eggnog_proteins': "eggNOG database of protein sequences and "
                            "their corresponding taxonomy information "
-                           "(generated through the fetch-eggnog-proteins "
+                           "(generated through the `fetch-eggnog-proteins` "
                            "action)."
     },
     parameters={
@@ -615,7 +615,7 @@ plugin.methods.register_function(
     },
     name="Create a DIAMOND formatted reference database for the"
          "specified taxon.",
-    description="Creates an DIAMOND database which contains the protein "
+    description="Creates a DIAMOND database which contains the protein "
                 "sequences that belong to the specified taxon.",
 )
 

@@ -162,7 +162,7 @@ class TestBuildDiamondDB(TestPluginBase):
         diamond_db = build_eggnog_diamond_db(proteins_and_taxa, taxon=2)
 
         # Check that command was called in the expected way
-        cmd = [
+        exp_cmd = [
             "create_dbs.py",
             "--data_dir", str(proteins_and_taxa),
             "--taxids", "2",
@@ -170,7 +170,7 @@ class TestBuildDiamondDB(TestPluginBase):
         ]
 
         # Check that subprocess.run is run as expected
-        subp_run.assert_called_once_with(cmd, check=True)
+        subp_run.assert_called_once_with(exp_cmd, check=True)
 
         # Check that shutil.move is run as expected
         source_path = os.path.join(str(proteins_and_taxa), "ref_db.dmnd")

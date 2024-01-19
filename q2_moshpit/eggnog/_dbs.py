@@ -183,7 +183,7 @@ def build_eggnog_diamond_db(
         taxon: int
 ) -> DiamondDatabaseDirFmt:
     """
-    Creates an DIAMOND database which contains the protein
+    Creates a DIAMOND database which contains the protein
     sequences that belong to the specified taxon.
     """
     # Validate taxon ID
@@ -229,9 +229,9 @@ def _validate_taxon_id(eggnog_proteins, taxon):
         )
 
     # Check for overlap with provided taxon id
-    if not tax_ids.intersection(set(str(taxon))):
+    if not str(taxon) in tax_ids:
         raise ValueError(
             f"'{taxon}' is not valid taxon ID. "
             "To view all valid taxon IDs inspect e5.taxid_info.tsv "
-            "file in the input eggnog_proteins input."
+            "file in the eggnog_proteins input."
         )

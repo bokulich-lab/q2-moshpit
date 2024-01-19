@@ -15,7 +15,6 @@ from q2_moshpit.busco.utils import (
     _render_html,
 )
 from q2_moshpit._utils import _process_common_input_params
-from typing import List
 from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
 
 
@@ -33,10 +32,6 @@ def evaluate_busco(
     cpu: int = 1,
     config: str = None,
     contig_break: int = 10,
-    datasets_version: str = None,
-    download: List[str] = None,
-    download_base_url: str = None,
-    download_path: str = None,
     evalue: float = 1e-03,
     force: bool = False,
     limit: int = 3,

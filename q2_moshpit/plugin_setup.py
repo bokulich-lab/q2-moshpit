@@ -657,10 +657,6 @@ busco_params = {
     "cpu": Int % Range(1, None),
     "config": Str,
     "contig_break": Int % Range(0, None),
-    "datasets_version": Str,
-    "download": List[Str],
-    "download_base_url": Str,
-    "download_path": Str,
     "evalue": Float % Range(0, None, inclusive_start=False),
     "force": Bool,
     "limit": Int % Range(1, 20),
@@ -698,14 +694,6 @@ busco_param_descriptions = {
                     "contigs. Default is n=10. "
                     "See https://gitlab.com/ezlab/busco/-/issues/691 for a "
                     "more detailed explanation.",
-    "datasets_version": "Specify the version of BUSCO datasets, e.g. odb10.",
-    "download": "Download dataset. Possible values are a specific dataset "
-                "name, 'all', 'prokaryota', 'eukaryota', or 'virus'. "
-                "If used together with other command line arguments, "
-                "make sure to place this last. Example: '[dataset ...]'.",
-    "download_base_url": "Set the url to the remote BUSCO dataset location.",
-    "download_path": "Specify local filepath for storing BUSCO dataset "
-                     "downloads.",
     "evalue": "E-value cutoff for BLAST searches. "
               "Allowed formats, 0.001 or 1e-03, Default: 1e-03.",
     "force": "Force rewriting of existing files. Must be used when output "

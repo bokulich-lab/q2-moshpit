@@ -6,7 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+import pandas as pd
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
+import shutil
 from q2_types_genomics.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
     EggnogProteinSequencesDirFmt
@@ -174,3 +176,62 @@ def fetch_eggnog_proteins() -> EggnogProteinSequencesDirFmt:
     ))
 
     return eggnog_fa
+
+
+def build_eggnog_diamond_db(
+        eggnog_proteins: EggnogProteinSequencesDirFmt,
+        taxon: int
+) -> DiamondDatabaseDirFmt:
+    """
+    Creates a DIAMOND database which contains the protein
+    sequences that belong to the specified taxon.
+    """
+    # Validate taxon ID
+    _validate_taxon_id(eggnog_proteins, taxon)
+
+    # Initialize output objects
+    diamond_db = DiamondDatabaseDirFmt()
+
+    # Define command.
+    cmd = [
+        "create_dbs.py",
+        "--data_dir", str(eggnog_proteins),
+        "--taxids", str(taxon),
+        "--dbname", "ref_db"
+    ]
+    run_command(cmd)
+
+    # The script will create the diamond DB in side the directory of
+    # eggnog_proteins object, so we need to move it to diamond_db
+    source_path = os.path.join(str(eggnog_proteins), "ref_db.dmnd")
+    destination_path = os.path.join(str(diamond_db), "ref_db.dmnd")
+    shutil.move(source_path, destination_path)
+
+    # Return objects
+    return diamond_db
+
+
+def _validate_taxon_id(eggnog_proteins, taxon):
+    # Validate taxon id number
+    # Read in valid taxon ids
+    taxid_info = pd.read_csv(
+        os.path.join(str(eggnog_proteins), "e5.taxid_info.tsv"),
+        sep="\t"
+    )
+
+    # Convert them into a set
+    tax_ids = set()
+    for lineage in taxid_info["Taxid Lineage"]:
+        tax_ids.update(
+            set(
+                lineage.strip().split(",")
+            )
+        )
+
+    # Check for overlap with provided taxon id
+    if not str(taxon) in tax_ids:
+        raise ValueError(
+            f"'{taxon}' is not valid taxon ID. "
+            "To view all valid taxon IDs inspect e5.taxid_info.tsv "
+            "file in the eggnog_proteins input."
+        )

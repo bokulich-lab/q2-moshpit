@@ -665,7 +665,7 @@ busco_params = {
     "metaeuk_rerun_parameters": Str,
     "miniprot": Bool,
     "quiet": Bool,
-    "scaffold_composition": Bool
+    "scaffold_composition": Bool,
 }
 busco_param_descriptions = {
     "mode": "Specify which BUSCO analysis mode to run."

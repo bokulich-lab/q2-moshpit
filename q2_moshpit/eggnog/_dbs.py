@@ -231,11 +231,11 @@ def _validate_taxon_id(eggnog_proteins, taxon):
 
     # Check for overlap with provided taxon id
         if not str(taxon) in tax_ids:
-        raise ValueError(
-            f"'{taxon}' is not valid taxon ID. "
-            "To view all valid taxon IDs inspect e5.taxid_info.tsv "
-            "file in the eggnog_proteins input."
-        )
+            raise ValueError(
+                f"'{taxon}' is not valid taxon ID. "
+                "To view all valid taxon IDs inspect e5.taxid_info.tsv "
+                "file in the eggnog_proteins input."
+            )
 
 
 def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:

@@ -12,7 +12,7 @@ from qiime2.plugin.testing import TestPluginBase
 from .._dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
     fetch_diamond_db, build_eggnog_diamond_db, fetch_ncbi_taxonomy,
-    _write_version_tsv
+    _write_version_tsv, _validate_taxon_id
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types_genomics.reference_db import (
@@ -226,7 +226,7 @@ class TestBuildDiamondDB(TestPluginBase):
         diamond_db = build_eggnog_diamond_db(proteins_and_taxa, taxon=2)
 
         # Check that command was called in the expected way
-        cmd = [
+        exp_cmd = [
             "create_dbs.py",
             "--data_dir", str(proteins_and_taxa),
             "--taxids", "2",
@@ -234,14 +234,14 @@ class TestBuildDiamondDB(TestPluginBase):
         ]
 
         # Check that subprocess.run is run as expected
-        subp_run.assert_called_once_with(cmd, check=True)
-
+        subp_run.assert_called_once_with(exp_cmd, check=True)
+        
         # Check that shutil.move is run as expected
         source_path = os.path.join(str(proteins_and_taxa), "ref_db.dmnd")
         destination_path = os.path.join(str(diamond_db), "ref_db.dmnd")
         shut_mv.assert_called_once_with(source_path, destination_path)
 
-    def test_build_eggnog_diamond_db_invalid_taxon_id(self):
+    def test_validate_taxon_id_invalid(self):
         # Init input data
         path_to_data = self.get_data_path('build_eggnog_diamond_db/')
         eggnog_proteins = EggnogProteinSequencesDirFmt(path_to_data, 'r')
@@ -251,4 +251,10 @@ class TestBuildDiamondDB(TestPluginBase):
             ValueError,
             "'0' is not valid taxon ID. "
         ):
-            _ = build_eggnog_diamond_db(eggnog_proteins, taxon=0)
+            _validate_taxon_id(eggnog_proteins, 0)
+
+    def test_validate_taxon_id_valid(self):
+        # Init input data
+        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
+        eggnog_proteins = EggnogProteinSequencesDirFmt(path_to_data, 'r')
+        _validate_taxon_id(eggnog_proteins, 2)

@@ -139,5 +139,5 @@ dmypy.json
 # Ignore notebooks
 **/*.ipynb
 
-# Ignore parsl stuff
+# Ignore parsl dir
 runinfo

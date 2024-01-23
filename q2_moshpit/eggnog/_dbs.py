@@ -13,7 +13,9 @@ from q2_types_genomics.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
     EggnogProteinSequencesDirFmt
 )
-from .._utils import run_command, _process_common_input_params, colorify
+from .._utils import (
+    run_command, _process_common_input_params, colorify, compare_md5_hashes
+)
 from ._utils import _parse_build_diamond_db_params
 
 
@@ -247,14 +249,19 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
     proteins_path = os.path.join(str(ncbi_data), "prot.accession2taxid.gz")
 
-    # Download zip file
+    # Download zip file + MD5 file
     print(colorify("Downloading *.dmp files..."))
-    run_command(
-        cmd=[
-            "wget", "-O", zip_path,
-            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip"
-        ]
-    )
+    for ext in ["", ".md5"]:
+        # Download MD5
+        run_command(
+            cmd=[
+                "wget", "-O", f"{zip_path}{ext}",
+                f"ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip{ext}"
+            ]
+        )
+
+    # Collect and compare md5 hashes
+    _collect_and_compare_md5(f"{zip_path}.md5", zip_path)
 
     # Unzip
     run_command(
@@ -267,18 +274,35 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     # Remove zip file
     run_command(cmd=["rm", zip_path])
 
-    # Download proteins
+    # Download proteins + MD5 file
     print(colorify("Downloading proteins file (~8 GB)..."))
-    run_command(
-        cmd=[
-            "wget", "-O", proteins_path,
-            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
-            "prot.accession2taxid.gz"
-        ]
-    )
+    for ext in ["", ".md5"]:
+        run_command(
+            cmd=[
+                "wget", "-O", f"{proteins_path}{ext}",
+                "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+                f"prot.accession2taxid.gz{ext}"
+            ]
+        )
+
+    # Collect and compare md5 hashes
+    _collect_and_compare_md5(f"{proteins_path}.md5", proteins_path)
 
     # Return object
     print(colorify(
         "Done! Moving data from temporary directory to final location..."
     ))
     return ncbi_data
+
+
+def _collect_and_compare_md5(path_to_md5: str, path_to_file: str):
+    with open(path_to_md5, 'r') as f:
+        # Read the first line
+        first_line = f.readline().strip()
+        # Split the line into hash and file name
+        md5_hash, _ = first_line.split(' ', 1)
+        # Compare
+        compare_md5_hashes(md5_hash, path_to_file)
+
+    # If no exception is raised, remove md5 file
+    run_command(cmd=["rm", path_to_md5])

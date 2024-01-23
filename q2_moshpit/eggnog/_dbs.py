@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
-import datetime
 import pandas as pd
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 import shutil
@@ -246,10 +245,7 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     # Initialize output object and paths
     ncbi_data = NCBITaxonomyDirFmt()
     zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
-    nodes_path = os.path.join(str(ncbi_data), "nodes.dmp")
-    names_path = os.path.join(str(ncbi_data), "names.dmp")
     proteins_path = os.path.join(str(ncbi_data), "prot.accession2taxid.gz")
-    version_path = os.path.join(str(ncbi_data), "version.tsv")
 
     # Download zip file
     print(colorify("Downloading *.dmp files..."))
@@ -281,37 +277,8 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
         ]
     )
 
-    # Constructing version file
-    print(colorify("Constructing version file..."))
-    _write_version_tsv(nodes_path, names_path, proteins_path, version_path)
-
     # Return object
     print(colorify(
         "Done! Moving data from temporary directory to final location..."
     ))
     return ncbi_data
-
-
-def _write_version_tsv(nodes, names, proteins, version):
-    names_time = datetime.date.fromtimestamp(os.path.getmtime(nodes))
-    nodes_time = datetime.date.fromtimestamp(os.path.getmtime(names))
-    proteins_time = datetime.date.fromtimestamp(os.path.getmtime(proteins))
-
-    # Create a DataFrame with file names and last modification times
-    data = {'file_name': [
-                'names.dmp',
-                'nodes.dmp',
-                'prot.accession2taxid.gz'
-                ],
-            'date': [
-                names_time.strftime('%d/%m/%Y'),
-                nodes_time.strftime('%d/%m/%Y'),
-                proteins_time.strftime('%d/%m/%Y')
-                ],
-            'time': [
-                names_time.strftime('%H:%M:%S'),
-                nodes_time.strftime('%H:%M:%S'),
-                proteins_time.strftime('%H:%M:%S')
-                ]
-            }
-    pd.DataFrame(data).to_csv(version, sep='\t', index=False)

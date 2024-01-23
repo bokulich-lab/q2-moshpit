@@ -268,7 +268,7 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     run_command(cmd=["rm", zip_path])
 
     # Download proteins
-    print(colorify("Downloading proteins file (~15 GB)..."))
+    print(colorify("Downloading proteins file (~8 GB)..."))
     run_command(
         cmd=[
             "wget", "-O", proteins_path,

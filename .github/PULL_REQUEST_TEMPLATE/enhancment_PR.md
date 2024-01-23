@@ -21,6 +21,10 @@ assignees: ''
 - [ ] user/repo_name/pull/PR_number
 - [ ] #PR_number
 ```
+If you also what the CI tool to block merging of the PR before another you can use the following:
+- blocked by #PR_number
+- merge after user/repo_name#PR_number
+- dependent on #PR_number
 -->
 
 ### Set up an environment

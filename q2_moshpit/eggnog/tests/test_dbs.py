@@ -8,10 +8,11 @@
 import os
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
+from qiime2.core.exceptions import ValidationError
 from .._dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
     fetch_diamond_db, build_eggnog_diamond_db, fetch_ncbi_taxonomy,
-    _validate_taxon_id
+    _validate_taxon_id, _collect_and_compare_md5
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types_genomics.reference_db import (
@@ -151,46 +152,80 @@ class TestBuildDiamondDB(TestPluginBase):
         # Check that commands are ran as expected
         subp_run.assert_has_calls([first_call, second_call], any_order=False)
 
+    @patch("q2_moshpit.eggnog._dbs._collect_and_compare_md5")
     @patch("subprocess.run")
-    def test_fetch_ncbi_taxonomy(self, subp_run):
+    def test_fetch_ncbi_taxonomy(self, subp_run, cc_md5):
         # Call function. Patching will make sure nothing is actually ran
         ncbi_data = fetch_ncbi_taxonomy()
         zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
         proteins_path = os.path.join(str(ncbi_data), "prot.accession2taxid.gz")
 
         # Check that command was called in the expected way
-        first_call = call(
-            [
-                "wget", "-O", zip_path,
-                "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip"
-            ],
-            check=True
-        )
-        second_call = call(
+        I_call, II_call = [
+            call(
+                [
+                    "wget", "-O", f"{zip_path}{ext}",
+                    f"ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip{ext}"
+                ],
+                check=True
+            )
+            for ext in ["", ".md5"]
+        ]
+        III_call = call(f"{zip_path}.md5", zip_path)
+        IV_call = call(
             [
                 "unzip", "-j", zip_path, "names.dmp", "nodes.dmp",
                 "-d", str(ncbi_data)
             ],
             check=True,
         )
-        third_call = call(
-            ["rm", zip_path],
-            check=True,
-        )
-        forth_call = call(
-            [
-                "wget", "-O", proteins_path,
-                "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
-                "prot.accession2taxid.gz"
-            ],
-            check=True,
-        )
+        V_call = call(["rm", zip_path], check=True)
+        VI_call, VII_call = [
+            call(
+                [
+                    "wget", "-O", f"{proteins_path}{ext}",
+                    "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+                    f"prot.accession2taxid.gz{ext}"
+                ],
+                check=True
+            )
+            for ext in ["", ".md5"]
+        ]
+        VIII_call = call(f"{proteins_path}.md5", proteins_path)
 
         # Check that commands are ran as expected
         subp_run.assert_has_calls(
-            [first_call, second_call, third_call, forth_call],
+            [I_call, II_call, IV_call, V_call, VI_call, VII_call],
             any_order=False
         )
+        cc_md5.assert_has_calls([III_call, VIII_call], any_order=False)
+
+    @patch("subprocess.run")
+    def test_collect_and_compare_md5_valid(self, subp_run):
+        path_to_file = self.get_data_path("md5/a.txt")
+
+        # Should raise no errors
+        _collect_and_compare_md5(f"{path_to_file}.md5", path_to_file)
+
+        # Check rm is called as expected
+        subp_run.assert_called_once_with(
+            ["rm", f"{path_to_file}.md5"], check=True
+        )
+
+    @patch("subprocess.run")
+    def test_collect_and_compare_md5_invalid(self, subp_run):
+        path_to_file = self.get_data_path("md5/b.txt")
+        path_to_wrong_md5 = self.get_data_path("md5/a.txt.md5")
+
+        # Check that expected exception is raised
+        with self.assertRaisesRegex(
+            ValidationError,
+            "has an unexpected MD5 hash"
+        ):
+            _collect_and_compare_md5(path_to_wrong_md5, path_to_file)
+
+        # check that rm is not called
+        subp_run.assert_not_called()
 
     @patch("q2_moshpit.eggnog._dbs._validate_taxon_id")
     @patch("subprocess.run")

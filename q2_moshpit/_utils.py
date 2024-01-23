@@ -5,7 +5,9 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+from qiime2.core.exceptions import ValidationError
 import subprocess
+import hashlib
 from typing import List
 
 
@@ -74,3 +76,25 @@ def _process_common_input_params(processing_func, params: dict) -> List[str]:
 
 def colorify(string):
     return "%s%s%s" % ('\033[1;32m', string, "\033[0m")
+
+
+def compare_md5_hashes(expected_hash: str, path_to_file: str):
+    observed_hash = calculate_md5_from_file(path_to_file)
+    if observed_hash != expected_hash:
+        raise ValidationError(
+            "Download error. Data possibly corrupted.\n"
+            f"{path_to_file} has an unexpected MD5 hash.\n\n"
+            "Expected hash:\n"
+            f"{expected_hash}\n\n"
+            "Observed hash:\n"
+            f"{observed_hash}"
+        )
+
+
+def calculate_md5_from_file(file_path):
+    md5_hash = hashlib.md5()
+    with open(file_path, 'rb') as f:
+        # Read the file in chunks to handle large files
+        for chunk in iter(lambda: f.read(4096), b""):
+            md5_hash.update(chunk)
+    return md5_hash.hexdigest()

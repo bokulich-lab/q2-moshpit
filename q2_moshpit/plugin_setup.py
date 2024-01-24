@@ -618,34 +618,6 @@ plugin.methods.register_function(
     input_descriptions={
         'eggnog_proteins': "eggNOG database of protein sequences and "
                            "their corresponding taxonomy information "
-                           "(generated through the fetch-eggnog-proteins "
-                           "action)."
-    },
-    parameters={
-        'taxon': Int % Range(2, 1579337)
-    },
-    parameter_descriptions={
-        'taxon': "Taxon ID number."
-    },
-    outputs=[("diamond_db", ReferenceDB[Diamond])],
-    output_descriptions={
-        "diamond_db": "Complete Diamond reference database for the"
-                      "specified taxon."
-    },
-    name="Create a DIAMOND formatted reference database for the"
-         "specified taxon.",
-    description="Creates an DIAMOND database which contains the protein "
-                "sequences that belong to the specified taxon.",
-)
-
-plugin.methods.register_function(
-    function=q2_moshpit.eggnog.build_eggnog_diamond_db,
-    inputs={
-        'eggnog_proteins': ReferenceDB[EggnogProteinSequences],
-    },
-    input_descriptions={
-        'eggnog_proteins': "eggNOG database of protein sequences and "
-                           "their corresponding taxonomy information "
                            "(generated through the `fetch-eggnog-proteins` "
                            "action)."
     },

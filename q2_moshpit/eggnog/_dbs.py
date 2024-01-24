@@ -6,15 +6,17 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
-import pandas as pd
-from q2_types.feature_data import ProteinSequencesDirectoryFormat
 import shutil
+import pandas as pd
+from qiime2.core.exceptions import ValidationError
+from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types_genomics.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
     EggnogProteinSequencesDirFmt
 )
 from .._utils import (
-    run_command, _process_common_input_params, colorify, compare_md5_hashes
+    run_command, _process_common_input_params, colorify,
+    _calculate_md5_from_file
 )
 from ._utils import _parse_build_diamond_db_params
 
@@ -241,29 +243,30 @@ def _validate_taxon_id(eggnog_proteins, taxon):
 
 def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     """
-    Script fetches 3 files from the NCBI server and puts them into the folder of
-    a NCBITaxonomyDirFmt object.
+    Script fetches 3 files from the NCBI server and puts them into the folder
+    of a NCBITaxonomyDirFmt object.
     """
-    # Initialize output object and paths
     ncbi_data = NCBITaxonomyDirFmt()
     zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
     proteins_path = os.path.join(str(ncbi_data), "prot.accession2taxid.gz")
 
-    # Download zip file + MD5 file
+    # Download dump zip file + MD5 file
     print(colorify("Downloading *.dmp files..."))
-    for ext in ["", ".md5"]:
-        # Download MD5
-        run_command(
-            cmd=[
-                "wget", "-O", f"{zip_path}{ext}",
-                f"ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip{ext}"
-            ]
-        )
+    run_command(
+        cmd=[
+            "wget", "-O", f"{zip_path}",
+            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip"
+        ]
+    )
+    run_command(
+        cmd=[
+            "wget", "-O", f"{zip_path}.md5",
+            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip.md5"
+        ]
+    )
 
-    # Collect and compare md5 hashes
     _collect_and_compare_md5(f"{zip_path}.md5", zip_path)
 
-    # Unzip
     run_command(
         cmd=[
             "unzip", "-j", zip_path, "names.dmp", "nodes.dmp",
@@ -271,24 +274,27 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
         ]
     )
 
-    # Remove zip file
-    run_command(cmd=["rm", zip_path])
+    os.remove(zip_path)
 
     # Download proteins + MD5 file
     print(colorify("Downloading proteins file (~8 GB)..."))
-    for ext in ["", ".md5"]:
-        run_command(
-            cmd=[
-                "wget", "-O", f"{proteins_path}{ext}",
-                "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
-                f"prot.accession2taxid.gz{ext}"
-            ]
-        )
+    run_command(
+        cmd=[
+            "wget", "-O", f"{proteins_path}",
+            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+            "prot.accession2taxid.gz"
+        ]
+    )
+    run_command(
+        cmd=[
+            "wget", "-O", f"{proteins_path}.md5",
+            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+            "prot.accession2taxid.gz.md5"
+        ]
+    )
 
-    # Collect and compare md5 hashes
     _collect_and_compare_md5(f"{proteins_path}.md5", proteins_path)
 
-    # Return object
     print(colorify(
         "Done! Moving data from temporary directory to final location..."
     ))
@@ -296,13 +302,22 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
 
 
 def _collect_and_compare_md5(path_to_md5: str, path_to_file: str):
+    # Read in hash from md5 file
     with open(path_to_md5, 'r') as f:
-        # Read the first line
-        first_line = f.readline().strip()
-        # Split the line into hash and file name
-        md5_hash, _ = first_line.split(' ', 1)
-        # Compare
-        compare_md5_hashes(md5_hash, path_to_file)
+        expected_hash = f.readline().strip().split(maxsplit=1)[0]
+
+    # Calculate hash from file
+    observed_hash = _calculate_md5_from_file(path_to_file)
+
+    if observed_hash != expected_hash:
+        raise ValidationError(
+            "Download error. Data possibly corrupted.\n"
+            f"{path_to_file} has an unexpected MD5 hash.\n\n"
+            "Expected hash:\n"
+            f"{expected_hash}\n\n"
+            "Observed hash:\n"
+            f"{observed_hash}"
+        )
 
     # If no exception is raised, remove md5 file
-    run_command(cmd=["rm", path_to_md5])
+    os.remove(path_to_md5)

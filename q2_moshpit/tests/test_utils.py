@@ -7,10 +7,9 @@
 # ----------------------------------------------------------------------------
 import unittest
 from qiime2.plugin.testing import TestPluginBase
-from qiime2.core.exceptions import ValidationError
 from .._utils import (
-    _construct_param, _process_common_input_params, compare_md5_hashes,
-    calculate_md5_from_file
+    _construct_param, _process_common_input_params,
+    _calculate_md5_from_file
 )
 
 
@@ -114,28 +113,14 @@ class TestUtils(TestPluginBase):
         ]
         self.assertSetEqual(set(observed), set(expected))
 
-    def test_compare_md5_hashes_pass(self):
-        path_to_file = self.get_data_path("md5/a.txt")
-        compare_md5_hashes("a583054a9831a6e7cc56ea5cd9cac40a", path_to_file)
-
-    def test_compare_md5_hashes_fail(self):
-        path_to_file = self.get_data_path("md5/b.txt")
-        with self.assertRaisesRegex(
-            ValidationError,
-            "has an unexpected MD5 hash"
-        ):
-            compare_md5_hashes(
-                "a583054a9831a6e7cc56ea5cd9cac40a", path_to_file
-            )
-
     def test_calculate_md5_from_pass(self):
         path_to_file = self.get_data_path("md5/a.txt")
-        observed_hash = calculate_md5_from_file(path_to_file)
+        observed_hash = _calculate_md5_from_file(path_to_file)
         self.assertEqual(observed_hash, "a583054a9831a6e7cc56ea5cd9cac40a")
 
     def test_calculate_md5_from_fail(self):
         path_to_file = self.get_data_path("md5/b.txt")
-        observed_hash = calculate_md5_from_file(path_to_file)
+        observed_hash = _calculate_md5_from_file(path_to_file)
         self.assertNotEqual(observed_hash, "a583054a9831a6e7cc56ea5cd9cac40a")
 
 

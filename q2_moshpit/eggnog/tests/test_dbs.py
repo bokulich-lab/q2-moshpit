@@ -154,66 +154,80 @@ class TestBuildDiamondDB(TestPluginBase):
 
     @patch("q2_moshpit.eggnog._dbs._collect_and_compare_md5")
     @patch("subprocess.run")
-    def test_fetch_ncbi_taxonomy(self, subp_run, cc_md5):
+    @patch("os.remove")
+    def test_fetch_ncbi_taxonomy(self, mock_os_rm, mock_run, mock_md5):
         # Call function. Patching will make sure nothing is actually ran
         ncbi_data = fetch_ncbi_taxonomy()
         zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
         proteins_path = os.path.join(str(ncbi_data), "prot.accession2taxid.gz")
 
         # Check that command was called in the expected way
-        I_call, II_call = [
+        expected_calls = [
             call(
                 [
-                    "wget", "-O", f"{zip_path}{ext}",
-                    f"ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip{ext}"
+                    "wget", "-O", f"{zip_path}",
+                    "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip"
                 ],
                 check=True
-            )
-            for ext in ["", ".md5"]
-        ]
-        III_call = call(f"{zip_path}.md5", zip_path)
-        IV_call = call(
-            [
-                "unzip", "-j", zip_path, "names.dmp", "nodes.dmp",
-                "-d", str(ncbi_data)
-            ],
-            check=True,
-        )
-        V_call = call(["rm", zip_path], check=True)
-        VI_call, VII_call = [
+            ),
             call(
                 [
-                    "wget", "-O", f"{proteins_path}{ext}",
+                    "wget", "-O", f"{zip_path}.md5",
+                    "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip.md5"
+                ],
+                check=True
+            ),
+            call(
+                [
+                    "unzip", "-j", zip_path, "names.dmp", "nodes.dmp",
+                    "-d", str(ncbi_data)
+                ],
+                check=True,
+            ),
+            call(
+                [
+                    "wget", "-O", f"{proteins_path}",
                     "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
-                    f"prot.accession2taxid.gz{ext}"
+                    "prot.accession2taxid.gz"
+                ],
+                check=True
+            ),
+            call(
+                [
+                    "wget", "-O", f"{proteins_path}.md5",
+                    "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+                    "prot.accession2taxid.gz.md5"
                 ],
                 check=True
             )
-            for ext in ["", ".md5"]
         ]
-        VIII_call = call(f"{proteins_path}.md5", proteins_path)
 
         # Check that commands are ran as expected
-        subp_run.assert_has_calls(
-            [I_call, II_call, IV_call, V_call, VI_call, VII_call],
+        mock_os_rm.assert_called_once_with(zip_path)
+        mock_run.assert_has_calls(
+            expected_calls,
             any_order=False
         )
-        cc_md5.assert_has_calls([III_call, VIII_call], any_order=False)
+        mock_md5.assert_has_calls(
+            [
+                call(f"{zip_path}.md5", zip_path),
+                call(f"{proteins_path}.md5", proteins_path),
+            ],
+            any_order=False
+        )
 
-    @patch("subprocess.run")
-    def test_collect_and_compare_md5_valid(self, subp_run):
+    @patch("os.remove")
+    def test_collect_and_compare_md5_valid(self, mock_os_rm):
         path_to_file = self.get_data_path("md5/a.txt")
 
         # Should raise no errors
         _collect_and_compare_md5(f"{path_to_file}.md5", path_to_file)
 
         # Check rm is called as expected
-        subp_run.assert_called_once_with(
-            ["rm", f"{path_to_file}.md5"], check=True
-        )
+        mock_os_rm.assert_called_once_with(f"{path_to_file}.md5")
 
-    @patch("subprocess.run")
-    def test_collect_and_compare_md5_invalid(self, subp_run):
+    @patch("os.remove")
+    def test_collect_and_compare_md5_invalid(self, mock_os_rm):
         path_to_file = self.get_data_path("md5/b.txt")
         path_to_wrong_md5 = self.get_data_path("md5/a.txt.md5")
 
@@ -225,7 +239,7 @@ class TestBuildDiamondDB(TestPluginBase):
             _collect_and_compare_md5(path_to_wrong_md5, path_to_file)
 
         # check that rm is not called
-        subp_run.assert_not_called()
+        mock_os_rm.assert_not_called()
 
     @patch("q2_moshpit.eggnog._dbs._validate_taxon_id")
     @patch("subprocess.run")

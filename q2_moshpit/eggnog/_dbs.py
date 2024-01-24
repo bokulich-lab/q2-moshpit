@@ -241,7 +241,7 @@ def _validate_taxon_id(eggnog_proteins, taxon):
 
 def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     """
-    Script fetches 3 files from the internet and puts them into the folder of
+    Script fetches 3 files from the NCBI server and puts them into the folder of
     a NCBITaxonomyDirFmt object.
     """
     # Initialize output object and paths

@@ -24,6 +24,7 @@ from q2_types_genomics.reference_db._format import BuscoDatabaseDirFmt
 def evaluate_busco(
     output_dir: str,
     bins: MultiMAGSequencesDirFmt,
+    busco_db: BuscoDatabaseDirFmt = None,
     mode: str = "genome",
     lineage_dataset: str = None,
     augustus: bool = False,
@@ -68,6 +69,10 @@ def evaluate_busco(
     common_args = _process_common_input_params(
         processing_func=_parse_busco_params, params=kwargs
     )
+
+    # If busco_db is provided add --download_path and --offline to command
+    if busco_db is not None:
+        common_args.extend(["--offline", "--download_path", str(busco_db)])
 
     # Creates output directory with path 'tmp'
     with tempfile.TemporaryDirectory() as tmp:

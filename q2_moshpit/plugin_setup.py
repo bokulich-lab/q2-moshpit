@@ -674,15 +674,61 @@ plugin.methods.register_function(
     description="Apply eggnog mapper to annotate seed orthologs.",
 )
 
+
+i_busco_db, p_auto_lineage, p_auto_lineage_euk, p_auto_lineage_prok = TypeMap({
+    ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])]:
+        (
+            Bool % Choices(True, False),
+            Bool % Choices(True, False),
+            Bool % Choices(True, False),
+        ),
+    ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])]:
+        (
+            Bool % Choices(False),
+            Bool % Choices(True, False),
+            Bool % Choices(True, False),
+        ),
+    ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])]:
+        (
+            Bool % Choices(False),
+            Bool % Choices(True, False),
+            Bool % Choices(False),
+        ),
+    ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])]:
+        (
+            Bool % Choices(False),
+            Bool % Choices(False),
+            Bool % Choices(True, False),
+        ),
+    ReferenceDB[BuscoDB % Properties('virus')]:
+        (
+            Bool % Choices(False),
+            Bool % Choices(False),
+            Bool % Choices(False),
+        ),
+    ReferenceDB[BuscoDB % Properties('prokaryota')]:
+        (
+            Bool % Choices(False),
+            Bool % Choices(False),
+            Bool % Choices(True, False),
+        ),
+    ReferenceDB[BuscoDB % Properties('eukaryota')]:
+        (
+            Bool % Choices(False),
+            Bool % Choices(True, False),
+            Bool % Choices(False),
+        )
+})
+
 busco_params = {
     "mode": Str % Choices(["genome"]),
     "lineage_dataset": Str,
     "augustus": Bool,
     "augustus_parameters": Str,
     "augustus_species": Str,
-    "auto_lineage": Bool,
-    "auto_lineage_euk": Bool,
-    "auto_lineage_prok": Bool,
+    "auto_lineage": p_auto_lineage,
+    "auto_lineage_euk": p_auto_lineage_euk,
+    "auto_lineage_prok": p_auto_lineage_prok,
     "cpu": Int % Range(1, None),
     "config": Str,
     "contig_break": Int % Range(0, None),
@@ -695,6 +741,7 @@ busco_params = {
     "miniprot": Bool,
     "scaffold_composition": Bool,
 }
+
 busco_param_descriptions = {
     "mode": "Specify which BUSCO analysis mode to run."
             "Currently only the 'genome' option is supported, "
@@ -747,15 +794,17 @@ busco_param_descriptions = {
                             "`scaffold_composition.txt`.",
 }
 
-
 plugin.visualizers.register_function(
     function=q2_moshpit.busco.evaluate_busco,
     inputs={
         "bins": SampleData[MAGs],
+        "busco_db": i_busco_db
     },
     parameters=busco_params,
     input_descriptions={
-        "bins": "MAGs to be analyzed.",
+        "bins": "MAGs to be analyzed",
+        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
+                    "mode"
     },
     parameter_descriptions=busco_param_descriptions,
     name="Evaluate quality of the generated MAGs using BUSCO.",

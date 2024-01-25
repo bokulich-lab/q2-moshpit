@@ -5,8 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
-
 import os
 import tempfile
 import q2_moshpit.busco.utils
@@ -14,8 +12,13 @@ from q2_moshpit.busco.utils import (
     _parse_busco_params,
     _render_html,
 )
-from q2_moshpit._utils import _process_common_input_params
+from q2_moshpit._utils import (
+    _process_common_input_params,
+    colorify,
+    run_command
+)
 from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
+from q2_types_genomics.reference_db._format import BuscoDatabaseDirFmt
 
 
 def evaluate_busco(
@@ -106,3 +109,31 @@ def evaluate_busco(
         # Render qiime html report
         # Result included in final output
         _render_html(output_dir, all_summaries_df)
+
+
+def fetch_busco_db(
+        virus: bool, prok: bool, euk: bool
+        ) -> BuscoDatabaseDirFmt:
+    # Init output object
+    busco_DB = BuscoDatabaseDirFmt()
+
+    # Parse input
+    args = [
+        variable_name
+        for variable_name, flag in [
+            ('virus', virus),
+            ('prokaryota', prok),
+            ('eukaryota', euk)
+            ]
+        if flag
+    ]
+
+    print(colorify("Downloading BUSCO database..."))
+    run_command(cmd=["busco", "--download", *args], cwd=str(busco_DB))
+
+    print(colorify(
+        "Download completed. \n"
+        "Copying files from temporary directory to final location..."
+    ))
+
+    return busco_DB

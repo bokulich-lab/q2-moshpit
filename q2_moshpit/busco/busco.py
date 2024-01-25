@@ -115,11 +115,11 @@ def fetch_busco_db(
         virus: bool, prok: bool, euk: bool
         ) -> BuscoDatabaseDirFmt:
     # Init output object
-    busco_DB = BuscoDatabaseDirFmt(path=None, mode='w')
+    busco_db = BuscoDatabaseDirFmt(path=None, mode='w')
 
     # Parse input
     args = [
-        variable_name
+        variable_name 
         for variable_name, flag in [
             ('virus', virus),
             ('prokaryota', prok),
@@ -128,12 +128,15 @@ def fetch_busco_db(
         if flag
     ]
 
+    # Download
     print(colorify("Downloading BUSCO database..."))
-    run_command(cmd=["busco", "--download", *args], cwd=str(busco_DB))
+    run_command(cmd=["busco", "--download", *args], cwd=str(busco_db))
 
+    # Let user know that the process is compleat but there still needs
+    # some time
     print(colorify(
         "Download completed. \n"
         "Copying files from temporary directory to final location..."
     ))
 
-    return busco_DB
+    return busco_db

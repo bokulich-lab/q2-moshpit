@@ -115,7 +115,7 @@ def fetch_busco_db(
         virus: bool, prok: bool, euk: bool
         ) -> BuscoDatabaseDirFmt:
     # Init output object
-    busco_DB = BuscoDatabaseDirFmt()
+    busco_DB = BuscoDatabaseDirFmt(path=None, mode='w')
 
     # Parse input
     args = [

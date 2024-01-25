@@ -622,7 +622,8 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,
     inputs={
-        'sequences': SampleData[Contigs] | FeatureData[MAG],
+        'sequences':
+            SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
         'diamond_db': ReferenceDB[Diamond],
     },
     parameters={

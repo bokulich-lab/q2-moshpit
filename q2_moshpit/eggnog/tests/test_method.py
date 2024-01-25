@@ -5,17 +5,20 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-import qiime2
 import pandas as pd
 import pandas.testing as pdt
+import qiime2
 from qiime2.plugin.testing import TestPluginBase
+
 from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from .._method import eggnog_diamond_search, eggnog_annotate
+from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types_genomics.per_sample_data import (
+    ContigSequencesDirFmt, MultiMAGSequencesDirFmt
+)
 from q2_types_genomics.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt
 )
-from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
-from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from .._method import eggnog_diamond_search, eggnog_annotate
 
 
 class TestDiamond(TestPluginBase):
@@ -44,7 +47,7 @@ class TestDiamond(TestPluginBase):
 
         pdt.assert_frame_equal(obs, exp)
 
-    def test_good_small_search_mags(self):
+    def test_good_small_search_mags_derep(self):
         mags = qiime2.Artifact.import_data(
             'FeatureData[MAG]',
             self.get_data_path('mag-sequences')
@@ -57,6 +60,31 @@ class TestDiamond(TestPluginBase):
         exp = pd.DataFrame(
             {'8': [3.0, 0.0], '0': [0.0, 1.0], '2': [0.0, 1.0]},
             index=['194b1aca-9373-4298-ba5c-05b382d1f553',
+                   'e1ba1d20-b466-4fef-ae19-6bf9c5c63d6f']
+        )
+        exp.columns.name = 'sseqid'
+
+        pdt.assert_frame_equal(obs, exp)
+
+    def test_good_small_search_mags(self):
+        mags = qiime2.Artifact.import_data(
+            'SampleData[MAGs]',
+            self.get_data_path('mag-sequences-per-sample')
+        ).view(MultiMAGSequencesDirFmt)
+
+        _, obs = eggnog_diamond_search(
+            sequences=mags,
+            diamond_db=self.diamond_db
+        )
+        exp = pd.DataFrame(
+            {
+                '8': [3.0, 3.0, 0.0, 0.0],
+                '0': [0.0, 0.0, 1.0, 1.0],
+                '2': [0.0, 0.0, 1.0, 1.0]
+            },
+            index=['194b1aca-9373-4298-ba5c-05b382d1f553',
+                   '8f40a3bc-14f0-426b-b2ba-7fb3b1cd0c02',
+                   'c6bd5123-35cf-473a-bebf-85cf544bcd48',
                    'e1ba1d20-b466-4fef-ae19-6bf9c5c63d6f']
         )
         exp.columns.name = 'sseqid'

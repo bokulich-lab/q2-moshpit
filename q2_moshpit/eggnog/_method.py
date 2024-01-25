@@ -6,27 +6,31 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import glob
-import subprocess
 import os
+import subprocess
 import tempfile
-import qiime2.util
-import pandas as pd
 from typing import Union
-from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
-from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from q2_types_genomics.reference_db import (
-    EggnogRefDirFmt, DiamondDatabaseDirFmt
-)
-from q2_types.feature_data import DNAFASTAFormat
+
+import pandas as pd
+import qiime2.util
+
 from q2_types_genomics.feature_data import (
     OrthologAnnotationDirFmt, MAGSequencesDirFmt
+)
+from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types_genomics.per_sample_data import (
+    ContigSequencesDirFmt, MultiMAGSequencesDirFmt
+)
+from q2_types_genomics.reference_db import (
+    EggnogRefDirFmt, DiamondDatabaseDirFmt
 )
 
 
 def eggnog_diamond_search(
         sequences: Union[
             ContigSequencesDirFmt,
-            MAGSequencesDirFmt
+            MultiMAGSequencesDirFmt,
+            MAGSequencesDirFmt,
         ],
         diamond_db: DiamondDatabaseDirFmt,
         num_cpus: int = 1, db_in_memory: bool = False
@@ -50,6 +54,14 @@ def eggnog_diamond_search(
                 sample_label=mag_id, output_loc=temp.name,
                 num_cpus=num_cpus, db_in_memory=db_in_memory
             )
+    elif isinstance(sequences, MultiMAGSequencesDirFmt):
+        for sample_id, mags in sequences.sample_dict().items():
+            for mag_id, mag_fp in mags.items():
+                _diamond_search_runner(
+                    input_path=mag_fp, diamond_db=diamond_db_fp,
+                    sample_label=mag_id, output_loc=temp.name,
+                    num_cpus=num_cpus, db_in_memory=db_in_memory
+                )
 
     result = SeedOrthologDirFmt()
     ortholog_fps = [

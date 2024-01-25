@@ -24,7 +24,10 @@ from q2_types_genomics.feature_data import (
 
 
 def eggnog_diamond_search(
-        sequences: Union[ContigSequencesDirFmt, MAGSequencesDirFmt],
+        sequences: Union[
+            ContigSequencesDirFmt,
+            MAGSequencesDirFmt
+        ],
         diamond_db: DiamondDatabaseDirFmt,
         num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):
@@ -34,20 +37,17 @@ def eggnog_diamond_search(
 
     # run analysis
     if isinstance(sequences, ContigSequencesDirFmt):
-        for relpath, obj_path in sequences.sequences.iter_views(
-                DNAFASTAFormat):
-            sample_id = str(relpath).rsplit(r'_', 1)[0]
+        for sample_id, contigs_fp in sequences.sample_dict().items():
             _diamond_search_runner(
-                input_path=obj_path, diamond_db=diamond_db_fp,
+                input_path=contigs_fp, diamond_db=diamond_db_fp,
                 sample_label=sample_id, output_loc=temp.name,
                 num_cpus=num_cpus, db_in_memory=db_in_memory
             )
     elif isinstance(sequences, MAGSequencesDirFmt):
-        for mag_fp in glob.glob(f'{sequences.path}/*.fa*'):
-            sample_id = os.path.splitext(os.path.basename(mag_fp))[0]
+        for mag_id, mag_fp in sequences.feature_dict().items():
             _diamond_search_runner(
                 input_path=mag_fp, diamond_db=diamond_db_fp,
-                sample_label=sample_id, output_loc=temp.name,
+                sample_label=mag_id, output_loc=temp.name,
                 num_cpus=num_cpus, db_in_memory=db_in_memory
             )
 

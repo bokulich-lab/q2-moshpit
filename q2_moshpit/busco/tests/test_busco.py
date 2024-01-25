@@ -9,13 +9,13 @@
 import os
 import tempfile
 import pandas as pd
-from q2_moshpit.busco.busco import evaluate_busco
+from q2_moshpit.busco.busco import evaluate_busco, fetch_busco_db
 from unittest.mock import patch, ANY
 from qiime2.plugin.testing import TestPluginBase
 from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
 
 
-class TestBUSCO(TestPluginBase):
+class TestEvaluateBUSCO(TestPluginBase):
     package = "q2_moshpit.busco.tests"
 
     @classmethod
@@ -102,3 +102,31 @@ class TestBUSCO(TestPluginBase):
                 paths_to_plots=ANY,
                 zip_path=os.path.join(tmp_path, "busco_plots.zip")
             )
+
+
+class TestFetchBUSCO(TestPluginBase):
+    package = "q2_moshpit.busco.tests"
+
+    @patch("subprocess.run")
+    def test_fetch_busco_db_virus(self, subp_run):
+        busco_db = fetch_busco_db(virus=True, prok=False, euk=False)
+
+        # Check that command was called in the expected way
+        cmd = ["busco", "--download", "virus"]
+        subp_run.assert_called_once_with(cmd, check=True, cwd=str(busco_db))
+
+    @patch("subprocess.run")
+    def test_fetch_busco_db_prok_euk(self, subp_run):
+        busco_db = fetch_busco_db(virus=False, prok=True, euk=True)
+
+        # Check that command was called in the expected way
+        cmd = ["busco", "--download", "prokaryota", "eukaryota"]
+        subp_run.assert_called_once_with(cmd, check=True, cwd=str(busco_db))
+
+    @patch("subprocess.run")
+    def test_fetch_busco_db_all(self, subp_run):
+        busco_db = fetch_busco_db(virus=True, prok=True, euk=True)
+
+        # Check that command was called in the expected way
+        cmd = ["busco", "--download", "virus", "prokaryota", "eukaryota"]
+        subp_run.assert_called_once_with(cmd, check=True, cwd=str(busco_db))

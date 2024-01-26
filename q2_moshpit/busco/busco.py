@@ -123,15 +123,18 @@ def fetch_busco_db(
     busco_db = BuscoDatabaseDirFmt(path=None, mode='w')
 
     # Parse input
-    args = [
-        variable_name 
-        for variable_name, flag in [
-            ('virus', virus),
-            ('prokaryota', prok),
-            ('eukaryota', euk)
-            ]
-        if flag
-    ]
+    if all([virus, prok, euk]):
+        args = ["all"]
+    else:
+        args = [
+            variable_name
+            for variable_name, flag in [
+                ('virus', virus),
+                ('prokaryota', prok),
+                ('eukaryota', euk)
+                ]
+            if flag
+        ]
 
     # Download
     print(colorify("Downloading BUSCO database..."))

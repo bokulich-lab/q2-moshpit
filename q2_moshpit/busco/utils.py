@@ -1,4 +1,5 @@
 import os
+import yaml
 import q2templates
 from shutil import copytree
 import pandas as pd
@@ -502,3 +503,10 @@ def _parse_df_columns(df: pd.DataFrame) -> pd.DataFrame:
     df["missing_"] = df["fragmented_"] + df['missing']
 
     return df
+
+
+def _load_busco_datasets_yaml() -> dict:
+    path_to_yaml = os.path.dirname(__file__)
+    with open(f"{path_to_yaml}/busco_datasets.yaml", "r") as f:
+        busco_datasets = yaml.safe_load(f)
+    return busco_datasets

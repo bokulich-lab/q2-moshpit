@@ -6,7 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from . import busco
+from . import eggnog
+from . import prodigal
+from ._version import get_versions
 from .dereplication import dereplicate_mags
+from .helpers import helpers
 from .kaiju import classification as kaiju_class, database as kaiju_db
 from .kraken2 import (
     classification as kraken_class,
@@ -14,13 +19,7 @@ from .kraken2 import (
     helpers as kraken_helpers
 )
 from .metabat2 import metabat2
-from . import prodigal
-from . import eggnog
-from . import busco
-from .helpers import helpers
 
-
-from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 

@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import importlib
-from q2_moshpit.busco.utils import _load_busco_datasets_yaml
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
     FeatureData, Sequence, Taxonomy, ProteinSequence
@@ -675,13 +674,9 @@ plugin.methods.register_function(
 )
 
 
-BUSCO_DATASETS = _load_busco_datasets_yaml()
-
-
 (
     i_busco_db,
     p_auto_lineage, p_auto_lineage_euk, p_auto_lineage_prok,
-    # p_lineage_dataset,
     _
 ) = TypeMap(
     {

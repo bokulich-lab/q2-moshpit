@@ -593,7 +593,8 @@ plugin.methods.register_function(
                 "This script downloads 2 files "
                 "(e5.proteomes.faa and e5.taxid_info.tsv) "
                 "and creates and artifact with them. At least 18 GB of "
-                "storage space is required to run this action. "
+                "storage space is required to run this action. ",
+    citations=[citations["huerta-cepas_eggnog_2019"]]
 )
 
 
@@ -641,6 +642,10 @@ plugin.methods.register_function(
          "specified taxon.",
     description="Creates a DIAMOND database which contains the protein "
                 "sequences that belong to the specified taxon.",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta-cepas_eggnog_2019"]
+    ]
 )
 
 plugin.methods.register_function(

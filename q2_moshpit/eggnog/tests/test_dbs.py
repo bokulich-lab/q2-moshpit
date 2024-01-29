@@ -262,7 +262,7 @@ class TestBuildDiamondDB(TestPluginBase):
 
         # Check that subprocess.run is run as expected
         subp_run.assert_called_once_with(exp_cmd, check=True)
-        
+
         # Check that shutil.move is run as expected
         source_path = os.path.join(str(proteins_and_taxa), "ref_db.dmnd")
         destination_path = os.path.join(str(diamond_db), "ref_db.dmnd")

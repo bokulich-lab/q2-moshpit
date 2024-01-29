@@ -607,6 +607,25 @@ plugin.methods.register_function(
                 "storage space is required to run this action. "
 )
 
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_ncbi_taxonomy,
+    inputs={},
+    parameters={},
+    outputs=[("taxonomy", ReferenceDB[NCBITaxonomy])],
+    output_descriptions={
+        "taxonomy": "NCBI reference taxonomy."
+    },
+    name="Fetch NCBI reference taxonomy",
+    description="Downloads NCBI reference taxonomy from the NCBI FTP server. "
+                "The resulting artifact is required by the "
+                "build-custom-diamond-db action if one wished to "
+                "create a Diamond data base with taxonomy features. "
+                "At least 30 GB of "
+                "storage space is required to run this action.",
+    citations=[citations["NCBI"]]
+)
+
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.build_eggnog_diamond_db,
     inputs={

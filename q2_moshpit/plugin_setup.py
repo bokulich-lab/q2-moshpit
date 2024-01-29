@@ -17,7 +17,7 @@ from q2_types.per_sample_sequences import (
 )
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
-from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
+from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices, Collection
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 import q2_moshpit._examples as ex
@@ -161,6 +161,10 @@ T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({
         FeatureData[Kraken2Reports % Properties('mags')],
         FeatureData[Kraken2Outputs % Properties('mags')]
     ),
+    SampleData[MAGs]: (
+        SampleData[Kraken2Reports % Properties('mags')],
+        SampleData[Kraken2Outputs % Properties('mags')]
+    )
 })
 
 plugin.pipelines.register_function(
@@ -221,19 +225,24 @@ plugin.methods.register_function(
 )
 
 T_kraken_collate_reports_in, T_kraken_collate_reports_out = TypeMap({
-    SampleData[Kraken2Reports % Properties('reads', 'contigs')]: (
+    SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')]:
+        SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
+    SampleData[Kraken2Reports % Properties('reads', 'contigs')]:
         SampleData[Kraken2Reports % Properties('reads', 'contigs')],
-    ),
-    SampleData[Kraken2Reports % Properties('reads')]: (
+    SampleData[Kraken2Reports % Properties('reads', 'mags')]:
+        SampleData[Kraken2Reports % Properties('reads', 'mags')],
+    SampleData[Kraken2Reports % Properties('contigs', 'mags')]:
+        SampleData[Kraken2Reports % Properties('contigs', 'mags')],
+    SampleData[Kraken2Reports % Properties('reads')]:
         SampleData[Kraken2Reports % Properties('reads')],
-    ),
-    SampleData[Kraken2Reports % Properties('contigs')]: (
+    SampleData[Kraken2Reports % Properties('contigs')]:
         SampleData[Kraken2Reports % Properties('contigs')],
-    )
+    SampleData[Kraken2Reports % Properties('mags')]:
+        SampleData[Kraken2Reports % Properties('mags')],
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.helpers.collate_kraken2_reports,
+    function=q2_moshpit.kraken_helpers.collate_kraken2_reports,
     inputs={"kraken2_reports": List[T_kraken_collate_reports_in]},
     parameters={},
     outputs={"collated_kraken2_reports": T_kraken_collate_reports_out},
@@ -242,19 +251,24 @@ plugin.methods.register_function(
 )
 
 T_kraken_collate_outputs_in, T_kraken_collate_outputs_out = TypeMap({
-    SampleData[Kraken2Outputs % Properties('reads', 'contigs')]: (
+    SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')]:
+        SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
+    SampleData[Kraken2Outputs % Properties('reads', 'contigs')]:
         SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
-    ),
-    SampleData[Kraken2Outputs % Properties('reads')]: (
+    SampleData[Kraken2Outputs % Properties('reads', 'mags')]:
+        SampleData[Kraken2Outputs % Properties('reads', 'mags')],
+    SampleData[Kraken2Outputs % Properties('contigs', 'mags')]:
+        SampleData[Kraken2Outputs % Properties('contigs', 'mags')],
+    SampleData[Kraken2Outputs % Properties('reads')]:
         SampleData[Kraken2Outputs % Properties('reads')],
-    ),
-    SampleData[Kraken2Outputs % Properties('contigs')]: (
+    SampleData[Kraken2Outputs % Properties('contigs')]:
         SampleData[Kraken2Outputs % Properties('contigs')],
-    )
+    SampleData[Kraken2Outputs % Properties('mags')]:
+        SampleData[Kraken2Outputs % Properties('mags')],
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.helpers.collate_kraken2_outputs,
+    function=q2_moshpit.kraken_helpers.collate_kraken2_outputs,
     inputs={"kraken2_outputs": List[T_kraken_collate_outputs_in]},
     parameters={},
     outputs={"collated_kraken2_outputs": T_kraken_collate_outputs_out},
@@ -672,6 +686,33 @@ plugin.methods.register_function(
     outputs=[('ortholog_annotations', FeatureData[NOG])],
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.helpers.partition_mags,
+    inputs={"mags": SampleData[MAGs]},
+    parameters={"num_partitions": Int % Range(1, None)},
+    outputs={"partitioned_mags": Collection[SampleData[MAGs]]},
+    input_descriptions={"mags": "The MAGs to partition."},
+    parameter_descriptions={
+        "num_partitions": "The number of partitions to split the MAGs"
+        " into. Defaults to partitioning into individual"
+        " MAGs."
+    },
+    name="Partition MAGs",
+    description="Partition collections of MAGs into individual MAGs "
+                "or the number of partitions specified.",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.helpers.collate_mags,
+    inputs={"mags": List[SampleData[MAGs]]},
+    parameters={},
+    outputs={"collated_mags": SampleData[MAGs]},
+    input_descriptions={"mags": "A collection of MAGs to be collated."},
+    name="Collate mags",
+    description="Takes a collection of SampleData[MAGs] and collates them "
+                "into a single artifact.",
 )
 
 busco_params = {

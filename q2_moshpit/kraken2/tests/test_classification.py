@@ -33,6 +33,8 @@ from qiime2.sdk.parallel_config import ParallelConfig
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
+from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
+
 
 class TestClassifyKraken2Helpers(TestPluginBase):
     package = "q2_moshpit.kraken2.tests"
@@ -305,7 +307,7 @@ class TestClassifyKraken2HasCorrectCalls(TestPluginBase):
     @patch("q2_moshpit.kraken2.classification._get_seq_paths")
     @patch("q2_moshpit.kraken2.classification._construct_output_paths")
     @patch("q2_moshpit.kraken2.classification.run_command")
-    def test_mags(self, p1, p2, p3, p4, p5):
+    def test_mags_derep(self, p1, p2, p3, p4, p5):
         seqs = MAGSequencesDirFmt(self.get_data_path("mags-derep"), "r")
         common_args = ["--db", "/some/where/db", "--quick"]
 
@@ -388,6 +390,138 @@ class TestClassifyKraken2HasCorrectCalls(TestPluginBase):
                 ),
                 call(
                     "8894435a-c836-4c18-b475-8b38a9ab6c6b",
+                    fake_output_dir, fake_report_dir
+                ),
+            ]
+        )
+        p3.assert_not_called()
+
+    @patch("q2_moshpit.kraken2.classification.Kraken2OutputDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification.Kraken2ReportDirectoryFormat")
+    @patch("q2_moshpit.kraken2.classification._get_seq_paths")
+    @patch("q2_moshpit.kraken2.classification._construct_output_paths")
+    @patch("q2_moshpit.kraken2.classification.run_command")
+    def test_mags(self, p1, p2, p3, p4, p5):
+        seqs = MultiFASTADirectoryFormat(self.get_data_path("mags"), "r")
+        common_args = ["--db", "/some/where/db", "--quick"]
+
+        fake_report_dir = Kraken2ReportDirectoryFormat()
+        fake_output_dir = Kraken2OutputDirectoryFormat()
+        exp_out_fps = [
+            os.path.join(
+                fake_output_dir.path,
+                "sample1",
+                "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.output.txt"
+            ),
+            os.path.join(
+                fake_output_dir.path,
+                "sample1",
+                "8894435a-c836-4c18-b475-8b38a9ab6c6b.output.txt"
+            ),
+            os.path.join(
+                fake_output_dir.path,
+                "sample2",
+                "99e2f6c5-5811-4a31-a4de-65040c8197bd.output.txt"
+            ),
+        ]
+        exp_rep_fps = [
+            os.path.join(
+                fake_report_dir.path,
+                "sample1",
+                "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.report.txt"
+            ),
+            os.path.join(
+                fake_report_dir.path,
+                "sample1",
+                "8894435a-c836-4c18-b475-8b38a9ab6c6b.report.txt"
+            ),
+            os.path.join(
+                fake_report_dir.path,
+                "sample2",
+                "99e2f6c5-5811-4a31-a4de-65040c8197bd.report.txt"
+            ),
+        ]
+
+        p2.side_effect = list(zip(exp_out_fps, exp_rep_fps))
+        p4.return_value = fake_report_dir
+        p5.return_value = fake_output_dir
+
+        # run kraken2
+        obs_reports, obs_outputs = classify_kraken2_helper(seqs, common_args)
+
+        self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
+        self.assertIsInstance(obs_outputs, Kraken2OutputDirectoryFormat)
+
+        p1.assert_has_calls(
+            [
+                call(
+                    cmd=[
+                        "kraken2",
+                        "--db",
+                        "/some/where/db",
+                        "--quick",
+                        "--report",
+                        exp_rep_fps[0],
+                        "--output",
+                        exp_out_fps[0],
+                        os.path.join(
+                            seqs.path,
+                            "sample1",
+                            "3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.fasta"
+                        ),
+                    ],
+                    verbose=True,
+                ),
+                call(
+                    cmd=[
+                        "kraken2",
+                        "--db",
+                        "/some/where/db",
+                        "--quick",
+                        "--report",
+                        exp_rep_fps[1],
+                        "--output",
+                        exp_out_fps[1],
+                        os.path.join(
+                            seqs.path,
+                            "sample1",
+                            "8894435a-c836-4c18-b475-8b38a9ab6c6b.fasta"
+                        ),
+                    ],
+                    verbose=True,
+                ),
+                call(
+                    cmd=[
+                        "kraken2",
+                        "--db",
+                        "/some/where/db",
+                        "--quick",
+                        "--report",
+                        exp_rep_fps[2],
+                        "--output",
+                        exp_out_fps[2],
+                        os.path.join(
+                            seqs.path,
+                            "sample2",
+                            "99e2f6c5-5811-4a31-a4de-65040c8197bd.fasta"
+                        ),
+                    ],
+                    verbose=True,
+                ),
+            ]
+        )
+        p2.assert_has_calls(
+            [
+                call(
+                    "sample1/3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa",
+                    fake_output_dir, fake_report_dir
+                ),
+                call(
+                    "sample1/8894435a-c836-4c18-b475-8b38a9ab6c6b",
+                    fake_output_dir, fake_report_dir
+                ),
+                call(
+                    "sample2/99e2f6c5-5811-4a31-a4de-65040c8197bd",
                     fake_output_dir, fake_report_dir
                 ),
             ]
@@ -709,7 +843,7 @@ class TestClassifyKraken2Contigs(TestPluginBase):
             self.assertFalse(exp_missing & obs)
 
 
-class TestClassifyKraken2MAGs(unittest.TestCase):
+class TestClassifyKraken2MAGsDerep(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         datadir = os.path.join(
@@ -717,7 +851,7 @@ class TestClassifyKraken2MAGs(unittest.TestCase):
         )
 
         db_path = os.path.join(datadir, 'simulated-sequences', 'kraken2-db')
-        mags_path = os.path.join(datadir, 'simulated-sequences', 'mags')
+        mags_path = os.path.join(datadir, 'simulated-sequences', 'mags-derep')
 
         db = Kraken2DBDirectoryFormat(db_path, 'r')
         samples = MAGSequencesDirFmt(mags_path, 'r')
@@ -765,6 +899,139 @@ class TestClassifyKraken2MAGs(unittest.TestCase):
         for path, df in self.report_views:
             mag_id = str(path).rsplit('.report.txt')[0]
             sample_id = self.uuid_to_sample[mag_id]
+
+            # the dataframe is non-empty
+            self.assertGreater(len(df), 0)
+
+            # the correct taxonomy id(s) is present somewhere in the
+            # classification tree, and none of the others are present
+            exp = self.sample_id_to_ncbi_id[sample_id]
+            obs = set(df['taxon_id'])
+            all_samples = set().union(
+                *[s for _, s in self.sample_id_to_ncbi_id.items()]
+            )
+            exp_missing = all_samples - exp
+            self.assertEqual(exp & obs, exp)
+            self.assertFalse(exp_missing & obs)
+
+
+class TestClassifyKraken2MAGs(TestPluginBase):
+    package = "q2_moshpit.kraken2.tests"
+
+    def setUp(self):
+        super().setUp()
+        self.classify_kraken2 = self.plugin.pipelines['classify_kraken2']
+
+    @classmethod
+    def setUpClass(cls):
+        datadir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'data'
+        )
+
+        db_path = os.path.join(datadir, 'simulated-sequences', 'kraken2-db')
+        mags_path = os.path.join(datadir, 'simulated-sequences', 'mags')
+
+        cls.db = Kraken2DBDirectoryFormat(db_path, 'r')
+        cls.samples = MultiFASTADirectoryFormat(mags_path, 'r')
+
+        cls.reports, cls.outputs = _classify_kraken2(cls.samples, cls.db)
+        cls.output_views = cls.outputs.reports.iter_views(pd.DataFrame)
+        cls.report_views = cls.reports.reports.iter_views(pd.DataFrame)
+
+        cls.uuid_to_sample = {
+            'sample2/9231448e-b591-4afc-9d8a-5255b1a24f08': 'ba',
+            'sample2/7797bbd1-4f3c-4482-9828-fa4be13c9977': 'mm',
+            'sample1/5693d0e1-be8e-40ab-9427-94a0ffc62963': 'sa',
+            'sample1/8adb2c2f-bb49-4b1a-a9ac-daf985b35070': 'se',
+        }
+        cls.sample_id_to_ncbi_id = {
+            'ba': {1392},   # bacillus anthracis
+            'mm': {10090},  # mus musculus
+            'sa': {1280},   # staph aureus
+            'se': {1282},   # staph epidermidis
+        }
+
+    def test_formats(self):
+        self.assertIsInstance(self.reports, Kraken2ReportDirectoryFormat)
+        self.assertIsInstance(self.outputs, Kraken2OutputDirectoryFormat)
+        self.reports.validate()
+        self.outputs.validate()
+
+    def test_mags(self):
+        for path, df in self.output_views:
+            mag_id = str(path).rsplit('.output.txt')[0]
+            sample_id = self.uuid_to_sample[mag_id]
+
+            # the expected number of records are in the output
+            self.assertGreater(len(df), 1)
+
+            # all mags are classified
+            self.assertEqual({'C'}, set(df['classification']))
+
+            # all mags are classified correctly
+            self.assertEqual(
+                set(df['taxon_id']),
+                self.sample_id_to_ncbi_id[sample_id]
+            )
+
+        for path, df in self.report_views:
+            mag_id = str(path).rsplit('.report.txt')[0]
+            sample_id = self.uuid_to_sample[mag_id]
+
+            # the dataframe is non-empty
+            self.assertGreater(len(df), 0)
+
+            # the correct taxonomy id(s) is present somewhere in the
+            # classification tree, and none of the others are present
+            exp = self.sample_id_to_ncbi_id[sample_id]
+            obs = set(df['taxon_id'])
+            all_samples = set().union(
+                *[s for _, s in self.sample_id_to_ncbi_id.items()]
+            )
+            exp_missing = all_samples - exp
+            self.assertEqual(exp & obs, exp)
+            self.assertFalse(exp_missing & obs)
+
+    def test_mags_parallel(self):
+        db = Artifact.import_data('Kraken2DB', self.db)
+        samples = Artifact.import_data('SampleData[MAGs]', self.samples)
+
+        with ParallelConfig():
+            reports, outputs = \
+                self.classify_kraken2.parallel(samples, db)._result()
+
+        reports = reports.view(Kraken2ReportDirectoryFormat)
+        outputs = outputs.view(Kraken2OutputDirectoryFormat)
+
+        output_views = outputs.reports.iter_views(pd.DataFrame)
+        report_views = reports.reports.iter_views(pd.DataFrame)
+
+        samples_of_interest = ('ba', 'mm', 'sa', 'se', 'ba-mm-mixed')
+
+        def filter_views(arg):
+            path, _ = arg
+            return Path(path.stem).stem in samples_of_interest
+
+        output_views = filter(filter_views, output_views)
+        report_views = filter(filter_views, report_views)
+
+        for path, df in output_views:
+            sample_id = str(path).rsplit('.output.txt')[0]
+
+            # the expected number of records are in the output
+            self.assertEqual(len(df), 20)
+
+            # all contigs are classified
+            self.assertEqual({'C'}, set(df['classification']))
+
+            # all contigs are classified correctly
+            self.assertEqual(
+                set(df['taxon_id']),
+                self.sample_id_to_ncbi_id[sample_id]
+            )
+
+        for path, df in report_views:
+            sample_id = str(path).rsplit('.report.txt')[0]
 
             # the dataframe is non-empty
             self.assertGreater(len(df), 0)

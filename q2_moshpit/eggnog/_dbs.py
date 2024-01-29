@@ -6,15 +6,18 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
-import datetime
 import pandas as pd
-from q2_types.feature_data import ProteinSequencesDirectoryFormat
 import shutil
+from qiime2.core.exceptions import ValidationError
+from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types_genomics.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
     EggnogProteinSequencesDirFmt
 )
-from .._utils import run_command, _process_common_input_params, colorify
+from .._utils import (
+    run_command, _process_common_input_params, colorify,
+    _calculate_md5_from_file
+)
 from ._utils import _parse_build_diamond_db_params
 
 
@@ -230,37 +233,40 @@ def _validate_taxon_id(eggnog_proteins, taxon):
         )
 
     # Check for overlap with provided taxon id
-    if not str(taxon) in tax_ids:
-        raise ValueError(
-            f"'{taxon}' is not valid taxon ID. "
-            "To view all valid taxon IDs inspect e5.taxid_info.tsv "
-            "file in the eggnog_proteins input."
-        )
+        if not str(taxon) in tax_ids:
+            raise ValueError(
+                f"'{taxon}' is not valid taxon ID. "
+                "To view all valid taxon IDs inspect e5.taxid_info.tsv "
+                "file in the eggnog_proteins input."
+            )
 
 
 def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
     """
-    Script fetches 3 files from the internet and puts them into the folder of
-    a NCBITaxonomyDirFmt object.
+    Script fetches 3 files from the NCBI server and puts them into the folder
+    of a NCBITaxonomyDirFmt object.
     """
-    # Initialize output object and paths
     ncbi_data = NCBITaxonomyDirFmt()
     zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
-    nodes_path = os.path.join(str(ncbi_data), "nodes.dmp")
-    names_path = os.path.join(str(ncbi_data), "names.dmp")
     proteins_path = os.path.join(str(ncbi_data), "prot.accession2taxid.gz")
-    version_path = os.path.join(str(ncbi_data), "version.tsv")
 
-    # Download zip file
+    # Download dump zip file + MD5 file
     print(colorify("Downloading *.dmp files..."))
     run_command(
         cmd=[
-            "wget", "-O", zip_path,
+            "wget", "-O", f"{zip_path}",
             "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip"
         ]
     )
+    run_command(
+        cmd=[
+            "wget", "-O", f"{zip_path}.md5",
+            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip.md5"
+        ]
+    )
 
-    # Unzip
+    _collect_and_compare_md5(f"{zip_path}.md5", zip_path)
+
     run_command(
         cmd=[
             "unzip", "-j", zip_path, "names.dmp", "nodes.dmp",
@@ -268,50 +274,50 @@ def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
         ]
     )
 
-    # Remove zip file
-    run_command(cmd=["rm", zip_path])
+    os.remove(zip_path)
 
-    # Download proteins
-    print(colorify("Downloading proteins file (~15 GB)..."))
+    # Download proteins + MD5 file
+    print(colorify("Downloading proteins file (~8 GB)..."))
     run_command(
         cmd=[
-            "wget", "-O", proteins_path,
+            "wget", "-O", f"{proteins_path}",
             "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
             "prot.accession2taxid.gz"
         ]
     )
+    run_command(
+        cmd=[
+            "wget", "-O", f"{proteins_path}.md5",
+            "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+            "prot.accession2taxid.gz.md5"
+        ]
+    )
 
-    # Constructing version file
-    print(colorify("Constructing version file..."))
-    _write_version_tsv(nodes_path, names_path, proteins_path, version_path)
+    _collect_and_compare_md5(f"{proteins_path}.md5", proteins_path)
 
-    # Return object
     print(colorify(
         "Done! Moving data from temporary directory to final location..."
     ))
     return ncbi_data
 
 
-def _write_version_tsv(nodes, names, proteins, version):
-    names_time = datetime.date.fromtimestamp(os.path.getmtime(nodes))
-    nodes_time = datetime.date.fromtimestamp(os.path.getmtime(names))
-    proteins_time = datetime.date.fromtimestamp(os.path.getmtime(proteins))
+def _collect_and_compare_md5(path_to_md5: str, path_to_file: str):
+    # Read in hash from md5 file
+    with open(path_to_md5, 'r') as f:
+        expected_hash = f.readline().strip().split(maxsplit=1)[0]
 
-    # Create a DataFrame with file names and last modification times
-    data = {'file_name': [
-                'names.dmp',
-                'nodes.dmp',
-                'prot.accession2taxid.gz'
-                ],
-            'date': [
-                names_time.strftime('%d/%m/%Y'),
-                nodes_time.strftime('%d/%m/%Y'),
-                proteins_time.strftime('%d/%m/%Y')
-                ],
-            'time': [
-                names_time.strftime('%H:%M:%S'),
-                nodes_time.strftime('%H:%M:%S'),
-                proteins_time.strftime('%H:%M:%S')
-                ]
-            }
-    pd.DataFrame(data).to_csv(version, sep='\t', index=False)
+    # Calculate hash from file
+    observed_hash = _calculate_md5_from_file(path_to_file)
+
+    if observed_hash != expected_hash:
+        raise ValidationError(
+            "Download error. Data possibly corrupted.\n"
+            f"{path_to_file} has an unexpected MD5 hash.\n\n"
+            "Expected hash:\n"
+            f"{expected_hash}\n\n"
+            "Observed hash:\n"
+            f"{observed_hash}"
+        )
+
+    # If no exception is raised, remove md5 file
+    os.remove(path_to_md5)

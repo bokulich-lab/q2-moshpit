@@ -606,45 +606,13 @@ plugin.methods.register_function(
         "taxonomy": "NCBI reference taxonomy."
     },
     name="Fetch NCBI reference taxonomy",
-    description="Downloads NCBI reference taxonomy for the NCBI ftp server. "
-                "The resulting artifact is required in the "
-                "build-custom-diamond-db action if one whished to "
+    description="Downloads NCBI reference taxonomy from the NCBI FTP server. "
+                "The resulting artifact is required by the "
+                "build-custom-diamond-db action if one wished to "
                 "create a Diamond data base with taxonomy features. "
                 "At least 30 GB of "
                 "storage space is required to run this action.",
     citations=[citations["NCBI"]]
-)
-
-plugin.methods.register_function(
-    function=q2_moshpit.eggnog.build_eggnog_diamond_db,
-    inputs={
-        'eggnog_proteins': ReferenceDB[EggnogProteinSequences],
-    },
-    input_descriptions={
-        'eggnog_proteins': "eggNOG database of protein sequences and "
-                           "their corresponding taxonomy information "
-                           "(generated through the fetch-eggnog-proteins "
-                           "action)."
-    },
-    parameters={
-        'taxon': Int % Range(2, 1579337)
-    },
-    parameter_descriptions={
-        'taxon': "Taxon ID number."
-    },
-    outputs=[("diamond_db", ReferenceDB[Diamond])],
-    output_descriptions={
-        "diamond_db": "Complete Diamond reference database for the"
-                      "specified taxon."
-    },
-    name="Create a DIAMOND formatted reference database for the"
-         "specified taxon.",
-    description="Creates an DIAMOND database which contains the protein "
-                "sequences that belong to the specified taxon.",
-    citations=[
-        citations["buchfink_sensitive_2021"],
-        citations["huerta-cepas_eggnog_2019"]
-    ]
 )
 
 plugin.methods.register_function(

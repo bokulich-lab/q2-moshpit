@@ -9,7 +9,9 @@
 from .dereplication import dereplicate_mags
 from .kaiju import classification as kaiju_class, database as kaiju_db
 from .kraken2 import (
-    classification as kraken_class, database as kraken_db, bracken, helpers as kraken_helpers
+    classification as kraken_class,
+    database as kraken_db, bracken,
+    helpers as kraken_helpers
 )
 from .metabat2 import metabat2
 from . import prodigal

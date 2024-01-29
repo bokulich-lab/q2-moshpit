@@ -10,12 +10,10 @@ import os
 from pathlib import Path
 
 import pandas as pd
-from q2_types.sample_data import SampleData
-from qiime2.core.type import Properties
 
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
-    Kraken2OutputDirectoryFormat, Kraken2Reports
+    Kraken2OutputDirectoryFormat
 )
 
 

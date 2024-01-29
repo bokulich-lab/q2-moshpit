@@ -23,14 +23,16 @@ from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
 from q2_types_genomics.feature_data import MAGSequencesDirFmt, MAG
 from q2_types_genomics.per_sample_data import (
-    ContigSequencesDirFmt, Contigs, MultiMAGSequencesDirFmt, MAGs
+    ContigSequencesDirFmt, Contigs, MAGs
 )
 from q2_types_genomics.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
     Kraken2DBDirectoryFormat,
 )
-from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
+from q2_types_genomics.per_sample_data._format import (
+    MultiFASTADirectoryFormat
+)
 
 
 def _get_seq_paths(df_index, df_row, df_columns):

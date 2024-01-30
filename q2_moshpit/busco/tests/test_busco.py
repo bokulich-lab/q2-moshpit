@@ -128,5 +128,5 @@ class TestFetchBUSCO(TestPluginBase):
         busco_db = fetch_busco_db(virus=True, prok=True, euk=True)
 
         # Check that command was called in the expected way
-        cmd = ["busco", "--download", "virus", "prokaryota", "eukaryota"]
+        cmd = ["busco", "--download", "all"]
         subp_run.assert_called_once_with(cmd, check=True, cwd=str(busco_db))

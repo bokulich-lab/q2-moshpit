@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
 import os
 import tempfile
 import pandas as pd
@@ -13,6 +12,7 @@ from q2_moshpit.busco.busco import evaluate_busco, fetch_busco_db
 from unittest.mock import patch, ANY
 from qiime2.plugin.testing import TestPluginBase
 from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
+from q2_types_genomics.reference_db._format import BuscoDatabaseDirFmt
 
 
 class TestEvaluateBUSCO(TestPluginBase):
@@ -30,7 +30,6 @@ class TestEvaluateBUSCO(TestPluginBase):
             mode="r",
         )
 
-    # Integration test busco.
     @patch('q2_moshpit.busco.utils._run_busco')
     @patch('q2_moshpit.busco.utils._zip_busco_plots')
     @patch('q2_moshpit.busco.utils._draw_busco_plots')
@@ -56,9 +55,6 @@ class TestEvaluateBUSCO(TestPluginBase):
             run_busco (unittest.mock): mock object for function
                 `_run_busco`.
         """
-        # import shutil
-        # path_to_look_at_html = "/Users/santiago/Downloads/busco_debug_bench"
-
         with tempfile.TemporaryDirectory() as tmp_path:
             # This side effect will return the all_summaries_dfs
             p = self.get_data_path("all_batch_summaries.csv")
@@ -66,9 +62,6 @@ class TestEvaluateBUSCO(TestPluginBase):
 
             # Run busco
             evaluate_busco(output_dir=str(tmp_path), bins=self.mags)
-
-            # For render debugging
-            # shutil.copytree(str(tmp_path), path_to_look_at_html)
 
             # Check for the existence of the html file
             self.assertTrue(os.path.exists(f"{tmp_path}/index.html"))
@@ -102,6 +95,152 @@ class TestEvaluateBUSCO(TestPluginBase):
                 paths_to_plots=ANY,
                 zip_path=os.path.join(tmp_path, "busco_plots.zip")
             )
+
+    @patch('q2_moshpit.busco.utils._run_busco')
+    @patch('q2_moshpit.busco.utils._zip_busco_plots')
+    @patch('q2_moshpit.busco.utils._draw_busco_plots')
+    @patch('q2_moshpit.busco.utils._collect_summaries_and_save')
+    def test_integration_busco_offline(
+        self,
+        collect_summaries,
+        draw_busco_plots,
+        zip_busco_plots,
+        run_busco
+    ):
+        with tempfile.TemporaryDirectory() as tmp_path:
+            # This side effect will return the all_summaries_dfs
+            p = self.get_data_path("all_batch_summaries.csv")
+            collect_summaries.return_value = pd.read_csv(p)
+
+            busco_db = BuscoDatabaseDirFmt(path=None, mode="w")
+            # Run busco
+            evaluate_busco(
+                output_dir=str(tmp_path),
+                bins=self.mags,
+                busco_db=busco_db
+            )
+
+            # Assert that the calls where done properly
+            run_busco.assert_called_once_with(
+                output_dir=run_busco.call_args.kwargs['output_dir'],
+                mags=self.mags,
+                params=[
+                    '--mode', 'genome',
+                    '--cpu', '1',
+                    '--contig_break', '10',
+                    '--evalue', '0.001',
+                    '--limit', '3',
+                    '--offline',
+                    '--download_path', f"{str(busco_db)}/busco_downloads"
+                ]
+            )
+
+    @patch('q2_moshpit.busco.utils._run_busco')
+    @patch('q2_moshpit.busco.utils._zip_busco_plots')
+    @patch('q2_moshpit.busco.utils._draw_busco_plots')
+    @patch('q2_moshpit.busco.utils._collect_summaries_and_save')
+    def test_integration_busco_w_lineage(
+        self,
+        collect_summaries,
+        draw_busco_plots,
+        zip_busco_plots,
+        run_busco
+    ):
+        with tempfile.TemporaryDirectory() as tmp_path:
+            # This side effect will return the all_summaries_dfs
+            p = self.get_data_path("all_batch_summaries.csv")
+            collect_summaries.return_value = pd.read_csv(p)
+
+            with self.assertWarnsRegex(
+                Warning,
+                "`--p-lineage-dataset` was specified as lineage_1. "
+                "--p-auto-lineage flags will be ignored."
+            ):
+                # Run busco
+                evaluate_busco(
+                    output_dir=str(tmp_path),
+                    bins=self.mags,
+                    lineage_dataset="lineage_1",
+                    auto_lineage=True,
+                    auto_lineage_euk=True,
+                    auto_lineage_prok=True,
+                )
+
+            # Assert that the calls where done properly
+            run_busco.assert_called_once_with(
+                output_dir=run_busco.call_args.kwargs['output_dir'],
+                mags=self.mags,
+                params=[
+                    '--mode', 'genome',
+                    '--lineage_dataset', "lineage_1",
+                    '--cpu', '1',
+                    '--contig_break', '10',
+                    '--evalue', '0.001',
+                    '--limit', '3',
+                ]
+            )
+
+    @patch('q2_moshpit.busco.utils._run_busco')
+    @patch('q2_moshpit.busco.utils._zip_busco_plots')
+    @patch('q2_moshpit.busco.utils._draw_busco_plots')
+    @patch('q2_moshpit.busco.utils._collect_summaries_and_save')
+    def test_integration_busco_offline_w_lineage(
+        self,
+        collect_summaries,
+        draw_busco_plots,
+        zip_busco_plots,
+        run_busco
+    ):
+        with tempfile.TemporaryDirectory() as tmp_path:
+            # This side effect will return the all_summaries_dfs
+            p = self.get_data_path("all_batch_summaries.csv")
+            collect_summaries.return_value = pd.read_csv(p)
+
+            # Give path to valid database
+            p = self.get_data_path("busco_db")
+            busco_db = BuscoDatabaseDirFmt(path=p, mode="r")
+
+            # Run busco
+            evaluate_busco(
+                output_dir=str(tmp_path),
+                bins=self.mags,
+                busco_db=busco_db,
+                lineage_dataset="lineage_1",
+            )
+
+            # Assert that the calls where done properly
+            run_busco.assert_called_once_with(
+                output_dir=run_busco.call_args.kwargs['output_dir'],
+                mags=self.mags,
+                params=[
+                    '--mode', 'genome',
+                    '--lineage_dataset', "lineage_1",
+                    '--cpu', '1',
+                    '--contig_break', '10',
+                    '--evalue', '0.001',
+                    '--limit', '3',
+                    '--offline',
+                    '--download_path', f"{str(busco_db)}/busco_downloads"
+                ]
+            )
+
+    def test_integration_busco_offline_w_lineage_invalid(self):
+        with tempfile.TemporaryDirectory() as tmp_path:
+            # Give path to valid database
+            p = self.get_data_path("busco_db")
+            busco_db = BuscoDatabaseDirFmt(path=p, mode="r")
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "lineage_2 is not present in input database"
+            ):
+                # Run busco
+                evaluate_busco(
+                    output_dir=str(tmp_path),
+                    bins=self.mags,
+                    busco_db=busco_db,
+                    lineage_dataset="lineage_2",
+                )
 
 
 class TestFetchBUSCO(TestPluginBase):

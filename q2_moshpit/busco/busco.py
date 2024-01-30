@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 import os
 import tempfile
+import warnings
 import q2_moshpit.busco.utils
 from q2_moshpit.busco.utils import (
     _parse_busco_params,
@@ -61,30 +62,34 @@ def evaluate_busco(
     # (kwargs passed to the function or their defaults) excluding
     # "output_dir" and "bins"
     kwargs = {
-        k: v for k, v in locals().items() if k not in ["output_dir", "bins"]
+        k: v for k, v in locals().items() if k not in [
+            "output_dir", "bins", "busco_db"
+        ]
     }
+
+    # Add busco_db to kwargs
+    if busco_db is not None:
+        kwargs["offline"] = True
+        kwargs["download_path"] = f"{str(busco_db)}/busco_downloads"
 
     # Validate lineage_dataset input if provided.
     if lineage_dataset is not None:
         if any([auto_lineage, auto_lineage_euk, auto_lineage_prok]):
-            print(colorify(
-                f"`--p-lineage-dataset` was specified as {lineage_dataset}",
-                "--p-auto-lineage* flags will be ignored."
-            ))
+            warnings.warn(
+                f"`--p-lineage-dataset` was specified as {lineage_dataset}. "
+                "--p-auto-lineage flags will be ignored."
+            )
             kwargs["auto_lineage"] = False
             kwargs["auto_lineage_euk"] = False
             kwargs["auto_lineage_prok"] = False
 
         # Check that lineage in deed exits inside Busco DB (if provided)
         if busco_db is not None:
-            if os.path.exists(
+            if not os.path.exists(
                 f"{str(busco_db)}/busco_downloads/lineages/{lineage_dataset}"
             ):
-                kwargs["offline"] = True
-                kwargs["download_path"] = f"{str(busco_db)}/busco_downloads"
-            else:
                 present_lineages = os.listdir(
-                    os.join.path(str(busco_db), "busco_downloads/lineages/")
+                    os.path.join(str(busco_db), "busco_downloads/lineages/")
                 )
                 raise ValueError(
                     f"The specified --p-lineage-dataset {lineage_dataset} "

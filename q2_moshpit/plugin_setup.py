@@ -552,7 +552,7 @@ plugin.methods.register_function(
                 "eggnog.taxa.db.traverse.pkl: "
                 "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
                 "eggnog_proteins.dmnd.gz",
-    citations=[citations["huerta-cepas_eggnog_2019"]]
+    citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
 plugin.methods.register_function(
@@ -574,7 +574,7 @@ plugin.methods.register_function(
                 "eggnog_proteins.dmnd.gz",
     citations=[
         citations["buchfink_sensitive_2021"],
-        citations["huerta-cepas_eggnog_2019"]
+        citations["huerta_cepas_eggnog_2019"]
     ]
 )
 
@@ -594,7 +594,7 @@ plugin.methods.register_function(
                 "(e5.proteomes.faa and e5.taxid_info.tsv) "
                 "and creates and artifact with them. At least 18 GB of "
                 "storage space is required to run this action. ",
-    citations=[citations["huerta-cepas_eggnog_2019"]]
+    citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
 
@@ -644,7 +644,7 @@ plugin.methods.register_function(
                 "sequences that belong to the specified taxon.",
     citations=[
         citations["buchfink_sensitive_2021"],
-        citations["huerta-cepas_eggnog_2019"]
+        citations["huerta_cepas_eggnog_2019"]
     ]
 )
 
@@ -682,7 +682,7 @@ plugin.methods.register_function(
                 "search functionality from the eggnog `emapper.py` script",
     citations=[
         citations["buchfink_sensitive_2021"],
-        citations["huerta-cepas_eggnog_2019"]
+        citations["huerta_cepas_eggnog_2019"]
     ]
 )
 
@@ -704,7 +704,7 @@ plugin.methods.register_function(
     outputs=[('ortholog_annotations', FeatureData[NOG])],
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
-    citations=[citations["huerta-cepas_eggnog_2019"]]
+    citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
 busco_params = {

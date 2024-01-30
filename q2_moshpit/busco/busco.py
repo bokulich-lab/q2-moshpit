@@ -98,10 +98,6 @@ def evaluate_busco(
         processing_func=_parse_busco_params, params=kwargs
     )
 
-    # If busco_db is provided add --download_path and --offline to command
-    if busco_db is not None:
-        common_args.extend(["--offline", "--download_path", str(busco_db)])
-
     # Creates output directory with path 'tmp'
     with tempfile.TemporaryDirectory() as tmp:
         # Run busco for every sample. Returns dictionary to report files.

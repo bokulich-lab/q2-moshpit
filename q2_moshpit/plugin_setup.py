@@ -673,7 +673,10 @@ plugin.methods.register_function(
     description="Apply eggnog mapper to annotate seed orthologs.",
 )
 
-
+# First bool flag only allowed to be True when the DB contains all lineages
+# Second bool flag only allowed to be True when the DB has property "eukaryota"
+# Third bool flag only allowed to be True when the DB has property "prokaryota"
+# Triple false option = setting where user specifies the lineage dataset
 (
     i_busco_db,
     p_auto_lineage, p_auto_lineage_euk, p_auto_lineage_prok,
@@ -686,7 +689,7 @@ plugin.methods.register_function(
         Bool % Choices(True),
         Bool % Choices(False),
         Bool % Choices(False),
-    ): Str % Choices("0.0"),
+    ): Int,  # Placeholder type because visualizations have no output
     (
         ReferenceDB[
             BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
@@ -694,7 +697,7 @@ plugin.methods.register_function(
         Bool % Choices(False),
         Bool % Choices(True),
         Bool % Choices(False),
-    ): Str % Choices("0.1"),
+    ): Int,
     (
         ReferenceDB[
             BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
@@ -722,7 +725,7 @@ plugin.methods.register_function(
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(True),
-    ): Str % Choices("1.1"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
         Bool % Choices(False),
@@ -740,49 +743,49 @@ plugin.methods.register_function(
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(False),
-    ): Str % Choices("2.1"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(True),
-    ): Str % Choices("3.0"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(False),
-    ): Str % Choices("3.1"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties('prokaryota')],
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(True),
-    ): Str % Choices("4.0"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties('prokaryota')],
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(False),
-    ): Str % Choices("4.1"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties('eukaryota')],
         Bool % Choices(False),
         Bool % Choices(True),
         Bool % Choices(False),
-    ): Str % Choices("5.0"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties('eukaryota')],
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(False),
-    ): Str % Choices("5.1"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties('virus')],
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(False),
-    ): Str % Choices("6.0"),
+    ): Int,
 })
 
 busco_params = {

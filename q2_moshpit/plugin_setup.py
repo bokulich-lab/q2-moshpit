@@ -678,149 +678,112 @@ plugin.methods.register_function(
     i_busco_db,
     p_auto_lineage, p_auto_lineage_euk, p_auto_lineage_prok,
     _
-) = TypeMap(
-    {
-        (
-            ReferenceDB[
-                BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
-            ],
-            Bool % Choices(True),
-            Bool % Choices(False),
-            Bool % Choices(False),
-            # Str % Choices([])
-        ): Str % Choices("0.0"),
-        (
-            ReferenceDB[
-                BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
-            ],
-            Bool % Choices(False),
-            Bool % Choices(True),
-            Bool % Choices(False),
-            # Str % Choices([])
-        ): Str % Choices("0.1"),
-        (
-            ReferenceDB[
-                BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
-            ],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(True),
-            # Str % Choices([])
-        ): Str % Choices("0.2"),
-        (
-            ReferenceDB[
-                BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
-            ],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(False),
-            # Str % Choices([
-            #     *BUSCO_DATASETS["bacteria"],
-            #     *BUSCO_DATASETS["archaea"],
-            #     *BUSCO_DATASETS["eukaryota"],
-            #     *BUSCO_DATASETS["viruses"],
-            # ])
-        ): Str % Choices("0.3"),
-        (
-            ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
-            Bool % Choices(False),
-            Bool % Choices(True),
-            Bool % Choices(False),
-            # Str % Choices([])
-        ): Str % Choices("1.0"),
-        (
-            ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(True),
-            # Str % Choices([])
-        ): Str % Choices("1.1"),
-        (
-            ReferenceDB[Diamond % Properties(['prokaryota', 'eukaryota'])],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(False),
-            # Str % Choices([
-            #     *BUSCO_DATASETS["bacteria"],
-            #     *BUSCO_DATASETS["archaea"],
-            #     *BUSCO_DATASETS["eukaryota"]
-            # ])
-        ): Str % Choices("1.2"),
-        (
-            ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
-            Bool % Choices(False),
-            Bool % Choices(True),
-            Bool % Choices(False),
-            # Str % Choices([])
-        ): Str % Choices("2.0"),
-        (
-            ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(False),
-            # Str % Choices([
-            #     *BUSCO_DATASETS["viruses"],
-            #     *BUSCO_DATASETS["eukaryota"]
-            # ])
-        ): Str % Choices("2.1"),
-        (
-            ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(True),
-            # Str % Choices([])
-        ): Str % Choices("3.0"),
-        (
-            ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(False),
-            # Str % Choices([
-            #     *BUSCO_DATASETS["bacteria"],
-            #     *BUSCO_DATASETS["archaea"],
-            #     *BUSCO_DATASETS["viruses"]
-            # ])
-        ): Str % Choices("3.1"),
-        (
-            ReferenceDB[BuscoDB % Properties('prokaryota')],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(True),
-            # Str % Choices([])
-        ): Str % Choices("4.0"),
-        (
-            ReferenceDB[BuscoDB % Properties('prokaryota')],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(False),
-            # Str % Choices([
-            #     *BUSCO_DATASETS["bacteria"],
-            #     *BUSCO_DATASETS["archaea"]
-            # ])
-        ): Str % Choices("4.1"),
-        (
-            ReferenceDB[BuscoDB % Properties('eukaryota')],
-            Bool % Choices(False),
-            Bool % Choices(True),
-            Bool % Choices(False),
-            # Str % Choices([])
-        ): Str % Choices("5.0"),
-        (
-            ReferenceDB[BuscoDB % Properties('eukaryota')],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(False),
-            # Str % Choices(BUSCO_DATASETS["eukaryota"])
-        ): Str % Choices("5.1"),
-        (
-            ReferenceDB[BuscoDB % Properties('virus')],
-            Bool % Choices(False),
-            Bool % Choices(False),
-            Bool % Choices(False),
-            # Str % Choices(BUSCO_DATASETS["viruses"])
-        ): Str % Choices("6.0"),
-    }
-)
+) = TypeMap({
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Str % Choices("0.0"),
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Str % Choices("0.1"),
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Str % Choices("0.2"),
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Str % Choices("0.3"),
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Str % Choices("1.0"),
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Str % Choices("1.1"),
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Str % Choices("1.2"),
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Str % Choices("2.0"),
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Str % Choices("2.1"),
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Str % Choices("3.0"),
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Str % Choices("3.1"),
+    (
+        ReferenceDB[BuscoDB % Properties('prokaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Str % Choices("4.0"),
+    (
+        ReferenceDB[BuscoDB % Properties('prokaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Str % Choices("4.1"),
+    (
+        ReferenceDB[BuscoDB % Properties('eukaryota')],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Str % Choices("5.0"),
+    (
+        ReferenceDB[BuscoDB % Properties('eukaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Str % Choices("5.1"),
+    (
+        ReferenceDB[BuscoDB % Properties('virus')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Str % Choices("6.0"),
+})
 
 busco_params = {
     "mode": Str % Choices(["genome"]),

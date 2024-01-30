@@ -551,7 +551,8 @@ plugin.methods.register_function(
                 "eggnog.taxa.tar.gz"
                 "eggnog.taxa.db.traverse.pkl: "
                 "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
-                "eggnog_proteins.dmnd.gz"
+                "eggnog_proteins.dmnd.gz",
+    citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
 plugin.methods.register_function(
@@ -570,7 +571,11 @@ plugin.methods.register_function(
                 "required to run this action. "
                 "Link to database: "
                 "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
-                "eggnog_proteins.dmnd.gz"
+                "eggnog_proteins.dmnd.gz",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
 )
 
 plugin.methods.register_function(
@@ -588,7 +593,8 @@ plugin.methods.register_function(
                 "This script downloads 2 files "
                 "(e5.proteomes.faa and e5.taxid_info.tsv) "
                 "and creates and artifact with them. At least 18 GB of "
-                "storage space is required to run this action. "
+                "storage space is required to run this action. ",
+    citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
 
@@ -636,6 +642,10 @@ plugin.methods.register_function(
          "specified taxon.",
     description="Creates a DIAMOND database which contains the protein "
                 "sequences that belong to the specified taxon.",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
 )
 
 plugin.methods.register_function(
@@ -670,6 +680,10 @@ plugin.methods.register_function(
     description="This method performs the steps by which we find our "
                 "possible target sequences to annotate using the diamond "
                 "search functionality from the eggnog `emapper.py` script",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
 )
 
 plugin.methods.register_function(
@@ -690,6 +704,7 @@ plugin.methods.register_function(
     outputs=[('ortholog_annotations', FeatureData[NOG])],
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
+    citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
 busco_params = {

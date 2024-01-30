@@ -57,13 +57,41 @@ def evaluate_busco(
         busco_output: all busco output files
         qiime_html: html for rendering the output plots
     """
-
     # Create dictionary with local variables
     # (kwargs passed to the function or their defaults) excluding
     # "output_dir" and "bins"
     kwargs = {
         k: v for k, v in locals().items() if k not in ["output_dir", "bins"]
     }
+
+    # Validate lineage_dataset input if provided.
+    if lineage_dataset is not None:
+        if any([auto_lineage, auto_lineage_euk, auto_lineage_prok]):
+            print(colorify(
+                f"`--p-lineage-dataset` was specified as {lineage_dataset}",
+                "--p-auto-lineage* flags will be ignored."
+            ))
+            kwargs["auto_lineage"] = False
+            kwargs["auto_lineage_euk"] = False
+            kwargs["auto_lineage_prok"] = False
+
+        # Check that lineage in deed exits inside Busco DB (if provided)
+        if busco_db is not None:
+            if os.path.exists(
+                f"{str(busco_db)}/busco_downloads/lineages/{lineage_dataset}"
+            ):
+                kwargs["offline"] = True
+                kwargs["download_path"] = f"{str(busco_db)}/busco_downloads"
+            else:
+                present_lineages = os.listdir(
+                    os.join.path(str(busco_db), "busco_downloads/lineages/")
+                )
+                raise ValueError(
+                    f"The specified --p-lineage-dataset {lineage_dataset} "
+                    "is not present in input database (--i-busco-db). \n"
+                    "Printing lineage datasets present in input database: \n"
+                    f"{present_lineages}"
+                )
 
     # Filter out all kwargs that are None, False or 0.0
     common_args = _process_common_input_params(

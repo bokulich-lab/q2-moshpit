@@ -144,7 +144,8 @@ plugin.methods.register_function(
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',
-    citations=[citations["kang2019"]]
+    citations=[citations["kang2019"], citations["heng2009samtools"],
+               citations["scikit_bio_release"]]
 )
 
 T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({

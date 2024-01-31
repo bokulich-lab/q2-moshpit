@@ -705,7 +705,7 @@ plugin.methods.register_function(
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(True),
-    ): Str % Choices("0.2"),
+    ): Int,
     (
         ReferenceDB[
             BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
@@ -713,13 +713,13 @@ plugin.methods.register_function(
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(False),
-    ): Str % Choices("0.3"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
         Bool % Choices(False),
         Bool % Choices(True),
         Bool % Choices(False),
-    ): Str % Choices("1.0"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
         Bool % Choices(False),
@@ -731,13 +731,13 @@ plugin.methods.register_function(
         Bool % Choices(False),
         Bool % Choices(False),
         Bool % Choices(False),
-    ): Str % Choices("1.2"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
         Bool % Choices(False),
         Bool % Choices(True),
         Bool % Choices(False),
-    ): Str % Choices("2.0"),
+    ): Int,
     (
         ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
         Bool % Choices(False),
@@ -794,9 +794,9 @@ busco_params = {
     "augustus": Bool,
     "augustus_parameters": Str,
     "augustus_species": Str,
-    "auto_lineage": p_auto_lineage,
-    "auto_lineage_euk": p_auto_lineage_euk,
-    "auto_lineage_prok": p_auto_lineage_prok,
+    "auto_lineage": Bool,
+    "auto_lineage_euk": Bool,
+    "auto_lineage_prok": Bool,
     "cpu": Int % Range(1, None),
     "config": Str,
     "contig_break": Int % Range(0, None),
@@ -866,7 +866,7 @@ plugin.visualizers.register_function(
     function=q2_moshpit.busco.evaluate_busco,
     inputs={
         "bins": SampleData[MAGs],
-        "busco_db": i_busco_db
+        "busco_db": ReferenceDB[BuscoDB]
     },
     parameters=busco_params,
     input_descriptions={

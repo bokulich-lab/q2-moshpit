@@ -794,9 +794,9 @@ busco_params = {
     "augustus": Bool,
     "augustus_parameters": Str,
     "augustus_species": Str,
-    "auto_lineage": Bool,
-    "auto_lineage_euk": Bool,
-    "auto_lineage_prok": Bool,
+    "auto_lineage": p_auto_lineage,
+    "auto_lineage_euk": p_auto_lineage_euk,
+    "auto_lineage_prok": p_auto_lineage_prok,
     "cpu": Int % Range(1, None),
     "config": Str,
     "contig_break": Int % Range(0, None),
@@ -866,7 +866,7 @@ plugin.visualizers.register_function(
     function=q2_moshpit.busco.evaluate_busco,
     inputs={
         "bins": SampleData[MAGs],
-        "busco_db": ReferenceDB[BuscoDB]
+        "busco_db": i_busco_db
     },
     parameters=busco_params,
     input_descriptions={

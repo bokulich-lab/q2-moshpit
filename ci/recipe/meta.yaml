@@ -20,7 +20,7 @@ requirements:
     - altair
     - beautifulsoup4
     - bracken
-    - busco >=5.0.0
+    - busco ==5.0.0
     - diamond
     - eggnog-mapper >=2.1.10
     - kaiju

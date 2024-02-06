@@ -711,11 +711,16 @@ plugin.methods.register_function(
 )
 
 
+input_mags, partitioned_mags = TypeMap({
+    SampleData[MAGs]: Collection[SampleData[MAGs]],
+    FeatureData[MAG]: Collection[FeatureData[MAG]]
+})
+
 plugin.methods.register_function(
     function=q2_moshpit.helpers.partition_mags,
-    inputs={"mags": SampleData[MAGs]},
+    inputs={"mags": input_mags},
     parameters={"num_partitions": Int % Range(1, None)},
-    outputs={"partitioned_mags": Collection[SampleData[MAGs]]},
+    outputs={"partitioned_mags": partitioned_mags},
     input_descriptions={"mags": "The MAGs to partition."},
     parameter_descriptions={
         "num_partitions": "The number of partitions to split the MAGs"
@@ -727,15 +732,20 @@ plugin.methods.register_function(
                 "or the number of partitions specified.",
 )
 
+list_of_mags, collated_mags = TypeMap({
+    List[SampleData[MAGs]]: SampleData[MAGs],
+    List[FeatureData[MAG]]: FeatureData[MAG]
+})
+
 plugin.methods.register_function(
     function=q2_moshpit.helpers.collate_mags,
-    inputs={"mags": List[SampleData[MAGs]]},
+    inputs={"mags": list_of_mags},
     parameters={},
-    outputs={"collated_mags": SampleData[MAGs]},
+    outputs={"collated_mags": collated_mags},
     input_descriptions={"mags": "A collection of MAGs to be collated."},
     name="Collate mags",
-    description="Takes a collection of SampleData[MAGs] and collates them "
-                "into a single artifact.",
+    description="Takes a collection of SampleData[MAGs] or FeatureData[MAG] "
+                "and collates them into a single artifact.",
 )
 
 

@@ -17,7 +17,9 @@ from q2_types.per_sample_sequences import (
 )
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
-from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
+from qiime2.core.type import (
+    Bool, Range, Int, Str, Float, List, Choices, Collection
+)
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 import q2_moshpit._examples as ex
@@ -707,6 +709,35 @@ plugin.methods.register_function(
     description="Apply eggnog mapper to annotate seed orthologs.",
     citations=[citations["huerta_cepas_eggnog_2019"]]
 )
+
+
+plugin.methods.register_function(
+    function=q2_moshpit.helpers.partition_mags,
+    inputs={"mags": SampleData[MAGs]},
+    parameters={"num_partitions": Int % Range(1, None)},
+    outputs={"partitioned_mags": Collection[SampleData[MAGs]]},
+    input_descriptions={"mags": "The MAGs to partition."},
+    parameter_descriptions={
+        "num_partitions": "The number of partitions to split the MAGs"
+        " into. Defaults to partitioning into individual"
+        " MAGs."
+    },
+    name="Partition MAGs",
+    description="Partition collections of MAGs into individual MAGs "
+                "or the number of partitions specified.",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.helpers.collate_mags,
+    inputs={"mags": List[SampleData[MAGs]]},
+    parameters={},
+    outputs={"collated_mags": SampleData[MAGs]},
+    input_descriptions={"mags": "A collection of MAGs to be collated."},
+    name="Collate mags",
+    description="Takes a collection of SampleData[MAGs] and collates them "
+                "into a single artifact.",
+)
+
 
 busco_params = {
     "mode": Str % Choices(["genome"]),

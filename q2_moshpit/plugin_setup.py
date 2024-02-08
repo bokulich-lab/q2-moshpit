@@ -236,7 +236,7 @@ T_kraken_collate_reports_in, T_kraken_collate_reports_out = TypeMap({
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.helpers.collate_kraken2_reports,
+    function=q2_moshpit.kraken2.helpers.collate_kraken2_reports,
     inputs={"kraken2_reports": List[T_kraken_collate_reports_in]},
     parameters={},
     outputs={"collated_kraken2_reports": T_kraken_collate_reports_out},
@@ -257,7 +257,7 @@ T_kraken_collate_outputs_in, T_kraken_collate_outputs_out = TypeMap({
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.helpers.collate_kraken2_outputs,
+    function=q2_moshpit.kraken2.helpers.collate_kraken2_outputs,
     inputs={"kraken2_outputs": List[T_kraken_collate_outputs_in]},
     parameters={},
     outputs={"collated_kraken2_outputs": T_kraken_collate_outputs_out},
@@ -717,7 +717,7 @@ input_mags, partitioned_mags = TypeMap({
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.helpers.partition_mags,
+    function=q2_moshpit.partition.partition_mags,
     inputs={"mags": input_mags},
     parameters={"num_partitions": Int % Range(1, None)},
     outputs={"partitioned_mags": partitioned_mags},
@@ -738,7 +738,7 @@ list_of_mags, collated_mags = TypeMap({
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.helpers.collate_mags,
+    function=q2_moshpit.partition.collate_mags,
     inputs={"mags": list_of_mags},
     parameters={},
     outputs={"collated_mags": collated_mags},

@@ -15,6 +15,7 @@ import tempfile
 from copy import deepcopy
 from typing import List
 
+import sys
 import requests
 import xmltodict
 from q2_types.feature_data import DNAFASTAFormat
@@ -42,7 +43,12 @@ COLLECTIONS = {
     "pluspfp8": "pluspfp_08gb",
     "pluspfp16": "pluspfp_16gb",
     "eupathdb": "eupathdb48",
+    "greengenes": "Greengenes13.5",
+    "rdp": "RDP11.5",
+    "silva132": "Silva132",
+    "silva138": "Silva138"
 }
+S16_DBS = ["greengenes", "rdp", "silva132", "silva138"]
 S3_COLLECTIONS_URL = 'https://genome-idx.s3.amazonaws.com'
 CHUNK_SIZE = 8192
 
@@ -158,7 +164,11 @@ def _build_bracken_database(
 
 def _find_latest_db(collection: str, response: requests.Response) -> str:
     collection_id = COLLECTIONS[collection]
-    pattern = fr'kraken\/k2_{collection_id}_\d{{8}}.tar.gz'
+
+    if collection in S16_DBS:
+        pattern = fr'kraken\/16S_{collection_id}_\d{{8}}.tgz'
+    else:
+        pattern = fr'kraken\/k2_{collection_id}_\d{{8}}.tar.gz'
 
     s3_objects = xmltodict.parse(response.content)
     s3_objects = s3_objects.get('ListBucketResult')
@@ -172,6 +182,7 @@ def _find_latest_db(collection: str, response: requests.Response) -> str:
     s3_objects = sorted(
         s3_objects, key=lambda x: x['LastModified'], reverse=True
     )
+
     latest_db = s3_objects[0]['Key']
     return latest_db
 
@@ -217,8 +228,23 @@ def _fetch_db_collection(collection: str, tmp_dir: str):
     msg = "Download finished. Extracting database files..."
     print(f"{msg}", end="", flush=True)
     with tarfile.open(db_path, "r:gz") as tar:
-        tar.extractall(path=tmp_dir)
+            tar.extractall(path=tmp_dir)
     print(f"\r{msg} Done.", flush=True)
+
+    if collection in S16_DBS:
+        items_in_tmp_dir = os.listdir(tmp_dir)
+        for item in items_in_tmp_dir:
+            item_path = os.path.join(tmp_dir, item)
+            # remove the zipped file
+            if item_path.endswith("gz"):
+                os.remove(item_path)
+            else:
+                # move all files in the tmp_dir
+                for file in os.listdir(item_path):
+                    shutil.move(os.path.join(item_path, file),
+                                os.path.join(tmp_dir, file))
+                # remove the extracted folder
+                shutil.rmtree(item_path)
 
 
 def _move_db_files(source: str, destination: str, extension: str = "k2d"):

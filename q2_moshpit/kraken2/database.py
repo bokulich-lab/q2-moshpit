@@ -238,11 +238,14 @@ def _fetch_db_collection(collection: str, tmp_dir: str):
             # remove the zipped file
             if item_path.endswith("gz"):
                 os.remove(item_path)
-            else:
+            elif (any(s16_db in item_path.lower() for s16_db in S16_DBS)
+                  and os.path.isdir(item_path)):
                 # move all files in the tmp_dir
+                extensions = ['.kmer_distrib', '.k2d', '.md', '.map']
                 for file in os.listdir(item_path):
-                    shutil.move(os.path.join(item_path, file),
-                                os.path.join(tmp_dir, file))
+                    if any(file.endswith(ext) for ext in extensions):
+                        shutil.move(os.path.join(item_path, file),
+                                    os.path.join(tmp_dir, file))
                 # remove the extracted folder
                 shutil.rmtree(item_path)
 

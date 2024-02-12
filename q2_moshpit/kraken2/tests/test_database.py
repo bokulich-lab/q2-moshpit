@@ -64,6 +64,19 @@ class TestKraken2Database(TestPluginBase):
             </ListBucketResult>
         '''
 
+        self.s3_response_16S = b'''
+            <ListBucketResult>
+                <Contents>
+                    <Key>kraken/16S_Greengenes13.5_20200326.tgz</Key>
+                    <LastModified>2020-03-26T01:38:22.000Z</LastModified>
+                </Contents>
+                <Contents>
+                    <Key>kraken/16S_Greengenes13.5_20200326.tgz</Key>
+                    <LastModified>2024-02-12T01:29:11.000Z</LastModified>
+                </Contents>
+            </ListBucketResult>
+        '''
+
         self.temp_dir = tempfile.mkdtemp()
         self.temp_tar = os.path.join(self.temp_dir, 'temp.tar.gz')
 
@@ -267,6 +280,13 @@ class TestKraken2Database(TestPluginBase):
         exp_db = 'kraken/k2_viral_20230314.tar.gz'
         self.assertEqual(obs_db, exp_db)
 
+    def test_find_latest_16S_db(self):
+        response = Mock(content=self.s3_response_16S)
+
+        obs_db = _find_latest_db('greengenes', response)
+        exp_db = 'kraken/16S_Greengenes13.5_20200326.tgz'
+        self.assertEqual(obs_db, exp_db)
+
     def test_find_latest_db_empty(self):
         response = Mock(content=b'''<ListBucketResult></ListBucketResult>''')
 
@@ -306,6 +326,39 @@ class TestKraken2Database(TestPluginBase):
         )
         mock_find.assert_called_once_with("viral", ANY)
         mock_tqdm.assert_not_called()
+
+    @patch("requests.get")
+    @patch("tarfile.open")
+    @patch(
+        "q2_moshpit.kraken2.database._find_latest_db",
+        return_value="kraken/tmp/16S_Greengenes13.5.tgz"
+    )
+    @patch("q2_moshpit.kraken2.database.tqdm")
+    def test_fetch_db_collection_16S_success(
+            self, mock_tqdm, mock_find, mock_tarfile_open, mock_requests_get
+    ):
+        mock_requests_get.side_effect = [
+            MagicMock(status_code=200),
+            MagicMock(
+                status_code=200,
+                iter_content=lambda chunk_size: self.tar_chunks,
+                headers={}
+            )
+        ]
+        mock_tarfile_open.return_value.__enter__.return_value = MagicMock()
+
+        _fetch_db_collection("greengenes", "/tmp")
+
+        mock_requests_get.has_calls([
+            call(S3_COLLECTIONS_URL),
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Greengenes13.5.tgz", stream=True)
+        ])
+        mock_tarfile_open.assert_called_once_with(
+            "/tmp/16S_Greengenes13.5.tgz", "r:gz"
+        )
+        mock_find.assert_called_once_with("greengenes", ANY)
+        mock_tqdm.assert_not_called()
+
 
     @patch("requests.get")
     @patch("tarfile.open")

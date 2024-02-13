@@ -12,7 +12,7 @@ import tempfile
 import qiime2.util
 import pandas as pd
 from typing import Union
-from q2_types.per_sample_data import ContigSequencesDirFmt
+from q2_types.per_sample_sequences import ContigSequencesDirFmt
 from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 from q2_types.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt

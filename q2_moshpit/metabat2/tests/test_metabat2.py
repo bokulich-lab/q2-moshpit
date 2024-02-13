@@ -13,8 +13,8 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from q2_types.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
-from q2_types.per_sample_data._format import MultiFASTADirectoryFormat
+from q2_types.per_sample_sequences import ContigSequencesDirFmt, BAMDirFmt
+from q2_types.per_sample_sequences._format import MultiFASTADirectoryFormat
 from unittest.mock import patch, ANY, call
 
 from qiime2.plugin.testing import TestPluginBase

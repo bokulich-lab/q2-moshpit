@@ -13,7 +13,7 @@ from q2_types.feature_data import (
 )
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
-    SequencesWithQuality, PairedEndSequencesWithQuality
+    SequencesWithQuality, PairedEndSequencesWithQuality, MAGs, Contigs
 )
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
@@ -31,8 +31,7 @@ from q2_types.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB, Kraken2DBReport
 )
 from q2_types.kraken2._type import BrackenDB
-from q2_types.per_sample_data import MAGs, Contigs
-from q2_types.per_sample_data._type import AlignmentMap
+from q2_types.per_sample_sequences._type import AlignmentMap
 from q2_types.reference_db import (
     ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
 )

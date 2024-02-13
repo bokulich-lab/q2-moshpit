@@ -14,7 +14,7 @@ from .._method import eggnog_diamond_search, eggnog_annotate
 from q2_types.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt
 )
-from q2_types.per_sample_data import ContigSequencesDirFmt
+from q2_types.per_sample_sequences import ContigSequencesDirFmt
 from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 
 

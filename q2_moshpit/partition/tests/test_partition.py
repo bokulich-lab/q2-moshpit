@@ -19,40 +19,56 @@ from q2_types_genomics.feature_data._format import (
 class TestHelpers(TestPluginBase):
     package = 'q2_moshpit.partition.tests'
 
+    @patch('qiime2.util.duplicate')
+    @patch('q2_moshpit.partition.utils._validate_num_partitions')
     @patch('q2_moshpit.partition.utils._partition_sample_data_mags')
     @patch('q2_moshpit.partition.utils._partition_feature_data_mags')
-    def test_partition_mags_sample(self, mock_feature, mock_sample):
+    def test_partition_mags_sample(
+        self,
+        mock_feature,
+        mock_sample,
+        mock_val_num,
+        mock_duplicate
+    ):
         mags = MultiMAGSequencesDirFmt()
         partition_mags(mags)
         mock_sample.assert_called_once_with(mags, None)
         mock_feature.assert_not_called()
 
+    @patch('qiime2.util.duplicate')
+    @patch('q2_moshpit.partition.utils._validate_num_partitions')
     @patch('q2_moshpit.partition.utils._partition_sample_data_mags')
     @patch('q2_moshpit.partition.utils._partition_feature_data_mags')
-    def test_partition_mags_feature(self, mock_feature, mock_sample):
+    def test_partition_mags_feature(
+        self,
+        mock_feature,
+        mock_sample,
+        mock_val_num,
+        mock_duplicate
+    ):
         mags = MAGSequencesDirFmt()
         partition_mags(mags)
         mock_feature.assert_called_once_with(mags, None)
         mock_sample.assert_not_called()
 
     def test_partition_mags_neither(self):
-        mags = MultiFASTADirectoryFormat()
+        mags = [MultiFASTADirectoryFormat()]
         with self.assertRaisesRegex(
             ValueError,
             "--i-mags is neither"
         ):
             partition_mags(mags)
 
-    @patch('utils._collate_sample_data_mags')
-    @patch('utils._collate_feature_data_mags')
+    @patch('q2_moshpit.partition.utils._collate_sample_data_mags')
+    @patch('q2_moshpit.partition.utils._collate_feature_data_mags')
     def test_collate_mags_sample(self, mock_feature, mock_sample):
         mags = [MultiMAGSequencesDirFmt()]
         collate_mags(mags)
         mock_feature.assert_not_called()
         mock_sample.assert_called_once_with(mags)
 
-    @patch('utils._collate_sample_data_mags')
-    @patch('utils._collate_feature_data_mags')
+    @patch('q2_moshpit.partition.utils._collate_sample_data_mags')
+    @patch('q2_moshpit.partition.utils._collate_feature_data_mags')
     def test_collate_mags_features(self, mock_feature, mock_sample):
         mags = [MAGSequencesDirFmt()]
         collate_mags(mags)

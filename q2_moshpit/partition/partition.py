@@ -22,14 +22,12 @@ from q2_types_genomics.feature_data._format import (
 def partition_mags(
     mags: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt],
     num_partitions: int = None
-) -> Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt]:
+) -> List[Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt]]:
 
     if isinstance(mags, MultiMAGSequencesDirFmt):
-        # pdb.set_trace()
         return _partition_sample_data_mags(mags, num_partitions)
 
     elif isinstance(mags, MAGSequencesDirFmt):
-        # pdb.set_trace()
         return _partition_feature_data_mags(mags, num_partitions)
 
     else:
@@ -45,11 +43,9 @@ def collate_mags(
 ) -> Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt]:
 
     if isinstance(mags[0], MultiMAGSequencesDirFmt):
-        print(_collate_sample_data_mags)
         return _collate_sample_data_mags(mags)
 
     elif isinstance(mags[0], MAGSequencesDirFmt):
-        print(_collate_feature_data_mags)
         return _collate_feature_data_mags(mags)
 
     else:

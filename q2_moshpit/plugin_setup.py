@@ -22,18 +22,18 @@ from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 import q2_moshpit._examples as ex
 import q2_moshpit
-from q2_types_genomics.feature_data import NOG, MAG
-from q2_types_genomics.genome_data import (
+from q2_types.feature_data_mag import NOG, MAG
+from q2_types.genome_data import (
     BLAST6, GenomeData, Loci, Genes, Proteins
 )
-from q2_types_genomics.kaiju import KaijuDB
-from q2_types_genomics.kraken2 import (
+from q2_types.kaiju import KaijuDB
+from q2_types.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB, Kraken2DBReport
 )
-from q2_types_genomics.kraken2._type import BrackenDB
-from q2_types_genomics.per_sample_data import MAGs, Contigs
-from q2_types_genomics.per_sample_data._type import AlignmentMap
-from q2_types_genomics.reference_db import (
+from q2_types.kraken2._type import BrackenDB
+from q2_types.per_sample_data import MAGs, Contigs
+from q2_types.per_sample_data._type import AlignmentMap
+from q2_types.reference_db import (
     ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
 )
 

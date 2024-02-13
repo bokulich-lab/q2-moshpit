@@ -8,7 +8,7 @@ from zipfile import ZipFile
 from .._utils import run_command
 from copy import deepcopy
 from typing import List, Dict
-from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
+from q2_types.per_sample_data._format import MultiMAGSequencesDirFmt
 
 
 arguments_with_hyphens = {

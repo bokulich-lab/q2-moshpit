@@ -21,9 +21,9 @@ from q2_types.sample_data import SampleData
 from q2_types.feature_data import FeatureData
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
-from q2_types_genomics.feature_data import MAGSequencesDirFmt, MAG
-from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, Contigs
-from q2_types_genomics.kraken2 import (
+from q2_types.feature_data_mag import MAGSequencesDirFmt, MAG
+from q2_types.per_sample_data import ContigSequencesDirFmt, Contigs
+from q2_types.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
     Kraken2DBDirectoryFormat,

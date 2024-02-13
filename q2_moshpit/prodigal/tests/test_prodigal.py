@@ -9,9 +9,9 @@
 import os
 from q2_moshpit.prodigal.prodigal import predict_genes_prodigal
 from qiime2.plugin.testing import TestPluginBase
-from q2_types_genomics.feature_data import MAGSequencesDirFmt
+from q2_types.feature_data_mag import MAGSequencesDirFmt
 from unittest.mock import patch, call
-from q2_types_genomics.genome_data import (
+from q2_types.genome_data import (
     LociDirectoryFormat, GenesDirectoryFormat, ProteinsDirectoryFormat,
 )
 

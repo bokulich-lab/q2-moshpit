@@ -13,7 +13,7 @@ from typing import List
 from q2_moshpit.kraken2.utils import (
     _find_lca, _taxon_to_list, _join_ranks
 )
-from q2_types_genomics.kraken2 import (
+from q2_types.kraken2 import (
     Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat
 )
 

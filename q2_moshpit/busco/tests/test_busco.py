@@ -12,7 +12,7 @@ import pandas as pd
 from q2_moshpit.busco.busco import evaluate_busco
 from unittest.mock import patch, ANY
 from qiime2.plugin.testing import TestPluginBase
-from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
+from q2_types.per_sample_data._format import MultiMAGSequencesDirFmt
 
 
 class TestBUSCO(TestPluginBase):

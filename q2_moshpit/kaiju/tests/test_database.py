@@ -20,7 +20,7 @@ from q2_moshpit.kaiju.database import (
 )
 from requests.exceptions import ConnectionError, RequestException
 
-from q2_types_genomics.kaiju import KaijuDBDirectoryFormat
+from q2_types.kaiju import KaijuDBDirectoryFormat
 
 
 class TestDatabaseFunctions(TestPluginBase):

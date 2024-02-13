@@ -10,7 +10,7 @@ import shutil
 import pandas as pd
 from qiime2.core.exceptions import ValidationError
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
-from q2_types_genomics.reference_db import (
+from q2_types.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
     EggnogProteinSequencesDirFmt
 )

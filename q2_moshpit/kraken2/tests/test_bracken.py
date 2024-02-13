@@ -19,7 +19,7 @@ from qiime2.plugin.testing import TestPluginBase
 from q2_moshpit.kraken2.bracken import (
     _assert_read_lens_available, _run_bracken_one_sample, _estimate_bracken)
 from q2_types.kraken2 import (BrackenDBDirectoryFormat,
-                                       Kraken2ReportDirectoryFormat)
+                              Kraken2ReportDirectoryFormat)
 
 
 class MockTempDir(tempfile.TemporaryDirectory):

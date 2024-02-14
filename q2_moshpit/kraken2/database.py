@@ -28,7 +28,6 @@ from q2_types_genomics.kraken2 import (
 
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
 
-
 COLLECTIONS = {
     "standard": "standard",
     "viral": "viral",
@@ -227,7 +226,7 @@ def _fetch_db_collection(collection: str, tmp_dir: str):
     msg = "Download finished. Extracting database files..."
     print(f"{msg}", end="", flush=True)
     with tarfile.open(db_path, "r:gz") as tar:
-            tar.extractall(path=tmp_dir)
+        tar.extractall(path=tmp_dir)
     print(f"\r{msg} Done.", flush=True)
 
     if collection in S16_DBS:
@@ -288,18 +287,18 @@ def _build_dbs_from_seqs(bracken_db, kraken2_db, seqs, tmp_dir, common_args):
 
 
 def build_kraken_db(
-    seqs: DNAFASTAFormat = None,
-    collection: str = None,
-    threads: int = 1,
-    kmer_len: int = 35,
-    minimizer_len: int = 31,
-    minimizer_spaces: int = 7,
-    no_masking: bool = False,
-    max_db_size: int = 0,
-    use_ftp: bool = False,
-    load_factor: float = 0.7,
-    fast_build: bool = False,
-    read_len: int = None,
+        seqs: DNAFASTAFormat = None,
+        collection: str = None,
+        threads: int = 1,
+        kmer_len: int = 35,
+        minimizer_len: int = 31,
+        minimizer_spaces: int = 7,
+        no_masking: bool = False,
+        max_db_size: int = 0,
+        use_ftp: bool = False,
+        load_factor: float = 0.7,
+        fast_build: bool = False,
+        read_len: int = None,
 ) -> (Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat):
     kraken2_db = Kraken2DBDirectoryFormat()
     bracken_db = BrackenDBDirectoryFormat()
@@ -331,8 +330,8 @@ def build_kraken_db(
 
 
 def inspect_kraken2_db(
-    db: Kraken2DBDirectoryFormat,
-    threads: int = 1
+        db: Kraken2DBDirectoryFormat,
+        threads: int = 1
 ) -> Kraken2DBReportDirectoryFormat:
     cmd = ['kraken2-inspect', '--db', str(db.path), '--threads', str(threads)]
     try:

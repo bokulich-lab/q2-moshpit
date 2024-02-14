@@ -396,6 +396,42 @@ class TestKraken2Database(TestPluginBase):
             unit_scale=True, unit_divisor=1024,
         )
 
+    @patch("requests.get")
+    @patch("tarfile.open")
+    @patch(
+        "q2_moshpit.kraken2.database._find_latest_db",
+        return_value="kraken/16S_Greengenes13.5.tgz"
+    )
+    @patch("q2_moshpit.kraken2.database.tqdm")
+    def test_fetch_db_collection_16S_success_with_tqdm(
+            self, mock_tqdm, mock_find, mock_tarfile_open, mock_requests_get
+    ):
+        mock_requests_get.side_effect = [
+            MagicMock(status_code=200),
+            MagicMock(
+                status_code=200,
+                iter_content=lambda chunk_size: self.tar_chunks,
+                headers={"content-length": '1000'}
+            )
+        ]
+        mock_tarfile_open.return_value.__enter__.return_value = MagicMock()
+
+        _fetch_db_collection("greengenes", "/tmp")
+
+        mock_requests_get.has_calls([
+            call(S3_COLLECTIONS_URL),
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Greengenes13.5.tgz", stream=True)
+        ])
+        mock_tarfile_open.assert_called_once_with(
+            "/tmp/16S_Greengenes13.5.tgz", "r:gz"
+        )
+        mock_find.assert_called_once_with("greengenes", ANY)
+        mock_tqdm.assert_called_once_with(
+            desc='Downloading the "kraken/16S_Greengenes13.5.tgz" database',
+            total=1000, unit='B',
+            unit_scale=True, unit_divisor=1024,
+        )
+
     @patch('requests.get')
     def test_fetch_db_collection_connection_error(self, mock_get):
         mock_get.side_effect = ConnectionError("Some error.")

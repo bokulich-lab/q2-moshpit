@@ -15,7 +15,6 @@ import tempfile
 from copy import deepcopy
 from typing import List
 
-import sys
 import requests
 import xmltodict
 from q2_types.feature_data import DNAFASTAFormat

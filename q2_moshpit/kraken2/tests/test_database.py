@@ -351,14 +351,14 @@ class TestKraken2Database(TestPluginBase):
 
         mock_requests_get.has_calls([
             call(S3_COLLECTIONS_URL),
-            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Greengenes13.5.tgz", stream=True)
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Greengenes13.5.tgz",
+                 stream=True)
         ])
         mock_tarfile_open.assert_called_once_with(
             "/tmp/16S_Greengenes13.5.tgz", "r:gz"
         )
         mock_find.assert_called_once_with("greengenes", ANY)
         mock_tqdm.assert_not_called()
-
 
     @patch("requests.get")
     @patch("tarfile.open")
@@ -420,7 +420,8 @@ class TestKraken2Database(TestPluginBase):
 
         mock_requests_get.has_calls([
             call(S3_COLLECTIONS_URL),
-            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Greengenes13.5.tgz", stream=True)
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Greengenes13.5.tgz",
+                 stream=True)
         ])
         mock_tarfile_open.assert_called_once_with(
             "/tmp/16S_Greengenes13.5.tgz", "r:gz"

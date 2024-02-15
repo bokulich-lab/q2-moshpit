@@ -10,7 +10,7 @@ import os
 
 import pandas as pd
 
-from q2_types_genomics.kraken2 import (
+from q2_types.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat
 )

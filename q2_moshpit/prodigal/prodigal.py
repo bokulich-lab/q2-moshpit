@@ -8,8 +8,8 @@
 import os
 import copy as cp
 from .._utils import run_command
-from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from q2_types_genomics.genome_data import (
+from q2_types.feature_data_mag import MAGSequencesDirFmt
+from q2_types.genome_data import (
     LociDirectoryFormat, GenesDirectoryFormat, ProteinsDirectoryFormat,
 )
 

@@ -5,24 +5,23 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-# import pdb
-from typing import Union, List
+from typing import Union
 from q2_moshpit.partition.utils import (
     _collate_sample_data_mags, _collate_feature_data_mags,
     _partition_feature_data_mags, _partition_sample_data_mags
 )
-from q2_types_genomics.per_sample_data._format import (
+from q2_types_genomics.per_sample_data import (
     MultiMAGSequencesDirFmt
 )
-from q2_types_genomics.feature_data._format import (
+from q2_types_genomics.feature_data import (
     MAGSequencesDirFmt
 )
 
 
 def partition_mags(
-    mags: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt],
+    mags: Union[MultiMAGSequencesDirFmt],
     num_partitions: int = None
-) -> List[Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt]]:
+) -> Union[MultiMAGSequencesDirFmt]:
 
     if isinstance(mags, MultiMAGSequencesDirFmt):
         return _partition_sample_data_mags(mags, num_partitions)
@@ -39,8 +38,8 @@ def partition_mags(
 
 
 def collate_mags(
-        mags: List[Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt]]
-) -> Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt]:
+        mags: Union[MultiMAGSequencesDirFmt]
+) -> Union[MultiMAGSequencesDirFmt]:
 
     if isinstance(mags[0], MultiMAGSequencesDirFmt):
         return _collate_sample_data_mags(mags)

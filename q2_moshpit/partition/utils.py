@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 import os
 import warnings
+import shutil
 import numpy as np
 from qiime2.util import duplicate
 from q2_types_genomics.per_sample_data._format import (
@@ -133,7 +134,8 @@ def _collate_sample_data_mags(mags):
             # Since its present many times it will be overwritten, but that ok
             else:
                 manifest = file_or_dir
-                duplicate(manifest, collated_mags.path / manifest.name)
+                # Overwrite is necessary
+                shutil.copy(manifest, collated_mags.path / manifest.name)
 
     return collated_mags
 

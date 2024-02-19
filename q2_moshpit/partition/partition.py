@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from typing import Union
 from q2_moshpit.partition.utils import (
     _collate_sample_data_mags, _collate_feature_data_mags,
     _partition_feature_data_mags, _partition_sample_data_mags
@@ -18,38 +17,23 @@ from q2_types_genomics.feature_data import (
 )
 
 
-def partition_mags(
-    mags: Union[MultiMAGSequencesDirFmt],
-    num_partitions: int = None
-) -> Union[MultiMAGSequencesDirFmt]:
-
-    if isinstance(mags, MultiMAGSequencesDirFmt):
-        return _partition_sample_data_mags(mags, num_partitions)
-
-    elif isinstance(mags, MAGSequencesDirFmt):
-        return _partition_feature_data_mags(mags, num_partitions)
-
-    else:
-        raise ValueError(
-            "--i-mags is neither SampleData[MAGs] of Feature[MAGs]\n"
-            "Printing associated format: \n"
-            f"{type(mags)}"
-        )
+def partition_feature_data_mags(
+    mags: MAGSequencesDirFmt, num_partitions: int = None
+) -> MAGSequencesDirFmt:
+    return _partition_feature_data_mags(mags, num_partitions)
 
 
-def collate_mags(
-        mags: Union[MultiMAGSequencesDirFmt]
-) -> Union[MultiMAGSequencesDirFmt]:
+def partition_sample_data_mags(
+    mags: MultiMAGSequencesDirFmt, num_partitions: int = None
+) -> MultiMAGSequencesDirFmt:
+    return _partition_sample_data_mags(mags, num_partitions)
 
-    if isinstance(mags[0], MultiMAGSequencesDirFmt):
-        return _collate_sample_data_mags(mags)
 
-    elif isinstance(mags[0], MAGSequencesDirFmt):
-        return _collate_feature_data_mags(mags)
+def collate_sample_data_mags(
+    mags: MultiMAGSequencesDirFmt
+) -> MultiMAGSequencesDirFmt:
+    return _collate_sample_data_mags(mags)
 
-    else:
-        raise ValueError(
-            "--i-mags is neither SampleData[MAGs] of Feature[MAGs]\n"
-            "Printing associated format: \n"
-            f"{type(mags[0])}"
-        )
+
+def collate_feature_data_mags(mags: MAGSequencesDirFmt) -> MAGSequencesDirFmt:
+    return _collate_feature_data_mags(mags)

@@ -6,11 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 from .partition import (
-    collate_mags,
-    partition_mags,
+    collate_feature_data_mags, collate_sample_data_mags,
+    partition_feature_data_mags, partition_sample_data_mags
 )
 
 __all__ = [
-    "partition_mags",
-    "collate_mags",
+    "collate_feature_data_mags", "collate_sample_data_mags",
+    "partition_feature_data_mags", "partition_sample_data_mags"
 ]

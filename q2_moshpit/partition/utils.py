@@ -33,6 +33,21 @@ def _validate_num_partitions(num_mags, num_partitions) -> int:
     return num_partitions
 
 
+def _validate_mag_ids(num_partitions, num_mags, mags_all):
+    if num_partitions == num_mags:
+        mag_ids = [mag_id[1] for mag_id in mags_all]
+        duplicates = [
+            mag_id for mag_id in mag_ids if mag_ids.count(mag_id) > 1
+        ]
+        if len(duplicates) > 0:
+            raise ValueError(
+                "MAG IDs are not unique. "
+                "They must be unique in order to output all partitions "
+                "correctly. Printing duplicate MAG IDs: "
+                f"{set(duplicates)}"
+            )
+
+
 def _partition_feature_data_mags(mags, num_partitions) -> dict:
     """
     Returns a dictionary where each key is either the mag_id or an index, and
@@ -43,11 +58,12 @@ def _partition_feature_data_mags(mags, num_partitions) -> dict:
 
     # Get a list where every entry is a tuple representing one MAG
     for mag_id, mag_fp in mags.feature_dict().items():
-        mags_all.append((mag_id, mag_fp))
+        mags_all.append((mag_fp, mag_id))
 
     # Count number of mags and validate the num_partitions
     num_mags = len(mags_all)
     num_partitions = _validate_num_partitions(num_mags, num_partitions)
+    _validate_mag_ids(num_partitions, num_mags, mags_all)
 
     # Split list MAGs into n arrays, where n = num_partitions
     arrays_of_mags = np.array_split(mags_all, num_partitions)
@@ -55,7 +71,7 @@ def _partition_feature_data_mags(mags, num_partitions) -> dict:
     for i, _mag in enumerate(arrays_of_mags, 1):
         result = MAGSequencesDirFmt()
 
-        for mag_id, mag_fp in _mag:
+        for mag_fp, mag_id in _mag:
             duplicate(mag_fp, result.path / os.path.basename(mag_fp))
 
         # If num_partitions == num_mags we will only have gone through one
@@ -86,6 +102,7 @@ def _partition_sample_data_mags(mags, num_partitions) -> dict:
     # Count number of mags and validate the num_partitions
     num_mags = len(mags_all)
     num_partitions = _validate_num_partitions(num_mags, num_partitions)
+    _validate_mag_ids(num_partitions, num_mags, mags_all)
 
     # Split list MAGs into n arrays, where n = num_partitions
     arrays_of_mags = np.array_split(mags_all, num_partitions)

@@ -710,17 +710,11 @@ plugin.methods.register_function(
     citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
-
-input_mags, partitioned_mags = TypeMap({
-    SampleData[MAGs]: Collection[SampleData[MAGs]],
-    FeatureData[MAG]: Collection[FeatureData[MAG]]
-})
-
 plugin.methods.register_function(
-    function=q2_moshpit.partition.partition_mags,
-    inputs={"mags": input_mags},
+    function=q2_moshpit.partition.partition_sample_data_mags,
+    inputs={"mags": SampleData[MAGs]},
     parameters={"num_partitions": Int % Range(1, None)},
-    outputs={"partitioned_mags": partitioned_mags},
+    outputs={"partitioned_mags": Collection[SampleData[MAGs]]},
     input_descriptions={"mags": "The MAGs to partition."},
     parameter_descriptions={
         "num_partitions": "The number of partitions to split the MAGs"
@@ -728,26 +722,47 @@ plugin.methods.register_function(
         " MAGs."
     },
     name="Partition MAGs",
-    description="Partition collections of MAGs into individual MAGs "
-                "or the number of partitions specified.",
+    description="Partition a SampleData[MAGs] artifact into smaller "
+                "artifacts containing subsets of the MAGs",
 )
 
-list_of_mags, collated_mags = TypeMap({
-    List[SampleData[MAGs]]: SampleData[MAGs],
-    List[FeatureData[MAG]]: FeatureData[MAG]
-})
-
 plugin.methods.register_function(
-    function=q2_moshpit.partition.collate_mags,
-    inputs={"mags": list_of_mags},
+    function=q2_moshpit.partition.collate_sample_data_mags,
+    inputs={"mags": List[SampleData[MAGs]]},
     parameters={},
-    outputs={"collated_mags": collated_mags},
+    outputs={"collated_mags": SampleData[MAGs]},
     input_descriptions={"mags": "A collection of MAGs to be collated."},
     name="Collate mags",
-    description="Takes a collection of SampleData[MAGs] or FeatureData[MAG] "
+    description="Takes a collection of SampleData[MAGs]'s "
                 "and collates them into a single artifact.",
 )
 
+plugin.methods.register_function(
+    function=q2_moshpit.partition.partition_feature_data_mags,
+    inputs={"mags": FeatureData[MAG]},
+    parameters={"num_partitions": Int % Range(1, None)},
+    outputs={"partitioned_mags": Collection[FeatureData[MAG]]},
+    input_descriptions={"mags": "MAGs to partition."},
+    parameter_descriptions={
+        "num_partitions": "The number of partitions to split the MAGs"
+        " into. Defaults to partitioning into individual"
+        " MAGs."
+    },
+    name="Partition MAGs",
+    description="Partition a FeatureData[MAG] artifact into smaller "
+                "artifacts containing subsets of the MAGs",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.partition.collate_feature_data_mags,
+    inputs={"mags": List[FeatureData[MAG]]},
+    parameters={},
+    outputs={"collated_mags": FeatureData[MAG]},
+    input_descriptions={"mags": "A collection of MAGs to be collated."},
+    name="Collate mags",
+    description="Takes a collection of FeatureData[MAG]'s "
+                "and collates them into a single artifact.",
+)
 
 busco_params = {
     "mode": Str % Choices(["genome"]),

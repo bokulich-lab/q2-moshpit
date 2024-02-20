@@ -694,12 +694,15 @@ plugin.methods.register_function(
     },
     parameters={
         'db_in_memory': Bool,
+        'num_cpus': Int % Range(0, None)
     },
     parameter_descriptions={
         'db_in_memory': 'Read eggnog database into memory. The '
                         'eggnog database is very large(>44GB), so this '
                         'option should only be used on clusters or other '
                         'machines with enough memory.',
+        'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+                    'use all available.',
     },
     outputs=[('ortholog_annotations', FeatureData[NOG])],
     name='Annotate orthologs against eggNOG database',

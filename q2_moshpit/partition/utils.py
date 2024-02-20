@@ -5,10 +5,11 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+from typing import List
 import warnings
 
 
-def _validate_num_partitions(num_mags, num_partitions) -> int:
+def _validate_num_partitions(num_mags: int, num_partitions: int) -> int:
 
     if num_partitions is None:
         return num_mags
@@ -25,7 +26,9 @@ def _validate_num_partitions(num_mags, num_partitions) -> int:
         return num_partitions
 
 
-def _validate_mag_ids(num_partitions, num_mags, mags_all):
+def _validate_mag_ids(
+    num_partitions: int, num_mags: int, mags_all: List[tuple]
+):
 
     if num_partitions == num_mags:
         mag_ids = [mag_id[1] for mag_id in mags_all]

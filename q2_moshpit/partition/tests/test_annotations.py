@@ -17,13 +17,16 @@ class TestCollateAnnotations(TestPluginBase):
     def test_collate_annotations(self):
         p = self.get_data_path("annotations")
         annotations = [
-          OrthologAnnotationDirFmt(f"{p}/{letter}.annotations", mode="r")
+          OrthologAnnotationDirFmt(f"{p}/{letter}", mode="r")
           for letter in ["a", "b", "c"]
         ]
         collated_annotations = collate_annotations(annotations)
 
         # assert that all files are there
-        compare = filecmp.dircmp(collated_annotations.path, p)
+        compare = filecmp.dircmp(
+            collated_annotations.path,
+            self.get_data_path("annotations/collated")
+        )
         self.assertListEqual(
             compare.common,
             [f"{letter}.annotations" for letter in ["a", "b", "c"]]

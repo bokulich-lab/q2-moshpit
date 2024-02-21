@@ -18,8 +18,8 @@ from copy import deepcopy
 import skbio.io
 from q2_types.feature_data import DNAIterator
 
-from q2_types_genomics.per_sample_data import ContigSequencesDirFmt, BAMDirFmt
-from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
+from q2_types.per_sample_sequences import ContigSequencesDirFmt, BAMDirFmt
+from q2_types.per_sample_sequences._format import MultiFASTADirectoryFormat
 
 from q2_moshpit._utils import run_command, _process_common_input_params
 from q2_moshpit.metabat2.utils import _process_metabat2_arg

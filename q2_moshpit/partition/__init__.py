@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from .partition import (
+from .mags import (
     collate_feature_data_mags, collate_sample_data_mags,
     partition_feature_data_mags, partition_sample_data_mags
 )

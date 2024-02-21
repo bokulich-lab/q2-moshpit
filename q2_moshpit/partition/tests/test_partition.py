@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 import filecmp
 from unittest.mock import patch
-from q2_moshpit.partition.partition import (
+from q2_moshpit.partition.mags import (
     partition_sample_data_mags, partition_feature_data_mags,
     collate_feature_data_mags, collate_sample_data_mags
 )

@@ -17,7 +17,7 @@ from q2_moshpit.kraken2 import kraken2_to_features  # , kraken2_to_mag_features
 from q2_moshpit.kraken2.select import _kraken_to_ncbi_tree, _find_lcas
 from qiime2.plugin.testing import TestPluginBase
 
-from q2_types_genomics.kraken2 import (
+from q2_types.kraken2 import (
     Kraken2ReportDirectoryFormat,  # Kraken2OutputDirectoryFormat,
 )
 

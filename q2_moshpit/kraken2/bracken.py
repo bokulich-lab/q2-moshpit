@@ -14,7 +14,7 @@ import pandas as pd
 
 from q2_moshpit._utils import run_command
 from q2_moshpit.kraken2.select import kraken2_to_features
-from q2_types_genomics.kraken2 import (
+from q2_types.kraken2 import (
     Kraken2ReportDirectoryFormat,
     BrackenDBDirectoryFormat,
 )

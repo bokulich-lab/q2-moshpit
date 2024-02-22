@@ -9,16 +9,15 @@ import pandas as pd
 import pandas.testing as pdt
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
-
-from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from q2_types_genomics.per_sample_data import (
-    ContigSequencesDirFmt, MultiMAGSequencesDirFmt
-)
-from q2_types_genomics.reference_db import (
+from q2_types.feature_data_mag import MAGSequencesDirFmt
+from .._method import eggnog_diamond_search, eggnog_annotate
+from q2_types.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt
 )
-from .._method import eggnog_diamond_search, eggnog_annotate
+from q2_types.per_sample_sequences import (
+    ContigSequencesDirFmt, MultiMAGSequencesDirFmt
+)
+from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 
 
 class TestDiamond(TestPluginBase):

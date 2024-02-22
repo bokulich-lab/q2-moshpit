@@ -20,7 +20,7 @@ from q2_types.per_sample_sequences import (
 )
 
 from q2_moshpit._utils import run_command
-from q2_types_genomics.kaiju import KaijuDBDirectoryFormat
+from q2_types.kaiju import KaijuDBDirectoryFormat
 
 DEFAULT_PREFIXES = ["d__", "p__", "c__", "o__", "f__", "g__", "s__", "ssp__"]
 

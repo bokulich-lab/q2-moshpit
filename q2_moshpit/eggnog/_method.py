@@ -13,16 +13,16 @@ from typing import Union
 
 import pandas as pd
 import qiime2.util
-
-from q2_types_genomics.feature_data import (
-    OrthologAnnotationDirFmt, MAGSequencesDirFmt
-)
-from q2_types_genomics.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from q2_types_genomics.per_sample_data import (
+from typing import Union
+from q2_types.per_sample_sequences import (
     ContigSequencesDirFmt, MultiMAGSequencesDirFmt
 )
-from q2_types_genomics.reference_db import (
+from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt
+)
+from q2_types.feature_data_mag import (
+    OrthologAnnotationDirFmt, MAGSequencesDirFmt
 )
 
 
@@ -111,7 +111,8 @@ def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
 
 def eggnog_annotate(eggnog_hits: SeedOrthologDirFmt,
                     eggnog_db: EggnogRefDirFmt,
-                    db_in_memory: bool = False) -> OrthologAnnotationDirFmt:
+                    db_in_memory: bool = False,
+                    num_cpus: int = 1) -> OrthologAnnotationDirFmt:
 
     eggnog_db_fp = eggnog_db.path
 
@@ -126,20 +127,22 @@ def eggnog_annotate(eggnog_hits: SeedOrthologDirFmt,
                                         eggnog_db=eggnog_db_fp,
                                         sample_label=sample_label,
                                         output_loc=result,
-                                        db_in_memory=db_in_memory)
+                                        db_in_memory=db_in_memory,
+                                        num_cpus=num_cpus)
 
     return result
 
 
 def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
-                                    output_loc, db_in_memory):
+                                    output_loc, db_in_memory, num_cpus):
 
     # at this point instead of being able to specify the type of target
     # orthologs, we want to annotate _all_.
 
     cmds = ['emapper.py', '-m', 'no_search', '--annotate_hits_table',
             str(seed_ortholog), '--data_dir', str(eggnog_db),
-            '-o', str(sample_label), '--output_dir', str(output_loc)]
+            '-o', str(sample_label), '--output_dir', str(output_loc),
+            '--cpu', str(num_cpus)]
     if db_in_memory:
         cmds.append('--dbmem')
 

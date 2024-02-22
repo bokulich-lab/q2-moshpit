@@ -15,7 +15,7 @@ from .._dbs import (
     _validate_taxon_id, _collect_and_compare_md5
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
-from q2_types_genomics.reference_db import (
+from q2_types.reference_db import (
     NCBITaxonomyDirFmt, EggnogProteinSequencesDirFmt
 )
 

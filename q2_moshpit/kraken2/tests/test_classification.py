@@ -16,10 +16,10 @@ from unittest.mock import patch, ANY, call
 from q2_types.per_sample_sequences import (
     SingleLanePerSampleSingleEndFastqDirFmt,
     SingleLanePerSamplePairedEndFastqDirFmt,
+    ContigSequencesDirFmt
 )
-from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from q2_types_genomics.per_sample_data import ContigSequencesDirFmt
-from q2_types_genomics.kraken2 import (
+from q2_types.feature_data_mag import MAGSequencesDirFmt
+from q2_types.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat, Kraken2DBDirectoryFormat,
 )

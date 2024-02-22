@@ -21,7 +21,7 @@ from q2_types.feature_data import DNAFASTAFormat
 from tqdm import tqdm
 
 from q2_moshpit._utils import _process_common_input_params, run_command
-from q2_types_genomics.kraken2 import (
+from q2_types.kraken2 import (
     Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat,
     Kraken2DBReportDirectoryFormat
 )

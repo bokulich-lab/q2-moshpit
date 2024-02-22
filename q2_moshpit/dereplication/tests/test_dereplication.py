@@ -18,8 +18,8 @@ from q2_moshpit.dereplication.derep import (
     _reassign_bins_to_samples, _write_unique_bins, _generate_pa_table,
     dereplicate_mags
 )
-from q2_types_genomics.feature_data import MAGSequencesDirFmt
-from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
+from q2_types.feature_data_mag import MAGSequencesDirFmt
+from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 from qiime2.plugin.testing import TestPluginBase
 

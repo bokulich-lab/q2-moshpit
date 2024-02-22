@@ -41,8 +41,8 @@
           <b> samples</b>. "BUSCO attempts to provide a quantitative assessment
           of the completeness in terms of the expected gene content of a genome
           assembly, transcriptome, or annotated gene set. The results are
-          simplified into categories of Complete and single-copy, Complete and
-          duplicated, Fragmented, or Missing BUSCOs. BUSCO completeness results
+          simplified into categories of complete and single-copy, complete and
+          duplicated, fragmented, or missing BUSCOs. BUSCO completeness results
           make sense only in the context of the biology of your organism". Visit the 
           <a
             href="https://busco.ezlab.org/busco_userguide.html#interpreting-the-results"
@@ -118,19 +118,21 @@
 
     const spec = JSON.parse(document.getElementById("spec").innerHTML);
 
-    vegaEmbed("#plot", spec)
-      .then(function (result) {
-        result.view.logLevel(vega.Warn);
-        window.v = result.view;
+    vegaEmbed("#plot", spec).then(
+      function (result) {
+          result.view.logLevel(vega.Warn);
+          window.v = result.view;
 
-        // move the sliders to the right
-        const controls = document.getElementsByClassName("vega-bindings");
-        document.getElementById("plot-controls").appendChild(controls[0]);
-      })
-      .catch(function (error) {
-        // From 'js-error-handler.html'
-        handleErrors([error], $("#plot"));
-      });
+          // move the sliders to the right
+          const controls = document.getElementsByClassName("vega-bindings");
+          document.getElementById("plot-controls").appendChild(controls[0]);
+        }
+      ).catch(
+        function (error) {
+          // From 'js-error-handler.html'
+          handleErrors([error], $("#plot"));
+        }
+      );
   });
 </script>
 

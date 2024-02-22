@@ -20,8 +20,8 @@ def generate_fractions(n):
 
 # Generate data
 data = []
-for i in range(1, 101):
-    for j in range(1, 55):
+for i in range(1, 2):  # samples, brakes at 66 * 20 (still ok)
+    for j in range(1, 66*24):  # mags. with unlimit 66 * 24 is still ok
         unique_id = uuid.uuid4()
         numbers = generate_fractions(5)
         data.append(
@@ -72,5 +72,5 @@ dictto = _draw_busco_plots_for_render(
     spacing=20
 )
 
-print(dictto)
+dictto
 # %%

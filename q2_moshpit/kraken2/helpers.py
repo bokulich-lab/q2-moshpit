@@ -32,4 +32,4 @@ def collate_kraken2_outputs(kraken2_outputs: Kraken2OutputDirectoryFormat) \
 def _collate_kraken_tsvs(kraken2_results, kraken_type, output):
     for kraken2_result in kraken2_results:
         for fp in kraken2_result.path.iterdir():
-            shutil.move(fp, output.path / os.path.basename(fp))
+            shutil.move(str(fp), output.path / os.path.basename(fp))

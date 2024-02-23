@@ -33,7 +33,7 @@
 
 <div class="row row-cols-1 row-cols-md-2 g-4">
   <div class="col-lg-12">
-    <div class="card mt-3 h-100">
+    <div class="card mt-3 h-10">
       <h5 class="card-header">Plot description</h5>
       <div class="card-body">
         <p>
@@ -66,10 +66,6 @@
           </a>
           of stats.sh for more information.
         </p>
-        <p>
-          Choose the assembly statistic that you wish to display from the drop-down manu below the graphs.
-          Hoover over the graph to show the numerical values that each bar represents.
-        </p>
 
         <div style="align-items: center; display: flex">
           <span class="header-inline">Downloads</span>
@@ -92,6 +88,27 @@
         </div>
       </div>
     </div>
+
+    <div class="card mt-3 h-10">
+      <h5 class="card-header">Plot Controls</h5>
+      <div class="card-body">
+        <ul>
+          <li>
+            By default only the first 10 samples are displayed. Use a regex expression in search box to display 
+            an arbitrary subset of the samples. If you have more than 1,300 MAGs in your dataset the display will not 
+            be able to show all the MAGs simultaneously.
+          </li>
+          <li>
+            Choose the assembly statistic that you wish to display from the drop-down menu below.
+          </li>
+          <li>
+            Hoover over the graph to show the numerical values that each bar represents.
+          </li>
+        </ul>
+
+        <div id="plot-controls"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -99,7 +116,6 @@
   {% if vega_plots_overview is defined %}
   <div class="col-lg-6">
     <div id="plot"></div>
-    <div id="plot-controls"></div>
   </div>
   {% else %}
   <p>Unable to generate the completeness plot</p>

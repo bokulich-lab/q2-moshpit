@@ -113,12 +113,20 @@ def _draw_busco_plots_for_render(
     domain = ["single", "duplicated", "fragmented", "missing"]
     range_ = ["#1E90FF", "#87CEFA", "#FFA500", "#FF7F50"]
 
+    # Get the first 10 sample ids
+    if len(df['sample_id'].unique()) <= 10:
+        default_regex = ""
+    else:
+        default_regex = df['sample_id'].unique()[0:10]
+        default_regex = '|'.join(default_regex)
+        default_regex = '^' + default_regex + "$"
+
     # Define the search box
     search_box = alt.param(
-        value=rf"^{df['sample_id'].unique()[0]}$",
+        value=rf"{default_regex}",
         bind=alt.binding(
             input='search',
-            placeholder="Sample ID (regex allowed)",
+            placeholder="Sample IDs",
             name='Search samples: ',
         )
     )

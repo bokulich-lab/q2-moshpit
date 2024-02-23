@@ -33,8 +33,6 @@ from qiime2.sdk.parallel_config import ParallelConfig
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
-from q2_types_genomics.per_sample_data._format import MultiFASTADirectoryFormat
-
 
 class TestClassifyKraken2Helpers(TestPluginBase):
     package = "q2_moshpit.kraken2.tests"

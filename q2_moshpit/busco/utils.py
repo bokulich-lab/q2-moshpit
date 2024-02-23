@@ -118,7 +118,7 @@ def _draw_busco_plots_for_render(
         default_regex = ""
     else:
         default_regex = df['sample_id'].unique()[0:10]
-        default_regex = '|'.join(default_regex)
+        default_regex = '$|^'.join(default_regex)
         default_regex = '^' + default_regex + "$"
 
     # Define the search box

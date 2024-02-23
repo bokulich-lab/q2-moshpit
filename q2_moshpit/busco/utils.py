@@ -11,6 +11,7 @@ from typing import List, Dict
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
+# Define data for the parameter parsing
 arguments_with_hyphens = {
     "auto_lineage": "auto-lineage",
     "auto_lineage_euk": "auto-lineage-euk",
@@ -18,6 +19,9 @@ arguments_with_hyphens = {
     "list_datasets": "list-datasets",
     "update_data": "update-data",
 }
+
+# Allow for big datasets with altair
+alt.data_transformers.enable("vegafusion")
 
 
 def _parse_busco_params(arg_key, arg_val) -> List[str]:
@@ -81,6 +85,7 @@ def _draw_busco_plots_for_render(
         var_name="category",
     )
 
+    # Data for the assemble statistics plot (the bar plots on the right)
     secondary_plot_data = df[[
         "sample_id",
         "mag_id",
@@ -108,6 +113,17 @@ def _draw_busco_plots_for_render(
     domain = ["single", "duplicated", "fragmented", "missing"]
     range_ = ["#1E90FF", "#87CEFA", "#FFA500", "#FF7F50"]
 
+    # Define the search box
+    search_box = alt.param(
+        value=rf"^{df['sample_id'].unique()[0]}$",
+        bind=alt.binding(
+            input='search',
+            placeholder="Sample ID (regex allowed)",
+            name='Search samples: ',
+        )
+    )
+
+    # Make BUSCO bar plots (the plots on the left)
     busco_plot = (
         alt.Chart(busco_plot_data)
         .mark_bar()
@@ -147,11 +163,19 @@ def _draw_busco_plots_for_render(
             ),
             spacing=spacing
         )
-        .resolve_scale(y="independent")
+        .resolve_scale(
+            y="independent"
+        )
+        .add_params(
+            search_box
+        ).transform_filter(
+            alt.expr.test(
+                alt.expr.regexp(search_box, 'i'), alt.datum.sample_id
+            )
+        )
     )
 
-    # Secondary plot
-    # Drop down menu
+    # Define drop down menu for assembly statistics plot
     dropdown = alt.binding_select(
         options=[
             'scaffold_n50',
@@ -159,7 +183,7 @@ def _draw_busco_plots_for_render(
             'percent_gaps',
             'number_of_scaffolds',
         ],
-        name="Assembly Statistics: "
+        name="Assembly statistics: "
     )
 
     xcol_param = alt.param(
@@ -167,11 +191,12 @@ def _draw_busco_plots_for_render(
         bind=dropdown
     )
 
+    # Define assembly statistics plot
     secondary_plot = alt.Chart(secondary_plot_data).mark_bar().encode(
         x=alt.X('x:Q').title('Assembly Statistic'),
         y=alt.Y('mag_id', axis=None),
         tooltip=[alt.Tooltip('x:Q', title="value")],
-        opacity=alt.value(0.85)
+        opacity=alt.value(0.85),
     ).transform_calculate(
         x=f'datum[{xcol_param.name}]'
     ).add_params(
@@ -188,11 +213,17 @@ def _draw_busco_plots_for_render(
         spacing=spacing
     ).resolve_scale(
         y="independent"
+    ).add_params(
+        search_box
+    ).transform_filter(
+        alt.expr.test(alt.expr.regexp(search_box, 'i'), alt.datum.sample_id)
     )
 
     # concatenate plots horizontally
     output_plot = alt.hconcat(
         busco_plot, secondary_plot, spacing=3
+    ).configure(
+        autosize=alt.AutoSizeParams(resize=True)
     ).configure_axis(
         labelFontSize=labelFontSize, titleFontSize=titleFontSize
     ).configure_legend(
@@ -202,7 +233,7 @@ def _draw_busco_plots_for_render(
     )
 
     # Return
-    return output_plot.to_json()
+    return output_plot.to_json(format="vega")
 
 
 def _run_busco(

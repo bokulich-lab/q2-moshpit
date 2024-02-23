@@ -163,6 +163,10 @@ class TestBUSCO(TestPluginBase):
         # Replace param value to make the dict altair version invariant
         observed = observed.replace("param_1", "param_i")
         observed = observed.replace("param_2", "param_i")
+        observed = observed.replace("param_3", "param_i")
+        observed = observed.replace("param_4", "param_i")
+        observed = observed.replace("_server_source_0", "_server_source_i")
+        observed = observed.replace("_server_source_1", "_server_source_i")
 
         # Json string to dict
         observed = json.loads(observed)

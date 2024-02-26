@@ -20,14 +20,14 @@ requirements:
     - altair
     - beautifulsoup4
     - bracken
-    - busco >=5.0.0
+    - busco ==5.5.0
     - diamond
     - eggnog-mapper >=2.1.10
     - kaiju
     - kraken2
     - metabat2
     - qiime2 {{ qiime2_epoch }}.*
-    - q2-types-genomics {{ qiime2_epoch }}.*
+    - q2-types {{ qiime2_epoch }}.*
     - q2templates {{ qiime2_epoch }}.*
     - q2-assembly {{ qiime2_epoch }}.*
     - eggnog-mapper >=2.1.10

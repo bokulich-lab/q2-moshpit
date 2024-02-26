@@ -8,12 +8,14 @@
 import os
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
+from qiime2.core.exceptions import ValidationError
 from .._dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
-    fetch_diamond_db, build_eggnog_diamond_db, _validate_taxon_id
+    fetch_diamond_db, build_eggnog_diamond_db, fetch_ncbi_taxonomy,
+    _validate_taxon_id, _collect_and_compare_md5
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
-from q2_types_genomics.reference_db import (
+from q2_types.reference_db import (
     NCBITaxonomyDirFmt, EggnogProteinSequencesDirFmt
 )
 
@@ -149,6 +151,95 @@ class TestBuildDiamondDB(TestPluginBase):
 
         # Check that commands are ran as expected
         subp_run.assert_has_calls([first_call, second_call], any_order=False)
+
+    @patch("q2_moshpit.eggnog._dbs._collect_and_compare_md5")
+    @patch("subprocess.run")
+    @patch("os.remove")
+    def test_fetch_ncbi_taxonomy(self, mock_os_rm, mock_run, mock_md5):
+        # Call function. Patching will make sure nothing is actually ran
+        ncbi_data = fetch_ncbi_taxonomy()
+        zip_path = os.path.join(str(ncbi_data), "taxdmp.zip")
+        proteins_path = os.path.join(str(ncbi_data), "prot.accession2taxid.gz")
+
+        # Check that command was called in the expected way
+        expected_calls = [
+            call(
+                [
+                    "wget", "-O", f"{zip_path}",
+                    "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip"
+                ],
+                check=True
+            ),
+            call(
+                [
+                    "wget", "-O", f"{zip_path}.md5",
+                    "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip.md5"
+                ],
+                check=True
+            ),
+            call(
+                [
+                    "unzip", "-j", zip_path, "names.dmp", "nodes.dmp",
+                    "-d", str(ncbi_data)
+                ],
+                check=True,
+            ),
+            call(
+                [
+                    "wget", "-O", f"{proteins_path}",
+                    "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+                    "prot.accession2taxid.gz"
+                ],
+                check=True
+            ),
+            call(
+                [
+                    "wget", "-O", f"{proteins_path}.md5",
+                    "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/"
+                    "prot.accession2taxid.gz.md5"
+                ],
+                check=True
+            )
+        ]
+
+        # Check that commands are ran as expected
+        mock_os_rm.assert_called_once_with(zip_path)
+        mock_run.assert_has_calls(
+            expected_calls,
+            any_order=False
+        )
+        mock_md5.assert_has_calls(
+            [
+                call(f"{zip_path}.md5", zip_path),
+                call(f"{proteins_path}.md5", proteins_path),
+            ],
+            any_order=False
+        )
+
+    @patch("os.remove")
+    def test_collect_and_compare_md5_valid(self, mock_os_rm):
+        path_to_file = self.get_data_path("md5/a.txt")
+
+        # Should raise no errors
+        _collect_and_compare_md5(f"{path_to_file}.md5", path_to_file)
+
+        # Check rm is called as expected
+        mock_os_rm.assert_called_once_with(f"{path_to_file}.md5")
+
+    @patch("os.remove")
+    def test_collect_and_compare_md5_invalid(self, mock_os_rm):
+        path_to_file = self.get_data_path("md5/b.txt")
+        path_to_wrong_md5 = self.get_data_path("md5/a.txt.md5")
+
+        # Check that expected exception is raised
+        with self.assertRaisesRegex(
+            ValidationError,
+            "has an unexpected MD5 hash"
+        ):
+            _collect_and_compare_md5(path_to_wrong_md5, path_to_file)
+
+        # check that rm is not called
+        mock_os_rm.assert_not_called()
 
     @patch("q2_moshpit.eggnog._dbs._validate_taxon_id")
     @patch("subprocess.run")

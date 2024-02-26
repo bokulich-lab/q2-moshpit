@@ -22,7 +22,7 @@ from q2_moshpit.busco.utils import (
 )
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
-from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
+from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
 class TestBUSCO(TestPluginBase):

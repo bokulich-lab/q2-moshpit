@@ -12,7 +12,7 @@ from q2_types.feature_data import (
 )
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
-    SequencesWithQuality, PairedEndSequencesWithQuality
+    SequencesWithQuality, PairedEndSequencesWithQuality, MAGs, Contigs
 )
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
@@ -21,18 +21,17 @@ from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 import q2_moshpit._examples as ex
 import q2_moshpit
-from q2_types_genomics.feature_data import NOG, MAG
-from q2_types_genomics.genome_data import (
+from q2_types.feature_data_mag import NOG, MAG
+from q2_types.genome_data import (
     BLAST6, GenomeData, Loci, Genes, Proteins
 )
-from q2_types_genomics.kaiju import KaijuDB
-from q2_types_genomics.kraken2 import (
+from q2_types.kaiju import KaijuDB
+from q2_types.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB, Kraken2DBReport
 )
-from q2_types_genomics.kraken2._type import BrackenDB
-from q2_types_genomics.per_sample_data import MAGs, Contigs
-from q2_types_genomics.per_sample_data._type import AlignmentMap
-from q2_types_genomics.reference_db import (
+from q2_types.kraken2._type import BrackenDB
+from q2_types.per_sample_sequences._type import AlignmentMap
+from q2_types.reference_db import (
     ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
     BuscoDB
 )
@@ -144,7 +143,8 @@ plugin.methods.register_function(
     name='Bin contigs into MAGs using MetaBAT 2.',
     description='This method uses MetaBAT 2 to bin provided contigs '
                 'into MAGs.',
-    citations=[citations["kang2019"]]
+    citations=[citations["kang2019"], citations["heng2009samtools"],
+               citations["scikit_bio_release"]]
 )
 
 T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({
@@ -551,7 +551,8 @@ plugin.methods.register_function(
                 "eggnog.taxa.tar.gz"
                 "eggnog.taxa.db.traverse.pkl: "
                 "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
-                "eggnog_proteins.dmnd.gz"
+                "eggnog_proteins.dmnd.gz",
+    citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
 plugin.methods.register_function(
@@ -570,7 +571,11 @@ plugin.methods.register_function(
                 "required to run this action. "
                 "Link to database: "
                 "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
-                "eggnog_proteins.dmnd.gz"
+                "eggnog_proteins.dmnd.gz",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
 )
 
 plugin.methods.register_function(
@@ -588,7 +593,27 @@ plugin.methods.register_function(
                 "This script downloads 2 files "
                 "(e5.proteomes.faa and e5.taxid_info.tsv) "
                 "and creates and artifact with them. At least 18 GB of "
-                "storage space is required to run this action. "
+                "storage space is required to run this action. ",
+    citations=[citations["huerta_cepas_eggnog_2019"]]
+)
+
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_ncbi_taxonomy,
+    inputs={},
+    parameters={},
+    outputs=[("taxonomy", ReferenceDB[NCBITaxonomy])],
+    output_descriptions={
+        "taxonomy": "NCBI reference taxonomy."
+    },
+    name="Fetch NCBI reference taxonomy",
+    description="Downloads NCBI reference taxonomy from the NCBI FTP server. "
+                "The resulting artifact is required by the "
+                "build-custom-diamond-db action if one wished to "
+                "create a Diamond data base with taxonomy features. "
+                "At least 30 GB of "
+                "storage space is required to run this action.",
+    citations=[citations["NCBI"]]
 )
 
 plugin.methods.register_function(
@@ -617,6 +642,10 @@ plugin.methods.register_function(
          "specified taxon.",
     description="Creates a DIAMOND database which contains the protein "
                 "sequences that belong to the specified taxon.",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
 )
 
 plugin.methods.register_function(
@@ -651,6 +680,10 @@ plugin.methods.register_function(
     description="This method performs the steps by which we find our "
                 "possible target sequences to annotate using the diamond "
                 "search functionality from the eggnog `emapper.py` script",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
 )
 
 plugin.methods.register_function(
@@ -671,6 +704,7 @@ plugin.methods.register_function(
     outputs=[('ortholog_annotations', FeatureData[NOG])],
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
+    citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
 # First bool flag only allowed to be True when the DB contains all lineages

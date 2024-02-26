@@ -18,8 +18,8 @@ from q2_moshpit._utils import (
     colorify,
     run_command
 )
-from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
-from q2_types_genomics.reference_db._format import BuscoDatabaseDirFmt
+from q2_types.reference_db._format import BuscoDatabaseDirFmt
+from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
 def evaluate_busco(

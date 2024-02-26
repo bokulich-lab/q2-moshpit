@@ -52,10 +52,6 @@
           for more information. 
         </p>
         <p>
-          Hoover over the graph to obtain information about the lineage dataset
-          used for each bin, and the number of genes in each BUSCO category.
-        </p>
-        <p>
           The right barplot shows assembly statistics calculated for each bin using BBTools.
           Specifically, it displays the statistics computed by the <b>stats.sh</b> procedure from BBMap.
           View the 
@@ -94,15 +90,28 @@
       <div class="card-body">
         <ul>
           <li>
-            By default only the first 10 samples are displayed. Use a regex expression in search box to display 
-            an arbitrary subset of the samples. If you have more than 1,300 MAGs in your dataset the display will not 
-            be able to show all the MAGs simultaneously.
+            By default only the first 10 samples are displayed. Use a regular expression (regex) in the search box to display 
+            an arbitrary subset of the samples. 
           </li>
+            <ul>
+              <li>
+                No more than ~1,300 MAGs can be displayed simultaneously. If you exceed this limit an error image will be displayed. 
+              </li>
+              <li>
+                If you have 14 samples named "sample_i" where "i" is a number from 1-14, and you whish to visualize only 
+                "sample_1" and "sample_14" your regex expression could look like this: ^sample_1$|^sample_14$
+              </li>
+              <li>
+                You can test your regex'es with this 
+                <a href="https://busco.ezlab.org/busco_userguide.html#interpreting-the-results">Regular Expression Tester</a>.
+              </li>
+            </ul>
           <li>
             Choose the assembly statistic that you wish to display from the drop-down menu below.
           </li>
           <li>
-            Hoover over the graph to show the numerical values that each bar represents.
+            Hoover over the graph to obtain information about the lineage dataset
+            used for each bin, and the number of genes in each BUSCO category.
           </li>
         </ul>
 

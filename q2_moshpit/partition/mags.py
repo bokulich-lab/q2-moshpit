@@ -10,10 +10,10 @@ import shutil
 import numpy as np
 from qiime2.util import duplicate
 from .utils import _validate_mag_ids, _validate_num_partitions
-from q2_types_genomics.per_sample_data import (
+from q2_types.per_sample_sequences import (
     MultiMAGSequencesDirFmt
 )
-from q2_types_genomics.feature_data import (
+from q2_types.feature_data import (
     MAGSequencesDirFmt
 )
 

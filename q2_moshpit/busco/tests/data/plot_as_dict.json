@@ -1160,10 +1160,10 @@
       "bind": {
         "input": "search",
         "name": "Search samples: ",
-        "placeholder": "Sample ID (regex allowed)"
+        "placeholder": "Sample IDs"
       },
       "name": "param_i",
-      "value": "^sample1$"
+      "value": ""
     },
     {
       "bind": {

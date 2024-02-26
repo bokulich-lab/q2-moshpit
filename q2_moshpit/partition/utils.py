@@ -29,6 +29,12 @@ def _validate_num_partitions(num_mags: int, num_partitions: int) -> int:
 def _validate_mag_ids(
     num_partitions: int, num_mags: int, mags_all: List[tuple]
 ):
+    # If num_partitions == num_mags and MAG ids are not unique
+    # the output will be missing these duplicated-id MAGs.
+    # While this is technically impossible since
+    # MAGs should have unique IDs by construction, it could still happen that a
+    # used imports MAGs with non-unique IDs. In such case this test would be
+    # useful.
 
     if num_partitions == num_mags:
         mag_ids = [mag_id[1] for mag_id in mags_all]

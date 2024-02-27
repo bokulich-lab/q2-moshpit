@@ -5,12 +5,12 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
 import unittest
-
 from qiime2.plugin.testing import TestPluginBase
-
-from .._utils import _construct_param, _process_common_input_params
+from .._utils import (
+    _construct_param, _process_common_input_params,
+    _calculate_md5_from_file
+)
 
 
 def fake_processing_func(key, val):
@@ -112,6 +112,16 @@ class TestUtils(TestPluginBase):
             "--m",
         ]
         self.assertSetEqual(set(observed), set(expected))
+
+    def test_calculate_md5_from_pass(self):
+        path_to_file = self.get_data_path("md5/a.txt")
+        observed_hash = _calculate_md5_from_file(path_to_file)
+        self.assertEqual(observed_hash, "a583054a9831a6e7cc56ea5cd9cac40a")
+
+    def test_calculate_md5_from_fail(self):
+        path_to_file = self.get_data_path("md5/b.txt")
+        observed_hash = _calculate_md5_from_file(path_to_file)
+        self.assertNotEqual(observed_hash, "a583054a9831a6e7cc56ea5cd9cac40a")
 
 
 if __name__ == '__main__':

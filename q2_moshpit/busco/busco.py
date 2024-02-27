@@ -15,8 +15,7 @@ from q2_moshpit.busco.utils import (
     _render_html,
 )
 from q2_moshpit._utils import _process_common_input_params
-from typing import List
-from q2_types_genomics.per_sample_data._format import MultiMAGSequencesDirFmt
+from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
 def evaluate_busco(
@@ -33,26 +32,14 @@ def evaluate_busco(
     cpu: int = 1,
     config: str = None,
     contig_break: int = 10,
-    datasets_version: str = None,
-    download: List[str] = None,
-    download_base_url: str = None,
-    download_path: str = None,
     evalue: float = 1e-03,
     force: bool = False,
     limit: int = 3,
-    help: bool = False,
-    list_datasets: bool = False,
     long: bool = False,
     metaeuk_parameters: str = None,
     metaeuk_rerun_parameters: str = None,
     miniprot: bool = False,
-    offline: bool = False,
-    quiet: bool = False,
-    restart: bool = False,
     scaffold_composition: bool = False,
-    tar: bool = False,
-    update_data: bool = False,
-    version: bool = False,
 ) -> None:
     """
     qiime2 visualization for the BUSCO assessment tool

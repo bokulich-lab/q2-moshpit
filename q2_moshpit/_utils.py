@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import subprocess
+import hashlib
 from typing import List
 
 
@@ -72,5 +73,14 @@ def _process_common_input_params(processing_func, params: dict) -> List[str]:
     return processed_args
 
 
-def colorify(string):
+def colorify(string: str):
     return "%s%s%s" % ('\033[1;32m', string, "\033[0m")
+
+
+def _calculate_md5_from_file(file_path: str) -> str:
+    md5_hash = hashlib.md5()
+    with open(file_path, 'rb') as f:
+        # Read the file in chunks to handle large files
+        for chunk in iter(lambda: f.read(4096), b""):
+            md5_hash.update(chunk)
+    return md5_hash.hexdigest()

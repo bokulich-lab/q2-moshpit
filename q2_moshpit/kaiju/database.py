@@ -11,7 +11,7 @@ from urllib.parse import urljoin
 
 from tqdm import tqdm
 
-from q2_types_genomics.kaiju import KaijuDBDirectoryFormat
+from q2_types.kaiju import KaijuDBDirectoryFormat
 
 
 from bs4 import BeautifulSoup

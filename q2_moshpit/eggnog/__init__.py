@@ -8,11 +8,12 @@
 from ._method import eggnog_diamond_search, eggnog_annotate
 from ._dbs import (
     fetch_eggnog_db, fetch_diamond_db, build_custom_diamond_db,
-    fetch_eggnog_proteins
+    fetch_eggnog_proteins, build_eggnog_diamond_db, fetch_ncbi_taxonomy
 )
 
 
 __all__ = [
     'eggnog_diamond_search', 'eggnog_annotate', 'fetch_eggnog_db',
-    'fetch_diamond_db', 'build_custom_diamond_db', 'fetch_eggnog_proteins'
+    'fetch_diamond_db', 'build_custom_diamond_db', 'fetch_eggnog_proteins',
+    'build_eggnog_diamond_db', 'fetch_ncbi_taxonomy'
 ]

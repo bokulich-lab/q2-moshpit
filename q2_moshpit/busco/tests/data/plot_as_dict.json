@@ -461,7 +461,7 @@
       ]
     },
     {
-      "name": "source_0",
+      "name": "source_i",
       "source": "_server_source_i",
       "transform": [
         {
@@ -518,7 +518,7 @@
     },
     {
       "name": "concat_0_row_domain",
-      "source": "source_0",
+      "source": "source_i",
       "transform": [
         {
           "as": [
@@ -538,7 +538,7 @@
       ]
     },
     {
-      "name": "source_1",
+      "name": "source_i",
       "source": "_server_source_i",
       "transform": [
         {
@@ -575,7 +575,7 @@
     },
     {
       "name": "concat_1_row_domain",
-      "source": "source_1",
+      "source": "source_i",
       "transform": [
         {
           "as": [
@@ -776,7 +776,7 @@
                   "distinct"
                 ]
               },
-              "data": "source_0",
+              "data": "source_i",
               "groupby": [
                 "sample_id"
               ],
@@ -997,7 +997,7 @@
                   "distinct"
                 ]
               },
-              "data": "source_1",
+              "data": "source_i",
               "groupby": [
                 "sample_id"
               ],
@@ -1121,7 +1121,7 @@
     },
     {
       "domain": {
-        "data": "source_1",
+        "data": "source_i",
         "fields": [
           "x_start",
           "x_end"

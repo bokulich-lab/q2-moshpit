@@ -1,6 +1,8 @@
 ### What's new
-- <!--- Describe what was changed in the code and why it is useful or necessary-->
-- <!--- Does this PR fully address an existing issue? If so write: Closes #issue_number -->
+<!---
+- Describe what was changed in the code and why it is useful or necessary
+- Does this PR fully address an existing issue? If so write: Closes #issue_number 
+-->
 
 ### Additional Info
 <!--- Is the PR blocked by another PR? If so, disclose it here. You can use the syntax user/repo_name/pull/PR_number to reference PRs in other repos. To reference PRs in the same repo simply use #PR_number. Do so inside the ```[tasklist]``` context as shown below.
@@ -76,7 +78,6 @@ qiime moshpit build-diamond-db --i-sequences sequences.qza --o-diamond-db custom
 ### TODO
 <!---Feel free to eliminate sections that are not relevant to your PR.-->
 - [ ] Fill in *Whats new* section. Erase any bullet points that are not used.
-- [ ] In the *Set up an environment* Make sure to adjust the environment to the latest version possible of all involved dependencies.
 - [ ] In *Run it locally*, **step 1**, make sure to write the PR number after you have submitted the PR.
 - [ ] In *Run it locally*, **step 2**, fill in the code to fetch the inputs to test the code.
 - [ ] In *Run it locally*, **step 3**, fill in the code to test the changes. 

@@ -4,48 +4,47 @@
 
 ### Additional Info
 <!--- Is the PR blocked by another PR? If so, disclose it here. You can use the syntax user/repo_name/pull/PR_number to reference PRs in other repos. To reference PRs in the same repo simply use #PR_number. Do so inside the ```[tasklist]``` context as shown below.
+
 ```[tasklist]
 ### Blocked by
-- [ ] user/repo_name/pull/PR_number
+- [ ] user/repo_name#PR_number
 - [ ] #PR_number
 ```
-If you also what the CI tool to block merging of the PR before another you can use the following:
+-->
+
+<!---
+If you also what the CI tool to block merging of the PR before another use the following syntax:
 - blocked by #PR_number
 - merge after user/repo_name#PR_number
 - dependent on #PR_number
--->
 
-### Set up an environment
-<!---
-- The following commands should get the reviewer a working environment where they can test the PR changes. 
-- Keep in mind that if you PR depends on newer versions of the dependencies you will have to install these manually, e.g: pip install git+https://github.com/username/repository.git or pip install -e . your_local_dependency
+Feel free to leave this section as a comment. The CI will still pick it up. 
 -->
-```bash
-# For linux: 
-# export MY_OS="linux"
-# For mac:
-export MY_OS="osx" 
-wget "https://data.qiime2.org/distro/shotgun/qiime2-shotgun-2023.9-py38-"$MY_OS"-conda.yml"
-conda env create -n q2-shotgun --file qiime2-shotgun-2023.9-py38-osx-conda.yml
-rm "qiime2-shotgun-2023.9-py38-"$MY_OS"-conda.yml"
-```
 
 ### Run it locally 
-1. Clone the repo and checkout the PR branch (skip this step if you already have a local copy of the code):
+1. Assuming you already a working virtual environment.
 ```bash
 # Remove q2-moshpit so you can install your local version.
-conda activate q2-shotgun
+conda activate <you_env_name>
 conda remove q2-moshpit
+```
 
+```bash
 # clone from GitHub
+cd <clone_here>
 git clone git@github.com:bokulich-lab/q2-moshpit.git
 cd q2-moshpit
-gh pr checkout <PR_number>
 pip install -e .
+```
+
+```bash
+# checkout the PR branch
+PR=<PR_number>
+git fetch origin pull/${PR}/head:pr-${PR}
+git checkout pr-${PR}
 ```
 <!---
 - The PR_number will be created after you submit the PR, therefore it can only be set after, by editing the PR message.
-- Make sure you have gh (GitHub CLI) installed in your environment.
 -->
 
 2. Let's get you some data to play with: 
@@ -74,14 +73,8 @@ qiime moshpit build-diamond-db --i-sequences sequences.qza --o-diamond-db custom
 ```
 -->
 
-### Running the tests
-```bash
-pytest -W ignore -vv --pyargs q2_moshpit
-```
-
 ### TODO
 <!---Feel free to eliminate sections that are not relevant to your PR.-->
-- [ ] Fill in *About this repo* section.
 - [ ] Fill in *Whats new* section. Erase any bullet points that are not used.
 - [ ] In the *Set up an environment* Make sure to adjust the environment to the latest version possible of all involved dependencies.
 - [ ] In *Run it locally*, **step 1**, make sure to write the PR number after you have submitted the PR.

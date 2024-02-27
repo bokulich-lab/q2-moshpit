@@ -1,15 +1,3 @@
----
-name: Bug PR
-about: Submit a PR for a bug
-title: 'BUG: '
-labels: bug
-assignees: ''
-
----
-### About this repo
-- `q2-moshpit` is a `qiime2` plugin that offers various analyses for shotgun metagenome data.
-- <!--- What part of the repo is the current PR concerned with? E.g. The current PR addressed a bug in action X, which runs a Y analysis on the inputs. -->
-
 ### What's new
 - <!--- Describe what was changed in the code and why it is useful or necessary-->
 - <!--- Does this PR fully address an existing issue? If so write: Closes #issue_number -->

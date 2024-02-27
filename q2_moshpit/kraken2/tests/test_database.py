@@ -30,7 +30,7 @@ from q2_moshpit.kraken2.database import (
     _find_latest_db, _fetch_db_collection, S3_COLLECTIONS_URL,
     _build_dbs_from_seqs, _fetch_prebuilt_dbs, inspect_kraken2_db
 )
-from q2_types_genomics.kraken2 import (
+from q2_types.kraken2 import (
     Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat,
     Kraken2DBReportFormat, Kraken2DBReportDirectoryFormat
 )

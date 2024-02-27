@@ -28,6 +28,7 @@ setup(
         'q2_moshpit': [
             'citations.bib',
             'tests/data/*',
+            'tests/data/md5/*',
             "assets/busco/*",
             "assets/busco/js/*",
             "assets/busco/css/*",
@@ -47,6 +48,8 @@ setup(
         ],
         'q2_moshpit.eggnog': [
             'tests/data/*',
+            'tests/data/md5/*',
+            'tests/data/build_eggnog_diamond_db/*',
             'tests/data/contig-sequences-1/*',
             'tests/data/mag-sequences/*',
             'tests/data/random-db-1/*',

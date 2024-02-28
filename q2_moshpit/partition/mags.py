@@ -13,7 +13,7 @@ from .utils import _validate_mag_ids, _validate_num_partitions
 from q2_types.per_sample_sequences import (
     MultiMAGSequencesDirFmt
 )
-from q2_types.feature_data import (
+from q2_types.feature_data_mag import (
     MAGSequencesDirFmt
 )
 

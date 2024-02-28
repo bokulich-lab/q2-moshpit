@@ -7,8 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import os
-
-import pandas as pd
+import shutil
 
 from q2_types.kraken2 import (
     Kraken2ReportDirectoryFormat,
@@ -31,21 +30,6 @@ def collate_kraken2_outputs(kraken2_outputs: Kraken2OutputDirectoryFormat) \
 
 
 def _collate_kraken_tsvs(kraken2_results, kraken_type, output):
-    collated_sample_outputs = {}
-
     for kraken2_result in kraken2_results:
         for fp in kraken2_result.path.iterdir():
-            # fp basename will be "sample_id.{output/report}.{txt/tsv}" we just
-            # want the id
-            sample_id = os.path.basename(fp).split('.')[0]
-            df = pd.read_csv(fp, sep='\t', header=None)
-
-            if sample_id in collated_sample_outputs:
-                collated_sample_outputs[sample_id].append(
-                    df, ignore_index=True)
-            else:
-                collated_sample_outputs[sample_id] = df
-
-    for sample_id, df in collated_sample_outputs.items():
-        df.to_csv(output.path / f'{sample_id}.{kraken_type}.txt', sep='\t',
-                  index=False, header=False)
+            shutil.move(fp, output.path / os.path.basename(fp))

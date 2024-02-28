@@ -255,7 +255,7 @@ def _run_busco(
             "-o",
             sample
         ])
-        run_command(cmd)
+        run_command(cmd, cwd=os.path.dirname(output_dir))
 
         # Check for output
         path_to_run_summary = os.path.join(

@@ -5,22 +5,27 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
-
 import os
 import tempfile
+import warnings
 import q2_moshpit.busco.utils
 from q2_moshpit.busco.utils import (
     _parse_busco_params,
     _render_html,
 )
-from q2_moshpit._utils import _process_common_input_params
+from q2_moshpit._utils import (
+    _process_common_input_params,
+    colorify,
+    run_command
+)
+from q2_types.reference_db._format import BuscoDatabaseDirFmt
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
 def evaluate_busco(
     output_dir: str,
     bins: MultiMAGSequencesDirFmt,
+    busco_db: BuscoDatabaseDirFmt = None,
     mode: str = "genome",
     lineage_dataset: str = None,
     augustus: bool = False,
@@ -53,13 +58,45 @@ def evaluate_busco(
         busco_output: all busco output files
         qiime_html: html for rendering the output plots
     """
-
     # Create dictionary with local variables
     # (kwargs passed to the function or their defaults) excluding
     # "output_dir" and "bins"
     kwargs = {
-        k: v for k, v in locals().items() if k not in ["output_dir", "bins"]
+        k: v for k, v in locals().items() if k not in [
+            "output_dir", "bins", "busco_db"
+        ]
     }
+
+    # Add busco_db to kwargs
+    if busco_db is not None:
+        kwargs["offline"] = True
+        kwargs["download_path"] = f"{str(busco_db)}/busco_downloads"
+
+    # Validate lineage_dataset input if provided.
+    if lineage_dataset is not None:
+        if any([auto_lineage, auto_lineage_euk, auto_lineage_prok]):
+            warnings.warn(
+                f"`--p-lineage-dataset` was specified as {lineage_dataset}. "
+                "--p-auto-lineage flags will be ignored."
+            )
+            kwargs["auto_lineage"] = False
+            kwargs["auto_lineage_euk"] = False
+            kwargs["auto_lineage_prok"] = False
+
+        # Check that lineage in deed exits inside Busco DB (if provided)
+        if busco_db is not None:
+            if not os.path.exists(
+                f"{str(busco_db)}/busco_downloads/lineages/{lineage_dataset}"
+            ):
+                present_lineages = os.listdir(
+                    os.path.join(str(busco_db), "busco_downloads/lineages/")
+                )
+                raise ValueError(
+                    f"The specified --p-lineage-dataset {lineage_dataset} "
+                    "is not present in input database (--i-busco-db). \n"
+                    "Printing lineage datasets present in input database: \n"
+                    f"{present_lineages}"
+                )
 
     # Filter out all kwargs that are None, False or 0.0
     common_args = _process_common_input_params(
@@ -106,3 +143,37 @@ def evaluate_busco(
         # Render qiime html report
         # Result included in final output
         _render_html(output_dir, all_summaries_df)
+
+
+def fetch_busco_db(
+        virus: bool, prok: bool, euk: bool
+        ) -> BuscoDatabaseDirFmt:
+    # Init output object
+    busco_db = BuscoDatabaseDirFmt(path=None, mode='w')
+
+    # Parse input
+    if all([virus, prok, euk]):
+        args = ["all"]
+    else:
+        args = [
+            variable_name
+            for variable_name, flag in [
+                ('virus', virus),
+                ('prokaryota', prok),
+                ('eukaryota', euk)
+                ]
+            if flag
+        ]
+
+    # Download
+    print(colorify("Downloading BUSCO database..."))
+    run_command(cmd=["busco", "--download", *args], cwd=str(busco_db))
+
+    # Let user know that the process is compleat but there still needs
+    # some time
+    print(colorify(
+        "Download completed. \n"
+        "Copying files from temporary directory to final location..."
+    ))
+
+    return busco_db

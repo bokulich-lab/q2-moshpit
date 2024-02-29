@@ -650,8 +650,48 @@ plugin.methods.register_function(
     ]
 )
 
-plugin.methods.register_function(
+plugin.pipelines.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,
+    inputs={
+        'sequences': SampleData[Contigs] | FeatureData[MAG],
+        'diamond_db': ReferenceDB[Diamond],
+    },
+    parameters={
+        'num_cpus': Int,
+        'db_in_memory': Bool,
+        **partition_params
+    },
+    input_descriptions={
+        'sequences': 'Sequence data of the contigs we want to '
+                     'search for hits using the Diamond Database',
+        'diamond_db': 'The filepath to an artifact containing the '
+                      'Diamond database',
+    },
+    parameter_descriptions={
+        'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+                    'use all available.',
+        'db_in_memory': 'Read database into memory. The '
+                        'database can be very large, so this '
+                        'option should only be used on clusters or other '
+                        'machines with enough memory.',
+        **partition_param_descriptions
+    },
+    outputs=[
+        ('eggnog_hits', SampleData[BLAST6]),
+        ('table', FeatureTable[Frequency])
+    ],
+    name='Run eggNOG search using diamond aligner',
+    description="This method performs the steps by which we find our "
+                "possible target sequences to annotate using the diamond "
+                "search functionality from the eggnog `emapper.py` script",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog._eggnog_diamond_search,
     inputs={
         'sequences': SampleData[Contigs] | FeatureData[MAG],
         'diamond_db': ReferenceDB[Diamond],
@@ -782,6 +822,17 @@ plugin.methods.register_function(
     name="Collate mags",
     description="Takes a collection of FeatureData[MAG]'s "
                 "and collates them into a single artifact.",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.partition.collate_orthologs,
+    inputs={"orthologs": List[SampleData[BLAST6]]},
+    parameters={},
+    outputs={"collated_orthologs": SampleData[BLAST6]},
+    input_descriptions={"orthologs": "Orthologs to collate"},
+    parameter_descriptions={},
+    name="Collate Orthologs",
+    description="Collate a List of SampleData[BLAST6] into one"
 )
 
 busco_params = {

@@ -9,8 +9,9 @@ import qiime2
 import pandas as pd
 import pandas.testing as pdt
 from qiime2.plugin.testing import TestPluginBase
+from qiime2.sdk.parallel_config import ParallelConfig
 from q2_types.feature_data_mag import MAGSequencesDirFmt
-from .._method import eggnog_diamond_search, eggnog_annotate
+from .._method import _eggnog_diamond_search, eggnog_annotate
 from q2_types.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt
 )
@@ -23,10 +24,16 @@ class TestDiamond(TestPluginBase):
 
     def setUp(self):
         super().setUp()
-        self.diamond_db = qiime2.Artifact.import_data(
+        self.diamond_db_artifact = qiime2.Artifact.import_data(
             'ReferenceDB[Diamond]',
             self.get_data_path('random-db-1')
-        ).view(DiamondDatabaseDirFmt)
+        )
+        self.diamond_db = self.diamond_db_artifact.view(DiamondDatabaseDirFmt)
+
+        self.eggnog_diamond_search = \
+            self.plugin.pipelines["eggnog_diamond_search"]
+        self._eggnog_diamond_search = \
+            self.plugin.methods["_eggnog_diamond_search"]
 
     def test_good_small_search_contigs(self):
         contigs = qiime2.Artifact.import_data(
@@ -34,7 +41,7 @@ class TestDiamond(TestPluginBase):
             self.get_data_path('contig-sequences-1')
         ).view(ContigSequencesDirFmt)
 
-        _, obs = eggnog_diamond_search(
+        _, obs = _eggnog_diamond_search(
             sequences=contigs,
             diamond_db=self.diamond_db
         )
@@ -50,7 +57,7 @@ class TestDiamond(TestPluginBase):
             self.get_data_path('mag-sequences')
         ).view(MAGSequencesDirFmt)
 
-        _, obs = eggnog_diamond_search(
+        _, obs = _eggnog_diamond_search(
             sequences=mags,
             diamond_db=self.diamond_db
         )
@@ -62,6 +69,50 @@ class TestDiamond(TestPluginBase):
         exp.columns.name = 'sseqid'
 
         pdt.assert_frame_equal(obs, exp)
+
+    def test_eggnog_search_parallel_contigs(self):
+        contigs = qiime2.Artifact.import_data(
+            'SampleData[Contigs]',
+            self.get_data_path('contig-sequences-1')
+        )
+
+        with ParallelConfig():
+            _, parallel = self.eggnog_diamond_search.parallel(
+                    contigs,
+                    self.diamond_db_artifact
+                )._result()
+
+        _, single = self._eggnog_diamond_search(
+            sequences=contigs,
+            diamond_db=self.diamond_db_artifact
+        )
+
+        parallel = parallel.view(pd.DataFrame)
+        single = single.view(pd.DataFrame)
+
+        pdt.assert_frame_equal(parallel, single)
+
+    def test_eggnog_search_parallel_mags(self):
+        mags = qiime2.Artifact.import_data(
+            'FeatureData[MAG]',
+            self.get_data_path('mag-sequences')
+        )
+
+        with ParallelConfig():
+            _, parallel = self.eggnog_diamond_search.parallel(
+                    mags,
+                    self.diamond_db_artifact
+                )._result()
+
+        _, single = self._eggnog_diamond_search(
+            sequences=mags,
+            diamond_db=self.diamond_db_artifact
+        )
+
+        parallel = parallel.view(pd.DataFrame)
+        single = single.view(pd.DataFrame)
+
+        pdt.assert_frame_equal(parallel, single)
 
 
 class TestAnnotate(TestPluginBase):

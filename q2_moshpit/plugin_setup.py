@@ -689,6 +689,24 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
+    function=q2_moshpit.eggnog._eggnog_feature_table,
+    inputs={
+        'seed_orthologs': SampleData[BLAST6]
+    },
+    parameters={},
+    input_descriptions={
+        'seed_orthologs': 'Sequence data to be turned into an eggnog feature '
+                          'table.'
+    },
+    parameter_descriptions={},
+    outputs=[
+        ('table', FeatureTable[Frequency])
+    ],
+    name='Create an eggnog table',
+    description='Create an eggnog table'
+)
+
+plugin.methods.register_function(
     function=q2_moshpit.eggnog.eggnog_annotate,
     inputs={
         'eggnog_hits': SampleData[BLAST6],

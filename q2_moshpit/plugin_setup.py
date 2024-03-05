@@ -17,7 +17,9 @@ from q2_types.per_sample_sequences import (
 )
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
-from qiime2.core.type import Bool, Range, Int, Str, Float, List, Choices
+from qiime2.core.type import (
+    Bool, Range, Int, Str, Float, List, Choices, Collection
+)
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 import q2_moshpit._examples as ex
@@ -233,7 +235,7 @@ T_kraken_collate_reports_in, T_kraken_collate_reports_out = TypeMap({
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.helpers.collate_kraken2_reports,
+    function=q2_moshpit.kraken2.helpers.collate_kraken2_reports,
     inputs={"kraken2_reports": List[T_kraken_collate_reports_in]},
     parameters={},
     outputs={"collated_kraken2_reports": T_kraken_collate_reports_out},
@@ -254,7 +256,7 @@ T_kraken_collate_outputs_in, T_kraken_collate_outputs_out = TypeMap({
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.helpers.collate_kraken2_outputs,
+    function=q2_moshpit.kraken2.helpers.collate_kraken2_outputs,
     inputs={"kraken2_outputs": List[T_kraken_collate_outputs_in]},
     parameters={},
     outputs={"collated_kraken2_outputs": T_kraken_collate_outputs_out},
@@ -648,8 +650,48 @@ plugin.methods.register_function(
     ]
 )
 
-plugin.methods.register_function(
+plugin.pipelines.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,
+    inputs={
+        'sequences': SampleData[Contigs] | FeatureData[MAG],
+        'diamond_db': ReferenceDB[Diamond],
+    },
+    parameters={
+        'num_cpus': Int,
+        'db_in_memory': Bool,
+        **partition_params
+    },
+    input_descriptions={
+        'sequences': 'Sequence data of the contigs we want to '
+                     'search for hits using the Diamond Database',
+        'diamond_db': 'The filepath to an artifact containing the '
+                      'Diamond database',
+    },
+    parameter_descriptions={
+        'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+                    'use all available.',
+        'db_in_memory': 'Read database into memory. The '
+                        'database can be very large, so this '
+                        'option should only be used on clusters or other '
+                        'machines with enough memory.',
+        **partition_param_descriptions
+    },
+    outputs=[
+        ('eggnog_hits', SampleData[BLAST6]),
+        ('table', FeatureTable[Frequency])
+    ],
+    name='Run eggNOG search using diamond aligner',
+    description="This method performs the steps by which we find our "
+                "possible target sequences to annotate using the diamond "
+                "search functionality from the eggnog `emapper.py` script",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog._eggnog_diamond_search,
     inputs={
         'sequences': SampleData[Contigs] | FeatureData[MAG],
         'diamond_db': ReferenceDB[Diamond],
@@ -687,6 +729,24 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
+    function=q2_moshpit.eggnog._eggnog_feature_table,
+    inputs={
+        'seed_orthologs': SampleData[BLAST6]
+    },
+    parameters={},
+    input_descriptions={
+        'seed_orthologs': 'Sequence data to be turned into an eggnog feature '
+                          'table.'
+    },
+    parameter_descriptions={},
+    outputs=[
+        ('table', FeatureTable[Frequency])
+    ],
+    name='Create an eggnog table',
+    description='Create an eggnog table'
+)
+
+plugin.methods.register_function(
     function=q2_moshpit.eggnog.eggnog_annotate,
     inputs={
         'eggnog_hits': SampleData[BLAST6],
@@ -708,6 +768,71 @@ plugin.methods.register_function(
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
     citations=[citations["huerta_cepas_eggnog_2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.partition.partition_sample_data_mags,
+    inputs={"mags": SampleData[MAGs]},
+    parameters={"num_partitions": Int % Range(1, None)},
+    outputs={"partitioned_mags": Collection[SampleData[MAGs]]},
+    input_descriptions={"mags": "The MAGs to partition."},
+    parameter_descriptions={
+        "num_partitions": "The number of partitions to split the MAGs"
+        " into. Defaults to partitioning into individual"
+        " MAGs."
+    },
+    name="Partition MAGs",
+    description="Partition a SampleData[MAGs] artifact into smaller "
+                "artifacts containing subsets of the MAGs",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.partition.collate_sample_data_mags,
+    inputs={"mags": List[SampleData[MAGs]]},
+    parameters={},
+    outputs={"collated_mags": SampleData[MAGs]},
+    input_descriptions={"mags": "A collection of MAGs to be collated."},
+    name="Collate mags",
+    description="Takes a collection of SampleData[MAGs]'s "
+                "and collates them into a single artifact.",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.partition.partition_feature_data_mags,
+    inputs={"mags": FeatureData[MAG]},
+    parameters={"num_partitions": Int % Range(1, None)},
+    outputs={"partitioned_mags": Collection[FeatureData[MAG]]},
+    input_descriptions={"mags": "MAGs to partition."},
+    parameter_descriptions={
+        "num_partitions": "The number of partitions to split the MAGs"
+        " into. Defaults to partitioning into individual"
+        " MAGs."
+    },
+    name="Partition MAGs",
+    description="Partition a FeatureData[MAG] artifact into smaller "
+                "artifacts containing subsets of the MAGs",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.partition.collate_feature_data_mags,
+    inputs={"mags": List[FeatureData[MAG]]},
+    parameters={},
+    outputs={"collated_mags": FeatureData[MAG]},
+    input_descriptions={"mags": "A collection of MAGs to be collated."},
+    name="Collate mags",
+    description="Takes a collection of FeatureData[MAG]'s "
+                "and collates them into a single artifact.",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.partition.collate_orthologs,
+    inputs={"orthologs": List[SampleData[BLAST6]]},
+    parameters={},
+    outputs={"collated_orthologs": SampleData[BLAST6]},
+    input_descriptions={"orthologs": "Orthologs to collate"},
+    parameter_descriptions={},
+    name="Collate Orthologs",
+    description="Collate a List of SampleData[BLAST6] into one"
 )
 
 plugin.methods.register_function(

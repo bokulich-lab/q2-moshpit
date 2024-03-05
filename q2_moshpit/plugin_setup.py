@@ -716,15 +716,14 @@ plugin.methods.register_function(
     parameters={},
     outputs=[('collated_annotations', FeatureData[NOG])],
     input_descriptions={
-        'ortholog_annotations': "Collection of orthologs annotations"
+        'ortholog_annotations': "Collection of ortholog annotations."
     },
     output_descriptions={
-        'collated_annotations': "Collated orthologs annotations"
+        'collated_annotations': "Collated ortholog annotations."
     },
-    name='Collate orthologs annotations',
-    description="Collate orthologs annotations from the eggnog-annotate "
-                "action. Intended when parallel runs of eggnog-diamond-search "
-                "and eggnog-annotate were used.",
+    name='Collate ortholog annotations.',
+    description="Takes a collection of FeatureData[NOG]'s "
+                "and collates them into a single artifact.",
 )
 
 busco_params = {

@@ -835,6 +835,22 @@ plugin.methods.register_function(
     description="Collate a List of SampleData[BLAST6] into one"
 )
 
+plugin.methods.register_function(
+    function=q2_moshpit.partition.collate_annotations,
+    inputs={'ortholog_annotations': List[FeatureData[NOG]]},
+    parameters={},
+    outputs=[('collated_annotations', FeatureData[NOG])],
+    input_descriptions={
+        'ortholog_annotations': "Collection of ortholog annotations."
+    },
+    output_descriptions={
+        'collated_annotations': "Collated ortholog annotations."
+    },
+    name='Collate ortholog annotations.',
+    description="Takes a collection of FeatureData[NOG]'s "
+                "and collates them into a single artifact.",
+)
+
 busco_params = {
     "mode": Str % Choices(["genome"]),
     "lineage_dataset": Str,

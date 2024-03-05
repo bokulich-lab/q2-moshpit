@@ -134,10 +134,12 @@ def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
     subprocess.run(cmds, check=True)
 
 
-def _eggnog_annotate(eggnog_hits: SeedOrthologDirFmt,
-                    eggnog_db: EggnogRefDirFmt,
-                    db_in_memory: bool = False,
-                    num_cpus: int = 1) -> OrthologAnnotationDirFmt:
+def _eggnog_annotate(
+        eggnog_hits: SeedOrthologDirFmt,
+        eggnog_db: EggnogRefDirFmt,
+        db_in_memory: bool = False,
+        num_cpus: int = 1
+) -> OrthologAnnotationDirFmt:
 
     eggnog_db_fp = eggnog_db.path
 

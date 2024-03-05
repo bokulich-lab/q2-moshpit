@@ -11,7 +11,6 @@ import shutil
 import warnings
 
 import numpy as np
-from q2_types.feature_data_mag import OrthologAnnotationDirFmt
 from q2_types.genome_data import SeedOrthologDirFmt
 from qiime2.util import duplicate
 
@@ -38,7 +37,8 @@ def partition_orthologs(
     # TODO: this logic should move to the format itself
     orthologs = glob.glob(os.path.join(str(orthologs), "*.seed_orthologs"))
     names = [
-        os.path.basename(x).replace(".emapper.seed_orthologs", "") for x in orthologs
+        os.path.basename(x).replace(".emapper.seed_orthologs", "")
+        for x in orthologs
     ]
     orthologs = list(zip(names, orthologs))
 

@@ -829,24 +829,6 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.partition.collate_annotations,
-    inputs={'ortholog_annotations': List[FeatureData[NOG]]},
-    parameters={},
-    outputs=[('collated_annotations', FeatureData[NOG])],
-    input_descriptions={
-        'ortholog_annotations': "Collection of orthologs annotations"
-    },
-    output_descriptions={
-        'collated_annotations': "Collated orthologs annotations"
-    },
-    name='Collate orthologs annotations',
-    description="Collate orthologs annotations from the eggnog-annotate "
-                "action. Intended when parallel runs of eggnog-diamond-search "
-                "and eggnog-annotate were used.",
-)
-
-
-plugin.methods.register_function(
     function=q2_moshpit.partition.collate_sample_data_mags,
     inputs={"mags": List[SampleData[MAGs]]},
     parameters={},

@@ -746,8 +746,34 @@ plugin.methods.register_function(
     description='Create an eggnog table'
 )
 
-plugin.methods.register_function(
+plugin.pipelines.register_function(
     function=q2_moshpit.eggnog.eggnog_annotate,
+    inputs={
+        'eggnog_hits': SampleData[BLAST6],
+        'eggnog_db': ReferenceDB[Eggnog],
+    },
+    parameters={
+        'db_in_memory': Bool,
+        'num_cpus': Int % Range(0, None),
+        **partition_params
+    },
+    parameter_descriptions={
+        'db_in_memory': 'Read eggnog database into memory. The '
+                        'eggnog database is very large(>44GB), so this '
+                        'option should only be used on clusters or other '
+                        'machines with enough memory.',
+        'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+                    'use all available.',
+        **partition_param_descriptions
+    },
+    outputs=[('ortholog_annotations', FeatureData[NOG])],
+    name='Annotate orthologs against eggNOG database',
+    description="Apply eggnog mapper to annotate seed orthologs.",
+    citations=[citations["huerta_cepas_eggnog_2019"]]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog._eggnog_annotate,
     inputs={
         'eggnog_hits': SampleData[BLAST6],
         'eggnog_db': ReferenceDB[Eggnog],
@@ -785,6 +811,40 @@ plugin.methods.register_function(
     description="Partition a SampleData[MAGs] artifact into smaller "
                 "artifacts containing subsets of the MAGs",
 )
+
+plugin.methods.register_function(
+    function=q2_moshpit.partition.partition_orthologs,
+    inputs={"orthologs": SampleData[BLAST6]},
+    parameters={"num_partitions": Int % Range(1, None)},
+    outputs={"partitioned_orthologs": Collection[SampleData[BLAST6]]},
+    input_descriptions={"orthologs": "The orthologs to partition."},
+    parameter_descriptions={
+        "num_partitions": "The number of partitions to split the MAGs"
+        " into. Defaults to partitioning into individual"
+        " MAGs."
+    },
+    name="Partition orthologs",
+    description="Partition a SampleData[MAGs] artifact into smaller "
+                "artifacts containing subsets of the MAGs",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.partition.collate_annotations,
+    inputs={'ortholog_annotations': List[FeatureData[NOG]]},
+    parameters={},
+    outputs=[('collated_annotations', FeatureData[NOG])],
+    input_descriptions={
+        'ortholog_annotations': "Collection of orthologs annotations"
+    },
+    output_descriptions={
+        'collated_annotations': "Collated orthologs annotations"
+    },
+    name='Collate orthologs annotations',
+    description="Collate orthologs annotations from the eggnog-annotate "
+                "action. Intended when parallel runs of eggnog-diamond-search "
+                "and eggnog-annotate were used.",
+)
+
 
 plugin.methods.register_function(
     function=q2_moshpit.partition.collate_sample_data_mags,

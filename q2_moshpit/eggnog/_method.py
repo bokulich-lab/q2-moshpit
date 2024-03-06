@@ -12,18 +12,55 @@ import tempfile
 import qiime2.util
 import pandas as pd
 from typing import Union
-from q2_types.per_sample_sequences import ContigSequencesDirFmt
+from q2_types.per_sample_sequences import ContigSequencesDirFmt, Contigs
 from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 from q2_types.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt
 )
-from q2_types.feature_data import DNAFASTAFormat
+from q2_types.feature_data import DNAFASTAFormat, FeatureData
 from q2_types.feature_data_mag import (
-    OrthologAnnotationDirFmt, MAGSequencesDirFmt
+    OrthologAnnotationDirFmt, MAGSequencesDirFmt, MAG
 )
+from q2_types.sample_data import SampleData
 
 
 def eggnog_diamond_search(
+        ctx,
+        sequences,
+        diamond_db,
+        num_cpus=1,
+        db_in_memory=False,
+        num_partitions=None
+):
+    _eggnog_diamond_search = ctx.get_action(
+        "moshpit", "_eggnog_diamond_search")
+
+    if sequences.type <= FeatureData[MAG]:
+        partition_method = ctx.get_action(
+            "moshpit", "partition_feature_data_mags")
+    elif sequences.type <= SampleData[Contigs]:
+        partition_method = ctx.get_action("assembly", "partition_contigs")
+    else:
+        raise NotImplementedError()
+
+    collate_hits = ctx.get_action("moshpit", "collate_orthologs")
+    _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
+
+    (partitioned_sequences,) = partition_method(sequences, num_partitions)
+
+    hits = []
+    for seq in partitioned_sequences.values():
+        (hit, _) = _eggnog_diamond_search(
+            seq, diamond_db, num_cpus, db_in_memory)
+        hits.append(hit)
+
+    (collated_hits,) = collate_hits(hits)
+    (collated_tables,) = _eggnog_feature_table(collated_hits)
+
+    return collated_hits, collated_tables
+
+
+def _eggnog_diamond_search(
         sequences: Union[ContigSequencesDirFmt, MAGSequencesDirFmt],
         diamond_db: DiamondDatabaseDirFmt,
         num_cpus: int = 1, db_in_memory: bool = False

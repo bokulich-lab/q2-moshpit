@@ -20,9 +20,6 @@ arguments_with_hyphens = {
     "update_data": "update-data",
 }
 
-# Allow for big datasets with altair
-alt.data_transformers.enable("vegafusion")
-
 
 def _parse_busco_params(arg_key, arg_val) -> List[str]:
     """Creates a list with argument and its value to be consumed by BUSCO.
@@ -241,7 +238,7 @@ def _draw_busco_plots_for_render(
     )
 
     # Return
-    return output_plot.to_json(format="vega")
+    return output_plot.to_json()
 
 
 def _run_busco(

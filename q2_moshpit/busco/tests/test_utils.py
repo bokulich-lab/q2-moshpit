@@ -161,11 +161,8 @@ class TestBUSCO(TestPluginBase):
         )
 
         # Replace param value to make the dict altair version invariant
-        for i in '01234':
-            observed = observed.replace(f"param_{i}", "param_i")
-            observed = observed.replace(
-                f"source_{i}", "source_i"
-            )
+        observed = observed.replace("param_1", "param_i")
+        observed = observed.replace("param_2", "param_i")
 
         # Json string to dict
         observed = json.loads(observed)

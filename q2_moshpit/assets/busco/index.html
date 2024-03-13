@@ -33,7 +33,7 @@
 
 <div class="row row-cols-1 row-cols-md-2 g-4">
   <div class="col-lg-12">
-    <div class="card mt-3 h-10">
+    <div class="card mt-3 h-100">
       <h5 class="card-header">Plot description</h5>
       <div class="card-body">
         <p>
@@ -41,8 +41,8 @@
           <b> samples</b>. "BUSCO attempts to provide a quantitative assessment
           of the completeness in terms of the expected gene content of a genome
           assembly, transcriptome, or annotated gene set. The results are
-          simplified into categories of complete and single-copy, complete and
-          duplicated, fragmented, or missing BUSCOs. BUSCO completeness results
+          simplified into categories of Complete and single-copy, Complete and
+          duplicated, Fragmented, or Missing BUSCOs. BUSCO completeness results
           make sense only in the context of the biology of your organism". Visit the 
           <a
             href="https://busco.ezlab.org/busco_userguide.html#interpreting-the-results"
@@ -50,6 +50,10 @@
             BUSCO User Guide </a
           >
           for more information. 
+        </p>
+        <p>
+          Hoover over the graph to obtain information about the lineage dataset
+          used for each bin, and the number of genes in each BUSCO category.
         </p>
         <p>
           The right barplot shows assembly statistics calculated for each bin using BBTools.
@@ -61,6 +65,10 @@
             source code and documentation 
           </a>
           of stats.sh for more information.
+        </p>
+        <p>
+          Choose the assembly statistic that you wish to display from the drop-down manu below the graphs.
+          Hoover over the graph to show the numerical values that each bar represents.
         </p>
 
         <div style="align-items: center; display: flex">
@@ -84,39 +92,6 @@
         </div>
       </div>
     </div>
-
-    <div class="card mt-3 h-10">
-      <h5 class="card-header">Plot Controls</h5>
-      <div class="card-body">
-        <ul>
-          <li>
-            By default only the first 10 samples are displayed. Use a regular expression (regex) in the search box to display 
-            an arbitrary subset of the samples. 
-          </li>
-            <ul>
-              <li>
-                No more than ~1,300 MAGs can be displayed simultaneously. If you exceed this limit an error image will be displayed. 
-              </li>
-              <li>
-                If you have 14 samples named "sample_i" where "i" is a number from 1-14, and you whish to visualize only 
-                "sample_1" and "sample_14" your regex expression could look like this: ^sample_1$|^sample_14$
-              </li>
-              <li>
-                You can test your regex'es with this <a href="https://regex101.com/">Regular Expression Tester</a>.
-              </li>
-            </ul>
-          <li>
-            Choose the assembly statistic that you wish to display from the drop-down menu below.
-          </li>
-          <li>
-            Hover over the graph to obtain information about the lineage dataset
-            used for each bin, and the number of genes in each BUSCO category.
-          </li>
-        </ul>
-
-        <div id="plot-controls"></div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -124,6 +99,7 @@
   {% if vega_plots_overview is defined %}
   <div class="col-lg-6">
     <div id="plot"></div>
+    <div id="plot-controls"></div>
   </div>
   {% else %}
   <p>Unable to generate the completeness plot</p>
@@ -142,21 +118,19 @@
 
     const spec = JSON.parse(document.getElementById("spec").innerHTML);
 
-    vegaEmbed("#plot", spec).then(
-      function (result) {
-          result.view.logLevel(vega.Warn);
-          window.v = result.view;
+    vegaEmbed("#plot", spec)
+      .then(function (result) {
+        result.view.logLevel(vega.Warn);
+        window.v = result.view;
 
-          // move the sliders to the right
-          const controls = document.getElementsByClassName("vega-bindings");
-          document.getElementById("plot-controls").appendChild(controls[0]);
-        }
-      ).catch(
-        function (error) {
-          // From 'js-error-handler.html'
-          handleErrors([error], $("#plot"));
-        }
-      );
+        // move the sliders to the right
+        const controls = document.getElementsByClassName("vega-bindings");
+        document.getElementById("plot-controls").appendChild(controls[0]);
+      })
+      .catch(function (error) {
+        // From 'js-error-handler.html'
+        handleErrors([error], $("#plot"));
+      });
   });
 </script>
 

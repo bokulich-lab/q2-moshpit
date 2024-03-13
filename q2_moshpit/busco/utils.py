@@ -1,3 +1,4 @@
+import json
 import os
 import q2templates
 from shutil import copytree
@@ -42,6 +43,27 @@ def _parse_busco_params(arg_key, arg_val) -> List[str]:
         return [f"--{arg_key}"]
     else:
         return [f"--{arg_key}", str(arg_val)]
+
+
+def _partition_dataframe(df, max_rows):
+    groups = [group for _, group in df.groupby('sample_id')]
+    partitions = []
+    temp = []
+    total_rows = 0
+
+    for group in groups:
+        if total_rows + len(group) > max_rows:
+            partitions.append(pd.concat(temp, ignore_index=True))
+            temp = [group]
+            total_rows = len(group)
+        else:
+            temp.append(group)
+            total_rows += len(group)
+
+    if temp:
+        partitions.append(pd.concat(temp, ignore_index=True))
+
+    return partitions
 
 
 def _draw_busco_plots_for_render(
@@ -108,6 +130,15 @@ def _draw_busco_plots_for_render(
     domain = ["single", "duplicated", "fragmented", "missing"]
     range_ = ["#1E90FF", "#87CEFA", "#FFA500", "#FF7F50"]
 
+    # Get the first 10 sample ids
+    if len(df['sample_id'].unique()) <= 10:
+        default_regex = ""
+    else:
+        default_regex = df['sample_id'].unique()[0:10]
+        default_regex = '$|^'.join(default_regex)
+        default_regex = '^' + default_regex + "$"
+
+    # Make BUSCO bar plots (the plots on the left)
     busco_plot = (
         alt.Chart(busco_plot_data)
         .mark_bar()
@@ -202,7 +233,7 @@ def _draw_busco_plots_for_render(
     )
 
     # Return
-    return output_plot.to_json()
+    return output_plot.to_dict()
 
 
 def _run_busco(
@@ -420,17 +451,36 @@ def _render_html(
         all_summaries_df (pd.DataFrame): Data frame composed of the individual
             run summaries.
     """
-    # Prepare context for jinja2 template
-    context = {
-        "vega_plots_overview": _draw_busco_plots_for_render(
-            all_summaries_df,
+    # Partition DataFrame
+    dfs = _partition_dataframe(all_summaries_df, max_rows=100)
+
+    context = {}
+    counter_left = 1
+    for i, df in enumerate(dfs):
+        sample_count = df['sample_id'].nunique()
+        counter_right = counter_left + sample_count - 1
+        sample_counter = {"from": counter_left, "to": counter_right}
+        counter_left += sample_count
+        subcontext = _draw_busco_plots_for_render(
+            df,
             width=600,
             height=30,
             titleFontSize=20,
             labelFontSize=17,
             spacing=20
-        ),
-    }
+        )
+        context.update(
+            {f"sample{i}": {
+                "subcontext": subcontext,
+                "sample_counter": sample_counter,
+                "sample_ids": df['sample_id'].unique().tolist(),
+            }}
+        )
+
+    vega_out_fp = os.path.join(output_dir, "vega.json")
+    with open(vega_out_fp, 'w') as json_file:
+        vega_json = json.dumps(context)
+        json_file.write(vega_json)
 
     # Copy BUSCO results from tmp dir to output_dir
     moshpit_path = os.path.dirname(  # Path to parent dir, q2_moshpit
@@ -445,7 +495,7 @@ def _render_html(
     )
 
     # Render
-    q2templates.render(index, output_dir, context=context)
+    q2templates.render(index, output_dir, context={"vega_json": vega_json})
 
     # Remove unwanted files
     # until Bootstrap 3 is replaced with v5, remove the v3 scripts as

@@ -230,22 +230,12 @@ def _fetch_db_collection(collection: str, tmp_dir: str):
     print(f"\r{msg} Done.", flush=True)
 
     if collection in S16_DBS:
-        items_in_tmp_dir = os.listdir(tmp_dir)
-        for item in items_in_tmp_dir:
-            item_path = os.path.join(tmp_dir, item)
-            # remove the zipped file
-            if item_path.endswith("gz"):
-                os.remove(item_path)
-            elif (any(s16_db in item_path.lower() for s16_db in S16_DBS)
-                  and os.path.isdir(item_path)):
-                # move all files in the tmp_dir
-                extensions = ['.kmer_distrib', '.k2d', '.md', '.map']
-                for file in os.listdir(item_path):
-                    if any(file.endswith(ext) for ext in extensions):
-                        shutil.move(os.path.join(item_path, file),
-                                    os.path.join(tmp_dir, file))
-                # remove the extracted folder
-                shutil.rmtree(item_path)
+        extr_db = [
+                x for x in os.listdir(tmp_dir) if not x.endswith(".tgz")
+            ][0]
+        src = os.path.join(tmp_dir, extr_db)
+        for file in os.listdir(src):
+            shutil.move(os.path.join(src, file), tmp_dir)
 
 
 def _move_db_files(source: str, destination: str, extension: str = "k2d"):

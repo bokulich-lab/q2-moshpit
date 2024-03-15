@@ -91,6 +91,28 @@ class TestKraken2Database(TestPluginBase):
                 chunk for chunk in iter(lambda: f.read(8192), b"")
             ]
 
+    def create_expected_calls(self,
+                              origin_dir, moving_dir, seq)->list:
+        expected_calls = []
+        expected_files = ["database100mers.kmer_distrib",
+                          "database150mers.kmer_distrib",
+                          "database200mers.kmer_distrib",
+                          "database250mers.kmer_distrib",
+                          "database50mers.kmer_distrib",
+                          "database75mers.kmer_distrib",
+                          "database100mers.kmer_distrib",
+                          "hash.k2d", "opts.k2d", "taxo.k2d",
+                          "README.md"]
+        if seq == "silva132" or seq == "rdp":
+            expected_files.append("seqid2taxid.map")
+
+        for filename in expected_files:
+            expected_calls.append(call(
+                os.path.join(origin_dir, filename),
+                moving_dir
+            ))
+        return expected_calls
+
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
 
@@ -328,14 +350,17 @@ class TestKraken2Database(TestPluginBase):
         mock_tqdm.assert_not_called()
 
     @patch("requests.get")
-    @patch("tarfile.open")
     @patch(
         "q2_moshpit.kraken2.database._find_latest_db",
         return_value="kraken/tmp/16S_Greengenes13.5.tgz"
     )
+    @patch("shutil.move")
+    @patch("os.listdir")
+    @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
-    def test_fetch_db_collection_16S_success(
-            self, mock_tqdm, mock_find, mock_tarfile_open, mock_requests_get
+    def test_fetch_db_collection_16S_greengenes_success(
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
+            mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -345,20 +370,145 @@ class TestKraken2Database(TestPluginBase):
                 headers={}
             )
         ]
-        mock_tarfile_open.return_value.__enter__.return_value = MagicMock()
+
+        mock_os_listdir.return_value = ["16S_Greengenes13.5.tgz",
+                                        "16S_Greengenes13.5"]
+        folder_name = "/tmp/16S_Greengenes13.5/"
+        expected_calls = self.create_expected_calls(folder_name,
+                                                    "/tmp",
+                                                    seq="greengenes")
 
         _fetch_db_collection("greengenes", "/tmp")
+
+        mock_shutil_move.has_calls(expected_calls)
 
         mock_requests_get.has_calls([
             call(S3_COLLECTIONS_URL),
             call(f"{S3_COLLECTIONS_URL}/kraken/16S_Greengenes13.5.tgz",
                  stream=True)
         ])
-        mock_tarfile_open.assert_called_once_with(
-            "/tmp/16S_Greengenes13.5.tgz", "r:gz"
-        )
-        mock_find.assert_called_once_with("greengenes", ANY)
         mock_tqdm.assert_not_called()
+
+    @patch("requests.get")
+    @patch(
+        "q2_moshpit.kraken2.database._find_latest_db",
+        return_value="kraken/tmp/16S_RDP11.5_20200326.tgz"
+    )
+    @patch("shutil.move")
+    @patch("os.listdir")
+    @patch("tarfile.open")
+    @patch("q2_moshpit.kraken2.database.tqdm")
+    def test_fetch_db_collection_16S_rdp_success(
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
+            mock_find, mock_requests_get
+    ):
+        mock_requests_get.side_effect = [
+            MagicMock(status_code=200),
+            MagicMock(
+                status_code=200,
+                iter_content=lambda chunk_size: self.tar_chunks,
+                headers={}
+            )
+        ]
+
+        mock_os_listdir.return_value = ["16S_RDP11.5_20200326.tgz",
+                                        "16S_RDP_k2db"]
+        folder_name = "/tmp/16S_RDP_k2db/"
+        expected_calls = self.create_expected_calls(folder_name,
+                                                    "/tmp",
+                                                    seq="rdp")
+
+        _fetch_db_collection("rdp", "/tmp")
+
+        mock_shutil_move.has_calls(expected_calls)
+
+        mock_requests_get.has_calls([
+            call(S3_COLLECTIONS_URL),
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_RDP11.5_20200326.tgz",
+                 stream=True)
+        ])
+        mock_tqdm.assert_not_called()
+
+    @patch("requests.get")
+    @patch(
+        "q2_moshpit.kraken2.database._find_latest_db",
+        return_value="kraken/tmp/16S_Silva132_20200326.tgz"
+    )
+    @patch("shutil.move")
+    @patch("os.listdir")
+    @patch("tarfile.open")
+    @patch("q2_moshpit.kraken2.database.tqdm")
+    def test_fetch_db_collection_16S_silva132_success(
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
+            mock_find, mock_requests_get
+    ):
+        mock_requests_get.side_effect = [
+            MagicMock(status_code=200),
+            MagicMock(
+                status_code=200,
+                iter_content=lambda chunk_size: self.tar_chunks,
+                headers={}
+            )
+        ]
+
+        mock_os_listdir.return_value = ["16S_Silva132_20200326.tgz",
+                                        "16S_SILVA132_k2db"]
+        folder_name = "/tmp/16S_SILVA132_k2db/"
+        expected_calls = self.create_expected_calls(folder_name,
+                                                    "/tmp",
+                                                    seq="silva132")
+
+        _fetch_db_collection("silva132", "/tmp")
+
+        mock_shutil_move.has_calls(expected_calls)
+
+        mock_requests_get.has_calls([
+            call(S3_COLLECTIONS_URL),
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Silva132_20200326.tgz",
+                 stream=True)
+        ])
+        mock_tqdm.assert_not_called()
+
+    @patch("requests.get")
+    @patch(
+        "q2_moshpit.kraken2.database._find_latest_db",
+        return_value="kraken/tmp/16S_Silva138_20200326.tgz"
+    )
+    @patch("shutil.move")
+    @patch("os.listdir")
+    @patch("tarfile.open")
+    @patch("q2_moshpit.kraken2.database.tqdm")
+    def test_fetch_db_collection_16S_silva138_success(
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
+            mock_find, mock_requests_get
+    ):
+        mock_requests_get.side_effect = [
+            MagicMock(status_code=200),
+            MagicMock(
+                status_code=200,
+                iter_content=lambda chunk_size: self.tar_chunks,
+                headers={}
+            )
+        ]
+
+        mock_os_listdir.return_value = ["16S_Silva138_20200326.tgz",
+                                        "16S_SILVA138_k2db"]
+        folder_name = "/tmp/16S_SILVA138_k2db/"
+        expected_calls = self.create_expected_calls(folder_name,
+                                                    "/tmp",
+                                                    seq="silva138")
+
+        _fetch_db_collection("silva138", "/tmp")
+
+        mock_shutil_move.has_calls(expected_calls)
+
+        mock_requests_get.has_calls([
+            call(S3_COLLECTIONS_URL),
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Silva138_20200326.tgz",
+                 stream=True)
+        ])
+        mock_tqdm.assert_not_called()
+
 
     @patch("requests.get")
     @patch("tarfile.open")
@@ -397,14 +547,17 @@ class TestKraken2Database(TestPluginBase):
         )
 
     @patch("requests.get")
-    @patch("tarfile.open")
     @patch(
         "q2_moshpit.kraken2.database._find_latest_db",
         return_value="kraken/16S_Greengenes13.5.tgz"
     )
+    @patch("shutil.move")
+    @patch("os.listdir")
+    @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
-    def test_fetch_db_collection_16S_success_with_tqdm(
-            self, mock_tqdm, mock_find, mock_tarfile_open, mock_requests_get
+    def test_fetch_db_collection_16S_greengenes_tqdm_success(
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
+            mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -414,21 +567,157 @@ class TestKraken2Database(TestPluginBase):
                 headers={"content-length": '1000'}
             )
         ]
-        mock_tarfile_open.return_value.__enter__.return_value = MagicMock()
+
+        mock_os_listdir.return_value = ["16S_Greengenes13.5.tgz",
+                                        "16S_Greengenes13.5"]
+        folder_name = "/tmp/16S_Greengenes13.5/"
+        expected_calls = self.create_expected_calls(folder_name,
+                                                    "/tmp",
+                                                    seq="greengenes")
 
         _fetch_db_collection("greengenes", "/tmp")
+
+        mock_shutil_move.has_calls(expected_calls)
 
         mock_requests_get.has_calls([
             call(S3_COLLECTIONS_URL),
             call(f"{S3_COLLECTIONS_URL}/kraken/16S_Greengenes13.5.tgz",
                  stream=True)
         ])
-        mock_tarfile_open.assert_called_once_with(
-            "/tmp/16S_Greengenes13.5.tgz", "r:gz"
-        )
-        mock_find.assert_called_once_with("greengenes", ANY)
         mock_tqdm.assert_called_once_with(
             desc='Downloading the "kraken/16S_Greengenes13.5.tgz" database',
+            total=1000, unit='B',
+            unit_scale=True, unit_divisor=1024,
+        )
+
+    @patch("requests.get")
+    @patch(
+        "q2_moshpit.kraken2.database._find_latest_db",
+        return_value="kraken/16S_RDP11.5_20200326.tgz"
+    )
+    @patch("shutil.move")
+    @patch("os.listdir")
+    @patch("tarfile.open")
+    @patch("q2_moshpit.kraken2.database.tqdm")
+    def test_fetch_db_collection_16S_rdp_tqdm_success(
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
+            mock_find, mock_requests_get
+    ):
+        mock_requests_get.side_effect = [
+            MagicMock(status_code=200),
+            MagicMock(
+                status_code=200,
+                iter_content=lambda chunk_size: self.tar_chunks,
+                headers={"content-length": '1000'}
+            )
+        ]
+
+        mock_os_listdir.return_value = ["16S_RDP11.5_20200326.tgz",
+                                        "16S_RDP_k2db"]
+        folder_name = "/tmp/16S_RDP_k2db/"
+        expected_calls = self.create_expected_calls(folder_name,
+                                                    "/tmp",
+                                                    seq="rdp")
+
+        _fetch_db_collection("rdp", "/tmp")
+
+        mock_shutil_move.has_calls(expected_calls)
+
+        mock_requests_get.has_calls([
+            call(S3_COLLECTIONS_URL),
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_RDP11.5_20200326.tgz",
+                 stream=True)
+        ])
+        mock_tqdm.assert_called_once_with(
+            desc='Downloading the "kraken/16S_RDP11.5_20200326.tgz" database',
+            total=1000, unit='B',
+            unit_scale=True, unit_divisor=1024,
+        )
+
+    @patch("requests.get")
+    @patch(
+        "q2_moshpit.kraken2.database._find_latest_db",
+        return_value="kraken/16S_Silva132_20200326.tgz"
+    )
+    @patch("shutil.move")
+    @patch("os.listdir")
+    @patch("tarfile.open")
+    @patch("q2_moshpit.kraken2.database.tqdm")
+    def test_fetch_db_collection_16S_silva132_tqdm_success(
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
+            mock_find, mock_requests_get
+    ):
+        mock_requests_get.side_effect = [
+            MagicMock(status_code=200),
+            MagicMock(
+                status_code=200,
+                iter_content=lambda chunk_size: self.tar_chunks,
+                headers={"content-length": '1000'}
+            )
+        ]
+
+        mock_os_listdir.return_value = ["16S_Silva132_20200326.tgz",
+                                        "16S_SILVA132_k2db"]
+        folder_name = "/tmp/16S_SILVA132_k2db/"
+        expected_calls = self.create_expected_calls(folder_name,
+                                                    "/tmp",
+                                                    seq="silva132")
+
+        _fetch_db_collection("silva132", "/tmp")
+
+        mock_shutil_move.has_calls(expected_calls)
+
+        mock_requests_get.has_calls([
+            call(S3_COLLECTIONS_URL),
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Silva132_20200326.tgz",
+                 stream=True)
+        ])
+        mock_tqdm.assert_called_once_with(
+            desc='Downloading the "kraken/16S_Silva132_20200326.tgz" database',
+            total=1000, unit='B',
+            unit_scale=True, unit_divisor=1024,
+        )
+
+    @patch("requests.get")
+    @patch(
+        "q2_moshpit.kraken2.database._find_latest_db",
+        return_value="kraken/16S_Silva138_20200326.tgz"
+    )
+    @patch("shutil.move")
+    @patch("os.listdir")
+    @patch("tarfile.open")
+    @patch("q2_moshpit.kraken2.database.tqdm")
+    def test_fetch_db_collection_16S_silva138_tqdm_success(
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
+            mock_find, mock_requests_get
+    ):
+        mock_requests_get.side_effect = [
+            MagicMock(status_code=200),
+            MagicMock(
+                status_code=200,
+                iter_content=lambda chunk_size: self.tar_chunks,
+                headers={"content-length": '1000'}
+            )
+        ]
+
+        mock_os_listdir.return_value = ["16S_Silva138_20200326.tgz",
+                                        "16S_SILVA138_k2db"]
+        folder_name = "/tmp/16S_SILVA138_k2db/"
+        expected_calls = self.create_expected_calls(folder_name,
+                                                    "/tmp",
+                                                    seq="silva138")
+
+        _fetch_db_collection("silva138", "/tmp")
+
+        mock_shutil_move.has_calls(expected_calls)
+
+        mock_requests_get.has_calls([
+            call(S3_COLLECTIONS_URL),
+            call(f"{S3_COLLECTIONS_URL}/kraken/16S_Silva138_20200326.tgz",
+                 stream=True)
+        ])
+        mock_tqdm.assert_called_once_with(
+            desc='Downloading the "kraken/16S_Silva138_20200326.tgz" database',
             total=1000, unit='B',
             unit_scale=True, unit_divisor=1024,
         )

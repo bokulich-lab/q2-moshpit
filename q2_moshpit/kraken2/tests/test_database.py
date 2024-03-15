@@ -92,7 +92,7 @@ class TestKraken2Database(TestPluginBase):
             ]
 
     def create_expected_calls(self,
-                              origin_dir, moving_dir, seq)->list:
+                              origin_dir, moving_dir, seq) -> list:
         expected_calls = []
         expected_files = ["database100mers.kmer_distrib",
                           "database150mers.kmer_distrib",
@@ -194,7 +194,6 @@ class TestKraken2Database(TestPluginBase):
                 "An error was encountered .* downloading the 'human' "
                 r"library, \(return code 123\), please inspect .*"
         ):
-
             _fetch_libraries(
                 self.kraken2_db_dir, libraries=['human'],
                 all_kwargs=self.kwargs
@@ -313,7 +312,7 @@ class TestKraken2Database(TestPluginBase):
         response = Mock(content=b'''<ListBucketResult></ListBucketResult>''')
 
         with self.assertRaisesRegex(
-            ValueError, r'No databases were found.+'
+                ValueError, r'No databases were found.+'
         ):
             _find_latest_db('viral', response)
 
@@ -359,8 +358,8 @@ class TestKraken2Database(TestPluginBase):
     @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
     def test_fetch_db_collection_16S_greengenes_success(
-            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
-            mock_find, mock_requests_get
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir,
+            mock_shutil_move, mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -399,8 +398,8 @@ class TestKraken2Database(TestPluginBase):
     @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
     def test_fetch_db_collection_16S_rdp_success(
-            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
-            mock_find, mock_requests_get
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir,
+            mock_shutil_move, mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -439,8 +438,8 @@ class TestKraken2Database(TestPluginBase):
     @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
     def test_fetch_db_collection_16S_silva132_success(
-            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
-            mock_find, mock_requests_get
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir,
+            mock_shutil_move, mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -479,8 +478,8 @@ class TestKraken2Database(TestPluginBase):
     @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
     def test_fetch_db_collection_16S_silva138_success(
-            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
-            mock_find, mock_requests_get
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir,
+            mock_shutil_move, mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -508,7 +507,6 @@ class TestKraken2Database(TestPluginBase):
                  stream=True)
         ])
         mock_tqdm.assert_not_called()
-
 
     @patch("requests.get")
     @patch("tarfile.open")
@@ -556,8 +554,8 @@ class TestKraken2Database(TestPluginBase):
     @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
     def test_fetch_db_collection_16S_greengenes_tqdm_success(
-            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
-            mock_find, mock_requests_get
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir,
+            mock_shutil_move, mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -600,8 +598,8 @@ class TestKraken2Database(TestPluginBase):
     @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
     def test_fetch_db_collection_16S_rdp_tqdm_success(
-            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
-            mock_find, mock_requests_get
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir,
+            mock_shutil_move, mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -644,8 +642,8 @@ class TestKraken2Database(TestPluginBase):
     @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
     def test_fetch_db_collection_16S_silva132_tqdm_success(
-            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
-            mock_find, mock_requests_get
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir,
+            mock_shutil_move, mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -688,8 +686,8 @@ class TestKraken2Database(TestPluginBase):
     @patch("tarfile.open")
     @patch("q2_moshpit.kraken2.database.tqdm")
     def test_fetch_db_collection_16S_silva138_tqdm_success(
-            self, mock_tqdm, mock_tarfile_open, mock_os_listdir, mock_shutil_move,
-            mock_find, mock_requests_get
+            self, mock_tqdm, mock_tarfile_open, mock_os_listdir,
+            mock_shutil_move, mock_find, mock_requests_get
     ):
         mock_requests_get.side_effect = [
             MagicMock(status_code=200),
@@ -876,7 +874,7 @@ class TestKraken2Database(TestPluginBase):
     @patch("tempfile.TemporaryDirectory", return_value=MockTempDir())
     def test_build_kraken_db_action_with_error(self, mock_tmp):
         with self.assertRaisesRegex(
-            ValueError, r"You need to either provide a list .+"
+                ValueError, r"You need to either provide a list .+"
         ):
             moshpit.actions.build_kraken_db()
 

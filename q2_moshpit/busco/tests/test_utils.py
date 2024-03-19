@@ -17,7 +17,7 @@ from q2_moshpit.busco.utils import (
     _zip_busco_plots,
     _run_busco,
     _draw_busco_plots_for_render,
-    _collect_summaries_and_save,
+    _collect_summaries,
     _parse_df_columns,
 )
 from unittest.mock import patch, call
@@ -63,7 +63,7 @@ class TestBUSCO(TestPluginBase):
 
     def test_collect_summaries_and_save(self):
         """
-        Test for `_collect_summaries_and_save` function.
+        Test for `_collect_summaries` function.
         Uses data stored in ./data. Checks for data frame equality.
         """
         with tempfile.TemporaryDirectory() as tmp_path:
@@ -74,8 +74,8 @@ class TestBUSCO(TestPluginBase):
                     filename=f"batch_summary_sample{i}.txt"
                 )
 
-            observed = _collect_summaries_and_save(
-                path_to_run_summaries=path_to_summaries,
+            observed = _collect_summaries(
+                run_summaries_fp_map=path_to_summaries,
                 all_summaries_path=os.path.join(tmp_path, "aggregated.csv"),
             )
 

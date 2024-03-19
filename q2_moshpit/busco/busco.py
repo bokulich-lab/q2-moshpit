@@ -7,17 +7,58 @@
 # ----------------------------------------------------------------------------
 import os
 import tempfile
+
+import pandas as pd
+
 from q2_moshpit.busco.utils import (
     _parse_busco_params, _render_html, _run_busco,
-    _collect_summaries_and_save, _draw_busco_plots,
+    _collect_summaries, _draw_busco_plots,
     _zip_busco_plots,
 )
 from q2_moshpit._utils import _process_common_input_params
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
-def evaluate_busco(
-    output_dir: str,
+def _rename_columns(df):
+    cols = {
+        "Input_file": "input_file", "Dataset": "dataset",
+        "Complete": "complete", "Single": "single",
+        "Duplicated": "duplicated", "Fragmented": "fragmented",
+        "Missing": "missing", "n_markers": "n_markers",
+        "Scaffold N50": "scaffold_n50", "Contigs N50": "contigs_n50",
+        "Percent gaps": "percent_gaps", "Number of scaffolds": "scaffolds",
+        "sample_id": "sample_id"
+    }
+
+    cols_reshuffled = [
+        "mag_id", "sample_id", "input_file", "dataset", "complete",
+        "single", "duplicated", "fragmented", "missing", "n_markers",
+        "scaffold_n50", "contigs_n50", "percent_gaps", "scaffolds",
+    ]
+
+    df = df.rename(columns=cols, inplace=False)
+    df["mag_id"] = df["input_file"].str.split(".", expand=True)[0]
+    return df[cols_reshuffled]
+
+
+def _busco_helper(bins, common_args):
+    with tempfile.TemporaryDirectory() as tmp:
+        path_to_run_summaries = _run_busco(
+            output_dir=os.path.join(tmp, "busco_output"),
+            mags=bins,
+            params=common_args,
+        )
+
+        all_summaries = _collect_summaries(
+            run_summaries_fp_map=path_to_run_summaries,
+        )
+
+    all_summaries = _rename_columns(all_summaries)
+
+    return all_summaries
+
+
+def _evaluate_busco(
     bins: MultiMAGSequencesDirFmt,
     mode: str = "genome",
     lineage_dataset: str = None,
@@ -38,25 +79,9 @@ def evaluate_busco(
     metaeuk_rerun_parameters: str = None,
     miniprot: bool = False,
     scaffold_composition: bool = False,
-) -> None:
-    """
-    qiime2 visualization for the BUSCO assessment tool
-    <https://busco.ezlab.org/>.
-
-    Args:
-        see all possible inputs by running `qiime moshpit plot_busco`
-
-    Output:
-        plots.zip: zip file containing all of the busco plots
-        busco_output: all busco output files
-        qiime_html: html for rendering the output plots
-    """
-
-    # Create dictionary with local variables
-    # (kwargs passed to the function or their defaults) excluding
-    # "output_dir" and "bins"
+) -> pd.DataFrame:
     kwargs = {
-        k: v for k, v in locals().items() if k not in ["output_dir", "bins"]
+        k: v for k, v in locals().items() if k not in ["bins",]
     }
 
     # Filter out all kwargs that are None, False or 0.0
@@ -64,43 +89,72 @@ def evaluate_busco(
         processing_func=_parse_busco_params, params=kwargs
     )
 
-    # Creates output directory with path 'tmp'
+    return _busco_helper(bins, common_args)
+
+
+def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
+    busco_results.to_csv(
+        os.path.join(output_dir, "all_batch_summaries.csv"),
+        index=False
+    )
     with tempfile.TemporaryDirectory() as tmp:
-        # Run busco for every sample. Returns dictionary to report files.
-        # Result NOT included in final output
-        busco_results_dir = os.path.join(tmp, "busco_output")
-        path_to_run_summaries = _run_busco(
-            output_dir=busco_results_dir,
-            mags=bins,
-            params=common_args,
-        )
-
-        # Collect result for each sample and save to file.
-        # Result included in final output (file for download)
-        all_summaries_path = os.path.join(
-            output_dir, "all_batch_summaries.csv"
-        )
-        all_summaries_df = _collect_summaries_and_save(
-            all_summaries_path=all_summaries_path,
-            path_to_run_summaries=path_to_run_summaries,
-        )
-
         # Draw BUSCO plots for all samples
         # Result NOT included in final output
-        plots_dir = os.path.join(tmp, "plots")
         paths_to_plots = _draw_busco_plots(
-            path_to_run_summaries=path_to_run_summaries,
-            plots_dir=plots_dir
+            data=busco_results,
+            plots_dir=os.path.join(tmp, "plots")
         )
 
-        # Zip graphs for user download
-        # Result included in final output (file for download)
-        zip_name = os.path.join(output_dir, "busco_plots.zip")
         _zip_busco_plots(
             paths_to_plots=paths_to_plots,
-            zip_path=zip_name
+            zip_path=os.path.join(output_dir, "busco_plots.zip")
         )
 
-        # Render qiime html report
-        # Result included in final output
-        _render_html(output_dir, all_summaries_df)
+        _render_html(output_dir, busco_results)
+
+
+def evaluate_busco(
+    ctx,
+    bins,
+    mode="genome",
+    lineage_dataset=None,
+    augustus=False,
+    augustus_parameters=None,
+    augustus_species=None,
+    auto_lineage=False,
+    auto_lineage_euk=False,
+    auto_lineage_prok=False,
+    cpu=1,
+    config=None,
+    contig_break=10,
+    evalue=1e-03,
+    force=False,
+    limit=3,
+    long=False,
+    metaeuk_parameters=None,
+    metaeuk_rerun_parameters=None,
+    miniprot=False,
+    scaffold_composition=False,
+    num_partitions=None
+):
+
+    kwargs = {
+        k: v for k, v in locals().items()
+        if k not in ["bins", "ctx", "num_partitions"]
+    }
+
+    _evaluate_busco = ctx.get_action("moshpit", "_evaluate_busco")
+    partition_mags = ctx.get_action("moshpit", "partition_sample_data_mags")
+    collate_busco_results = ctx.get_action("moshpit", "collate_busco_results")
+    _visualize_busco = ctx.get_action("moshpit", "_visualize_busco")
+
+    (partitioned_mags, ) = partition_mags(bins, num_partitions)
+    results = []
+    for mag in partitioned_mags.values():
+        (busco_result, ) = _evaluate_busco(mag, **kwargs)
+        results.append(busco_result)
+
+    collated_results = collate_busco_results(results)
+    visualization = _visualize_busco(collated_results)
+
+    return collated_results, visualization

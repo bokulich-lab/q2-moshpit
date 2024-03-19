@@ -19,7 +19,7 @@ from q2_types.per_sample_sequences import (
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
 from qiime2.core.type import (
-    Bool, Range, Int, Str, Float, List, Choices, Collection
+    Bool, Range, Int, Str, Float, List, Choices, Collection, Visualization
 )
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
@@ -968,16 +968,76 @@ busco_param_descriptions = {
 }
 
 
-plugin.visualizers.register_function(
-    function=q2_moshpit.busco.evaluate_busco,
+plugin.methods.register_function(
+    function=q2_moshpit.partition.collate_busco_results,
+    inputs={"busco_results": List[BUSCOResults]},
+    parameters={},
+    outputs={"collated_busco_results": BUSCOResults},
+    name="Collate BUSCO results.",
+    description="Collates BUSCO results."
+)
+
+
+plugin.methods.register_function(
+    function=q2_moshpit.busco._evaluate_busco,
     inputs={
         "bins": SampleData[MAGs],
     },
     parameters=busco_params,
+    outputs={
+        "results": BUSCOResults
+    },
     input_descriptions={
         "bins": "MAGs to be analyzed.",
     },
     parameter_descriptions=busco_param_descriptions,
+    output_descriptions={
+        "results": "BUSCO result table."
+    },
+    name="Evaluate quality of the generated MAGs using BUSCO.",
+    description="This method uses BUSCO "
+                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "tool) to assess the quality of assembled MAGs and generates "
+                "a table summarizing the results.",
+    citations=[citations["manni_busco_2021"]],
+)
+
+plugin.visualizers.register_function(
+    function=q2_moshpit.busco._visualize_busco,
+    inputs={
+        "busco_results": BUSCOResults,
+    },
+    parameters={},
+    input_descriptions={
+        "busco_results": "BUSCO results table.",
+    },
+    parameter_descriptions={},
+    name="Visualize BUSCO results.",
+    description="This method generates a visualization "
+                "from the BUSCO results table.",
+    citations=[citations["manni_busco_2021"]],
+)
+
+plugin.pipelines.register_function(
+    function=q2_moshpit.busco.evaluate_busco,
+    inputs={
+        "bins": SampleData[MAGs],
+    },
+    parameters={**busco_params, **partition_params},
+    outputs={
+        "results_table": BUSCOResults,
+        "visualization": Visualization
+    },
+    input_descriptions={
+        "bins": "MAGs to be analyzed.",
+    },
+    parameter_descriptions={
+        **busco_param_descriptions, **partition_param_descriptions
+    },
+    output_descriptions={
+        "results_table": "BUSCO result table.",
+        "visualization": "Visualization of the BUSCO results."
+    },
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
                 "(Benchmarking Universal Single-Copy Ortholog assessment "

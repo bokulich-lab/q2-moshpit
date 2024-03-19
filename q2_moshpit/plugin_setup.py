@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 import importlib
 
+from q2_moshpit.busco.types import BUSCOResults, BUSCOResultsDirectoryFormat, BUSCOResultsFormat
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
     FeatureData, Sequence, Taxonomy, ProteinSequence
@@ -1121,3 +1122,10 @@ plugin.methods.register_function(
                 "classification of NGS reads.",
     citations=[citations["menzel2016"]],
 )
+
+plugin.register_semantic_types(BUSCOResults)
+plugin.register_semantic_type_to_format(
+    BUSCOResults,
+    artifact_format=BUSCOResultsDirectoryFormat)
+plugin.register_formats(BUSCOResultsFormat, BUSCOResultsDirectoryFormat)
+importlib.import_module('q2_moshpit.busco.types._transformer')

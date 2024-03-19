@@ -150,8 +150,11 @@ def evaluate_busco(
 
     (partitioned_mags, ) = partition_mags(bins, num_partitions)
     results = []
+    print(f"Partitioned MAGs: {partitioned_mags}")
     for mag in partitioned_mags.values():
+        print(f"Processing MAG: {mag}")
         (busco_result, ) = _evaluate_busco(mag, **kwargs)
+        print(f"Got BUSCO result: {busco_result}")
         results.append(busco_result)
 
     collated_results = collate_busco_results(results)

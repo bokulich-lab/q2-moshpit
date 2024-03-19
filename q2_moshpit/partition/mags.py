@@ -8,6 +8,7 @@
 import os
 import shutil
 import numpy as np
+import pandas as pd
 from qiime2.util import duplicate
 from .utils import _validate_mag_ids, _validate_num_partitions
 from q2_types.per_sample_sequences import (
@@ -83,7 +84,10 @@ def partition_sample_data_mags(
 
     for i, _mag in enumerate(arrays_of_mags, 1):
         result = MultiMAGSequencesDirFmt()
-        duplicate(mags.path / "MANIFEST", result.path / "MANIFEST")
+        samples = [x for x, _, _ in _mag]
+        manifest = pd.read_csv(mags.path / "MANIFEST", header=True, index_col=None)
+        manifest = manifest[manifest["sample_id"].isin(samples)]
+        manifest.to_csv(result.path / "MANIFEST", index=False)
 
         for sample_id, mag_id, mag_fp in _mag:
             os.makedirs(result.path / sample_id, exist_ok=True)

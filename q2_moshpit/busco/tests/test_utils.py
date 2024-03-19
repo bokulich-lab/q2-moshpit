@@ -15,11 +15,11 @@ from q2_moshpit.busco.utils import (
     _parse_busco_params,
     _draw_busco_plots,
     _zip_busco_plots,
-    _run_busco,
-    _draw_busco_plots_for_render,
+    _draw_busco_plots,
     _collect_summaries,
     _parse_df_columns,
 )
+from q2_moshpit.busco.busco import _run_busco
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
@@ -140,10 +140,10 @@ class TestBUSCO(TestPluginBase):
             filename="batch_summary_sample1.txt", delim="\t"
         )
 
-    # Test `_draw_busco_plots_for_render`
+    # Test `_draw_busco_plots`
     def test_draw_busco_plots_for_render(self):
         """
-        Tests function `_draw_busco_plots_for_render`.
+        Tests function `_draw_busco_plots`.
         Checks for dictionary equality.
         """
         # Load data
@@ -151,7 +151,7 @@ class TestBUSCO(TestPluginBase):
         all_summaries_df = pd.read_csv(p)
 
         # Draw plot
-        observed = _draw_busco_plots_for_render(
+        observed = _draw_busco_plots(
             all_summaries_df,
             width=500,
             height=30,

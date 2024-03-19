@@ -4,13 +4,7 @@ import q2templates
 from shutil import copytree
 import pandas as pd
 import altair as alt
-import matplotlib.pyplot as plt
-from zipfile import ZipFile
-from .._utils import run_command
-from copy import deepcopy
-from typing import List, Dict
-from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
-
+from typing import List
 
 arguments_with_hyphens = {
     "auto_lineage": "auto-lineage",
@@ -53,7 +47,7 @@ def _partition_dataframe(df, max_rows):
 
     for group in groups:
         if total_rows + len(group) > max_rows:
-            partitions.append(pd.concat(temp, ignore_index=True))
+            partitions.append(pd.concat(temp))
             temp = [group]
             total_rows = len(group)
         else:
@@ -61,12 +55,12 @@ def _partition_dataframe(df, max_rows):
             total_rows += len(group)
 
     if temp:
-        partitions.append(pd.concat(temp, ignore_index=True))
+        partitions.append(pd.concat(temp))
 
     return partitions
 
 
-def _draw_busco_plots_for_render(
+def _draw_busco_plots(
     df: pd.DataFrame,
     width: int = None,
     height: int = None,
@@ -90,11 +84,10 @@ def _draw_busco_plots_for_render(
     Output:
         Output plot in dictionary from casted to a string.
     """
-
-    # Format data frame
-    df = _parse_df_columns(df)
-
     # Format data for plotting
+    df = df.reset_index(drop=False, inplace=False)
+    df = df.rename(columns={"id": "mag_id"}, inplace=False)
+
     busco_plot_data = pd.melt(
         df,
         id_vars=["sample_id", "mag_id", "dataset", "n_markers"],
@@ -109,7 +102,7 @@ def _draw_busco_plots_for_render(
         'scaffold_n50',
         'contigs_n50',
         'percent_gaps',
-        'number_of_scaffolds',
+        'scaffolds',
     ]]
 
     # Specify order
@@ -117,7 +110,7 @@ def _draw_busco_plots_for_render(
     busco_plot_data["order"] = busco_plot_data["category"].map(mapping)
 
     # Estimate fraction of sequences in each BUSCO category
-    busco_plot_data["fracc_markers"] = (
+    busco_plot_data["frac_markers"] = (
         "~"
         + round(
             busco_plot_data["BUSCO_percentage"] *
@@ -131,12 +124,12 @@ def _draw_busco_plots_for_render(
     range_ = ["#1E90FF", "#87CEFA", "#FFA500", "#FF7F50"]
 
     # Get the first 10 sample ids
-    if len(df['sample_id'].unique()) <= 10:
-        default_regex = ""
-    else:
-        default_regex = df['sample_id'].unique()[0:10]
-        default_regex = '$|^'.join(default_regex)
-        default_regex = '^' + default_regex + "$"
+    # if len(df['sample_id'].unique()) <= 10:
+    #     default_regex = ""
+    # else:
+    #     default_regex = df['sample_id'].unique()[0:10]
+    #     default_regex = '$|^'.join(default_regex)
+    #     default_regex = '^' + default_regex + "$"
 
     # Make BUSCO bar plots (the plots on the left)
     busco_plot = (
@@ -152,7 +145,7 @@ def _draw_busco_plots_for_render(
             color=alt.Color(
                 "category",
                 scale=alt.Scale(domain=domain, range=range_),
-                legend=alt.Legend(title="BUSCO Category", orient="top"),
+                legend=alt.Legend(title="BUSCO category", orient="top"),
             ),
             order=alt.Order("order", sort="ascending"),
             tooltip=[
@@ -160,8 +153,8 @@ def _draw_busco_plots_for_render(
                 alt.Tooltip("mag_id", title="MAG ID"),
                 alt.Tooltip("dataset", title="Lineage dataset"),
                 alt.Tooltip(
-                    "fracc_markers",
-                    title="Aprox. number of markers in this category"
+                    "frac_markers",
+                    title="Approx. number of markers in this category"
                 ),
                 alt.Tooltip("BUSCO_percentage", title="% BUSCOs"),
             ],
@@ -188,9 +181,9 @@ def _draw_busco_plots_for_render(
             'scaffold_n50',
             'contigs_n50',
             'percent_gaps',
-            'number_of_scaffolds',
+            'scaffolds',
         ],
-        name="Assembly Statistics: "
+        name="Assembly statistics: "
     )
 
     xcol_param = alt.param(
@@ -199,7 +192,7 @@ def _draw_busco_plots_for_render(
     )
 
     secondary_plot = alt.Chart(secondary_plot_data).mark_bar().encode(
-        x=alt.X('x:Q').title('Assembly Statistic'),
+        x=alt.X('x:Q').title('Assembly statistic'),
         y=alt.Y('mag_id', axis=None),
         tooltip=[alt.Tooltip('x:Q', title="value")],
         opacity=alt.value(0.85)
@@ -236,168 +229,6 @@ def _draw_busco_plots_for_render(
     return output_plot.to_dict()
 
 
-def _run_busco(
-    output_dir: str, mags: MultiMAGSequencesDirFmt, params: List[str]
-) -> Dict[str, str]:
-    """Evaluates bins for all samples using BUSCO.
-
-    Args:
-        output_dir (str): Location where the final results should be stored.
-        mags (MultiMAGSequencesDirFmt): The mags to be analyzed.
-        params (List[str]): List of parsed arguments to pass to BUSCO.
-
-    Returns:
-        dict: Dictionary where keys are sample IDs and values are the paths
-            to the `batch_summary.txt` generated by BUSCO, e.g.
-            `tmp/busco_output/<sample_id>/batch_summary.txt`.
-    """
-
-    # Define base command
-    base_cmd = ["busco", *params]
-
-    # Creates pandas df "manifest" from bins
-    manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
-
-    # Make a new column in manifest with the directories of files
-    # listed in column "filename"
-    manifest["sample_dir"] = manifest.filename.apply(
-        lambda x: os.path.dirname(x)
-    )
-
-    # numpy.ndarray with unique dirs
-    sample_dirs = manifest["sample_dir"].unique()
-
-    # Initialize dictionary with paths to run summaries
-    path_to_run_summaries = {}
-
-    # For every unique sample dir run busco
-    for sample_dir in sample_dirs:
-        # Get sample id from tip dirname
-        sample = os.path.split(sample_dir)[-1]
-
-        # Deep copy base command extend it with the sample specific
-        # info and run it
-        cmd = deepcopy(base_cmd)
-        cmd.extend([
-            "--in",
-            sample_dir,
-            "--out_path",
-            output_dir,
-            "-o",
-            sample
-        ])
-        run_command(cmd)
-
-        # Check for output
-        path_to_run_summary = os.path.join(
-            output_dir, sample, "batch_summary.txt"
-        )
-        if os.path.isfile(path_to_run_summary):
-            path_to_run_summaries[sample] = path_to_run_summary
-        else:
-            raise FileNotFoundError(
-                f"BUSCO batch summary file {path_to_run_summary} not found."
-            )
-
-    # Return a dict where key is sample id and value is path
-    # "tmp/sample_id/batch_summary.txt"
-    return path_to_run_summaries
-
-
-def _draw_busco_plots(
-        data: pd.DataFrame, plots_dir: str
-        ) -> Dict[str, str]:
-    """
-    Generates plots for all `batch_summary.txt` (one for every sample)
-    and saves them to `plots_dir`.
-
-    Args:
-        data (pd.DataFrame): DataFrame with BUSCO results for all samples.
-        plots_dir (str): Path where the results should be stored.
-
-    Returns:
-        dict: Dictionary where keys are sample IDs and values are the paths
-            to the generated plots, e.g.
-            `tmp/plots/<sample_id>/plot_batch_summary.svg`.
-    """
-    paths_to_plots = {}
-
-    # For every sample make a plot
-    samples = data["sample_id"].unique()
-    for sample_id in samples:
-        df = data[data["sample_id"] == sample_id]
-
-        # Create horizontal stacked bar plot
-        height = 0.9  # Height of the bars
-        a = 0.7
-
-        for i, mag_id in enumerate(df.mag_id.unique()):
-            row = df[df["mag_id"] == mag_id]
-            plt.barh(
-                i, row["missing_"], height, color='r',
-                label='Missing', alpha=a
-            )
-            plt.barh(
-                i, row["fragmented_"], height, color='tab:orange',
-                label='Fragmented', alpha=a
-            )
-            plt.barh(
-                i, row["duplicated_"], height, color='tab:cyan',
-                label='Duplicated', alpha=a
-            )
-            plt.barh(
-                i, row["single_"], height, color='tab:blue',
-                label='Single', alpha=a
-            )
-
-        # Add vertical lines and adjust x-axis limit
-        plt.gca().xaxis.grid(True, linestyle='--', linewidth=0.5)
-        plt.xlim(0, 100)
-
-        # Add labels, title, and legend
-        plt.ylabel("MAG IDs")
-        plt.xlabel('% BUSCO')
-        plt.title('')
-
-        plt.yticks(range(len(data.mag_id.unique())), data.mag_id.unique())
-        plt.legend(
-            ['Missing', 'Fragmented', 'Duplicated', 'Single'], loc='lower left'
-        )
-
-        # Save figure to file
-        output_name = os.path.join(
-            plots_dir, sample_id, "plot_batch_summary.svg"
-        )
-        os.makedirs(os.path.dirname(output_name), exist_ok=True)
-        plt.savefig(output_name, format="svg", bbox_inches='tight')
-
-        # Save path to dictionary
-        paths_to_plots[sample_id] = output_name
-
-    # Return paths to all generated plots
-    return paths_to_plots
-
-
-def _zip_busco_plots(paths_to_plots: dict, zip_path: str) -> None:
-    """
-    Creates a single zip archive containing all plots produced by BUSCO,
-    one for each sample.
-
-    Args:
-        paths_to_plots: Dictionary mapping sample to plot path.
-        zip_path (str): The path to the zip archive.
-    """
-
-    # Get shortest common path between files
-    common_path = os.path.commonpath(paths_to_plots.values())
-
-    # Write to zipfile
-    with ZipFile(zip_path, "w") as zf:
-        for _, path_to_plot in paths_to_plots.items():
-            arcname = os.path.relpath(path_to_plot, common_path)
-            zf.write(path_to_plot, arcname=arcname)
-
-
 def _collect_summaries(run_summaries_fp_map: dict) -> pd.DataFrame:
     """
     Reads-in the sample-wise summaries and concatenates them in one
@@ -427,7 +258,7 @@ def _collect_summaries(run_summaries_fp_map: dict) -> pd.DataFrame:
 def _render_html(
         output_dir: str,
         all_summaries_df: pd.DataFrame,
-        ):
+):
     """
     Renders an qiime2 html file with the plots summarizing the BUSCO output.
 
@@ -436,7 +267,6 @@ def _render_html(
         all_summaries_df (pd.DataFrame): Data frame composed of the individual
             run summaries.
     """
-    # Partition DataFrame
     dfs = _partition_dataframe(all_summaries_df, max_rows=100)
 
     context = {}
@@ -446,7 +276,8 @@ def _render_html(
         counter_right = counter_left + sample_count - 1
         sample_counter = {"from": counter_left, "to": counter_right}
         counter_left += sample_count
-        subcontext = _draw_busco_plots_for_render(
+        df = _parse_df_columns(df)
+        subcontext = _draw_busco_plots(
             df,
             width=600,
             height=30,
@@ -499,35 +330,24 @@ def _render_html(
 
 def _parse_df_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Parses the columns of a batch_summery data frame generated by busco
-    and formats its columns names such that:
-
-    - all "-" are replaces by "_"
-    - they contain only alphanumeric characters
-    - everything is in lowercase
-
-    Additionally, it creates a new column "mag_id" which contains the MAG ID.
-    It also casts the "percent_gaps" column from string to float.
+    Adds several columns required for generation of downloadable 
+    BUSCO plots.
 
     Args:
-        df (pd.DataFrame): Unformatted data frame
+        df (pd.DataFrame): Unformatted DataFrame
 
     Returns:
-        df (pd.DataFrame): Formatted data frame
+        df (pd.DataFrame): Formatted DataFrame
     """
-
-    # Clean column names
-    df.columns = df.columns.str.replace(" ", "_")
-    df.columns = df.columns.str.replace("[^a-zA-Z0-9_]", "", regex=True)
-    df.columns = df.columns.str.lower()
-
-    # Rename column "input_file"
-    df["mag_id"] = df["input_file"].str.split(".", expand=True)[0]
-
     # Cast into percent_gaps col to float
     df["percent_gaps"] = df["percent_gaps"].str.split(
         '%', expand=True
     )[0].map(float)
+
+    for col in ["single", "duplicated", "fragmented", "missing"]:
+        df[col] = df[col].map(float)
+
+    df["n_markers"] = df["n_markers"].map(int)
 
     # Make new columns for downloadable plots
     # (only used in _draw_busco_plots)
@@ -537,3 +357,26 @@ def _parse_df_columns(df: pd.DataFrame) -> pd.DataFrame:
     df["missing_"] = df["fragmented_"] + df['missing']
 
     return df
+
+
+def _rename_columns(df):
+    cols = {
+        "Input_file": "input_file", "Dataset": "dataset",
+        "Complete": "complete", "Single": "single",
+        "Duplicated": "duplicated", "Fragmented": "fragmented",
+        "Missing": "missing", "n_markers": "n_markers",
+        "Scaffold N50": "scaffold_n50", "Contigs N50": "contigs_n50",
+        "Percent gaps": "percent_gaps", "Number of scaffolds": "scaffolds",
+        "sample_id": "sample_id"
+    }
+
+    cols_reshuffled = [
+        "mag_id", "sample_id", "input_file", "dataset", "complete",
+        "single", "duplicated", "fragmented", "missing", "n_markers",
+        "scaffold_n50", "contigs_n50", "percent_gaps", "scaffolds",
+    ]
+
+    df = df.rename(columns=cols, inplace=False)
+    df["mag_id"] = df["input_file"].str.split(".", expand=True)[0]
+
+    return df[cols_reshuffled]

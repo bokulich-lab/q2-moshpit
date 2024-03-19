@@ -83,17 +83,18 @@ def partition_sample_data_mags(
 
     for i, _mag in enumerate(arrays_of_mags, 1):
         result = MultiMAGSequencesDirFmt()
-        samples = set([x for x, _, _ in _mag[0]])
+        samples = set(x for sublist in _mag for x, _, _ in sublist)
         manifest = pd.read_csv(mags.path / "MANIFEST", index_col=None)
         manifest = manifest[manifest["sample-id"].isin(samples)]
         manifest.to_csv(result.path / "MANIFEST", index=False)
 
-        for sample_id, mag_id, mag_fp in _mag[0]:
-            os.makedirs(result.path / sample_id, exist_ok=True)
-            duplicate(
-                mag_fp,
-                result.path / sample_id / os.path.basename(mag_fp)
-            )
+        for sample_set in _mag:
+            for sample_id, mag_id, mag_fp in sample_set:
+                os.makedirs(result.path / sample_id, exist_ok=True)
+                duplicate(
+                    mag_fp,
+                    result.path / sample_id / os.path.basename(mag_fp)
+                )
 
         # If num_partitions == num_samples we will only have gone through one
         # MAG in the above loop and will use its id as a key. Otherwise we

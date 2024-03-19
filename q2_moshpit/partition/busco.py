@@ -19,7 +19,7 @@ def collate_busco_results(
 
     results = []
     for result in busco_results:
-        df = result.view(pd.DataFrame)
+        df = pd.read_csv(result.path / "busco_results.tsv", sep='\t', index_col=0)
         results.append(df)
 
     pd.concat(results).to_csv(

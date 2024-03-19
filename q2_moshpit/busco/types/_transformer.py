@@ -29,7 +29,7 @@ def _1(ff: BUSCOResultsFormat) -> pd.DataFrame:
 def _2(data: pd.DataFrame) -> BUSCOResultsFormat:
     ff = BUSCOResultsFormat()
     with ff.open() as fh:
-        data.to_csv(fh, sep='\t', index=True, header=True)
+        data.to_csv(fh, sep='\t', index=False, header=True)
     return ff
 
 

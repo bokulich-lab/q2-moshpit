@@ -552,21 +552,6 @@ def _render_html(
     all_summaries_df.index.name = "feature id"
     table_json = all_summaries_df.to_json(orient='split')
 
-    # with tempfile.TemporaryDirectory() as tmp:
-    #     tabulate(tmp, Metadata(all_summaries_df))
-    #     shutil.move(
-    #         os.path.join(tmp, "index.html"),
-    #         os.path.join(output_dir, "table.html")
-    #     )
-    #     shutil.move(
-    #         os.path.join(tmp, "css", "datatables.min.css"),
-    #         os.path.join(output_dir, "css", "datatables.min.css"),
-    #     )
-    #     shutil.move(
-    #         os.path.join(tmp, "js", "datatables.min.js"),
-    #         os.path.join(output_dir, "js", "datatables.min.js"),
-    #     )
-
     # Render
     tabbed_context = {
         "tabs": [

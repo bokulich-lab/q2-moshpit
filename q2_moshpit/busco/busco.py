@@ -5,14 +5,12 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
-
 import os
 import tempfile
-import q2_moshpit.busco.utils
 from q2_moshpit.busco.utils import (
-    _parse_busco_params,
-    _render_html,
+    _parse_busco_params, _render_html, _run_busco,
+    _collect_summaries_and_save, _draw_busco_plots,
+    _zip_busco_plots,
 )
 from q2_moshpit._utils import _process_common_input_params
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
@@ -71,7 +69,7 @@ def evaluate_busco(
         # Run busco for every sample. Returns dictionary to report files.
         # Result NOT included in final output
         busco_results_dir = os.path.join(tmp, "busco_output")
-        path_to_run_summaries = q2_moshpit.busco.utils._run_busco(
+        path_to_run_summaries = _run_busco(
             output_dir=busco_results_dir,
             mags=bins,
             params=common_args,
@@ -82,7 +80,7 @@ def evaluate_busco(
         all_summaries_path = os.path.join(
             output_dir, "all_batch_summaries.csv"
         )
-        all_summaries_df = q2_moshpit.busco.utils._collect_summaries_and_save(
+        all_summaries_df = _collect_summaries_and_save(
             all_summaries_path=all_summaries_path,
             path_to_run_summaries=path_to_run_summaries,
         )
@@ -90,7 +88,7 @@ def evaluate_busco(
         # Draw BUSCO plots for all samples
         # Result NOT included in final output
         plots_dir = os.path.join(tmp, "plots")
-        paths_to_plots = q2_moshpit.busco.utils._draw_busco_plots(
+        paths_to_plots = _draw_busco_plots(
             path_to_run_summaries=path_to_run_summaries,
             plots_dir=plots_dir
         )
@@ -98,7 +96,7 @@ def evaluate_busco(
         # Zip graphs for user download
         # Result included in final output (file for download)
         zip_name = os.path.join(output_dir, "busco_plots.zip")
-        q2_moshpit.busco.utils._zip_busco_plots(
+        _zip_busco_plots(
             paths_to_plots=paths_to_plots,
             zip_path=zip_name
         )

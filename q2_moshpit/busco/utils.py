@@ -1,14 +1,22 @@
+import json
 import os
+import shutil
+import tempfile
+
 import q2templates
 from shutil import copytree
 import pandas as pd
 import altair as alt
 import matplotlib.pyplot as plt
 from zipfile import ZipFile
+
+from qiime2 import Metadata
+
 from .._utils import run_command
 from copy import deepcopy
 from typing import List, Dict
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_metadata._tabulate import tabulate
 
 
 arguments_with_hyphens = {
@@ -44,6 +52,27 @@ def _parse_busco_params(arg_key, arg_val) -> List[str]:
         return [f"--{arg_key}", str(arg_val)]
 
 
+def _partition_dataframe(df, max_rows):
+    groups = [group for _, group in df.groupby('sample_id')]
+    partitions = []
+    temp = []
+    total_rows = 0
+
+    for group in groups:
+        if total_rows + len(group) > max_rows:
+            partitions.append(pd.concat(temp, ignore_index=True))
+            temp = [group]
+            total_rows = len(group)
+        else:
+            temp.append(group)
+            total_rows += len(group)
+
+    if temp:
+        partitions.append(pd.concat(temp, ignore_index=True))
+
+    return partitions
+
+
 def _draw_busco_plots_for_render(
     df: pd.DataFrame,
     width: int = None,
@@ -51,7 +80,7 @@ def _draw_busco_plots_for_render(
     labelFontSize: int = None,
     titleFontSize: int = None,
     spacing: int = None
-) -> str:
+) -> dict:
     """
     Draws a horizontal normalized bar plot for every sample for which BUSCO was
     run. Each barplot shows the BUSCO results for each of the MAGs in the
@@ -66,7 +95,7 @@ def _draw_busco_plots_for_render(
         titleFontSize (int): size of titles in plot
 
     Output:
-        Output plot in dictionary from casted to a string.
+        Output plot spec as a dictionary.
     """
 
     # Format data frame
@@ -108,6 +137,15 @@ def _draw_busco_plots_for_render(
     domain = ["single", "duplicated", "fragmented", "missing"]
     range_ = ["#1E90FF", "#87CEFA", "#FFA500", "#FF7F50"]
 
+    # Get the first 10 sample ids
+    if len(df['sample_id'].unique()) <= 10:
+        default_regex = ""
+    else:
+        default_regex = df['sample_id'].unique()[0:10]
+        default_regex = '$|^'.join(default_regex)
+        default_regex = '^' + default_regex + "$"
+
+    # Make BUSCO bar plots (the plots on the left)
     busco_plot = (
         alt.Chart(busco_plot_data)
         .mark_bar()
@@ -202,7 +240,7 @@ def _draw_busco_plots_for_render(
     )
 
     # Return
-    return output_plot.to_json()
+    return output_plot.to_dict()
 
 
 def _run_busco(
@@ -379,8 +417,8 @@ def _collect_summaries_and_save(
         path_to_run_summaries: dict
         ) -> pd.DataFrame:
     """
-    Reads-in the sample wise summaries and concatenates them it one
-    pd.DataFrame, which is saved to file.
+    Reads in the sample-wise summaries and concatenates them it one
+    DataFrame, which is saved to file.
 
     Args:
         all_summaries_path (str): Directory path where to write the
@@ -408,6 +446,50 @@ def _collect_summaries_and_save(
     return all_summaries_df
 
 
+def _draw_busco_summary(data: pd.DataFrame) -> dict:
+    """
+    Draws a summary histogram for the BUSCO results of all samples. The plot
+    is then returned as a dictionary for rendering.
+
+    Returns:
+        dict: Dictionary containing the Vega spec.
+    """
+    # Format data frame
+    data = _parse_df_columns(data)
+
+    # Format data for plotting
+    data = pd.melt(
+        data,
+        id_vars=["sample_id", "mag_id", "dataset", "n_markers"],
+        value_vars=["single", "duplicated", "fragmented", "missing"],
+        value_name="BUSCO_percentage",
+        var_name="category",
+    )
+
+    chart = alt.Chart(data).mark_bar().encode(
+        x=alt.X('BUSCO_percentage:Q', bin=True, title='BUSCO percentage'),
+        y=alt.Y('count()', title='MAG count'),
+        facet=alt.Facet(
+            'category:N',
+            columns=2,
+            sort=['single', 'duplicated', 'fragmented', 'missing'],
+            title=None
+        ),
+        color=alt.value("steelblue")
+    ).properties(
+        width=360,
+        height=360
+    ).configure_axis(
+        labelFontSize=17, titleFontSize=20
+    ).configure_legend(
+        labelFontSize=17, titleFontSize=20
+    ).configure_header(
+        labelFontSize=17, titleFontSize=20
+    )
+
+    return chart.to_dict()
+
+
 def _render_html(
         output_dir: str,
         all_summaries_df: pd.DataFrame,
@@ -420,17 +502,36 @@ def _render_html(
         all_summaries_df (pd.DataFrame): Data frame composed of the individual
             run summaries.
     """
-    # Prepare context for jinja2 template
-    context = {
-        "vega_plots_overview": _draw_busco_plots_for_render(
-            all_summaries_df,
+    # Partition DataFrame
+    dfs = _partition_dataframe(all_summaries_df, max_rows=100)
+
+    context = {}
+    counter_left = 1
+    for i, df in enumerate(dfs):
+        sample_count = df['sample_id'].nunique()
+        counter_right = counter_left + sample_count - 1
+        sample_counter = {"from": counter_left, "to": counter_right}
+        counter_left += sample_count
+        subcontext = _draw_busco_plots_for_render(
+            df,
             width=600,
             height=30,
             titleFontSize=20,
             labelFontSize=17,
             spacing=20
-        ),
-    }
+        )
+        context.update(
+            {f"sample{i}": {
+                "subcontext": subcontext,
+                "sample_counter": sample_counter,
+                "sample_ids": df['sample_id'].unique().tolist(),
+            }}
+        )
+
+    summary_spec = _draw_busco_summary(all_summaries_df)
+
+    vega_json = _dump_spec(context, output_dir, "vega.json")
+    vega_json_summary = _dump_spec(summary_spec, output_dir, "vega_summary.json")
 
     # Copy BUSCO results from tmp dir to output_dir
     moshpit_path = os.path.dirname(  # Path to parent dir, q2_moshpit
@@ -438,14 +539,33 @@ def _render_html(
     )
     TEMPLATES = os.path.join(moshpit_path, "assets")
     index = os.path.join(TEMPLATES, "busco", "index.html")
+    details = os.path.join(TEMPLATES, "busco", "detailed_view.html")
+    table = os.path.join(TEMPLATES, "busco", "table.html")
     copytree(
         src=os.path.join(TEMPLATES, "busco"),
         dst=output_dir,
         dirs_exist_ok=True
     )
 
+    # Draw the results table
+    all_summaries_df.set_index("mag_id", inplace=True, drop=True)
+    all_summaries_df.index.name = "feature id"
+    table_json = all_summaries_df.to_json(orient='split')
+
     # Render
-    q2templates.render(index, output_dir, context=context)
+    tabbed_context = {
+        "tabs": [
+            {"title": "QC overview", "url": "index.html"},
+            {"title": "Sample details", "url": "detailed_view.html"},
+            {"title": "Feature details", "url": "table.html"}
+        ],
+        "vega_json": vega_json,
+        "vega_json_summary": vega_json_summary,
+        "table": table_json,
+        "page_size": 100
+    }
+    templates = [index, details, table]
+    q2templates.render(templates, output_dir, context=tabbed_context)
 
     # Remove unwanted files
     # until Bootstrap 3 is replaced with v5, remove the v3 scripts as
@@ -460,6 +580,14 @@ def _render_html(
             output_dir, "q2templateassets", "js", "bootstrap.min.js"
             )
     )
+
+
+def _dump_spec(context, output_dir, vega_spec_fn):
+    vega_out_fp = os.path.join(output_dir, vega_spec_fn)
+    with open(vega_out_fp, 'w') as json_file:
+        vega_json = json.dumps(context)
+        json_file.write(vega_json)
+    return vega_json
 
 
 def _parse_df_columns(df: pd.DataFrame) -> pd.DataFrame:

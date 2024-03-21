@@ -185,6 +185,15 @@ def _find_latest_db(collection: str, response: requests.Response) -> str:
     return latest_db
 
 
+def _move_files_one_level_up(tmp_dir):
+    extr_db = [
+        x for x in os.listdir(tmp_dir) if not x.endswith(".tgz")
+    ][0]
+    src = os.path.join(tmp_dir, extr_db)
+    for file in os.listdir(src):
+        shutil.move(os.path.join(src, file), tmp_dir)
+
+
 def _fetch_db_collection(collection: str, tmp_dir: str):
     err_msg = 'Could not connect to the server. Please check your internet ' \
               'connection and try again. The error was: {}.'
@@ -230,12 +239,7 @@ def _fetch_db_collection(collection: str, tmp_dir: str):
     print(f"\r{msg} Done.", flush=True)
 
     if collection in S16_DBS:
-        extr_db = [
-                x for x in os.listdir(tmp_dir) if not x.endswith(".tgz")
-            ][0]
-        src = os.path.join(tmp_dir, extr_db)
-        for file in os.listdir(src):
-            shutil.move(os.path.join(src, file), tmp_dir)
+        _move_files_one_level_up(tmp_dir)
 
 
 def _move_db_files(source: str, destination: str, extension: str = "k2d"):

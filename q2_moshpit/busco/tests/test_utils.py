@@ -13,12 +13,10 @@ import json
 import pandas as pd
 from q2_moshpit.busco.utils import (
     _parse_busco_params,
-    _draw_busco_plots,
-    _zip_busco_plots,
-    _draw_busco_plots,
     _collect_summaries,
     _parse_df_columns,
 )
+from q2_moshpit.busco.plots_detailed import _draw_detailed_plots
 from q2_moshpit.busco.busco import _run_busco
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
@@ -92,7 +90,7 @@ class TestBUSCO(TestPluginBase):
             else:
                 self.assertTrue(True)
 
-    # Test `_draw_busco_plots`
+    # Test `_draw_detailed_plots`
     def draw_n_busco_plots(self, filename, delim):
         """
         Creates plot from a table containing information about
@@ -121,7 +119,7 @@ class TestBUSCO(TestPluginBase):
                 path_to_run_summaries[sample_id] = path_to_df
 
             # Draw plots
-            paths_to_plots = _draw_busco_plots(
+            paths_to_plots = _draw_detailed_plots(
                 path_to_run_summaries=path_to_run_summaries,
                 plots_dir=os.path.join(tmp_path, "plots"),
             )
@@ -140,10 +138,10 @@ class TestBUSCO(TestPluginBase):
             filename="batch_summary_sample1.txt", delim="\t"
         )
 
-    # Test `_draw_busco_plots`
+    # Test `_draw_detailed_plots`
     def test_draw_busco_plots_for_render(self):
         """
-        Tests function `_draw_busco_plots`.
+        Tests function `_draw_detailed_plots`.
         Checks for dictionary equality.
         """
         # Load data
@@ -151,7 +149,7 @@ class TestBUSCO(TestPluginBase):
         all_summaries_df = pd.read_csv(p)
 
         # Draw plot
-        observed = _draw_busco_plots(
+        observed = _draw_detailed_plots(
             all_summaries_df,
             width=500,
             height=30,
@@ -181,7 +179,7 @@ class TestBUSCO(TestPluginBase):
         self.maxDiff = None
         self.assertDictEqual(expected, observed)
 
-    # Test `_draw_busco_plots`
+    # Test `_draw_detailed_plots`
     def mock_draw_busco_plots(self, tmp_path: str, num_files: int) -> dict:
         """
         Mocks the generation of sample wise plots by generating

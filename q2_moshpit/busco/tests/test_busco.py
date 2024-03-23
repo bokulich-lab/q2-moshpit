@@ -33,7 +33,7 @@ class TestBUSCO(TestPluginBase):
     # Integration test busco.
     @patch('q2_moshpit.busco.utils._run_busco')
     @patch('q2_moshpit.busco.utils._zip_busco_plots')
-    @patch('q2_moshpit.busco.utils._draw_busco_plots')
+    @patch('q2_moshpit.busco.utils._draw_detailed_plots')
     @patch('q2_moshpit.busco.utils._collect_summaries')
     def test_integration_busco(
         self,
@@ -50,7 +50,7 @@ class TestBUSCO(TestPluginBase):
             collect_summaries (unittest.mock): mock object for function
                 `_collect_summaries`
             zip_busco_plots (unittest.mock): mock object for function
-                `_draw_busco_plots`.
+                `_draw_detailed_plots`.
             zip_busco_plots (unittest.mock): mock object for function
                 `_zip_busco_plots`.
             run_busco (unittest.mock): mock object for function

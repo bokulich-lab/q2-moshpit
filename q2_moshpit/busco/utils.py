@@ -89,23 +89,13 @@ def _collect_summaries(run_summaries_fp_map: dict) -> pd.DataFrame:
     return pd.concat(all_summaries, ignore_index=True)
 
 
-def _dump_spec(context, output_dir, vega_spec_fn):
-    # vega_out_fp = os.path.join(output_dir, vega_spec_fn)
-    # with open(vega_out_fp, 'w') as json_file:
-    vega_json = json.dumps(context)
-        # json_file.write(vega_json)
-    return vega_json
-
-
 def _get_feature_table(busco_results: pd.DataFrame):
     df = busco_results.reset_index(inplace=False, drop=False)
-    for col in MARKER_COLS:
-        df[col] = df[col] * df["n_markers"] / 100
     new_cols = {
         "mag_id": "MAG", "sample_id": "Sample", "dataset": "Dataset",
-        "single": "Single", "duplicated": "Duplicated",
-        "fragmented": "Fragmented", "missing": "Missing",
-        "complete": "Complete", "n_markers": "Total markers",
+        "single": "% single", "duplicated": "% duplicated",
+        "fragmented": "% fragmented", "missing": "% missing",
+        "complete": "% complete", "n_markers": "Total markers",
         "contigs_n50": "N50 contigs", "percent_gaps": "Percent gaps",
         "scaffolds": "Contigs"
     }

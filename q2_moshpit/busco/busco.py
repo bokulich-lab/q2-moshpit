@@ -5,6 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import json
+
 import os
 import tempfile
 from copy import deepcopy
@@ -20,8 +22,8 @@ from q2_moshpit.busco.plots_summary import _draw_marker_summary_histograms, \
 
 from q2_moshpit.busco.utils import (
     _parse_busco_params, _collect_summaries, _rename_columns,
-    _parse_df_columns, _partition_dataframe, _dump_spec,
-    _get_feature_table, _cleanup_bootstrap, _calculate_summary_stats,
+    _parse_df_columns, _partition_dataframe, _calculate_summary_stats,
+    _get_feature_table, _cleanup_bootstrap
 )
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
@@ -180,13 +182,9 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
     marker_summary_spec = _draw_marker_summary_histograms(busco_results)
     selectable_summary_spec = _draw_selectable_summary_histograms(busco_results)
 
-    vega_json = _dump_spec(context, output_dir, "vega.json")
-    vega_json_summary = _dump_spec(
-        marker_summary_spec, output_dir, "vega_summary.json"
-    )
-    vega_json_summary_selectable = _dump_spec(
-        selectable_summary_spec, output_dir, "vega_summary_selectable.json"
-    )
+    vega_json = json.dumps(context)
+    vega_json_summary = json.dumps(marker_summary_spec)
+    vega_json_summary_selectable = json.dumps(selectable_summary_spec)
 
     # Copy BUSCO results from tmp dir to output_dir
     TEMPLATES = os.path.join(

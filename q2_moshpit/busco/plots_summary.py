@@ -58,7 +58,7 @@ def _draw_marker_summary_histograms(data: pd.DataFrame) -> dict:
         data, columns=["single", "duplicated", "fragmented", "missing"]
     )
     chart2 = _draw_horizontal_histograms(
-        data, columns=["scaffolds", "contigs_n50", "scaffold_n50", "percent_gaps"]
+        data, columns=["scaffolds", "contigs_n50", "scaffold_n50", "length"]
     )
 
     chart = alt.vconcat(chart, chart2).configure_axis(
@@ -80,16 +80,19 @@ def _draw_selectable_summary_histograms(data: pd.DataFrame) -> dict:
     Returns:
         dict: Dictionary containing the Vega spec.
     """
+    metrics = [
+        'single', 'duplicated', 'fragmented', 'missing',
+        'scaffolds', 'contigs_n50', 'length'
+    ]
     data = pd.melt(
         data,
         id_vars=["sample_id", "mag_id", "dataset", "n_markers"],
-        value_vars=["single", "duplicated", "fragmented", "missing", "scaffolds", "contigs_n50"],
+        value_vars=metrics,
         value_name="metric",
         var_name="category",
     )
 
     # Create the dropdown selection with all possible metrics
-    metrics = ['single', 'duplicated', 'fragmented', 'missing', 'scaffolds', 'contigs_n50']
     selection_metrics = alt.selection_point(
         fields=['category'],
         bind=alt.binding_select(options=metrics),

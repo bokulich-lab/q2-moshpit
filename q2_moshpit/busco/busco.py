@@ -8,6 +8,7 @@
 import json
 
 import os
+import skbio.io
 import tempfile
 from copy import deepcopy
 from shutil import copytree
@@ -97,6 +98,15 @@ def _run_busco(
     return path_to_run_summaries
 
 
+def _get_mag_lengths(bins: MultiMAGSequencesDirFmt):
+    lengths = {}
+    for sample, mags in bins.sample_dict().items():
+        for mag_id, mag_fp in mags.items():
+            seq = skbio.io.read(mag_fp, format="fasta")
+            lengths[mag_id] = sum([len(s) for s in seq])
+    return pd.Series(lengths, name="length")
+
+
 def _busco_helper(bins, common_args):
     with tempfile.TemporaryDirectory() as tmp:
         path_to_run_summaries = _run_busco(
@@ -108,8 +118,10 @@ def _busco_helper(bins, common_args):
         all_summaries = _collect_summaries(
             run_summaries_fp_map=path_to_run_summaries,
         )
-
     all_summaries = _rename_columns(all_summaries)
+
+    lengths = _get_mag_lengths(bins)
+    all_summaries = all_summaries.join(lengths, on="mag_id")
 
     return all_summaries
 

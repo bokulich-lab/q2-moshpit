@@ -97,7 +97,7 @@ def _get_feature_table(busco_results: pd.DataFrame):
         "fragmented": "% fragmented", "missing": "% missing",
         "complete": "% complete", "n_markers": "Total markers",
         "contigs_n50": "N50 contigs", "percent_gaps": "Percent gaps",
-        "scaffolds": "Contigs"
+        "scaffolds": "Contigs", "length": "Length (bp)"
     }
     df = df[list(new_cols.keys())].rename(columns=new_cols, inplace=False)
     return df.to_json(orient='split')

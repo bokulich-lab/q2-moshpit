@@ -242,7 +242,7 @@ def _run_busco(
         sample_dirs = manifest["sample_dir"].unique()
 
     elif isinstance(mags, MAGSequencesDirFmt):
-        sample_dirs = [os.joint.path(str(mags), "data")]
+        sample_dirs = [str(mags)]
 
     else:
         assert False, (

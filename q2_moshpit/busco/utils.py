@@ -106,6 +106,12 @@ def _draw_busco_plots_for_render(
         + "/" + busco_plot_data["n_markers"].map(str)
     )
 
+    # Define title
+    if len(busco_plot_data["sample_id"].unique()) >= 2:
+        title = "Sample ID and MAG ID"
+    else:
+        title = "MAG ID"
+
     # Plot
     domain = ["single", "duplicated", "fragmented", "missing"]
     range_ = ["#1E90FF", "#87CEFA", "#FFA500", "#FF7F50"]
@@ -145,7 +151,7 @@ def _draw_busco_plots_for_render(
         .facet(
             row=alt.Row(
                 "sample_id",
-                title="Sample ID / MAG ID"
+                title=title
             ),
             spacing=spacing
         )

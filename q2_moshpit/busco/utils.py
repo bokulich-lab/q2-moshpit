@@ -109,8 +109,10 @@ def _draw_busco_plots_for_render(
     # Define title
     if len(busco_plot_data["sample_id"].unique()) >= 2:
         title = "Sample ID and MAG ID"
+        subtitle_size = 15
     else:
         title = "MAG ID"
+        subtitle_size = 0
 
     # Plot
     domain = ["single", "duplicated", "fragmented", "missing"]
@@ -151,7 +153,8 @@ def _draw_busco_plots_for_render(
         .facet(
             row=alt.Row(
                 "sample_id",
-                title=title
+                title=title,
+                header=alt.Header(labelFontSize=subtitle_size),
             ),
             spacing=spacing
         )

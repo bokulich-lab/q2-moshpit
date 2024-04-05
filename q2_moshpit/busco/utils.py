@@ -8,7 +8,9 @@ from zipfile import ZipFile
 from .._utils import run_command
 from copy import deepcopy
 from typing import List, Dict
+from typing import Union
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.feature_data_mag import MAGSequencesDirFmt
 
 
 arguments_with_hyphens = {
@@ -206,7 +208,9 @@ def _draw_busco_plots_for_render(
 
 
 def _run_busco(
-    output_dir: str, mags: MultiMAGSequencesDirFmt, params: List[str]
+    output_dir: str,
+    mags: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt],
+    params: List[str]
 ) -> Dict[str, str]:
     """Evaluates bins for all samples using BUSCO.
 
@@ -224,17 +228,27 @@ def _run_busco(
     # Define base command
     base_cmd = ["busco", *params]
 
-    # Creates pandas df "manifest" from bins
-    manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
+    if isinstance(mags, MultiMAGSequencesDirFmt):
+        # Creates pandas df "manifest" from bins
+        manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
 
-    # Make a new column in manifest with the directories of files
-    # listed in column "filename"
-    manifest["sample_dir"] = manifest.filename.apply(
-        lambda x: os.path.dirname(x)
-    )
+        # Make a new column in manifest with the directories of files
+        # listed in column "filename"
+        manifest["sample_dir"] = manifest.filename.apply(
+            lambda x: os.path.dirname(x)
+        )
 
-    # numpy.ndarray with unique dirs
-    sample_dirs = manifest["sample_dir"].unique()
+        # numpy.ndarray with unique dirs
+        sample_dirs = manifest["sample_dir"].unique()
+
+    elif isinstance(mags, MAGSequencesDirFmt):
+        sample_dirs = [os.joint.path(str(mags), "data")]
+
+    else:
+        assert False, (
+            "mags should either be MultiMAGSequencesDirFmt "
+            "or MAGSequencesDirFmt"
+        )
 
     # Initialize dictionary with paths to run summaries
     path_to_run_summaries = {}

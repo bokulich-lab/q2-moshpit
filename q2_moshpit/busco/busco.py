@@ -10,17 +10,19 @@
 import os
 import tempfile
 import q2_moshpit.busco.utils
+from typing import Union
 from q2_moshpit.busco.utils import (
     _parse_busco_params,
     _render_html,
 )
 from q2_moshpit._utils import _process_common_input_params
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.feature_data_mag import MAGSequencesDirFmt
 
 
 def evaluate_busco(
     output_dir: str,
-    bins: MultiMAGSequencesDirFmt,
+    bins: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt],
     mode: str = "genome",
     lineage_dataset: str = None,
     augustus: bool = False,

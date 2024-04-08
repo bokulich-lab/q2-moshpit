@@ -463,7 +463,8 @@
       "facet": {
         "row": {
           "field": "sample_id",
-          "title": "Sample ID / MAG ID",
+          "header": {"labelFontSize": 15},
+          "title": "Sample ID and MAG ID",
           "type": "nominal"
         }
       },

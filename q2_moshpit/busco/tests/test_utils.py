@@ -268,17 +268,23 @@ class TestBUSCO(TestPluginBase):
         """
         Checks for existence of zip file.
         """
+        n_files = 6
+
         with tempfile.TemporaryDirectory() as tmp_path:
             paths_to_plots = self.mock_draw_busco_plots(
-                num_files=6, tmp_path=tmp_path
+                num_files=n_files, tmp_path=tmp_path
             )
 
             # Zip graphs for user download
             zip_path = os.path.join(tmp_path, "busco_plots.zip")
             _zip_busco_plots(paths_to_plots=paths_to_plots, zip_path=zip_path)
 
-            # Check for existence of file
-            self.assertTrue(zipfile.is_zipfile(zip_path))
+            # Check if one can unzip the file correctly
+            with zipfile.ZipFile(zip_path, 'r') as zip:
+                expected_files = [
+                    f"empty_file_{i}.svg" for i in range(n_files)
+                ]
+                self.assertListEqual(zip.namelist(), expected_files)
 
     def test_zip_busco_plots_one(self):
         """
@@ -293,8 +299,9 @@ class TestBUSCO(TestPluginBase):
             zip_path = os.path.join(tmp_path, "busco_plots.zip")
             _zip_busco_plots(paths_to_plots=paths_to_plots, zip_path=zip_path)
 
-            # Check for existence of file
-            self.assertTrue(zipfile.is_zipfile(zip_path))
+            # Check if one can unzip the file correctly
+            with zipfile.ZipFile(zip_path, 'r') as zip:
+                self.assertListEqual(zip.namelist(), ["empty_file_0.svg"])
 
     @patch('subprocess.run')
     def test_run_busco_SampleData(self, subp_run):

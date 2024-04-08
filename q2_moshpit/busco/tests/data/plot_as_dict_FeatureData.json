@@ -1,0 +1,350 @@
+{
+  "config": {
+    "axis": {
+      "labelFontSize": 17,
+      "titleFontSize": 20
+    },
+    "header": {
+      "labelFontSize": 17,
+      "titleFontSize": 20
+    },
+    "legend": {
+      "labelFontSize": 17,
+      "titleFontSize": 20
+    },
+    "view": {
+      "continuousHeight": 300,
+      "continuousWidth": 300
+    }
+  },
+  "datasets": {
+    "data-8eeb27a58f5796f75448a5d3d8f81d69": [
+      {
+        "contigs_n50": 170295,
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "number_of_scaffolds": 27,
+        "percent_gaps": 0.0,
+        "sample_id": "data",
+        "scaffold_n50": 170295
+      },
+      {
+        "contigs_n50": 109922,
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "number_of_scaffolds": 65,
+        "percent_gaps": 0.0,
+        "sample_id": "data",
+        "scaffold_n50": 109922
+      },
+      {
+        "contigs_n50": 111744,
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "number_of_scaffolds": 127,
+        "percent_gaps": 0.0,
+        "sample_id": "data",
+        "scaffold_n50": 111744
+      }
+    ],
+    "data-aa27db16b89ba99bd435a50e28f5712a": [
+      {
+        "BUSCO_percentage": 96.8,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~120/124",
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 96.0,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~119/124",
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 96.0,
+        "category": "single",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~119/124",
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "n_markers": 124,
+        "order": 1,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "duplicated",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "n_markers": 124,
+        "order": 2,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "fragmented",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "n_markers": 124,
+        "order": 3,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 1.6,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~2/124",
+        "mag_id": "67392c6c-9f45-4c84-85f5-ae0bfc668892",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "67123d05-b5ae-4a53-873b-727952881899",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "data"
+      },
+      {
+        "BUSCO_percentage": 0.8,
+        "category": "missing",
+        "dataset": "bacteria_odb10",
+        "fracc_markers": "~1/124",
+        "mag_id": "311112c9-7f8b-460c-9cad-3864af3148c2",
+        "n_markers": 124,
+        "order": 4,
+        "sample_id": "data"
+      }
+    ]
+  },
+  "hconcat": [
+    {
+      "data": {
+        "name": "data-aa27db16b89ba99bd435a50e28f5712a"
+      },
+      "facet": {
+        "row": {
+          "field": "sample_id",
+          "header": {
+            "labelFontSize": 0
+          },
+          "title": "MAG ID",
+          "type": "nominal"
+        }
+      },
+      "resolve": {
+        "scale": {
+          "y": "independent"
+        }
+      },
+      "spacing": 20,
+      "spec": {
+        "encoding": {
+          "color": {
+            "field": "category",
+            "legend": {
+              "orient": "top",
+              "title": "BUSCO Category"
+            },
+            "scale": {
+              "domain": [
+                "single",
+                "duplicated",
+                "fragmented",
+                "missing"
+              ],
+              "range": [
+                "#1E90FF",
+                "#87CEFA",
+                "#FFA500",
+                "#FF7F50"
+              ]
+            },
+            "type": "nominal"
+          },
+          "opacity": {
+            "value": 0.85
+          },
+          "order": {
+            "field": "order",
+            "sort": "ascending",
+            "type": "quantitative"
+          },
+          "tooltip": [
+            {
+              "field": "sample_id",
+              "title": "Sample ID",
+              "type": "nominal"
+            },
+            {
+              "field": "mag_id",
+              "title": "MAG ID",
+              "type": "nominal"
+            },
+            {
+              "field": "dataset",
+              "title": "Lineage dataset",
+              "type": "nominal"
+            },
+            {
+              "field": "fracc_markers",
+              "title": "Aprox. number of markers in this category",
+              "type": "nominal"
+            },
+            {
+              "field": "BUSCO_percentage",
+              "title": "% BUSCOs",
+              "type": "quantitative"
+            }
+          ],
+          "x": {
+            "aggregate": "sum",
+            "field": "BUSCO_percentage",
+            "stack": "normalize",
+            "title": "BUSCO fraction",
+            "type": "quantitative"
+          },
+          "y": {
+            "axis": {
+              "titleFontSize": 0
+            },
+            "field": "mag_id",
+            "type": "nominal"
+          }
+        },
+        "height": {
+          "step": 30
+        },
+        "mark": {
+          "type": "bar"
+        },
+        "width": 500
+      }
+    },
+    {
+      "data": {
+        "name": "data-8eeb27a58f5796f75448a5d3d8f81d69"
+      },
+      "facet": {
+        "row": {
+          "field": "sample_id",
+          "header": {
+            "labelFontSize": 0
+          },
+          "title": null,
+          "type": "nominal"
+        }
+      },
+      "resolve": {
+        "scale": {
+          "y": "independent"
+        }
+      },
+      "spacing": 20,
+      "spec": {
+        "encoding": {
+          "opacity": {
+            "value": 0.85
+          },
+          "tooltip": [
+            {
+              "field": "x",
+              "title": "value",
+              "type": "quantitative"
+            }
+          ],
+          "x": {
+            "field": "x",
+            "title": "Assembly Statistic",
+            "type": "quantitative"
+          },
+          "y": {
+            "axis": null,
+            "field": "mag_id",
+            "type": "nominal"
+          }
+        },
+        "height": {
+          "step": 30
+        },
+        "mark": {
+          "type": "bar"
+        },
+        "transform": [
+          {
+            "as": "x",
+            "calculate": "datum[param_i]"
+          }
+        ],
+        "width": 500
+      }
+    }
+  ],
+  "params": [
+    {
+      "bind": {
+        "input": "select",
+        "name": "Assembly Statistics: ",
+        "options": [
+          "scaffold_n50",
+          "contigs_n50",
+          "percent_gaps",
+          "number_of_scaffolds"
+        ]
+      },
+      "name": "param_i",
+      "value": "scaffold_n50"
+    }
+  ],
+  "spacing": 3
+}

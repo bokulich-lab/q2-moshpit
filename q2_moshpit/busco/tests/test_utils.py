@@ -139,9 +139,8 @@ class TestBUSCO(TestPluginBase):
         self.draw_n_busco_plots(
             filename="batch_summary_sample1.txt", delim="\t"
         )
-
-    # Test `_draw_busco_plots_for_render`
-    def test_draw_busco_plots_for_render(self):
+ 
+    def test_draw_busco_plots_for_render_SampleData(self):
         """
         Tests function `_draw_busco_plots_for_render`.
         Checks for dictionary equality.
@@ -181,7 +180,47 @@ class TestBUSCO(TestPluginBase):
         self.maxDiff = None
         self.assertDictEqual(expected, observed)
 
-    # Test `_draw_busco_plots`
+    def test_draw_busco_plots_for_render_FeatureData(self):
+        """
+        Tests function `_draw_busco_plots_for_render`.
+        Checks for dictionary equality.
+        """
+        # Load data
+        p = self.get_data_path("all_batch_summaries_FeatureData.csv")
+        all_summaries_df = pd.read_csv(p)
+
+        # Draw plot
+        observed = _draw_busco_plots_for_render(
+            all_summaries_df,
+            width=500,
+            height=30,
+            titleFontSize=20,
+            labelFontSize=17,
+            spacing=20
+        )
+
+        # Replace param value to make the dict altair version invariant
+        observed = observed.replace("param_1", "param_i")
+        observed = observed.replace("param_2", "param_i")
+
+        # Json string to dict
+        observed = json.loads(observed)
+
+        # Remove $schema k-v pair (also altair version variant)
+        observed.pop("$schema")
+
+        # Load expected data
+        p = self.get_data_path("plot_as_dict_FeatureData.json")
+        with open(p, "r") as json_file:
+            expected = json_file.read()
+
+        # Json string to dictionary
+        expected = json.loads(expected)
+
+        self.maxDiff = None
+        self.assertDictEqual(expected, observed)
+
+    # Mock the `_draw_busco_plots` function
     def mock_draw_busco_plots(self, tmp_path: str, num_files: int) -> dict:
         """
         Mocks the generation of sample wise plots by generating

@@ -82,6 +82,10 @@ setup(
         ],
         'q2_moshpit.prodigal.tests': [
             'data/*', 'data/*/*',
+        ],
+        'q2_moshpit.partition.tests': [
+            'data/*', 'data/*/*', 'data/*/*/*', 'data/*/*/*/*',
+            'data/*/*/*/*/*',
         ]
     },
     zip_safe=False,

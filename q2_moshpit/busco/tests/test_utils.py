@@ -9,14 +9,12 @@
 import os
 import tempfile
 import zipfile
-import json
 import pandas as pd
 from q2_moshpit.busco.utils import (
     _parse_busco_params,
     _draw_busco_plots,
     _zip_busco_plots,
     _run_busco,
-    _draw_busco_plots_for_render,
     _collect_summaries_and_save,
     _parse_df_columns,
 )

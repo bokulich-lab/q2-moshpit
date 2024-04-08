@@ -12,18 +12,55 @@ import tempfile
 import qiime2.util
 import pandas as pd
 from typing import Union
-from q2_types.per_sample_sequences import ContigSequencesDirFmt
+from q2_types.per_sample_sequences import ContigSequencesDirFmt, Contigs
 from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 from q2_types.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt
 )
-from q2_types.feature_data import DNAFASTAFormat
+from q2_types.feature_data import DNAFASTAFormat, FeatureData, BLAST6
 from q2_types.feature_data_mag import (
-    OrthologAnnotationDirFmt, MAGSequencesDirFmt
+    OrthologAnnotationDirFmt, MAGSequencesDirFmt, MAG
 )
+from q2_types.sample_data import SampleData
 
 
 def eggnog_diamond_search(
+        ctx,
+        sequences,
+        diamond_db,
+        num_cpus=1,
+        db_in_memory=False,
+        num_partitions=None
+):
+    _eggnog_diamond_search = ctx.get_action(
+        "moshpit", "_eggnog_diamond_search")
+
+    if sequences.type <= FeatureData[MAG]:
+        partition_method = ctx.get_action(
+            "moshpit", "partition_feature_data_mags")
+    elif sequences.type <= SampleData[Contigs]:
+        partition_method = ctx.get_action("assembly", "partition_contigs")
+    else:
+        raise NotImplementedError()
+
+    collate_hits = ctx.get_action("moshpit", "collate_orthologs")
+    _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
+
+    (partitioned_sequences,) = partition_method(sequences, num_partitions)
+
+    hits = []
+    for seq in partitioned_sequences.values():
+        (hit, _) = _eggnog_diamond_search(
+            seq, diamond_db, num_cpus, db_in_memory)
+        hits.append(hit)
+
+    (collated_hits,) = collate_hits(hits)
+    (collated_tables,) = _eggnog_feature_table(collated_hits)
+
+    return collated_hits, collated_tables
+
+
+def _eggnog_diamond_search(
         sequences: Union[ContigSequencesDirFmt, MAGSequencesDirFmt],
         diamond_db: DiamondDatabaseDirFmt,
         num_cpus: int = 1, db_in_memory: bool = False
@@ -97,9 +134,12 @@ def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
     subprocess.run(cmds, check=True)
 
 
-def eggnog_annotate(eggnog_hits: SeedOrthologDirFmt,
-                    eggnog_db: EggnogRefDirFmt,
-                    db_in_memory: bool = False) -> OrthologAnnotationDirFmt:
+def _eggnog_annotate(
+        eggnog_hits: SeedOrthologDirFmt,
+        eggnog_db: EggnogRefDirFmt,
+        db_in_memory: bool = False,
+        num_cpus: int = 1
+) -> OrthologAnnotationDirFmt:
 
     eggnog_db_fp = eggnog_db.path
 
@@ -114,20 +154,51 @@ def eggnog_annotate(eggnog_hits: SeedOrthologDirFmt,
                                         eggnog_db=eggnog_db_fp,
                                         sample_label=sample_label,
                                         output_loc=result,
-                                        db_in_memory=db_in_memory)
+                                        db_in_memory=db_in_memory,
+                                        num_cpus=num_cpus)
 
     return result
 
 
+def eggnog_annotate(
+        ctx,
+        eggnog_hits,
+        eggnog_db,
+        db_in_memory=False,
+        num_cpus=1,
+        num_partitions=None
+):
+    _eggnog_annotate = ctx.get_action("moshpit", "_eggnog_annotate")
+    collate_annotations = ctx.get_action("moshpit", "collate_annotations")
+
+    if eggnog_hits.type <= SampleData[BLAST6]:
+        partition_method = ctx.get_action("moshpit", "partition_orthologs")
+    else:
+        raise NotImplementedError()
+
+    (partitioned_orthologs, ) = partition_method(eggnog_hits, num_partitions)
+
+    annotations = []
+    for orthologs in partitioned_orthologs.values():
+        (annotation, ) = _eggnog_annotate(
+            orthologs, eggnog_db, db_in_memory, num_cpus
+        )
+        annotations.append(annotation)
+
+    (collated_annotations, ) = collate_annotations(annotations)
+    return collated_annotations
+
+
 def _annotate_seed_orthologs_runner(seed_ortholog, eggnog_db, sample_label,
-                                    output_loc, db_in_memory):
+                                    output_loc, db_in_memory, num_cpus):
 
     # at this point instead of being able to specify the type of target
     # orthologs, we want to annotate _all_.
 
     cmds = ['emapper.py', '-m', 'no_search', '--annotate_hits_table',
             str(seed_ortholog), '--data_dir', str(eggnog_db),
-            '-o', str(sample_label), '--output_dir', str(output_loc)]
+            '-o', str(sample_label), '--output_dir', str(output_loc),
+            '--cpu', str(num_cpus)]
     if db_in_memory:
         cmds.append('--dbmem')
 

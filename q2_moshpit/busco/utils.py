@@ -254,9 +254,9 @@ def _run_busco(
         sample_dirs = [str(mags)]
 
     else:
-        assert False, (
-            "mags should either be MultiMAGSequencesDirFmt "
-            "or MAGSequencesDirFmt"
+        raise ValueError(
+            "MAGs should either be MultiMAGSequencesDirFmt "
+            f"or MAGSequencesDirFmt objects, not {type(mags)}."
         )
 
     # Initialize dictionary with paths to run summaries

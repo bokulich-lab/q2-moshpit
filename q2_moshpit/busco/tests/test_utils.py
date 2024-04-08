@@ -23,6 +23,7 @@ from q2_moshpit.busco.utils import (
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.feature_data_mag import MAGSequencesDirFmt
 
 
 class TestBUSCO(TestPluginBase):
@@ -36,6 +37,12 @@ class TestBUSCO(TestPluginBase):
 
         # Get MAGs fixture
         self.mags = MultiMAGSequencesDirFmt(
+            path=p,
+            mode="r",
+        )
+
+        # Get MAGs fixture
+        self.mags_FeatrueData = MAGSequencesDirFmt(
             path=p,
             mode="r",
         )
@@ -139,7 +146,7 @@ class TestBUSCO(TestPluginBase):
         self.draw_n_busco_plots(
             filename="batch_summary_sample1.txt", delim="\t"
         )
- 
+
     def test_draw_busco_plots_for_render_SampleData(self):
         """
         Tests function `_draw_busco_plots_for_render`.
@@ -290,11 +297,11 @@ class TestBUSCO(TestPluginBase):
             self.assertTrue(zipfile.is_zipfile(zip_path))
 
     @patch('subprocess.run')
-    def test_run_busco(self, subp_run):
+    def test_run_busco_SampleData(self, subp_run):
         """
         Test function `_run_busco`. Checks for dictionary equality.
         """
-        output_dir = self.get_data_path("busco_output")
+        output_dir = self.get_data_path("busco_output_SampleData")
         sample_ids = os.listdir(output_dir)
 
         # Initialize assertion objects
@@ -336,8 +343,76 @@ class TestBUSCO(TestPluginBase):
         # Check for appropiate calls
         subp_run.assert_has_calls(calls, any_order=True)
 
+    @patch('subprocess.run')
+    def test_run_busco_FeatrueData(self, subp_run):
+        """
+        Test function `_run_busco`. Checks for dictionary equality.
+        """
+        output_dir = self.get_data_path("busco_output_FeatureData")
+        sample_ids = os.listdir(output_dir)
+
+        # Initialize assertion objects
+        expected = {}
+        calls = []
+
+        # Define command arguments
+        fake_props = ["--a", "--b", "0.6"]
+
+        # Fabricate list of calls and the expected output
+        for sample_id in sample_ids:
+            # Make a dictionary to compare output
+            p = os.path.join(output_dir, sample_id, "batch_summary.txt")
+            expected[sample_id] = p
+
+            # Append call to list of calls to assert the patching
+            calls.append(call(
+                [
+                    "busco",
+                    "--a",
+                    "--b", "0.6",
+                    "--in", os.path.dirname(self.get_data_path("")),
+                    "--out_path", output_dir,
+                    "-o", sample_id
+                ],
+                check=True
+            ))
+
+        # Run busco and save paths to run summaries
+        observed = _run_busco(
+            output_dir=output_dir,
+            mags=self.mags_FeatrueData,
+            params=fake_props,
+        )
+
+        # Assert output
+        self.assertDictEqual(expected, observed)
+
+        # Check for appropiate calls
+        subp_run.assert_has_calls(calls, any_order=True)
+
+    def test_run_busco_exception_input(self):
+        """
+        Test function `_run_busco`. Checks for a raised exception.
+        """
+        with tempfile.TemporaryDirectory() as tmp_path:
+            # Define command arguments
+            fake_props = ["--a", "--b", "0.6"]
+            output_dir = os.path.join(tmp_path, "busco_output")
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "MAGs should either be MultiMAGSequencesDirFmt "
+                "or MAGSequencesDirFmt objects, not <class 'str'>."
+            ):
+                # Run busco and save paths to run summaries
+                _ = _run_busco(
+                    output_dir=output_dir,
+                    mags="I am not a MAG artifact",
+                    params=fake_props,
+                )
+
     @patch("subprocess.run")
-    def test_run_busco_exception(self, subp_run):
+    def test_run_busco_exception_busco_output_not_found(self, subp_run):
         """
         Test function `_run_busco`. Checks for a raised exception.
         """

@@ -328,7 +328,7 @@ def _draw_busco_plots(
 
         # Create horizontal stacked bar plot
         height = 0.9  # Height of the bars
-        a = 0.7
+        a = 1
 
         for i, mag_id in enumerate(df.mag_id.unique()):
             row = df[df["mag_id"] == mag_id]
@@ -392,9 +392,12 @@ def _zip_busco_plots(paths_to_plots: dict, zip_path: str) -> None:
 
     # Write to zipfile
     with ZipFile(zip_path, "w") as zf:
-        for _, path_to_plot in paths_to_plots.items():
-            arcname = os.path.relpath(path_to_plot, common_path)
-            zf.write(path_to_plot, arcname=arcname)
+        if len(paths_to_plots.items()) == 1:
+            zf.write(common_path, arcname=os.path.basename(common_path))
+        else:
+            for _, path_to_plot in paths_to_plots.items():
+                arcname = os.path.relpath(path_to_plot, common_path)
+                zf.write(path_to_plot, arcname=arcname)
 
 
 def _collect_summaries_and_save(

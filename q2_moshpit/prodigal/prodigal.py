@@ -57,7 +57,7 @@ def predict_genes_prodigal(
                     genes.path, f"{prefix}{file_id}_genes.fasta"
                 )
             ])
-        run_command(cmd)
+            run_command(cmd)
 
     if isinstance(mags, MAGSequencesDirFmt):
         # Get paths to fasta files in input dir
@@ -67,12 +67,14 @@ def predict_genes_prodigal(
     elif isinstance(mags, MultiMAGSequencesDirFmt):
         # List all directories / samples
         for sample_dir in os.listdir(mags.path):
-            if os.path.isdir(os.path.join(mags.path, sample_dir)):
-                fasta_files = os.listdir(os.path.join(mags.path, sample_dir))
+            sample_dir_path = os.path.join(mags.path, sample_dir)
+            if os.path.isdir(sample_dir_path):
+                fasta_files = os.listdir(sample_dir_path)
+                print(fasta_files)
                 _process_fasta_files(
                     fasta_files,
                     f"{sample_dir}_",
-                    os.path.join(mags.path, sample_dir)
+                    sample_dir_path
                 )
 
     # Return output directories

@@ -5,11 +5,11 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
 import os
 from q2_moshpit.prodigal.prodigal import predict_genes_prodigal
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data_mag import MAGSequencesDirFmt
+from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
 from unittest.mock import patch, call
 from q2_types.genome_data import (
     LociDirectoryFormat, GenesDirectoryFormat, ProteinsDirectoryFormat,
@@ -20,7 +20,7 @@ class TestBUSCO(TestPluginBase):
     package = "q2_moshpit.prodigal.tests"
 
     @patch("subprocess.run")
-    def test_run_prodigal_1_mag(self, subp_run):
+    def test_run_prodigal_feature_data_1_mag(self, subp_run):
         # Run prodigal with dummy data
         p = self.get_data_path("dir_with_1_mag")
         mags = MAGSequencesDirFmt(path=p, mode="r")
@@ -53,7 +53,7 @@ class TestBUSCO(TestPluginBase):
         )
 
     @patch("subprocess.run")
-    def test_run_prodigal_3_mag(self, subp_run):
+    def test_run_prodigal_feature_data_3_mag(self, subp_run):
         # Run prodigal with dummy data
         p = self.get_data_path("dir_with_3_mag")
         mags = MAGSequencesDirFmt(path=p, mode="r")
@@ -85,3 +85,40 @@ class TestBUSCO(TestPluginBase):
 
         # Assert that patch was called 3 times
         subp_run.assert_has_calls(three_calls)
+
+    @patch("subprocess.run")
+    def test_run_prodigal_sample_data(self, subp_run):
+        p = self.get_data_path("")
+        mags = MultiMAGSequencesDirFmt(path=p, mode="r")
+        loci, genes, proteins = predict_genes_prodigal(mags=mags)
+
+        # Check that output is correct type
+        self.assertIsInstance(loci, LociDirectoryFormat)
+        self.assertIsInstance(genes, GenesDirectoryFormat)
+        self.assertIsInstance(proteins, ProteinsDirectoryFormat)
+
+        # Get names of fasta files from test data dir
+        calls = []
+        for sample in os.listdir(mags.path):
+            for fasta_file in os.listdir(f"{mags.path}/{sample}"):
+                file_id = os.path.splitext(fasta_file)[0]
+                # Define calls
+                calls.append(call([
+                    "prodigal",
+                    "-g", "11",
+                    "-f", "gff",
+                    "-i", os.path.join(mags.path, sample, f"{file_id}.fasta"),
+                    "-o",
+                    os.path.join(loci.path, f"{sample}_{file_id}_loci.gff"),
+                    "-a",
+                    os.path.join(
+                        proteins.path, f"{sample}_{file_id}_proteins.fasta"
+                    ),
+                    "-d",
+                    os.path.join(genes.path, f"{sample}_{file_id}_genes.fasta")
+                    ],
+                    check=True)
+                )
+
+        # Assert that patch was called 3 times
+        subp_run.assert_has_calls(calls)

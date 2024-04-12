@@ -989,7 +989,7 @@ plugin.visualizers.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.prodigal.predict_genes_prodigal,
     inputs={
-        'mags': FeatureData[MAG]
+        'mags': FeatureData[MAG] | SampleData[MAGs]
     },
     input_descriptions={
         'mags': 'MAGs for which one wishes to predict genes.'

@@ -12,8 +12,6 @@ jobs:
       distro: metagenome
       additional-reports-path: ./coverage.xml
       additional-reports-name: coverage
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   coverage:
     needs: [ci]
@@ -31,3 +29,5 @@ jobs:
         name: 'Upload coverage'
         with:
           fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

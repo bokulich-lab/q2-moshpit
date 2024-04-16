@@ -12,6 +12,8 @@ jobs:
       distro: metagenome
       additional-reports-path: ./coverage.xml
       additional-reports-name: coverage
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   coverage:
     needs: [ci]

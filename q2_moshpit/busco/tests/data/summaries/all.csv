@@ -1,0 +1,6 @@
+Input_file,Dataset,Complete,Single,Duplicated,Fragmented,Missing,n_markers,Scaffold N50,Contigs N50,Percent gaps,Number of scaffolds,sample_id
+ab23d75d-547d-455a-8b51-16b46ddf7496.fasta,bacteria_odb10,80.6,80.6,0.0,2.4,17.0,124,1309033,1309033,0.000%,5,sample1
+0e514d88-16c4-4273-a1df-1a360eb2c823.fasta,bacteria_odb10,100.0,1.6,98.4,0.0,0.0,124,44962,44962,0.000%,701,sample1
+8098e3a8-df4a-46af-83e2-6c2443d74cb9.fasta,bacteria_odb10,11.3,0.0,11.3,0.8,87.9,124,912062,912062,0.000%,1,sample2
+d4637408-80ab-49d5-ab32-c66509c3a544.fasta,bacteria_odb10,71.0,71.0,0.0,3.2,25.8,124,808744,808744,0.000%,4,sample2
+503c2f56-3e4f-4ce7-9b61-b63bc7fe0592.fasta,bacteria_odb10,98.4,4.0,94.4,0.8,0.8,124,39203,39203,0.000%,860,sample2

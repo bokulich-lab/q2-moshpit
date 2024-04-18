@@ -10,6 +10,10 @@ import os
 import pandas as pd
 from typing import List
 
+import skbio.io
+
+from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
+
 arguments_with_hyphens = {
     "auto_lineage": "auto-lineage",
     "auto_lineage_euk": "auto-lineage-euk",
@@ -45,7 +49,26 @@ def _parse_busco_params(arg_key, arg_val) -> List[str]:
         return [f"--{arg_key}", str(arg_val)]
 
 
-def _partition_dataframe(df, max_rows):
+def _partition_dataframe(df: pd.DataFrame, max_rows: int) -> list:
+    """
+    Partitions a DataFrame into smaller DataFrames based on
+    a maximum row limit.
+
+    This function groups the DataFrame by 'sample_id' and then partitions
+    these groups into smaller DataFrames. Each partition will have a total
+    row count less than or equal to the max_rows parameter. The last group
+    in a partition can exceed the max_rows limit.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to partition. It should have a
+            'sample_id' column.
+        max_rows (int): The maximum number of rows that each partitioned
+            DataFrame should have.
+
+    Returns:
+        list: A list of partitioned DataFrames. Each DataFrame in the
+            list is a partition of the original DataFrame.
+    """
     groups = [group for _, group in df.groupby('sample_id')]
     partitions = []
     temp = []
@@ -53,7 +76,8 @@ def _partition_dataframe(df, max_rows):
 
     for group in groups:
         if total_rows + len(group) > max_rows:
-            partitions.append(pd.concat(temp))
+            if temp:
+                partitions.append(pd.concat(temp))
             temp = [group]
             total_rows = len(group)
         else:
@@ -176,3 +200,12 @@ def _calculate_summary_stats(df: pd.DataFrame) -> json:
         "count": df[MARKER_COLS].count()
     })
     return stats.T.to_json(orient='table')
+
+
+def _get_mag_lengths(bins: MultiMAGSequencesDirFmt):
+    lengths = {}
+    for sample, mags in bins.sample_dict().items():
+        for mag_id, mag_fp in mags.items():
+            seq = skbio.io.read(mag_fp, format="fasta")
+            lengths[mag_id] = sum([len(s) for s in seq])
+    return pd.Series(lengths, name="length")

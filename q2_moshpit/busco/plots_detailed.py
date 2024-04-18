@@ -70,14 +70,6 @@ def _draw_detailed_plots(
     domain = ["single", "duplicated", "fragmented", "missing"]
     range_ = ["#1E90FF", "#87CEFA", "#FFA500", "#FF7F50"]
 
-    # Get the first 10 sample ids
-    # if len(df['sample_id'].unique()) <= 10:
-    #     default_regex = ""
-    # else:
-    #     default_regex = df['sample_id'].unique()[0:10]
-    #     default_regex = '$|^'.join(default_regex)
-    #     default_regex = '^' + default_regex + "$"
-
     # Make BUSCO bar plots (the plots on the left)
     busco_plot = (
         alt.Chart(busco_plot_data)

@@ -5,16 +5,15 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
+import json
 import os
 import tempfile
 import zipfile
-import json
 import pandas as pd
 from q2_moshpit.busco.utils import (
-    _parse_busco_params,
-    _collect_summaries,
-    _parse_df_columns, _partition_dataframe, _get_feature_table, _calculate_summary_stats, _get_mag_lengths,
+    _parse_busco_params, _collect_summaries, _parse_df_columns,
+    _partition_dataframe, _get_feature_table, _calculate_summary_stats,
+    _get_mag_lengths,
 )
 from q2_moshpit.busco.plots_detailed import _draw_detailed_plots
 from q2_moshpit.busco.busco import _run_busco

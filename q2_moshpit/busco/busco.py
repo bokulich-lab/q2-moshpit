@@ -168,7 +168,9 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
         )
 
     marker_summary_spec = _draw_marker_summary_histograms(busco_results)
-    selectable_summary_spec = _draw_selectable_summary_histograms(busco_results)
+    selectable_summary_spec = _draw_selectable_summary_histograms(
+        busco_results
+    )
 
     vega_json = json.dumps(context)
     vega_json_summary = json.dumps(marker_summary_spec)

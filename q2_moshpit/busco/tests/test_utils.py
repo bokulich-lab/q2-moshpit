@@ -6,19 +6,16 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import json
-import os
 import tempfile
-import zipfile
+
 import pandas as pd
+from qiime2.plugin.testing import TestPluginBase
+
 from q2_moshpit.busco.utils import (
     _parse_busco_params, _collect_summaries, _parse_df_columns,
     _partition_dataframe, _get_feature_table, _calculate_summary_stats,
     _get_mag_lengths,
 )
-from q2_moshpit.busco.plots_detailed import _draw_detailed_plots
-from q2_moshpit.busco.busco import _run_busco
-from unittest.mock import patch, call
-from qiime2.plugin.testing import TestPluginBase
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
@@ -99,7 +96,7 @@ class TestBUSCO(TestPluginBase):
         self.assertSetEqual(set(observed), set(expected))
 
     def test_collect_summaries(self):
-        with tempfile.TemporaryDirectory() as tmp_path:
+        with tempfile.TemporaryDirectory():
             paths = {}
 
             for i in range(1, 4):

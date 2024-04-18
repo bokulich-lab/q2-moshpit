@@ -7,7 +7,9 @@
 # ----------------------------------------------------------------------------
 import importlib
 
-from q2_moshpit.busco.types import BUSCOResults, BUSCOResultsDirectoryFormat, BUSCOResultsFormat
+from q2_moshpit.busco.types import (
+    BUSCOResults, BUSCOResultsDirectoryFormat, BUSCOResultsFormat
+)
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
     FeatureData, Sequence, Taxonomy, ProteinSequence

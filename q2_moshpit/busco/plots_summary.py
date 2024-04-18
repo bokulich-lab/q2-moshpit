@@ -30,7 +30,9 @@ def _draw_horizontal_histograms(data: pd.DataFrame, columns: List[str]):
     for i, category in enumerate(columns):
         x_title = category.replace("_", " ").capitalize()
         y_title = "MAG count" if i == 0 else None
-        chart = alt.Chart(data[data["category"] == category]).mark_bar().encode(
+        chart = alt.Chart(
+            data[data["category"] == category]
+        ).mark_bar().encode(
             x=alt.X('metric:Q', bin=True, title=x_title),
             y=alt.Y('count()', title=y_title),
             color=alt.value("steelblue")
@@ -121,7 +123,8 @@ def _draw_selectable_summary_histograms(data: pd.DataFrame) -> dict:
         selection_metrics,
         selection_box
     ).transform_filter(
-        'datum.sample_id == trim(select_sample) & datum.category == select_metric.category'
+        'datum.sample_id == trim(select_sample) '
+        '& datum.category == select_metric.category'
     ).configure_axis(
         labelFontSize=LABEL_FONT_SIZE, titleFontSize=TITLE_FONT_SIZE
     ).configure_legend(

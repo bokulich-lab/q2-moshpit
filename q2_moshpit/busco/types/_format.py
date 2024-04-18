@@ -31,7 +31,10 @@ class BUSCOResultsFormat(model.TextFileFormat):
 
             for i, row in enumerate(reader, start=2):
                 if len(row) != len(self.HEADER):
-                    raise ValidationError(f'Line {i} has {len(row)} columns, expected {len(self.HEADER)}')
+                    raise ValidationError(
+                        f'Line {i} has {len(row)} columns, '
+                        f'expected {len(self.HEADER)}'
+                    )
 
                 if n_records is not None and i - 1 >= n_records:
                     break

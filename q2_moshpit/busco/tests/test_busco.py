@@ -10,7 +10,7 @@ import os
 import shutil
 import tempfile
 import pandas as pd
-from q2_moshpit.busco.busco import evaluate_busco, _run_busco, _busco_helper
+from q2_moshpit.busco.busco import _run_busco, _busco_helper
 from unittest.mock import patch, ANY, call
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
@@ -54,7 +54,7 @@ class TestBUSCO(TestPluginBase):
         mock_run.assert_has_calls([
             call(
                 ['busco', '--lineage_dataset', 'bacteria_odb10',
-                 '--cpu', '7','--in', self.get_data_path('mags/sample1'),
+                 '--cpu', '7', '--in', self.get_data_path('mags/sample1'),
                  '--out_path', self.temp_dir.name, '-o', 'sample1'],
             ),
             call(

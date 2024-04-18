@@ -129,7 +129,7 @@ def _get_feature_table(busco_results: pd.DataFrame):
 
 def _parse_df_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Adds several columns required for generation of downloadable 
+    Adds several columns required for generation of downloadable
     BUSCO plots.
 
     Args:

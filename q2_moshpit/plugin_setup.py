@@ -719,6 +719,15 @@ plugin.methods.register_function(
         ('eggnog_hits', SampleData[BLAST6]),
         ('table', FeatureTable[Frequency])
     ],
+    output_descriptions={
+        'eggnog_hits': 'Table(s) describing the alignment hits '
+                       '(BLAST6 format).'
+                       'One table per sample or MAGs in the input.',
+        'table': 'Table where rows are subject sequence IDs and columns are '
+                 'MAGs or samples IDs. Values are counts, i.e. the amount of '
+                 'times a given subject sequence was found to be a hit in a '
+                 'given sample of MAG.'
+    },
     name='Run eggNOG search using diamond aligner',
     description="This method performs the steps by which we find our "
                 "possible target sequences to annotate using the diamond "
@@ -753,6 +762,12 @@ plugin.pipelines.register_function(
         'eggnog_hits': SampleData[BLAST6],
         'eggnog_db': ReferenceDB[Eggnog],
     },
+    input_descriptions={
+        'eggnog_hits': 'Table(s) describing the alignment hits '
+                       '(BLAST6 format).'
+                       'One table per sample or MAGs in the input.',
+        "eggnog_db": "eggNOG annotation database."
+    },
     parameters={
         'db_in_memory': Bool,
         'num_cpus': Int % Range(0, None),
@@ -768,6 +783,9 @@ plugin.pipelines.register_function(
         **partition_param_descriptions
     },
     outputs=[('ortholog_annotations', FeatureData[NOG])],
+    output_descriptions={
+        'ortholog_annotations': 'Annotated hits.'
+    },
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
     citations=[citations["huerta_cepas_eggnog_2019"]]

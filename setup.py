@@ -44,6 +44,7 @@ setup(
             "data/mags/*", "data/mags/*/*",
             "data/summaries/*"
         ],
+        "q2_moshpit.busco.types.tests": ["data/*"],
         'q2_moshpit.eggnog': [
             'tests/data/*',
             'tests/data/md5/*',

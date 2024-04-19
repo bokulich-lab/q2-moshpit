@@ -843,8 +843,8 @@ plugin.methods.register_function(
         " MAGs."
     },
     name="Partition orthologs",
-    description="Partition a SampleData[MAGs] artifact into smaller "
-                "artifacts containing subsets of the MAGs",
+    description="Partition a SampleData[BLAST6] artifact into smaller "
+                "artifacts containing subsets of the BLAST6 reports.",
 )
 
 plugin.methods.register_function(
@@ -893,7 +893,8 @@ plugin.methods.register_function(
     input_descriptions={"orthologs": "Orthologs to collate"},
     parameter_descriptions={},
     name="Collate Orthologs",
-    description="Collate a List of SampleData[BLAST6] into one"
+    description="Takes a collection SampleData[BLAST6]'s "
+                "and collates them into a single artifact.",
 )
 
 plugin.methods.register_function(

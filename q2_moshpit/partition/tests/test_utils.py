@@ -18,14 +18,14 @@ class TestHelpers(TestPluginBase):
 
     def test_validate_num_partitions_Warning(self):
         num_partitions = 15
-        num_mags = 14
+        num_samples = 14
         with self.assertWarnsRegex(
             Warning,
             "You have requested a number of partitions"
             f" '{num_partitions}' that is greater than your number"
-            f" of MAGs '{num_mags}.'"
+            f" of samples '{num_samples}.'"
         ):
-            _ = _validate_num_partitions(num_mags, num_partitions)
+            _ = _validate_num_partitions(num_samples, num_partitions)
 
     def test_validate_num_partitions_valid(self):
         num_partitions = _validate_num_partitions(14, 2)

@@ -46,17 +46,20 @@ class TestHelpers(TestPluginBase):
         ]
 
         # Compare dirs
-        for i, mag_ids in [(1, mag_ids_sample_1), (2, mag_ids_sample_2)]:
+        exp_partitions = [
+            ('sample1', mag_ids_sample_1), ('sample2', mag_ids_sample_2)
+        ]
+        for _id, mag_ids in exp_partitions:
             dircmp = filecmp.dircmp(
-                partitioned_mags[i].path,
+                partitioned_mags[_id].path,
                 mags.path
             )
             self.assertListEqual(
-                ["MANIFEST", f"sample{i}"], dircmp.common
+                ["MANIFEST", _id], dircmp.common
             )
             dircmp = filecmp.dircmp(
-                f"{partitioned_mags[i].path}/sample{i}",
-                f"{mags.path}/sample{i}"
+                f"{partitioned_mags[_id].path}/{_id}",
+                f"{mags.path}/{_id}"
             )
             self.assertListEqual(
                 [

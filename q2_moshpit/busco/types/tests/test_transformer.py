@@ -64,4 +64,3 @@ class TestBUSCOTransformers(TestPluginBase):
         exp = qiime2.Metadata(df)
 
         self.assertEqual(obs, exp)
-

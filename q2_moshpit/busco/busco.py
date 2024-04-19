@@ -155,8 +155,8 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
             df,
             width=600,
             height=30,
-            titleFontSize=20,
-            labelFontSize=17,
+            title_font_size=20,
+            label_font_size=17,
             spacing=20
         )
         context.update(

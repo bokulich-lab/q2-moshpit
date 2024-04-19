@@ -19,7 +19,7 @@ from q2_moshpit.busco.utils import (
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
-class TestBUSCO(TestPluginBase):
+class TestBUSCOUtils(TestPluginBase):
     package = "q2_moshpit.busco.tests"
 
     def setUp(self):

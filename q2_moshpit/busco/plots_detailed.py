@@ -15,8 +15,8 @@ def _draw_detailed_plots(
     df: pd.DataFrame,
     width: int = None,
     height: int = None,
-    labelFontSize: int = None,
-    titleFontSize: int = None,
+    label_font_size: int = None,
+    title_font_size: int = None,
     spacing: int = None
 ) -> dict:
     """
@@ -29,9 +29,9 @@ def _draw_detailed_plots(
         df (pd.DataFrame): tabular batch summary for all samples
         width (int): width of the plot
         height (int): height of each bar in the plot
-        labelFontSize (int): size of the labels in plot
-        titleFontSize (int): size of titles in plot
-
+        label_font_size (int): size of the labels in plot
+        title_font_size (int): size of titles in plot
+        spacing (int): spacing between plots
     Output:
         Output plot in dictionary from casted to a string.
     """
@@ -156,11 +156,11 @@ def _draw_detailed_plots(
     output_plot = alt.hconcat(
         busco_plot, secondary_plot, spacing=3
     ).configure_axis(
-        labelFontSize=labelFontSize, titleFontSize=titleFontSize
+        labelFontSize=label_font_size, titleFontSize=title_font_size
     ).configure_legend(
-        labelFontSize=labelFontSize, titleFontSize=titleFontSize
+        labelFontSize=label_font_size, titleFontSize=title_font_size
     ).configure_header(
-        labelFontSize=labelFontSize, titleFontSize=titleFontSize
+        labelFontSize=label_font_size, titleFontSize=title_font_size
     )
 
     return output_plot.to_dict()

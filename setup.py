@@ -41,10 +41,6 @@ setup(
         ],
         "q2_moshpit.busco.tests": [
             "data/*",
-            "data/busco_output/*",
-            "data/busco_output/sample1/*",
-            "data/busco_output/sample2/*",
-            "data/busco_output/sample3/*",
             "data/mags/*", "data/mags/*/*",
             "data/summaries/*"
         ],

@@ -9,7 +9,7 @@ jobs:
   ci:
     uses: qiime2/distributions/.github/workflows/lib-ci-dev.yaml@dev
     with:
-      distro: shotgun
+      distro: metagenome
       additional-reports-path: ./coverage.xml
       additional-reports-name: coverage
 
@@ -25,7 +25,9 @@ jobs:
           name: ${{ needs.ci.outputs.additional-reports-name }}
           path: ${{ needs.ci.outputs.additional-reports-path }}
 
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         name: 'Upload coverage'
         with:
           fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

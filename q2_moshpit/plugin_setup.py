@@ -720,13 +720,9 @@ plugin.methods.register_function(
         ('table', FeatureTable[Frequency])
     ],
     output_descriptions={
-        'eggnog_hits': 'Table(s) describing the alignment hits '
-                       '(BLAST6 format).'
-                       'One table per sample or MAGs in the input.',
-        'table': 'Table where rows are subject sequence IDs and columns are '
-                 'MAGs or samples IDs. Values are counts, i.e. the amount of '
-                 'times a given subject sequence was found to be a hit in a '
-                 'given sample of MAG.'
+        'eggnog_hits': 'BLAST6-like table(s) describing the identified orthologs. '
+                       'One table per sample or MAG in the input.',
+        'table': 'Feature table with counts of orthologs per sample/MAG.'
     },
     name='Run eggNOG search using diamond aligner',
     description="This method performs the steps by which we find our "
@@ -763,9 +759,7 @@ plugin.pipelines.register_function(
         'eggnog_db': ReferenceDB[Eggnog],
     },
     input_descriptions={
-        'eggnog_hits': 'Table(s) describing the alignment hits '
-                       '(BLAST6 format).'
-                       'One table per sample or MAGs in the input.',
+        'eggnog_hits': 'BLAST6-like table(s) describing the identified orthologs. ',
         "eggnog_db": "eggNOG annotation database."
     },
     parameters={
@@ -893,7 +887,7 @@ plugin.methods.register_function(
     input_descriptions={"orthologs": "Orthologs to collate"},
     parameter_descriptions={},
     name="Collate Orthologs",
-    description="Takes a collection SampleData[BLAST6]'s "
+    description="Takes a collection SampleData[BLAST6] artifacts "
                 "and collates them into a single artifact.",
 )
 

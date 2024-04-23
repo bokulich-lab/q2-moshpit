@@ -5,12 +5,13 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
+import json
 import os
 import shutil
-import tempfile
 import pandas as pd
-from q2_moshpit.busco.busco import _run_busco, _busco_helper
+from q2_moshpit.busco.busco import (
+    _run_busco, _busco_helper, _evaluate_busco, _visualize_busco
+)
 from unittest.mock import patch, ANY, call
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
@@ -20,7 +21,7 @@ class TestBUSCO(TestPluginBase):
     package = "q2_moshpit.busco.tests"
 
     def setUp(self):
-        self.temp_dir = tempfile.TemporaryDirectory()
+        super().setUp()
         self.mags = MultiMAGSequencesDirFmt(
             path=self.get_data_path('mags'),
             mode="r",
@@ -94,3 +95,76 @@ class TestBUSCO(TestPluginBase):
             output_dir=ANY, mags=self.mags,
             params=['--lineage_dataset', 'bacteria_odb10']
         )
+
+    @patch("q2_moshpit.busco.busco._busco_helper")
+    def test_evaluate_busco(self, mock_helper):
+        _evaluate_busco(
+            bins=self.mags, mode="some_mode", lineage_dataset="bacteria_odb10"
+        )
+        mock_helper.assert_called_with(
+            self.mags,
+            ['--mode', 'some_mode', '--lineage_dataset', 'bacteria_odb10',
+             '--cpu', '1', '--contig_break', '10', '--evalue', '0.001',
+             '--limit', '3']
+        )
+
+    @patch(
+        "q2_moshpit.busco.busco._draw_detailed_plots",
+        return_value={"fake1": {"plot": "spec"}}
+    )
+    @patch(
+        "q2_moshpit.busco.busco._draw_marker_summary_histograms",
+        return_value={"fake2": {"plot": "spec"}}
+    )
+    @patch(
+        "q2_moshpit.busco.busco._draw_selectable_summary_histograms",
+        return_value={"fake3": {"plot": "spec"}}
+    )
+    @patch(
+        "q2_moshpit.busco.busco._get_feature_table", return_value="table1"
+    )
+    @patch(
+        "q2_moshpit.busco.busco._calculate_summary_stats",
+        return_value="stats1"
+    )
+    @patch("q2templates.render")
+    @patch("q2_moshpit.busco.busco._cleanup_bootstrap")
+    def test_visualize_busco(
+            self, mock_clean, mock_render, mock_stats, mock_table,
+            mock_selectable, mock_marker, mock_detailed
+    ):
+        _visualize_busco(
+            output_dir=self.temp_dir.name,
+            busco_results=pd.read_csv(
+                self.get_data_path('summaries/all_renamed_with_lengths.csv')
+            )
+        )
+
+        mock_detailed.assert_called_once()
+        mock_marker.assert_called_once()
+        mock_selectable.assert_called_once()
+
+        exp_context = {
+            "tabs": [
+                {"title": "QC overview", "url": "index.html"},
+                {"title": "Sample details", "url": "detailed_view.html"},
+                {"title": "Feature details", "url": "table.html"}
+            ],
+            "vega_json": json.dumps(
+                {"sample0": {
+                    "subcontext": {"fake1": {"plot": "spec"}},
+                    "sample_counter": {"from": 1, "to": 2},
+                    "sample_ids": ["sample1", "sample2"]}}
+            ),
+            "vega_summary_json": json.dumps({"fake2": {"plot": "spec"}}),
+            "vega_summary_selectable_json": json.dumps(
+                {"fake3": {"plot": "spec"}}
+            ),
+            "table": "table1",
+            "summary_stats_json": "stats1",
+            "page_size": 100
+        }
+        mock_render.assert_called_with(
+            ANY, self.temp_dir.name, context=exp_context
+        )
+        mock_clean.assert_called_with(self.temp_dir.name)

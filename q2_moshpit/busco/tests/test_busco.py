@@ -10,11 +10,17 @@ import os
 import shutil
 import pandas as pd
 from q2_moshpit.busco.busco import (
-    _run_busco, _busco_helper, _evaluate_busco, _visualize_busco
+    _run_busco, _busco_helper, _evaluate_busco, _visualize_busco, evaluate_busco
 )
-from unittest.mock import patch, ANY, call
+from unittest.mock import patch, ANY, call, Mock, MagicMock
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+
+
+class MockContext(Mock):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.get_action = Mock()
 
 
 class TestBUSCO(TestPluginBase):
@@ -168,3 +174,20 @@ class TestBUSCO(TestPluginBase):
             ANY, self.temp_dir.name, context=exp_context
         )
         mock_clean.assert_called_with(self.temp_dir.name)
+
+    # TODO: maybe this could be turned into an actual test
+    def test_evaluate_busco_action(self):
+        mock_action = MagicMock(side_effect=[
+            lambda x, **kwargs: (0, ),
+            lambda x, y: ({"mag1": {}, "mag2": {}}, ),
+            lambda x: ("collated_result", ),
+            lambda x: ("visualization", )
+        ])
+        mock_ctx = MagicMock(get_action=mock_action)
+        obs = evaluate_busco(
+            ctx=mock_ctx,
+            bins=self.mags,
+            num_partitions=2
+        )
+        exp = ("collated_result", "visualization")
+        self.assertTupleEqual(obs, exp)

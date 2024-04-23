@@ -177,8 +177,8 @@ plugin.pipelines.register_function(
         ('hits', T_kraken_out_hits),
     ],
     input_descriptions={
-        "seqs": "Sequences to be classified. Both, single-/paired-end reads"
-                "and assembled MAGs, can be provided.",
+        "seqs": "Sequences to be classified. Single-/paired-end reads,"
+                "contigs, or assembled MAGs can be provided.",
         "kraken2_db": "Kraken 2 database.",
     },
     parameter_descriptions={
@@ -190,8 +190,8 @@ plugin.pipelines.register_function(
         'hits': 'Output files produced by Kraken2.',
     },
     name='Perform taxonomic classification of reads or MAGs using Kraken 2.',
-    description='This method uses Kraken 2 to classify provided NGS reads '
-                'or MAGs into taxonomic groups.',
+    description='Use Kraken 2 to classify provided DNA sequence reads, '
+                'contigs, or MAGs into taxonomic groups.',
     citations=[citations["wood2019"]]
 )
 
@@ -207,8 +207,8 @@ plugin.methods.register_function(
         ('hits', T_kraken_out_hits),
     ],
     input_descriptions={
-        "seqs": "The sequences to be classified. Single-end or paired-end "
-                "reads, contigs, or MAGs can be provided.",
+        "seqs": "Sequences to be classified. Single-/paired-end reads,"
+                "contigs, or assembled MAGs can be provided.",
         "kraken2_db": "Kraken 2 database.",
     },
     parameter_descriptions=kraken2_param_descriptions,
@@ -217,8 +217,8 @@ plugin.methods.register_function(
         'hits': 'Output files produced by Kraken2.',
     },
     name='Perform taxonomic classification of reads or MAGs using Kraken 2.',
-    description='This method uses Kraken 2 to classify provided NGS reads '
-                'or MAGs into taxonomic groups.',
+    description='Use Kraken 2 to classify provided DNA sequence reads, '
+                'contigs, or MAGs into taxonomic groups.',
     citations=[citations["wood2019"]]
 )
 
@@ -260,8 +260,8 @@ plugin.methods.register_function(
     inputs={"kraken2_outputs": List[T_kraken_collate_outputs_in]},
     parameters={},
     outputs={"collated_kraken2_outputs": T_kraken_collate_outputs_out},
-    name="Collate kraken2 outputs",
-    description="Collates kraken2 outputs"
+    name="Collate kraken2 outputs.",
+    description="Collates kraken2 outputs."
 )
 
 plugin.methods.register_function(
@@ -287,10 +287,13 @@ plugin.methods.register_function(
     parameter_descriptions={
         'threshold': 'Bracken: number of reads required PRIOR to abundance '
                      'estimation to perform re-estimation.',
-        'read_len': ('Bracken: read length to get all classifications for. '
-                     'For paired end data (e.g., 2x150) this should be set '
-                     'to the length of the single-end reads (e.g., 150).'),
-        'level': 'Bracken: taxonomic level to estimate abundance at.'
+        'read_len': 'Bracken: the ideal length of reads in your sample. '
+                    'For paired end data (e.g., 2x150) this should be set '
+                    'to the length of the single-end reads (e.g., 150).',
+        'level': 'Bracken: specifies the taxonomic rank to analyze. Each '
+                 'classification at this specified rank will receive an '
+                 'estimated number of reads belonging to that rank after '
+                 'abundance estimation.'
     },
     output_descriptions={
         'reports': 'Reports modified by Bracken.',
@@ -343,7 +346,7 @@ plugin.methods.register_function(
                             'ignored in comparisons.',
         'no_masking': 'Avoid masking low-complexity sequences prior to '
                       'building; masking requires dustmasker or segmasker '
-                      'to be installed in PATH',
+                      'to be installed in PATH.',
         'max_db_size': 'Maximum number of bytes for Kraken 2 hash table; '
                        'if the estimator determines more would normally be '
                        'needed, the reference library will be downsampled '
@@ -361,9 +364,10 @@ plugin.methods.register_function(
         'bracken_database': 'Bracken database.'
     },
     name='Build Kraken 2 database.',
-    description='This method builds a Kraken 2/Bracken databases from '
-                'provided DNA sequences or simply fetches pre-built '
-                'versions from an online resource.',
+    description='This method builds Kraken 2 and Bracken databases either (1) '
+                'from provided DNA sequences to build a custom database, or '
+                '(2) simply fetches pre-built versions from an online '
+                'resource.',
     citations=[citations["wood2019"], citations["lu2017"]]
 )
 
@@ -383,10 +387,10 @@ plugin.methods.register_function(
     },
     name="Inspect a Kraken 2 database.",
     description="This method generates a report of identical format to those "
-                "generated by classify_kraken2, with the interpretation being "
-                "instead of reporting the number of inputs classified to a "
-                "taxon/clade, the number of minimizers mapped to a "
-                "taxon/clade are reported.",
+                "generated by classify_kraken2, with a slightly different "
+                "interpretation. Instead of reporting the number of inputs "
+                "classified to a taxon/clade, the report displays the number "
+                "of minimizers mapped to each taxon/clade.",
     citations=[citations["wood2019"]],
 )
 
@@ -423,6 +427,16 @@ plugin.methods.register_function(
     citations=[]
 )
 
+select_features_taxonomy_description = (
+    'Output taxonomy. Infra-clade ranks are ignored unless if they are '
+    'strain-level. Missing internal ranks are annotated by their next '
+    'most specific rank, with the exception of k__Bacteria and k__Archaea, '
+    'which match their domain name.')
+
+select_features_description = (
+    'Convert a Kraken 2 report, which is an annotated NCBI taxonomy tree, '
+    'into generic artifacts for downstream analyses.')
+
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.kraken2_to_features,
     inputs={
@@ -439,23 +453,17 @@ plugin.methods.register_function(
         'reports': 'Per-sample Kraken 2 reports.'
     },
     parameter_descriptions={
-        'coverage_threshold': 'The minimum percent coverage required to'
-                              ' produce a feature.'
+        'coverage_threshold': 'The minimum percent coverage required to '
+                              'produce a feature.'
     },
     output_descriptions={
-        'table': 'A presence/absence table of selected features. The features'
-                 ' are not of even ranks, but will be the most specific rank'
-                 ' available.',
-        'taxonomy': 'Infra-clade ranks are ignored '
-                    'unless they are strain-level. Missing internal ranks '
-                    'are annotated by their next most specific rank, '
-                    'with the exception of k__Bacteria and k__Archaea which '
-                    'match their domain\'s name.',
+        'table': 'A presence/absence table of selected features. The features '
+                 'are not of even ranks, but will be the most specific rank '
+                 'available.',
+        'taxonomy': select_features_taxonomy_description,
     },
-    name='Select downstream features from Kraken 2',
-    description='Convert a Kraken 2 report, which is an annotated NCBI '
-                'taxonomy tree into generic artifacts for downstream '
-                'analyses.'
+    name='Select features from a Kraken 2 report.',
+    description=select_features_description
 )
 
 plugin.methods.register_function(
@@ -480,16 +488,10 @@ plugin.methods.register_function(
         #             'taxonomic assignments of its contigs. '
     },
     output_descriptions={
-        'taxonomy': 'Infra-clade ranks are ignored '
-                    'unless they are strain-level. Missing internal ranks '
-                    'are annotated by their next most specific rank, '
-                    'with the exception of k__Bacteria and k__Archaea which '
-                    'match their domain\'s name.',
+        'taxonomy': select_features_taxonomy_description,
     },
-    name='Select downstream MAG features from Kraken 2',
-    description='Convert a Kraken 2 report, which is an annotated NCBI '
-                'taxonomy tree into generic artifacts for downstream '
-                'analyses.'
+    name='Select MAG features from a Kraken 2 report.',
+    description=select_features_description
 )
 
 plugin.methods.register_function(
@@ -536,15 +538,14 @@ plugin.methods.register_function(
     parameters={},
     outputs=[("eggnog_db", ReferenceDB[Eggnog])],
     output_descriptions={
-        "eggnog_db": "Artifact containing the eggNOG annotation "
-                     "database."
+        "eggnog_db": "eggNOG annotation database."
     },
     name="Fetch the databases necessary to run the "
          "eggnog-annotate action.",
     description="Downloads eggnog reference database  "
                 "using the `download_eggnog_data.py` script from eggNOG. "
                 "Here, this script downloads 3 files "
-                "and creates and artifact with them. At least 80 Gb of "
+                "and creates an artifact with them. At least 80 Gb of "
                 "storage space is required to run this action. "
                 "Links to files: "
                 "eggnog.db: "
@@ -592,7 +593,7 @@ plugin.methods.register_function(
     },
     name="Fetch the databases necessary to run the "
          "build-eggnog-diamond-db action.",
-    description="Downloads eggnog proteome database  "
+    description="Downloads eggnog proteome database.  "
                 "This script downloads 2 files "
                 "(e5.proteomes.faa and e5.taxid_info.tsv) "
                 "and creates and artifact with them. At least 18 GB of "
@@ -609,10 +610,10 @@ plugin.methods.register_function(
     output_descriptions={
         "taxonomy": "NCBI reference taxonomy."
     },
-    name="Fetch NCBI reference taxonomy",
+    name="Fetch NCBI reference taxonomy.",
     description="Downloads NCBI reference taxonomy from the NCBI FTP server. "
                 "The resulting artifact is required by the "
-                "build-custom-diamond-db action if one wished to "
+                "build-custom-diamond-db action if one wishes to "
                 "create a Diamond data base with taxonomy features. "
                 "At least 30 GB of "
                 "storage space is required to run this action.",
@@ -634,14 +635,14 @@ plugin.methods.register_function(
         'taxon': Int % Range(2, 1579337)
     },
     parameter_descriptions={
-        'taxon': "Taxon ID number."
+        'taxon': "NCBI Taxon ID number."
     },
     outputs=[("diamond_db", ReferenceDB[Diamond])],
     output_descriptions={
-        "diamond_db": "Complete Diamond reference database for the"
+        "diamond_db": "Complete Diamond reference database for the "
                       "specified taxon."
     },
-    name="Create a DIAMOND formatted reference database for the"
+    name="Create a DIAMOND formatted reference database for the "
          "specified taxon.",
     description="Creates a DIAMOND database which contains the protein "
                 "sequences that belong to the specified taxon.",
@@ -702,14 +703,13 @@ plugin.methods.register_function(
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'sequences': 'Sequence data of the contigs we want to '
-                     'search for hits using the Diamond Database',
-        'diamond_db': 'The filepath to an artifact containing the '
-                      'Diamond database',
+        'sequences': 'Contigs or MAGs to '
+                     'search against the Diamond Database.',
+        'diamond_db': 'The Diamond database.',
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
-                    'use all available.',
+                    'use all available CPUs.',
         'db_in_memory': 'Read database into memory. The '
                         'database can be very large, so this '
                         'option should only be used on clusters or other '
@@ -719,10 +719,9 @@ plugin.methods.register_function(
         ('eggnog_hits', SampleData[BLAST6]),
         ('table', FeatureTable[Frequency])
     ],
-    name='Run eggNOG search using diamond aligner',
-    description="This method performs the steps by which we find our "
-                "possible target sequences to annotate using the diamond "
-                "search functionality from the eggnog `emapper.py` script",
+    name='Run eggNOG search using diamond aligner.',
+    description="Use Diamond and eggNOG to align contig or MAG sequences "
+                "against the Diamond database.",
     citations=[
         citations["buchfink_sensitive_2021"],
         citations["huerta_cepas_eggnog_2019"]
@@ -768,7 +767,7 @@ plugin.pipelines.register_function(
         **partition_param_descriptions
     },
     outputs=[('ortholog_annotations', FeatureData[NOG])],
-    name='Annotate orthologs against eggNOG database',
+    name='Annotate orthologs against eggNOG database.',
     description="Apply eggnog mapper to annotate seed orthologs.",
     citations=[citations["huerta_cepas_eggnog_2019"]]
 )
@@ -1017,7 +1016,7 @@ plugin.methods.register_function(
     output_descriptions={
         'loci': "Gene coordinates files (one per MAG) listing the location of "
                 "each predicted gene as well as some additional scoring "
-                "information. ",
+                "information.",
         'genes': "Fasta files (one per MAG) with the nucleotide sequences of "
                  "the predicted genes.",
         'proteins': "Fasta files (one per MAG) with the protein translation "
@@ -1028,7 +1027,7 @@ plugin.methods.register_function(
                 "Gene-finding ALgorithm), a gene prediction algorithm "
                 "designed for improved gene structure prediction, translation "
                 "initiation site recognition, and reduced false positives in "
-                "prokaryotic genomes.",
+                "bacterial and archaeal genomes.",
     citations=[citations["hyatt_prodigal_2010"]]
 )
 
@@ -1115,10 +1114,11 @@ plugin.methods.register_function(
              "when calculating percentages for classified reads."
     },
     output_descriptions={
-        "abundances": "Read abundances.", "taxonomy": "Linked taxonomy."
+        "abundances": "Read abundances.",
+        "taxonomy": "Linked taxonomy."
     },
     name="Classify reads using Kaiju.",
     description="This method uses Kaiju to perform taxonomic "
-                "classification of NGS reads.",
+                "classification of DNA sequence reads.",
     citations=[citations["menzel2016"]],
 )

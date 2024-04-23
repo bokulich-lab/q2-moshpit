@@ -10,7 +10,8 @@ import os
 import shutil
 import pandas as pd
 from q2_moshpit.busco.busco import (
-    _run_busco, _busco_helper, _evaluate_busco, _visualize_busco, evaluate_busco
+    _run_busco, _busco_helper, _evaluate_busco,
+    _visualize_busco, evaluate_busco
 )
 from unittest.mock import patch, ANY, call, Mock, MagicMock
 from qiime2.plugin.testing import TestPluginBase

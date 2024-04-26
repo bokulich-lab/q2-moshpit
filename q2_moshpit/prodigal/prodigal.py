@@ -38,7 +38,7 @@ def predict_genes_prodigal(
         # below is defined correctly. Otw subdir = ""
         subdir = subdir + "/" if subdir else ""
 
-        # Adjust command and run
+        # Complete command and run
         cmd = cp.deepcopy(base_cmd)
         cmd.extend([
             "-i", path_to_input,
@@ -55,6 +55,11 @@ def predict_genes_prodigal(
 
     elif isinstance(mags, MultiMAGSequencesDirFmt):
         for sample_id, mags_dict in mags.sample_dict().items():
+            # Make sample_id folders in output locations
+            for output_object in [loci, genes, proteins]:
+                os.makedirs(os.path.join(output_object.path, sample_id))
+
+            # Run prodigal for each mag
             for mag_id, mag_fp in mags_dict.items():
                 _run_prodigal(mag_fp, mag_id, sample_id)
 

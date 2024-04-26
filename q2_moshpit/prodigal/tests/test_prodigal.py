@@ -84,7 +84,7 @@ class TestBUSCO(TestPluginBase):
         ]
 
         # Assert that patch was called 3 times
-        subp_run.assert_has_calls(three_calls)
+        subp_run.assert_has_calls(three_calls, any_order=True)
 
     @patch("subprocess.run")
     def test_run_prodigal_sample_data(self, subp_run):
@@ -109,16 +109,16 @@ class TestBUSCO(TestPluginBase):
                     "-f", "gff",
                     "-i", os.path.join(mags.path, sample, f"{file_id}.fasta"),
                     "-o",
-                    os.path.join(loci.path, f"{sample}_{file_id}_loci.gff"),
+                    os.path.join(loci.path, f"{sample}/{file_id}_loci.gff"),
                     "-a",
                     os.path.join(
-                        proteins.path, f"{sample}_{file_id}_proteins.fasta"
+                        proteins.path, f"{sample}/{file_id}_proteins.fasta"
                     ),
                     "-d",
-                    os.path.join(genes.path, f"{sample}_{file_id}_genes.fasta")
+                    os.path.join(genes.path, f"{sample}/{file_id}_genes.fasta")
                     ],
                     check=True)
                 )
 
         # Assert that patch was called 3 times
-        subp_run.assert_has_calls(calls)
+        subp_run.assert_has_calls(calls, any_order=True)

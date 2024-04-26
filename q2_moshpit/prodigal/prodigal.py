@@ -33,49 +33,30 @@ def predict_genes_prodigal(
         "-f", "gff"
     ]
 
-    def _process_fasta_files(fasta_files: list, prefix: str, input_path: str):
-        # For every fasta file call prodigal and write
-        # outputs to the corresponding directories.
-        for fasta_file in fasta_files:
-            # Get the filename from the file path
-            file_id = os.path.splitext(fasta_file)[0]
+    def _run_prodigal(path_to_input: str, mag_id: str, subdir: str = None):
+        # If subdirectory is not None, append a "/" s.t. the command
+        # below is defined correctly. Otw subdir = ""
+        subdir = subdir + "/" if subdir else ""
 
-            # Adjust command and run
-            cmd = cp.deepcopy(base_cmd)
-            cmd.extend([
-                "-i", os.path.join(input_path, fasta_file),
-                "-o",
-                os.path.join(
-                    loci.path, f"{prefix}{file_id}_loci.gff"
-                ),
-                "-a",
-                os.path.join(
-                    proteins.path, f"{prefix}{file_id}_proteins.fasta"
-                ),
-                "-d",
-                os.path.join(
-                    genes.path, f"{prefix}{file_id}_genes.fasta"
-                )
-            ])
-            run_command(cmd)
+        # Adjust command and run
+        cmd = cp.deepcopy(base_cmd)
+        cmd.extend([
+            "-i", path_to_input,
+            "-o", os.path.join(loci.path, f"{subdir}{mag_id}_loci.gff"),
+            "-a",
+            os.path.join(proteins.path, f"{subdir}{mag_id}_proteins.fasta"),
+            "-d", os.path.join(genes.path, f"{subdir}{mag_id}_genes.fasta")
+        ])
+        run_command(cmd)
 
     if isinstance(mags, MAGSequencesDirFmt):
-        # Get paths to fasta files in input dir
-        fasta_files = os.listdir(mags.path)
-        _process_fasta_files(fasta_files, '', mags.path)
+        for mag_id, mag_fp in mags.feature_dict().items():
+            _run_prodigal(mag_fp, mag_id)
 
     elif isinstance(mags, MultiMAGSequencesDirFmt):
-        # List all directories / samples
-        for sample_dir in os.listdir(mags.path):
-            sample_dir_path = os.path.join(mags.path, sample_dir)
-            if os.path.isdir(sample_dir_path):
-                fasta_files = os.listdir(sample_dir_path)
-                print(fasta_files)
-                _process_fasta_files(
-                    fasta_files,
-                    f"{sample_dir}_",
-                    sample_dir_path
-                )
+        for sample_id, mags_dict in mags.sample_dict().items():
+            for mag_id, mag_fp in mags_dict.items():
+                _run_prodigal(mag_fp, mag_id, sample_id)
 
     # Return output directories
     return loci, genes, proteins

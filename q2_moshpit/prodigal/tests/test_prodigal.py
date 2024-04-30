@@ -46,9 +46,9 @@ class TestBUSCO(TestPluginBase):
             "-g", "11",
             "-f", "gff",
             "-i", os.path.join(mags.path, f"{fasta_file}.fasta"),
-            "-o", os.path.join(loci.path, f"{fasta_file}_loci.gff"),
-            "-a", os.path.join(proteins.path, f"{fasta_file}_proteins.fasta"),
-            "-d", os.path.join(genes.path, f"{fasta_file}_genes.fasta")],
+            "-o", os.path.join(loci.path, f"{fasta_file}.gff"),
+            "-a", os.path.join(proteins.path, f"{fasta_file}.fasta"),
+            "-d", os.path.join(genes.path, f"{fasta_file}.fasta")],
             check=True
         )
 
@@ -76,9 +76,9 @@ class TestBUSCO(TestPluginBase):
             "-g", "11",
             "-f", "gff",
             "-i", os.path.join(mags.path, f"{fasta_file}.fasta"),
-            "-o", os.path.join(loci.path, f"{fasta_file}_loci.gff"),
-            "-a", os.path.join(proteins.path, f"{fasta_file}_proteins.fasta"),
-            "-d", os.path.join(genes.path, f"{fasta_file}_genes.fasta")],
+            "-o", os.path.join(loci.path, f"{fasta_file}.gff"),
+            "-a", os.path.join(proteins.path, f"{fasta_file}.fasta"),
+            "-d", os.path.join(genes.path, f"{fasta_file}.fasta")],
             check=True)
             for fasta_file in fasta_files
         ]
@@ -90,12 +90,12 @@ class TestBUSCO(TestPluginBase):
     def test_run_prodigal_sample_data(self, subp_run):
         p = self.get_data_path("")
         mags = MultiMAGSequencesDirFmt(path=p, mode="r")
-        loci, genes, proteins = predict_genes_prodigal(mags=mags)
+        loci, genes, prot = predict_genes_prodigal(mags=mags)
 
         # Check that output is correct type
         self.assertIsInstance(loci, LociDirectoryFormat)
         self.assertIsInstance(genes, GenesDirectoryFormat)
-        self.assertIsInstance(proteins, ProteinsDirectoryFormat)
+        self.assertIsInstance(prot, ProteinsDirectoryFormat)
 
         # Get names of fasta files from test data dir
         calls = []
@@ -108,14 +108,9 @@ class TestBUSCO(TestPluginBase):
                     "-g", "11",
                     "-f", "gff",
                     "-i", os.path.join(mags.path, sample, f"{file_id}.fasta"),
-                    "-o",
-                    os.path.join(loci.path, f"{sample}/{file_id}_loci.gff"),
-                    "-a",
-                    os.path.join(
-                        proteins.path, f"{sample}/{file_id}_proteins.fasta"
-                    ),
-                    "-d",
-                    os.path.join(genes.path, f"{sample}/{file_id}_genes.fasta")
+                    "-o", os.path.join(loci.path, f"{sample}/{file_id}.gff"),
+                    "-a", os.path.join(prot.path, f"{sample}/{file_id}.fasta"),
+                    "-d", os.path.join(genes.path, f"{sample}/{file_id}.fasta")
                     ],
                     check=True)
                 )

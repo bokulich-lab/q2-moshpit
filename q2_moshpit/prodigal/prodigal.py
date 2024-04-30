@@ -42,10 +42,9 @@ def predict_genes_prodigal(
         cmd = cp.deepcopy(base_cmd)
         cmd.extend([
             "-i", path_to_input,
-            "-o", os.path.join(loci.path, f"{subdir}{mag_id}_loci.gff"),
-            "-a",
-            os.path.join(proteins.path, f"{subdir}{mag_id}_proteins.fasta"),
-            "-d", os.path.join(genes.path, f"{subdir}{mag_id}_genes.fasta")
+            "-o", os.path.join(loci.path, f"{subdir}{mag_id}.gff"),
+            "-a", os.path.join(proteins.path, f"{subdir}{mag_id}.fasta"),
+            "-d", os.path.join(genes.path, f"{subdir}{mag_id}.fasta")
         ])
         run_command(cmd)
 

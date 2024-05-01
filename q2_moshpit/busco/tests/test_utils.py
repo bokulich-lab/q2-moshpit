@@ -5,42 +5,76 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
-import os
-import tempfile
-import zipfile
 import json
+import tempfile
+
 import pandas as pd
-from q2_moshpit.busco.utils import (
-    _parse_busco_params,
-    _draw_busco_plots,
-    _zip_busco_plots,
-    _run_busco,
-    _draw_busco_plots_for_render,
-    _collect_summaries_and_save,
-    _parse_df_columns,
-)
-from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
+
+from q2_moshpit.busco.utils import (
+    _parse_busco_params, _collect_summaries, _parse_df_columns,
+    _partition_dataframe, _get_feature_table, _calculate_summary_stats,
+    _get_mag_lengths,
+)
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
-class TestBUSCO(TestPluginBase):
+class TestBUSCOUtils(TestPluginBase):
     package = "q2_moshpit.busco.tests"
 
-    @classmethod
-    def setUpClass(self):
-
-        # Set base path
-        p = os.path.join(os.path.dirname(__file__), "data")
-
-        # Get MAGs fixture
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
         self.mags = MultiMAGSequencesDirFmt(
-            path=p,
+            path=self.get_data_path('mags'),
             mode="r",
         )
+        self.df1 = pd.DataFrame({
+            'sample_id': ['sample1'] * 6 + ['sample2'] * 4 + ['sample3'] * 5,
+            'mag_id': [f'mag{i}' for i in range(1, 16)],
+            'value': range(15)
+        })
+        self.df2 = pd.DataFrame({
+            'sample_id': ['sample1'] * 6 + ['sample2'] * 6 + ['sample3'] * 3,
+            'mag_id': [f'mag{i}' for i in range(1, 16)],
+            'value': range(15)
+        })
+        self.df3 = pd.DataFrame({
+            'mag_id': ['mag1', 'mag2', 'mag3'],
+            'sample_id': ['sample1', 'sample2', 'sample3'],
+            'dataset': ['dataset1', 'dataset2', 'dataset3'],
+            'single': [1, 2, 3],
+            'duplicated': [4, 5, 6],
+            'fragmented': [7, 8, 9],
+            'missing': [10, 11, 12],
+            'complete': [13, 14, 15],
+            'n_markers': [16, 17, 18],
+            'contigs_n50': [19, 20, 21],
+            'percent_gaps': [22, 23, 24],
+            'scaffolds': [25, 26, 27],
+            'length': [28, 29, 30]
+        })
+        self.df4 = pd.DataFrame({
+            'id': ['mag1', 'mag2', 'mag3'],
+            'percent_gaps': ['10%', '20%', '30%'],
+            'single': ['1.0', '2.0', '3.0'],
+            'duplicated': ['4.0', '5.0', '6.0'],
+            'fragmented': ['7.0', '8.0', '9.0'],
+            'missing': ['10.0', '11.0', '12.0'],
+            'complete': ['13.0', '14.0', '15.0'],
+            'n_markers': ['16', '17', '18']
+        })
+        self.df5 = pd.DataFrame({
+            'index': [0, 1, 2],
+            'mag_id': ['mag1', 'mag2', 'mag3'],
+            'percent_gaps': [10.0, 20.0, 30.0],
+            'single': [1.0, 2.0, 3.0],
+            'duplicated': [4.0, 5.0, 6.0],
+            'fragmented': [7.0, 8.0, 9.0],
+            'missing': [10.0, 11.0, 12.0],
+            'complete': [13.0, 14.0, 15.0],
+            'n_markers': [16, 17, 18]
+        })
 
-    # Test `_parse_busco_params`
     def test_parse_busco_params_1(self):
         observed = _parse_busco_params("auto_lineage", True)
         expected = ["--auto-lineage"]
@@ -61,284 +95,126 @@ class TestBUSCO(TestPluginBase):
         expected = ["--lineage_dataset", "bacteria-XYZ"]
         self.assertSetEqual(set(observed), set(expected))
 
-    def test_collect_summaries_and_save(self):
-        """
-        Test for `_collect_summaries_and_save` function.
-        Uses data stored in ./data. Checks for data frame equality.
-        """
-        with tempfile.TemporaryDirectory() as tmp_path:
-            path_to_summaries = {}
+    def test_collect_summaries(self):
+        with tempfile.TemporaryDirectory():
+            paths = {}
 
             for i in range(1, 4):
-                path_to_summaries[f"sample{i}"] = self.get_data_path(
+                paths[f"sample{i}"] = self.get_data_path(
                     filename=f"batch_summary_sample{i}.txt"
                 )
 
-            observed = _collect_summaries_and_save(
-                path_to_run_summaries=path_to_summaries,
-                all_summaries_path=os.path.join(tmp_path, "aggregated.csv"),
-            )
-
-            expected = pd.read_csv(
+            obs = _collect_summaries(paths)
+            exp = pd.read_csv(
                 self.get_data_path(filename="all_batch_summaries.csv")
             )
             pd.set_option('display.max_columns', None)
-
-            try:
-                pd.testing.assert_frame_equal(observed, expected)
-            except AssertionError as e:
-                print(e)
-                self.assertTrue(False)
-            else:
-                self.assertTrue(True)
-
-    # Test `_draw_busco_plots`
-    def draw_n_busco_plots(self, filename, delim):
-        """
-        Creates plot from a table containing information about
-        one or more samples. Checks for the existence of the output
-        plots.
-
-        Args:
-            filename (str): name of file in ./data to construct the images
-            delim (str): delimiter of `filename`
-        """
-        # Create an empty dictionary to store the DataFrames
-        path_to_run_summaries = {}
-
-        # Group the DataFrame by the 'sample_id' column
-        p = self.get_data_path(f"{filename}")
-        df = pd.read_csv(p, delimiter=delim)
-        grouped = df.groupby("sample_id")
-
-        # Iterate through the groups and store each group as a
-        # DataFrame in the dictionary
-        # Creates output directory with path 'tmp'
-        with tempfile.TemporaryDirectory() as tmp_path:
-            for sample_id, group_df in grouped:
-                path_to_df = f"{tmp_path}/{sample_id}.csv"
-                group_df.to_csv(path_to_df, sep="\t", index=False)
-                path_to_run_summaries[sample_id] = path_to_df
-
-            # Draw plots
-            paths_to_plots = _draw_busco_plots(
-                path_to_run_summaries=path_to_run_summaries,
-                plots_dir=os.path.join(tmp_path, "plots"),
-            )
-
-            # Check if busco plots are in fact generated
-            for _, value in paths_to_plots.items():
-                self.assertTrue(os.path.exists(value))
-
-    def test_draw_busco_plots_multiple(self):
-        self.draw_n_busco_plots(
-            filename="all_batch_summaries.csv", delim=","
-        )
-
-    def test_draw_busco_plots_one(self):
-        self.draw_n_busco_plots(
-            filename="batch_summary_sample1.txt", delim="\t"
-        )
-
-    # Test `_draw_busco_plots_for_render`
-    def test_draw_busco_plots_for_render(self):
-        """
-        Tests function `_draw_busco_plots_for_render`.
-        Checks for dictionary equality.
-        """
-        # Load data
-        p = self.get_data_path("all_batch_summaries.csv")
-        all_summaries_df = pd.read_csv(p)
-
-        # Draw plot
-        observed = _draw_busco_plots_for_render(
-            all_summaries_df,
-            width=500,
-            height=30,
-            titleFontSize=20,
-            labelFontSize=17,
-            spacing=20
-        )
-
-        # Replace param value to make the dict altair version invariant
-        observed = observed.replace("param_1", "param_i")
-        observed = observed.replace("param_2", "param_i")
-
-        # Json string to dict
-        observed = json.loads(observed)
-
-        # Remove $schema k-v pair (also altair version variant)
-        observed.pop("$schema")
-
-        # Load expected data
-        p = self.get_data_path("plot_as_dict.json")
-        with open(p, "r") as json_file:
-            expected = json_file.read()
-
-        # Json string to dictionary
-        expected = json.loads(expected)
-
-        self.maxDiff = None
-        self.assertDictEqual(expected, observed)
-
-    # Test `_draw_busco_plots`
-    def mock_draw_busco_plots(self, tmp_path: str, num_files: int) -> dict:
-        """
-        Mocks the generation of sample wise plots by generating
-        empty files.
-
-        Args:
-            tmp_path (str): Path where to write the empty files.
-            num_files (int): number of empty files to create, one per sample.
-
-        Returns:
-            paths_to_plots (dict):  dictionary with keys sample_id and value
-                path to empty file.
-        """
-        # Generate random images
-        paths_to_plots = {}
-
-        # Path to output
-        out_dir = os.path.join(tmp_path, "zip_this_dir")
-        os.makedirs(out_dir)
-
-        # Loop to create the empty files
-        for i in range(num_files):
-            # Specify the name of each empty file
-            file_name = f"empty_file_{i}.svg"
-
-            # Combine the directory path and file name to create the full
-            # file path
-            file_path = os.path.join(out_dir, file_name)
-            paths_to_plots[f"empty_file_{i}"] = file_path
-
-            # Create an empty file
-            with open(file_path, 'w'):
-                pass
-
-        return paths_to_plots
-
-    def test_zip_busco_plots_multiple(self):
-        """
-        Checks for existence of zip file.
-        """
-        with tempfile.TemporaryDirectory() as tmp_path:
-            paths_to_plots = self.mock_draw_busco_plots(
-                num_files=6, tmp_path=tmp_path
-            )
-
-            # Zip graphs for user download
-            zip_path = os.path.join(tmp_path, "busco_plots.zip")
-            _zip_busco_plots(paths_to_plots=paths_to_plots, zip_path=zip_path)
-
-            # Check for existence of file
-            self.assertTrue(zipfile.is_zipfile(zip_path))
-
-    def test_zip_busco_plots_one(self):
-        """
-        Checks for existence of zip file.
-        """
-        with tempfile.TemporaryDirectory() as tmp_path:
-            paths_to_plots = self.mock_draw_busco_plots(
-                num_files=1, tmp_path=tmp_path
-            )
-
-            # Zip graphs for user download
-            zip_path = os.path.join(tmp_path, "busco_plots.zip")
-            _zip_busco_plots(paths_to_plots=paths_to_plots, zip_path=zip_path)
-
-            # Check for existence of file
-            self.assertTrue(zipfile.is_zipfile(zip_path))
-
-    @patch('subprocess.run')
-    def test_run_busco(self, subp_run):
-        """
-        Test function `_run_busco`. Checks for dictionary equality.
-        """
-        output_dir = self.get_data_path("busco_output")
-        sample_ids = os.listdir(output_dir)
-
-        # Initialize assertion objects
-        expected = {}
-        calls = []
-
-        # Define command arguments
-        fake_props = ["--a", "--b", "0.6"]
-
-        # Fabricate list of calls and the expected output
-        for sample_id in sample_ids:
-            # Make a dictionary to compare output
-            p = os.path.join(output_dir, sample_id, "batch_summary.txt")
-            expected[sample_id] = p
-
-            # Append call to list of calls to assert the patching
-            calls.append(call(
-                [
-                    "busco",
-                    "--a",
-                    "--b", "0.6",
-                    "--in", self.get_data_path(f"{sample_id}"),
-                    "--out_path", output_dir,
-                    "-o", sample_id
-                ],
-                check=True
-            ))
-
-        # Run busco and save paths to run summaries
-        observed = _run_busco(
-            output_dir=output_dir,
-            mags=self.mags,
-            params=fake_props,
-        )
-
-        # Assert output
-        self.assertDictEqual(expected, observed)
-
-        # Check for appropiate calls
-        subp_run.assert_has_calls(calls, any_order=True)
-
-    @patch("subprocess.run")
-    def test_run_busco_exception(self, subp_run):
-        """
-        Test function `_run_busco`. Checks for a raised exception.
-        """
-        with tempfile.TemporaryDirectory() as tmp_path:
-            # Define command arguments
-            fake_props = ["--a", "--b", "0.6"]
-            output_dir = os.path.join(tmp_path, "busco_output")
-
-            with self.assertRaises(FileNotFoundError):
-                # Run busco and save paths to run summaries
-                _ = _run_busco(
-                    output_dir=output_dir,
-                    mags=self.mags,
-                    params=fake_props,
-                )
-
-        # Assert that the patch was called once.
-        cmd = [
-            "busco",
-            "--a",
-            "--b", "0.6",
-            "--in", self.get_data_path("sample1"),
-            "--out_path", output_dir,
-            "-o", "sample1"
-        ]
-        subp_run.assert_called_once_with(cmd, check=True)
+            pd.testing.assert_frame_equal(obs, exp)
 
     def test_parse_df_columns(self):
-        # This side effect will return the all_summaries_dfs
-        p1 = self.get_data_path("all_batch_summaries.csv")
-        observed = pd.read_csv(p1)
-        observed = _parse_df_columns(observed)
+        obs = _parse_df_columns(self.df4)
+        exp = self.df5
+        pd.testing.assert_frame_equal(obs, exp)
 
-        p2 = self.get_data_path("all_batch_summaries_formatted.csv")
-        expected = pd.read_csv(p2)
+    def test_partition_dataframe_max_rows_5(self):
+        partitions = _partition_dataframe(self.df1, max_rows=5)
+        self.assertEqual(len(partitions), 3)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(6, 3), (4, 3), (5, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
 
-        try:
-            pd.testing.assert_frame_equal(observed, expected)
-        except AssertionError as e:
-            print(e)
-            self.assertTrue(False)
-        else:
-            self.assertTrue(True)
+        partitions = _partition_dataframe(self.df2, max_rows=5)
+        self.assertEqual(len(partitions), 3)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(6, 3), (6, 3), (3, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+    def test_partition_dataframe_max_rows_10(self):
+        partitions = _partition_dataframe(self.df1, max_rows=10)
+        self.assertEqual(len(partitions), 2)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(10, 3), (5, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+        partitions = _partition_dataframe(self.df2, max_rows=10)
+        self.assertEqual(len(partitions), 2)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(6, 3), (9, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+    def test_partition_dataframe_max_rows_15(self):
+        partitions = _partition_dataframe(self.df1, max_rows=15)
+        self.assertEqual(len(partitions), 1)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(15, 3),]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+        partitions = _partition_dataframe(self.df2, max_rows=15)
+        self.assertEqual(len(partitions), 1)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(15, 3), ]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+    def test_get_feature_table(self):
+        obs = json.loads(
+            _get_feature_table(self.df3)
+        )
+        with open(self.get_data_path('feature_table.json'), 'r') as f:
+            exp = json.load(f)
+        self.assertDictEqual(obs, exp)
+
+    def test_calculate_summary_stats(self):
+        obs = _calculate_summary_stats(self.df3)
+        exp = pd.DataFrame({
+            "min": pd.Series({
+                'single': 1,
+                'duplicated': 4,
+                'fragmented': 7,
+                'missing': 10,
+                'complete': 13
+            }),
+            "median": pd.Series({
+                'single': 2.0,
+                'duplicated': 5.0,
+                'fragmented': 8.0,
+                'missing': 11.0,
+                'complete': 14.0
+            }),
+            "mean": pd.Series({
+                'single': 2.0,
+                'duplicated': 5.0,
+                'fragmented': 8.0,
+                'missing': 11.0,
+                'complete': 14.0
+            }),
+            "max": pd.Series({
+                'single': 3,
+                'duplicated': 6,
+                'fragmented': 9,
+                'missing': 12,
+                'complete': 15
+            }),
+            "count": pd.Series({
+                'single': 3,
+                'duplicated': 3,
+                'fragmented': 3,
+                'missing': 3,
+                'complete': 3
+            })
+        }).T.to_json(orient='table')
+
+        self.assertEqual(obs, exp)
+
+    def test_get_mag_lengths(self):
+        obs = _get_mag_lengths(self.mags)
+        exp = pd.Series(
+            {
+                '24dee6fe-9b84-45bb-8145-de7b092533a1': 1935,
+                'ca7012fc-ba65-40c3-84f5-05aa478a7585': 3000,
+                'fb0bc871-04f6-486b-a10e-8e0cb66f8de3': 2000,
+                'd65a71fa-4279-4588-b937-0747ed5d604d': 3000,
+                'db03f8b6-28e1-48c5-a47c-9c65f38f7357': 2000,
+                'fa4d7420-d0a4-455a-b4d7-4fa66e54c9bf': 3000
+            }, name="length"
+        )
+        pd.testing.assert_series_equal(obs, exp)

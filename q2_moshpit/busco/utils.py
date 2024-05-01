@@ -56,8 +56,10 @@ def _partition_dataframe(df: pd.DataFrame, max_rows: int) -> list:
 
     This function groups the DataFrame by 'sample_id' and then partitions
     these groups into smaller DataFrames. Each partition will have a total
-    row count less than or equal to the max_rows parameter. The last group
-    in a partition can exceed the max_rows limit.
+    row count less than or equal to the max_rows parameter (unless a single
+    partition exceeds the max_rows, in which case it will have all the
+    MAGs included). The last group in a partition can exceed the max_rows
+    limit.
 
     Args:
         df (pd.DataFrame): The DataFrame to partition. It should have a

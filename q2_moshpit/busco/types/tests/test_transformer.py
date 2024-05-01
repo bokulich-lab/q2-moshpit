@@ -44,11 +44,12 @@ class TestBUSCOTransformers(TestPluginBase):
             pd.DataFrame, BUSCOResultsFormat
         )
         df = pd.read_csv(
-            self.fp, sep='\t', header=0, index_col=0, dtype='str'
+            self.fp, sep='\t', header=0, index_col=False, dtype='str'
         )
         df.index.name = 'id'
         obs = transformer(df)
 
+        obs.validate()
         self.assertIsInstance(obs, BUSCOResultsFormat)
 
     def test_result_to_metadata_transformer(self):

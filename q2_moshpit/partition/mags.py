@@ -47,8 +47,8 @@ def partition_feature_data_mags(
         for mag_fp, mag_id in _mag:
             duplicate(mag_fp, result.path / os.path.basename(mag_fp))
 
-        # If num_partitions == num_samples we will only have gone through one
-        # MAG in the above loop and will use its id as a key. Otherwise we
+        # If num_partitions == num_mags we will only have gone through one
+        # MAG in the above loop and will use its id as a key. Otherwise, we
         # may have gone through multiple MAGs in the above loop and will be
         # using indices for keys
         if num_partitions == num_mags:
@@ -57,11 +57,6 @@ def partition_feature_data_mags(
             partitioned_mags[i] = result
 
     return partitioned_mags
-
-
-def _chunker(seq, size):
-    # source: https://stackoverflow.com/a/434328/579416
-    return [seq[pos:pos + size] for pos in range(0, len(seq), size)]
 
 
 def partition_sample_data_mags(

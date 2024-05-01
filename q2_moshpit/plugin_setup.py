@@ -713,6 +713,11 @@ plugin.methods.register_function(
         ('eggnog_hits', SampleData[BLAST6]),
         ('table', FeatureTable[Frequency])
     ],
+    output_descriptions={
+        'eggnog_hits': 'BLAST6-like table(s) describing the identified orthologs. '
+                       'One table per sample or MAG in the input.',
+        'table': 'Feature table with counts of orthologs per sample/MAG.'
+    },
     name='Run eggNOG search using diamond aligner',
     description="This method performs the steps by which we find our "
                 "possible target sequences to annotate using the diamond "
@@ -747,6 +752,10 @@ plugin.pipelines.register_function(
         'eggnog_hits': SampleData[BLAST6],
         'eggnog_db': ReferenceDB[Eggnog],
     },
+    input_descriptions={
+        'eggnog_hits': 'BLAST6-like table(s) describing the identified orthologs. ',
+        "eggnog_db": "eggNOG annotation database."
+    },
     parameters={
         'db_in_memory': Bool,
         'num_cpus': Int % Range(0, None),
@@ -762,6 +771,9 @@ plugin.pipelines.register_function(
         **partition_param_descriptions
     },
     outputs=[('ortholog_annotations', FeatureData[NOG])],
+    output_descriptions={
+        'ortholog_annotations': 'Annotated hits.'
+    },
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
     citations=[citations["huerta_cepas_eggnog_2019"]]
@@ -819,8 +831,8 @@ plugin.methods.register_function(
         " MAGs."
     },
     name="Partition orthologs",
-    description="Partition a SampleData[MAGs] artifact into smaller "
-                "artifacts containing subsets of the MAGs",
+    description="Partition a SampleData[BLAST6] artifact into smaller "
+                "artifacts containing subsets of the BLAST6 reports.",
 )
 
 plugin.methods.register_function(
@@ -869,7 +881,8 @@ plugin.methods.register_function(
     input_descriptions={"orthologs": "Orthologs to collate"},
     parameter_descriptions={},
     name="Collate Orthologs",
-    description="Collate a List of SampleData[BLAST6] into one"
+    description="Takes a collection SampleData[BLAST6] artifacts "
+                "and collates them into a single artifact.",
 )
 
 plugin.methods.register_function(

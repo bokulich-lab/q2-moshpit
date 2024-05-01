@@ -714,8 +714,8 @@ plugin.methods.register_function(
         ('table', FeatureTable[Frequency])
     ],
     output_descriptions={
-        'eggnog_hits': 'BLAST6-like table(s) describing the identified orthologs. '
-                       'One table per sample or MAG in the input.',
+        'eggnog_hits': 'BLAST6-like table(s) describing the identified '
+                       'orthologs. One table per sample or MAG in the input.',
         'table': 'Feature table with counts of orthologs per sample/MAG.'
     },
     name='Run eggNOG search using diamond aligner',
@@ -753,7 +753,8 @@ plugin.pipelines.register_function(
         'eggnog_db': ReferenceDB[Eggnog],
     },
     input_descriptions={
-        'eggnog_hits': 'BLAST6-like table(s) describing the identified orthologs. ',
+        'eggnog_hits': 'BLAST6-like table(s) describing the '
+                       'identified orthologs. ',
         "eggnog_db": "eggNOG annotation database."
     },
     parameters={

@@ -8,11 +8,12 @@
 import json
 import os
 import pandas as pd
-from typing import List
+from typing import List, Union
 
 import skbio.io
 
 from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
+from q2_types.feature_data_mag import MAGSequencesDirFmt
 
 arguments_with_hyphens = {
     "auto_lineage": "auto-lineage",
@@ -204,10 +205,16 @@ def _calculate_summary_stats(df: pd.DataFrame) -> json:
     return stats.T.to_json(orient='table')
 
 
-def _get_mag_lengths(bins: MultiMAGSequencesDirFmt):
+def _get_mag_lengths(bins: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt]):
     lengths = {}
-    for sample, mags in bins.sample_dict().items():
-        for mag_id, mag_fp in mags.items():
+    if isinstance(bins, MultiMAGSequencesDirFmt):
+        for sample, mags in bins.sample_dict().items():
+            for mag_id, mag_fp in mags.items():
+                seq = skbio.io.read(mag_fp, format="fasta")
+                lengths[mag_id] = sum([len(s) for s in seq])
+        return pd.Series(lengths, name="length")
+    else:
+        for mag_id, mag_fp in bins.feature_dict().items():
             seq = skbio.io.read(mag_fp, format="fasta")
             lengths[mag_id] = sum([len(s) for s in seq])
-    return pd.Series(lengths, name="length")
+        return pd.Series(lengths, name="length")

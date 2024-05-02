@@ -11,7 +11,7 @@ import os
 import tempfile
 from copy import deepcopy
 from shutil import copytree
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import pandas as pd
 import q2templates
@@ -27,10 +27,13 @@ from q2_moshpit.busco.utils import (
 )
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.feature_data_mag._format import MAGSequencesDirFmt
 
 
 def _run_busco(
-    output_dir: str, mags: MultiMAGSequencesDirFmt, params: List[str]
+    output_dir: str,
+    mags: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt],
+    params: List[str]
 ) -> Dict[str, str]:
     """Evaluates bins for all samples using BUSCO.
 
@@ -46,12 +49,21 @@ def _run_busco(
     """
     base_cmd = ["busco", *params]
 
-    manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
-    manifest["sample_dir"] = manifest.filename.apply(
-        lambda x: os.path.dirname(x)
-    )
+    if isinstance(mags, MultiMAGSequencesDirFmt):
+        # Creates pandas df "manifest" from bins
+        manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
 
-    sample_dirs = manifest["sample_dir"].unique()
+        # Make a new column in manifest with the directories of files
+        # listed in column "filename"
+        manifest["sample_dir"] = manifest.filename.apply(
+            lambda x: os.path.dirname(x)
+        )
+
+        # numpy.ndarray with unique dirs
+        sample_dirs = manifest["sample_dir"].unique()
+
+    elif isinstance(mags, MAGSequencesDirFmt):
+        sample_dirs = [str(mags)]
 
     path_to_run_summaries = {}
 
@@ -103,7 +115,7 @@ def _busco_helper(bins, common_args):
 
 
 def _evaluate_busco(
-    bins: MultiMAGSequencesDirFmt,
+    bins: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt],
     mode: str = "genome",
     lineage_dataset: str = None,
     augustus: bool = False,
@@ -244,9 +256,14 @@ def evaluate_busco(
     }
 
     _evaluate_busco = ctx.get_action("moshpit", "_evaluate_busco")
-    partition_mags = ctx.get_action("moshpit", "partition_sample_data_mags")
     collate_busco_results = ctx.get_action("moshpit", "collate_busco_results")
     _visualize_busco = ctx.get_action("moshpit", "_visualize_busco")
+    partition_mags = ctx.get_action(
+        "moshpit",
+        "partition_sample_data_mags"
+        if isinstance(bins, MultiMAGSequencesDirFmt)
+        else "partition_feature_data_mags"
+    )
 
     (partitioned_mags, ) = partition_mags(bins, num_partitions)
     results = []

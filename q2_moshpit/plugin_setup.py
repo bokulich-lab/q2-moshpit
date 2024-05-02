@@ -989,7 +989,7 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.busco._evaluate_busco,
     inputs={
-        "bins": SampleData[MAGs],
+        "bins": SampleData[MAGs] | FeatureData[MAG],
     },
     parameters=busco_params,
     outputs={
@@ -1029,7 +1029,7 @@ plugin.visualizers.register_function(
 plugin.pipelines.register_function(
     function=q2_moshpit.busco.evaluate_busco,
     inputs={
-        "bins": SampleData[MAGs],
+        "bins": SampleData[MAGs] | FeatureData[MAG],
     },
     parameters={**busco_params, **partition_params},
     outputs={

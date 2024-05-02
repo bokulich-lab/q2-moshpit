@@ -52,6 +52,7 @@ setup(
             'tests/data/contig-sequences-1/*',
             'tests/data/mag-sequences/*',
             'tests/data/mag-sequences-per-sample/*',
+            'tests/data/mag-sequences-per-sample/*/*',
             'tests/data/random-db-1/*',
             'tests/data/good_hits/*',
             'tests/data/bad_hits/*',

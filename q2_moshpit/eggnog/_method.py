@@ -13,18 +13,17 @@ from typing import Union
 
 import pandas as pd
 import qiime2.util
-from typing import Union
-from q2_types.per_sample_sequences import ContigSequencesDirFmt, Contigs
-from q2_types.per_sample_sequences import (
-    ContigSequencesDirFmt, MultiMAGSequencesDirFmt
-)
-from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from q2_types.reference_db import (
-    EggnogRefDirFmt, DiamondDatabaseDirFmt
-)
-from q2_types.feature_data import DNAFASTAFormat, FeatureData, BLAST6
+
+from q2_types.feature_data import FeatureData, BLAST6
 from q2_types.feature_data_mag import (
     OrthologAnnotationDirFmt, MAGSequencesDirFmt, MAG
+)
+from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.per_sample_sequences import (
+    ContigSequencesDirFmt, MultiMAGSequencesDirFmt, Contigs
+)
+from q2_types.reference_db import (
+    EggnogRefDirFmt, DiamondDatabaseDirFmt
 )
 from q2_types.sample_data import SampleData
 

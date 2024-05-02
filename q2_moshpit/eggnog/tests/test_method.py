@@ -11,10 +11,9 @@ import pandas as pd
 import pandas.testing as pdt
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.sdk.parallel_config import ParallelConfig
+
+from q2_moshpit.eggnog import _eggnog_diamond_search, _eggnog_annotate
 from q2_types.feature_data_mag import MAGSequencesDirFmt
-from .._method import (
-    _eggnog_diamond_search, _eggnog_annotate, eggnog_diamond_search
-)
 from q2_types.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt
 )
@@ -40,6 +39,8 @@ class TestDiamond(TestPluginBase):
             self.plugin.pipelines["eggnog_diamond_search"]
         self._eggnog_diamond_search = \
             self.plugin.methods["_eggnog_diamond_search"]
+        self._eggnog_annotate = \
+            self.plugin.methods["_eggnog_annotate"]
 
     def test_good_small_search_contigs(self):
         contigs = qiime2.Artifact.import_data(
@@ -82,7 +83,7 @@ class TestDiamond(TestPluginBase):
             self.get_data_path('mag-sequences-per-sample')
         ).view(MultiMAGSequencesDirFmt)
 
-        _, obs = eggnog_diamond_search(
+        _, obs = _eggnog_diamond_search(
             sequences=mags,
             diamond_db=self.diamond_db
         )

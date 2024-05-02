@@ -576,13 +576,9 @@ plugin.methods.register_function(
     },
     name="Fetch the complete Diamond database necessary to run the "
          "eggnog-diamond-search action.",
-    description="Downloads Diamond reference database.  "
-                "This action downloads 1 file (ref_db.dmnd). "
-                "At least 18 Gb of storage space is "
-                "required to run this action. "
-                "Link to database: "
-                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
-                "eggnog_proteins.dmnd.gz",
+    description="Downloads Diamond reference database. "
+                "This action downloads 1 file (ref_db.dmnd). At least 18 GB "
+                "of storage space is required to run this action.",
     citations=[
         citations["buchfink_sensitive_2021"],
         citations["huerta_cepas_eggnog_2019"]

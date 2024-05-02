@@ -229,54 +229,45 @@ plugin.methods.register_function(
     citations=[citations["wood2019"]]
 )
 
-T_kraken_collate_reports_in, T_kraken_collate_reports_out = TypeMap({
-    SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')]:
-        SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
-    SampleData[Kraken2Reports % Properties('reads', 'contigs')]:
-        SampleData[Kraken2Reports % Properties('reads', 'contigs')],
-    SampleData[Kraken2Reports % Properties('reads', 'mags')]:
-        SampleData[Kraken2Reports % Properties('reads', 'mags')],
-    SampleData[Kraken2Reports % Properties('contigs', 'mags')]:
-        SampleData[Kraken2Reports % Properties('contigs', 'mags')],
-    SampleData[Kraken2Reports % Properties('reads')]:
-        SampleData[Kraken2Reports % Properties('reads')],
-    SampleData[Kraken2Reports % Properties('contigs')]:
-        SampleData[Kraken2Reports % Properties('contigs')],
-    SampleData[Kraken2Reports % Properties('mags')]:
-        SampleData[Kraken2Reports % Properties('mags')],
+P_kraken_in, P_kraken_out = TypeMap({
+    Properties('reads', 'contigs', 'mags'):
+        Properties('reads', 'contigs', 'mags'),
+    Properties('reads', 'contigs'): Properties('reads', 'contigs'),
+    Properties('reads', 'mags'): Properties('reads', 'mags'),
+    Properties('contigs', 'mags'): Properties('contigs', 'mags'),
+    Properties('reads'): Properties('reads'),
+    Properties('contigs'): Properties('contigs'),
+    Properties('mags'): Properties('mags'),
 })
 
 plugin.methods.register_function(
     function=q2_moshpit.kraken_helpers.collate_kraken2_reports,
-    inputs={"kraken2_reports": List[T_kraken_collate_reports_in]},
+    inputs={
+        "kraken2_reports": List[
+            SampleData[Kraken2Reports % P_kraken_in]
+        ]
+    },
     parameters={},
-    outputs={"collated_kraken2_reports": T_kraken_collate_reports_out},
+    outputs={
+        "collated_kraken2_reports": SampleData[Kraken2Reports % P_kraken_out]
+    },
     name="Collate kraken2 reports",
     description="Collates kraken2 reports"
 )
 
-T_kraken_collate_outputs_in, T_kraken_collate_outputs_out = TypeMap({
-    SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')]:
-        SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
-    SampleData[Kraken2Outputs % Properties('reads', 'contigs')]:
-        SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
-    SampleData[Kraken2Outputs % Properties('reads', 'mags')]:
-        SampleData[Kraken2Outputs % Properties('reads', 'mags')],
-    SampleData[Kraken2Outputs % Properties('contigs', 'mags')]:
-        SampleData[Kraken2Outputs % Properties('contigs', 'mags')],
-    SampleData[Kraken2Outputs % Properties('reads')]:
-        SampleData[Kraken2Outputs % Properties('reads')],
-    SampleData[Kraken2Outputs % Properties('contigs')]:
-        SampleData[Kraken2Outputs % Properties('contigs')],
-    SampleData[Kraken2Outputs % Properties('mags')]:
-        SampleData[Kraken2Outputs % Properties('mags')],
-})
-
 plugin.methods.register_function(
     function=q2_moshpit.kraken_helpers.collate_kraken2_outputs,
-    inputs={"kraken2_outputs": List[T_kraken_collate_outputs_in]},
+    inputs={
+        "kraken2_outputs": List[
+            SampleData[Kraken2Outputs % P_kraken_in]
+        ]
+    },
     parameters={},
-    outputs={"collated_kraken2_outputs": T_kraken_collate_outputs_out},
+    outputs={
+        "collated_kraken2_outputs": List[
+            SampleData[Kraken2Outputs % P_kraken_out]
+        ]
+    },
     name="Collate kraken2 outputs",
     description="Collates kraken2 outputs"
 )

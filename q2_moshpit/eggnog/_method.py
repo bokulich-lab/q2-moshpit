@@ -20,7 +20,7 @@ from q2_types.feature_data_mag import (
 )
 from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
 from q2_types.per_sample_sequences import (
-    ContigSequencesDirFmt, MultiMAGSequencesDirFmt, Contigs
+    ContigSequencesDirFmt, MultiMAGSequencesDirFmt, Contigs, MAGs
 )
 from q2_types.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt
@@ -44,6 +44,10 @@ def eggnog_diamond_search(
             "moshpit", "partition_feature_data_mags")
     elif sequences.type <= SampleData[Contigs]:
         partition_method = ctx.get_action("assembly", "partition_contigs")
+    elif sequences.type <= SampleData[MAGs]:
+        partition_method = ctx.get_action(
+            "moshpit", "partition_sample_data_mags"
+        )
     else:
         raise NotImplementedError()
 

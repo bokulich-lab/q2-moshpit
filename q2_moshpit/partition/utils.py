@@ -9,19 +9,21 @@ from typing import List
 import warnings
 
 
-def _validate_num_partitions(num_mags: int, num_partitions: int) -> int:
+def _validate_num_partitions(
+        num_samples: int, num_partitions: int, sample_type: str = "sample"
+) -> int:
 
     if num_partitions is None:
-        return num_mags
-    elif num_partitions > num_mags:
+        return num_samples
+    elif num_partitions > num_samples:
         warnings.warn(
-            "You have requested a number of partitions"
-            f" '{num_partitions}' that is greater than your number"
-            f" of MAGs '{num_mags}.' Your data will be"
-            f" partitioned by MAG into '{num_mags}'"
-            " partitions."
+            "You have requested a number of partitions "
+            f"'{num_partitions}' that is greater than your number "
+            f"of {sample_type}s '{num_samples}.' Your data will be "
+            f"partitioned by {sample_type} into '{num_samples}' "
+            "partitions."
         )
-        return num_mags
+        return num_samples
     else:
         return num_partitions
 

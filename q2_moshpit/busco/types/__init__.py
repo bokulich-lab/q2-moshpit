@@ -5,7 +5,10 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+from ._format import BUSCOResultsFormat, BUSCOResultsDirectoryFormat
+from ._type import BUSCOResults
 
-from .busco import evaluate_busco, _evaluate_busco, _visualize_busco
 
-__all__ = ["evaluate_busco", "_evaluate_busco", "_visualize_busco"]
+__all__ = [
+    'BUSCOResults', 'BUSCOResultsFormat', 'BUSCOResultsDirectoryFormat'
+]

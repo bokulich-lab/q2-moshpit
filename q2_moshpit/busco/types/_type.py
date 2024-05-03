@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+from qiime2.core.type import SemanticType
 
-from .busco import evaluate_busco, _evaluate_busco, _visualize_busco
 
-__all__ = ["evaluate_busco", "_evaluate_busco", "_visualize_busco"]
+BUSCOResults = SemanticType('BUSCOResults')

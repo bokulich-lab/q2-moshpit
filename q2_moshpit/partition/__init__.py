@@ -14,9 +14,11 @@ from .mags import (
 from .ortholog import (
     collate_orthologs, partition_orthologs
 )
+from .busco import collate_busco_results
 
 __all__ = [
     "collate_feature_data_mags", "collate_sample_data_mags",
     "partition_feature_data_mags", "partition_sample_data_mags",
-    "collate_orthologs", "partition_orthologs", "collate_annotations"
+    "collate_orthologs", "partition_orthologs", "collate_annotations",
+    "collate_busco_results"
 ]

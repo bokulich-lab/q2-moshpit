@@ -124,10 +124,32 @@ class TestDiamond(TestPluginBase):
 
         pdt.assert_frame_equal(parallel, single)
 
-    def test_eggnog_search_parallel_mags(self):
+    def test_eggnog_search_parallel_mags_derep(self):
         mags = qiime2.Artifact.import_data(
             'FeatureData[MAG]',
             self.get_data_path('mag-sequences')
+        )
+
+        with ParallelConfig():
+            _, parallel = self.eggnog_diamond_search.parallel(
+                    mags,
+                    self.diamond_db_artifact
+                )._result()
+
+        _, single = self._eggnog_diamond_search(
+            sequences=mags,
+            diamond_db=self.diamond_db_artifact
+        )
+
+        parallel = parallel.view(pd.DataFrame)
+        single = single.view(pd.DataFrame)
+
+        pdt.assert_frame_equal(parallel, single)
+
+    def test_eggnog_search_parallel_mags(self):
+        mags = qiime2.Artifact.import_data(
+            'SampleData[MAGs]',
+            self.get_data_path('mag-sequences-per-sample')
         )
 
         with ParallelConfig():

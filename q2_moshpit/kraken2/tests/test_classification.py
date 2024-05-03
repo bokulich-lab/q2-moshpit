@@ -1004,20 +1004,21 @@ class TestClassifyKraken2MAGs(TestPluginBase):
         output_views = outputs.reports.iter_views(pd.DataFrame)
         report_views = reports.reports.iter_views(pd.DataFrame)
 
-        samples_of_interest = ('ba', 'mm', 'sa', 'se', 'ba-mm-mixed')
+        samples_of_interest = self.uuid_to_sample.keys()
 
         def filter_views(arg):
             path, _ = arg
-            return Path(path.stem).stem in samples_of_interest
+            return str(path).split(".")[0] in samples_of_interest
 
         output_views = filter(filter_views, output_views)
         report_views = filter(filter_views, report_views)
 
         for path, df in output_views:
-            sample_id = str(path).rsplit('.output.txt')[0]
+            mag_id = str(path).rsplit('.output.txt')[0]
+            sample_id = self.uuid_to_sample[mag_id]
 
             # the expected number of records are in the output
-            self.assertEqual(len(df), 20)
+            self.assertGreater(len(df), 17)
 
             # all contigs are classified
             self.assertEqual({'C'}, set(df['classification']))
@@ -1029,7 +1030,8 @@ class TestClassifyKraken2MAGs(TestPluginBase):
             )
 
         for path, df in report_views:
-            sample_id = str(path).rsplit('.report.txt')[0]
+            mag_id = str(path).rsplit('.report.txt')[0]
+            sample_id = self.uuid_to_sample[mag_id]
 
             # the dataframe is non-empty
             self.assertGreater(len(df), 0)

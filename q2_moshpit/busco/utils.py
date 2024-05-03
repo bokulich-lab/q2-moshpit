@@ -118,6 +118,7 @@ def _collect_summaries(run_summaries_fp_map: dict) -> pd.DataFrame:
 
 def _get_feature_table(busco_results: pd.DataFrame):
     df = busco_results.reset_index(inplace=False, drop=False)
+
     new_cols = {
         "mag_id": "MAG", "sample_id": "Sample", "dataset": "Dataset",
         "single": "% single", "duplicated": "% duplicated",
@@ -126,6 +127,10 @@ def _get_feature_table(busco_results: pd.DataFrame):
         "contigs_n50": "N50 contigs", "percent_gaps": "Percent gaps",
         "scaffolds": "Contigs", "length": "Length (bp)"
     }
+
+    if len(busco_results["sample_id"].unique()) < 2:
+        del new_cols["sample_id"]
+
     df = df[list(new_cols.keys())].rename(columns=new_cols, inplace=False)
     return df.to_json(orient='split')
 

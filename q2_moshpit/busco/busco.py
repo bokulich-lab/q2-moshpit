@@ -160,8 +160,8 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
     if len(busco_results["sample_id"].unique()) >= 2:
         dfs = _partition_dataframe(busco_results, max_rows=n)
         column_name = "sample_id"
-        assets_subdir = "busco_sample_data"
-        tab_title = "Sample"
+        assets_subdir = "sample_data"
+        tab_title = ["Sample details", "Feature details"]
 
         # Draw selectable histograms (only for sample data mags)
         tabbed_context = {
@@ -171,24 +171,32 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
     else:
         dfs = [busco_results[i:i+100] for i in range(0, len(busco_results), n)]
         column_name = "mag_id"
-        tab_title = "MAG"
-        assets_subdir = "busco_feature_data"
+        tab_title = ["BUSCO Plots", "BUSCO Table"]
+        assets_subdir = "feature_data"
         tabbed_context = {}  # Init as empty bc we update it below
 
     # Copy BUSCO results from tmp dir to output_dir
     TEMPLATES = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "assets", assets_subdir
+        os.path.dirname(os.path.dirname(__file__)),
+        "assets",
+        "busco"
     )
     templates = [
-        os.path.join(TEMPLATES, "index.html"),
-        os.path.join(TEMPLATES, "detailed_view.html"),
-        os.path.join(TEMPLATES, "table.html"),
+        os.path.join(TEMPLATES, assets_subdir, file_name)
+        for file_name in ["index.html", "detailed_view.html", "table.html"]
     ]
     copytree(
-        src=os.path.join(TEMPLATES),
+        src=os.path.join(TEMPLATES, assets_subdir),
         dst=output_dir,
         dirs_exist_ok=True
     )
+    for folder in ["css", "js"]:
+        os.makedirs(os.path.join(output_dir, folder))
+        copytree(
+            src=os.path.join(TEMPLATES, folder),
+            dst=os.path.join(output_dir, folder),
+            dirs_exist_ok=True
+        )
 
     # Partition data frames and draw detailed plots
     context = {}
@@ -223,8 +231,8 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
     tabbed_context.update({
         "tabs": [
             {"title": "QC overview", "url": "index.html"},
-            {"title": f"{tab_title} details", "url": "detailed_view.html"},
-            {"title": "Feature details", "url": "table.html"}
+            {"title": tab_title[0], "url": "detailed_view.html"},
+            {"title": tab_title[1], "url": "table.html"}
         ],
         "vega_json": vega_json,
         "vega_summary_json": vega_json_sum,

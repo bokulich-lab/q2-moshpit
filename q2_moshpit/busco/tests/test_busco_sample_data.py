@@ -24,7 +24,7 @@ class MockContext(Mock):
         self.get_action = Mock()
 
 
-class TestBUSCO(TestPluginBase):
+class TestBUSCOSampleData(TestPluginBase):
     package = "q2_moshpit.busco.tests"
 
     def setUp(self):
@@ -158,10 +158,10 @@ class TestBUSCO(TestPluginBase):
                 {"title": "Feature details", "url": "table.html"}
             ],
             "vega_json": json.dumps(
-                {"sample0": {
+                {"partition_0": {
                     "subcontext": {"fake1": {"plot": "spec"}},
-                    "sample_counter": {"from": 1, "to": 2},
-                    "sample_ids": ["sample1", "sample2"]}}
+                    "counters": {"from": 1, "to": 2},
+                    "ids": ["sample1", "sample2"]}}
             ),
             "vega_summary_json": json.dumps({"fake2": {"plot": "spec"}}),
             "vega_summary_selectable_json": json.dumps(

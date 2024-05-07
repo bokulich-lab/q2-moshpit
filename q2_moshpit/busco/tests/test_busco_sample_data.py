@@ -8,6 +8,7 @@
 import json
 import os
 import shutil
+import qiime2
 import pandas as pd
 from q2_moshpit.busco.busco import (
     _run_busco, _busco_helper, _evaluate_busco,
@@ -180,14 +181,18 @@ class TestBUSCOSampleData(TestPluginBase):
     def test_evaluate_busco_action(self):
         mock_action = MagicMock(side_effect=[
             lambda x, **kwargs: (0, ),
-            lambda x, y: ({"mag1": {}, "mag2": {}}, ),
             lambda x: ("collated_result", ),
-            lambda x: ("visualization", )
+            lambda x: ("visualization", ),
+            lambda x, y: ({"mag1": {}, "mag2": {}}, )
         ])
         mock_ctx = MagicMock(get_action=mock_action)
+        mags = qiime2.Artifact.import_data(
+            'SampleData[MAGs]',
+            self.get_data_path('mags')
+        )
         obs = evaluate_busco(
             ctx=mock_ctx,
-            bins=self.mags,
+            bins=mags,
             num_partitions=2
         )
         exp = ("collated_result", "visualization")

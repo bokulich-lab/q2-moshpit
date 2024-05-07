@@ -50,7 +50,7 @@ def _parse_busco_params(arg_key, arg_val) -> List[str]:
         return [f"--{arg_key}", str(arg_val)]
 
 
-def _partition_dataframe(df: pd.DataFrame, max_rows: int) -> list:
+def _partition_dataframe_sample_data(df: pd.DataFrame, max_rows: int) -> list:
     """
     Partitions a DataFrame into smaller DataFrames based on
     a maximum row limit.
@@ -91,6 +91,25 @@ def _partition_dataframe(df: pd.DataFrame, max_rows: int) -> list:
         partitions.append(pd.concat(temp))
 
     return partitions
+
+
+def _partition_dataframe_feature_data(df: pd.DataFrame, max_rows: int) -> list:
+    """
+    Partitions a DataFrame into smaller DataFrames based on
+    a maximum row limit. Each partition will have a total
+    row count less than or equal to the `max_rows` parameter.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to partition. It should have a
+            'sample_id' column.
+        max_rows (int): The maximum number of rows that each partitioned
+            DataFrame should have.
+
+    Returns:
+        list: A list of partitioned DataFrames. Each DataFrame in the
+            list is a partition of the original DataFrame.
+    """
+    return [df[i:i+max_rows] for i in range(0, len(df), max_rows)]
 
 
 def _collect_summaries(run_summaries_fp_map: dict) -> pd.DataFrame:

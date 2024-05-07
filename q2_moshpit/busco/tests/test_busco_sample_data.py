@@ -14,15 +14,9 @@ from q2_moshpit.busco.busco import (
     _run_busco, _busco_helper, _evaluate_busco,
     _visualize_busco, evaluate_busco
 )
-from unittest.mock import patch, ANY, call, Mock, MagicMock
+from unittest.mock import patch, ANY, call, MagicMock
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
-
-
-class MockContext(Mock):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.get_action = Mock()
 
 
 class TestBUSCOSampleData(TestPluginBase):

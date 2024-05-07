@@ -13,15 +13,9 @@ import pandas as pd
 from q2_moshpit.busco.busco import (
     _run_busco, _visualize_busco, evaluate_busco
 )
-from unittest.mock import patch, ANY, Mock, MagicMock
+from unittest.mock import patch, ANY, MagicMock
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data_mag import MAGSequencesDirFmt
-
-
-class MockContext(Mock):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.get_action = Mock()
 
 
 class TestBUSCOFeatureData(TestPluginBase):

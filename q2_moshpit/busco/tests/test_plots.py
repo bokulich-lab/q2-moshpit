@@ -19,13 +19,20 @@ class TestBUSCOPlots(TestPluginBase):
 
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.df = pd.read_csv(
-            self.get_data_path('summaries/all_renamed_with_lengths.csv')
+        self.df_sample_data = pd.read_csv(
+            self.get_data_path(
+                'summaries/all_renamed_with_lengths.csv'
+            )
+        )
+        self.df_feature_data = pd.read_csv(
+            self.get_data_path(
+                'summaries/all_renamed_with_lengths_feature_data.csv'
+            )
         )
 
-    def test_draw_detailed_plots(self):
+    def test_draw_detailed_plots_sample_data(self):
         obs = _draw_detailed_plots(
-            df=self.df,
+            df=self.df_sample_data,
             width=100,
             height=250,
             label_font_size=10,
@@ -53,8 +60,46 @@ class TestBUSCOPlots(TestPluginBase):
             self.assertEqual(config[key]['labelFontSize'], 10)
             self.assertEqual(config[key]['titleFontSize'], 15)
 
+        facet_row = obs['hconcat'][0]['facet']['row']
+        self.assertEqual(facet_row['title'], "Sample ID and MAG ID")
+        self.assertEqual(facet_row['header']['labelFontSize'], 15)
+
+    def test_draw_detailed_plots_feature_data(self):
+        obs = _draw_detailed_plots(
+            df=self.df_feature_data,
+            width=100,
+            height=250,
+            label_font_size=10,
+            title_font_size=15,
+            spacing=5
+        )
+
+        self.assertIsInstance(obs, dict)
+        self.assertIn('config', obs)
+        self.assertIn('hconcat', obs)
+        self.assertIn('data', obs['hconcat'][0])
+        for i in (0, 1):
+            self.assertEqual(
+                obs['hconcat'][i]['spacing'], 5
+            )
+            self.assertEqual(
+                obs['hconcat'][i]['spec']['height']['step'], 250
+            )
+            self.assertEqual(
+                obs['hconcat'][i]['spec']['width'], 100
+            )
+
+        config = obs['config']
+        for key in ['axis', 'header', 'legend']:
+            self.assertEqual(config[key]['labelFontSize'], 10)
+            self.assertEqual(config[key]['titleFontSize'], 15)
+
+        facet_row = obs['hconcat'][0]['facet']['row']
+        self.assertEqual(facet_row['title'], "MAG ID")
+        self.assertEqual(facet_row['header']['labelFontSize'], 0)
+
     def test_draw_marker_summary_histograms(self):
-        obs = _draw_marker_summary_histograms(data=self.df)
+        obs = _draw_marker_summary_histograms(data=self.df_sample_data)
 
         self.assertIsInstance(obs, dict)
         self.assertIn('config', obs)
@@ -82,7 +127,7 @@ class TestBUSCOPlots(TestPluginBase):
             self.assertEqual(config[key]['titleFontSize'], 15)
 
     def test_draw_selectable_summary_histograms(self):
-        obs = _draw_selectable_summary_histograms(data=self.df)
+        obs = _draw_selectable_summary_histograms(data=self.df_sample_data)
 
         self.assertIsInstance(obs, dict)
         self.assertIn('config', obs)

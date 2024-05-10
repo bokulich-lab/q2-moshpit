@@ -166,6 +166,10 @@ T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({
         FeatureData[Kraken2Reports % Properties('mags')],
         FeatureData[Kraken2Outputs % Properties('mags')]
     ),
+    SampleData[MAGs]: (
+        SampleData[Kraken2Reports % Properties('mags')],
+        SampleData[Kraken2Outputs % Properties('mags')]
+    )
 })
 
 plugin.pipelines.register_function(
@@ -225,44 +229,45 @@ plugin.methods.register_function(
     citations=[citations["wood2019"]]
 )
 
-T_kraken_collate_reports_in, T_kraken_collate_reports_out = TypeMap({
-    SampleData[Kraken2Reports % Properties('reads', 'contigs')]: (
-        SampleData[Kraken2Reports % Properties('reads', 'contigs')],
-    ),
-    SampleData[Kraken2Reports % Properties('reads')]: (
-        SampleData[Kraken2Reports % Properties('reads')],
-    ),
-    SampleData[Kraken2Reports % Properties('contigs')]: (
-        SampleData[Kraken2Reports % Properties('contigs')],
-    )
+P_kraken_in, P_kraken_out = TypeMap({
+    Properties('reads', 'contigs', 'mags'):
+        Properties('reads', 'contigs', 'mags'),
+    Properties('reads', 'contigs'): Properties('reads', 'contigs'),
+    Properties('reads', 'mags'): Properties('reads', 'mags'),
+    Properties('contigs', 'mags'): Properties('contigs', 'mags'),
+    Properties('reads'): Properties('reads'),
+    Properties('contigs'): Properties('contigs'),
+    Properties('mags'): Properties('mags'),
 })
 
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.helpers.collate_kraken2_reports,
-    inputs={"kraken2_reports": List[T_kraken_collate_reports_in]},
+    function=q2_moshpit.kraken_helpers.collate_kraken2_reports,
+    inputs={
+        "kraken2_reports": List[
+            SampleData[Kraken2Reports % P_kraken_in]
+        ]
+    },
     parameters={},
-    outputs={"collated_kraken2_reports": T_kraken_collate_reports_out},
+    outputs={
+        "collated_kraken2_reports": SampleData[Kraken2Reports % P_kraken_out]
+    },
     name="Collate kraken2 reports",
     description="Collates kraken2 reports"
 )
 
-T_kraken_collate_outputs_in, T_kraken_collate_outputs_out = TypeMap({
-    SampleData[Kraken2Outputs % Properties('reads', 'contigs')]: (
-        SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
-    ),
-    SampleData[Kraken2Outputs % Properties('reads')]: (
-        SampleData[Kraken2Outputs % Properties('reads')],
-    ),
-    SampleData[Kraken2Outputs % Properties('contigs')]: (
-        SampleData[Kraken2Outputs % Properties('contigs')],
-    )
-})
-
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.helpers.collate_kraken2_outputs,
-    inputs={"kraken2_outputs": List[T_kraken_collate_outputs_in]},
+    function=q2_moshpit.kraken_helpers.collate_kraken2_outputs,
+    inputs={
+        "kraken2_outputs": List[
+            SampleData[Kraken2Outputs % P_kraken_in]
+        ]
+    },
     parameters={},
-    outputs={"collated_kraken2_outputs": T_kraken_collate_outputs_out},
+    outputs={
+        "collated_kraken2_outputs": List[
+            SampleData[Kraken2Outputs % P_kraken_out]
+        ]
+    },
     name="Collate kraken2 outputs",
     description="Collates kraken2 outputs"
 )
@@ -562,13 +567,9 @@ plugin.methods.register_function(
     },
     name="Fetch the complete Diamond database necessary to run the "
          "eggnog-diamond-search action.",
-    description="Downloads Diamond reference database.  "
-                "This action downloads 1 file (ref_db.dmnd). "
-                "At least 18 Gb of storage space is "
-                "required to run this action. "
-                "Link to database: "
-                "http://eggnogdb.embl.de/download/emapperdb-5.0.2/"
-                "eggnog_proteins.dmnd.gz",
+    description="Downloads Diamond reference database. "
+                "This action downloads 1 file (ref_db.dmnd). At least 18 GB "
+                "of storage space is required to run this action.",
     citations=[
         citations["buchfink_sensitive_2021"],
         citations["huerta_cepas_eggnog_2019"]
@@ -648,7 +649,8 @@ plugin.methods.register_function(
 plugin.pipelines.register_function(
     function=q2_moshpit.eggnog.eggnog_diamond_search,
     inputs={
-        'sequences': SampleData[Contigs] | FeatureData[MAG],
+        'sequences':
+            SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
         'diamond_db': ReferenceDB[Diamond],
     },
     parameters={
@@ -688,7 +690,8 @@ plugin.pipelines.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.eggnog._eggnog_diamond_search,
     inputs={
-        'sequences': SampleData[Contigs] | FeatureData[MAG],
+        'sequences':
+            SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
         'diamond_db': ReferenceDB[Diamond],
     },
     parameters={

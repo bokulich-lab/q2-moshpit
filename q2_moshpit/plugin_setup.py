@@ -38,7 +38,8 @@ from q2_types.kraken2 import (
 from q2_types.kraken2._type import BrackenDB
 from q2_types.per_sample_sequences._type import AlignmentMap
 from q2_types.reference_db import (
-    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
+    BuscoDB
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -905,15 +906,130 @@ plugin.methods.register_function(
                 "and collates them into a single artifact.",
 )
 
+# First bool flag only allowed to be True when the DB contains all lineages
+# Second bool flag only allowed to be True when the DB has property "eukaryota"
+# Third bool flag only allowed to be True when the DB has property "prokaryota"
+# Triple false option = setting where user specifies the lineage dataset
+(
+    i_busco_db,
+    p_auto_lineage, p_auto_lineage_euk, p_auto_lineage_prok,
+    _
+) = TypeMap({
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,  # Placeholder type because visualizations have no output
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('prokaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('prokaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('eukaryota')],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('eukaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('virus')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+})
+
 busco_params = {
     "mode": Str % Choices(["genome"]),
     "lineage_dataset": Str,
     "augustus": Bool,
     "augustus_parameters": Str,
     "augustus_species": Str,
-    "auto_lineage": Bool,
-    "auto_lineage_euk": Bool,
-    "auto_lineage_prok": Bool,
+    "auto_lineage": p_auto_lineage,
+    "auto_lineage_euk": p_auto_lineage_euk,
+    "auto_lineage_prok": p_auto_lineage_prok,
     "cpu": Int % Range(1, None),
     "config": Str,
     "contig_break": Int % Range(0, None),
@@ -993,6 +1109,7 @@ plugin.methods.register_function(
     function=q2_moshpit.busco._evaluate_busco,
     inputs={
         "bins": SampleData[MAGs],
+        "busco_db": i_busco_db
     },
     parameters=busco_params,
     outputs={
@@ -1000,6 +1117,8 @@ plugin.methods.register_function(
     },
     input_descriptions={
         "bins": "MAGs to be analyzed.",
+        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
+                    "mode."
     },
     parameter_descriptions=busco_param_descriptions,
     output_descriptions={
@@ -1033,6 +1152,7 @@ plugin.pipelines.register_function(
     function=q2_moshpit.busco.evaluate_busco,
     inputs={
         "bins": SampleData[MAGs],
+        "busco_db": i_busco_db
     },
     parameters={**busco_params, **partition_params},
     outputs={
@@ -1041,6 +1161,8 @@ plugin.pipelines.register_function(
     },
     input_descriptions={
         "bins": "MAGs to be analyzed.",
+        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
+                    "mode."
     },
     parameter_descriptions={
         **busco_param_descriptions, **partition_param_descriptions

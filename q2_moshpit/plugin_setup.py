@@ -38,7 +38,8 @@ from q2_types.kraken2 import (
 from q2_types.kraken2._type import BrackenDB
 from q2_types.per_sample_sequences._type import AlignmentMap
 from q2_types.reference_db import (
-    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
+    BuscoDB
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -1200,3 +1201,65 @@ plugin.register_semantic_type_to_format(
     artifact_format=BUSCOResultsDirectoryFormat)
 plugin.register_formats(BUSCOResultsFormat, BUSCOResultsDirectoryFormat)
 importlib.import_module('q2_moshpit.busco.types._transformer')
+
+p_virus, p_prok, p_euk, o_busco_db = TypeMap({
+    (
+        Bool % Choices(True),
+        Bool % Choices(True),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])],
+    (
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+    (
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+    (
+        Bool % Choices(True),
+        Bool % Choices(True),
+        Bool % Choices(False)
+    ): ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+    (
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(False)
+    ): ReferenceDB[BuscoDB % Properties('virus')],
+    (
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False)
+    ): ReferenceDB[BuscoDB % Properties('prokaryota')],
+    (
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties('eukaryota')],
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.busco.fetch_busco_db,
+    inputs={},
+    outputs=[('busco_db', o_busco_db)],
+    output_descriptions={
+        'busco_db': "BUSCO database for the specified lineages"
+    },
+    parameters={
+        "virus": p_virus,
+        "prok": p_prok,
+        "euk": p_euk,
+    },
+    parameter_descriptions={
+        "virus": "Download the virus dataset",
+        "prok": "Download the prokaryote dataset",
+        "euk": "Download the eukaryote dataset",
+    },
+    name="Download BUSCO database.",
+    description="Downloads BUSCO database for the specified lineage. "
+                "Output can be used to run BUSCO with the 'evaluate-busco' "
+                "action.",
+    citations=[citations["manni_busco_2021"]],
+)

@@ -6,20 +6,24 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import glob
-import subprocess
 import os
+import subprocess
 import tempfile
-import qiime2.util
-import pandas as pd
 from typing import Union
-from q2_types.per_sample_sequences import ContigSequencesDirFmt, Contigs
-from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
-from q2_types.reference_db import (
-    EggnogRefDirFmt, DiamondDatabaseDirFmt
-)
-from q2_types.feature_data import DNAFASTAFormat, FeatureData, BLAST6
+
+import pandas as pd
+import qiime2.util
+
+from q2_types.feature_data import FeatureData, BLAST6
 from q2_types.feature_data_mag import (
     OrthologAnnotationDirFmt, MAGSequencesDirFmt, MAG
+)
+from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.per_sample_sequences import (
+    ContigSequencesDirFmt, MultiMAGSequencesDirFmt, Contigs, MAGs
+)
+from q2_types.reference_db import (
+    EggnogRefDirFmt, DiamondDatabaseDirFmt
 )
 from q2_types.sample_data import SampleData
 
@@ -40,6 +44,10 @@ def eggnog_diamond_search(
             "moshpit", "partition_feature_data_mags")
     elif sequences.type <= SampleData[Contigs]:
         partition_method = ctx.get_action("assembly", "partition_contigs")
+    elif sequences.type <= SampleData[MAGs]:
+        partition_method = ctx.get_action(
+            "moshpit", "partition_sample_data_mags"
+        )
     else:
         raise NotImplementedError()
 
@@ -61,7 +69,11 @@ def eggnog_diamond_search(
 
 
 def _eggnog_diamond_search(
-        sequences: Union[ContigSequencesDirFmt, MAGSequencesDirFmt],
+        sequences: Union[
+            ContigSequencesDirFmt,
+            MultiMAGSequencesDirFmt,
+            MAGSequencesDirFmt
+        ],
         diamond_db: DiamondDatabaseDirFmt,
         num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):
@@ -71,22 +83,27 @@ def _eggnog_diamond_search(
 
     # run analysis
     if isinstance(sequences, ContigSequencesDirFmt):
-        for relpath, obj_path in sequences.sequences.iter_views(
-                DNAFASTAFormat):
-            sample_id = str(relpath).rsplit(r'_', 1)[0]
+        for sample_id, contigs_fp in sequences.sample_dict().items():
             _diamond_search_runner(
-                input_path=obj_path, diamond_db=diamond_db_fp,
+                input_path=contigs_fp, diamond_db=diamond_db_fp,
                 sample_label=sample_id, output_loc=temp.name,
                 num_cpus=num_cpus, db_in_memory=db_in_memory
             )
     elif isinstance(sequences, MAGSequencesDirFmt):
-        for mag_fp in glob.glob(f'{sequences.path}/*.fa*'):
-            sample_id = os.path.splitext(os.path.basename(mag_fp))[0]
+        for mag_id, mag_fp in sequences.feature_dict().items():
             _diamond_search_runner(
                 input_path=mag_fp, diamond_db=diamond_db_fp,
-                sample_label=sample_id, output_loc=temp.name,
+                sample_label=mag_id, output_loc=temp.name,
                 num_cpus=num_cpus, db_in_memory=db_in_memory
             )
+    elif isinstance(sequences, MultiMAGSequencesDirFmt):
+        for sample_id, mags in sequences.sample_dict().items():
+            for mag_id, mag_fp in mags.items():
+                _diamond_search_runner(
+                    input_path=mag_fp, diamond_db=diamond_db_fp,
+                    sample_label=mag_id, output_loc=temp.name,
+                    num_cpus=num_cpus, db_in_memory=db_in_memory
+                )
 
     result = SeedOrthologDirFmt()
     ortholog_fps = [

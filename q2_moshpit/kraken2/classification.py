@@ -16,7 +16,8 @@ from q2_types.per_sample_sequences import (
     PairedEndSequencesWithQuality,
     SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt,
-    ContigSequencesDirFmt, Contigs
+    ContigSequencesDirFmt, Contigs,
+    MultiFASTADirectoryFormat, MAGs
 )
 from q2_types.sample_data import SampleData
 from q2_types.feature_data import FeatureData
@@ -78,6 +79,10 @@ def classify_kraken2(
         partition_method = ctx.get_action("demux", "partition_samples_paired")
     elif seqs.type <= SampleData[Contigs]:
         partition_method = ctx.get_action("assembly", "partition_contigs")
+    elif seqs.type <= SampleData[MAGs]:
+        partition_method = ctx.get_action(
+            "moshpit", "partition_sample_data_mags"
+        )
     # FeatureData[MAG] is not parallelized
     elif seqs.type <= FeatureData[MAG]:
         kraken2_reports, kraken2_outputs = \
@@ -108,6 +113,7 @@ def _classify_kraken2(
             SingleLanePerSampleSingleEndFastqDirFmt,
             ContigSequencesDirFmt,
             MAGSequencesDirFmt,
+            MultiFASTADirectoryFormat
         ],
         kraken2_db: Kraken2DBDirectoryFormat,
         threads: int = 1,
@@ -159,6 +165,13 @@ def classify_kraken2_helper(
     elif isinstance(seqs, MAGSequencesDirFmt):
         iterate_over = seqs.feature_dict().items()
 
+    elif isinstance(seqs, MultiFASTADirectoryFormat):
+        iterate_over = (
+            (sample_id, mag_id, mag_fp)
+            for sample_id, mags in seqs.sample_dict().items()
+            for mag_id, mag_fp in mags.items()
+        )
+
     kraken2_reports_dir = Kraken2ReportDirectoryFormat()
     kraken2_outputs_dir = Kraken2OutputDirectoryFormat()
 
@@ -166,6 +179,12 @@ def classify_kraken2_helper(
         for args in iterate_over:
             if isinstance(seqs, read_types):
                 _sample, fps = path_function(*args)
+            elif isinstance(seqs, MultiFASTADirectoryFormat):
+                sample_id, mag_id, fps = args
+                for p in (kraken2_reports_dir.path, kraken2_outputs_dir.path):
+                    os.makedirs(os.path.join(p, sample_id), exist_ok=True)
+                _sample = f"{sample_id}/{mag_id}"
+                fps = [fps]
             else:
                 _sample, fps = args
                 fps = [fps]

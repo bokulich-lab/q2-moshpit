@@ -5,10 +5,13 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from ._format import BUSCOResultsFormat, BUSCOResultsDirectoryFormat
-from ._type import BUSCOResults
+from ._type import BUSCOResults, BuscoDB
+from ._format import (
+    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt
+)
 
 
 __all__ = [
-    'BUSCOResults', 'BUSCOResultsFormat', 'BUSCOResultsDirectoryFormat'
+    'BUSCOResults', 'BUSCOResultsFormat', 'BUSCOResultsDirectoryFormat',
+    'BuscoDB', 'BuscoDatabaseDirFmt'
 ]

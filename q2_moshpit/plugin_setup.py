@@ -6,9 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import importlib
-
 from q2_moshpit.busco.types import (
-    BUSCOResults, BUSCOResultsDirectoryFormat, BUSCOResultsFormat
+    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
+    BUSCOResults, BuscoDB
 )
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
@@ -38,8 +38,7 @@ from q2_types.kraken2 import (
 from q2_types.kraken2._type import BrackenDB
 from q2_types.per_sample_sequences._type import AlignmentMap
 from q2_types.reference_db import (
-    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
-    BuscoDB
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -1195,13 +1194,6 @@ plugin.methods.register_function(
     citations=[citations["menzel2016"]],
 )
 
-plugin.register_semantic_types(BUSCOResults)
-plugin.register_semantic_type_to_format(
-    BUSCOResults,
-    artifact_format=BUSCOResultsDirectoryFormat)
-plugin.register_formats(BUSCOResultsFormat, BUSCOResultsDirectoryFormat)
-importlib.import_module('q2_moshpit.busco.types._transformer')
-
 p_virus, p_prok, p_euk, o_busco_db = TypeMap({
     (
         Bool % Choices(True),
@@ -1262,4 +1254,15 @@ plugin.methods.register_function(
                 "Output can be used to run BUSCO with the 'evaluate-busco' "
                 "action.",
     citations=[citations["manni_busco_2021"]],
+)
+
+plugin.register_semantic_types(BUSCOResults)
+plugin.register_semantic_type_to_format(
+    BUSCOResults,
+    artifact_format=BUSCOResultsDirectoryFormat)
+plugin.register_formats(BUSCOResultsFormat, BUSCOResultsDirectoryFormat)
+importlib.import_module('q2_moshpit.busco.types._transformer')
+plugin.register_semantic_types(BuscoDB)
+plugin.register_semantic_type_to_format(
+    ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
 )

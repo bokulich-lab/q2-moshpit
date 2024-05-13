@@ -6,11 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import csv
-from q2_moshpit.busco.types import BuscoDB, BUSCOResults
 from qiime2.core.exceptions import ValidationError
 from qiime2.plugin import model
 from q2_types.plugin_setup import plugin
-from q2_types.reference_db import ReferenceDB
 from q2_types.feature_data import AlignedProteinFASTAFormat
 
 
@@ -51,11 +49,6 @@ BUSCOResultsDirectoryFormat = model.SingleFileDirectoryFormat(
     'BUSCOResultsDirectoryFormat', 'busco_results.tsv',
     BUSCOResultsFormat
 )
-
-plugin.register_semantic_type_to_format(
-    BUSCOResults,
-    artifact_format=BUSCOResultsDirectoryFormat)
-plugin.register_formats(BUSCOResultsFormat, BUSCOResultsDirectoryFormat)
 
 
 class BuscoGenericTextFileFmt(model.TextFileFormat):
@@ -154,6 +147,3 @@ class BuscoDatabaseDirFmt(model.DirectoryFormat):
 
 
 plugin.register_formats(BuscoDatabaseDirFmt)
-plugin.register_semantic_type_to_format(
-    ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
-)

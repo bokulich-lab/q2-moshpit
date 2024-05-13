@@ -5,11 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from q2_types.plugin_setup import plugin
 from qiime2.core.type import SemanticType
 from q2_types.reference_db import ReferenceDB
 
 BUSCOResults = SemanticType('BUSCOResults')
 BuscoDB = SemanticType('BuscoDB', variant_of=ReferenceDB.field['type'])
-
-plugin.register_semantic_types(BuscoDB, BUSCOResults)

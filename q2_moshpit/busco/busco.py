@@ -28,7 +28,7 @@ from q2_moshpit.busco.utils import (
 )
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
-from q2_types.reference_db import BuscoDB
+from q2_moshpit.busco.types import BuscoDB
 
 
 def _run_busco(

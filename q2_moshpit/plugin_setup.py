@@ -39,7 +39,6 @@ from q2_types.kraken2._type import BrackenDB
 from q2_types.per_sample_sequences._type import AlignmentMap
 from q2_types.reference_db import (
     ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
-    BuscoDB
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')

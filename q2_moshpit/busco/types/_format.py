@@ -8,7 +8,6 @@
 import csv
 from qiime2.core.exceptions import ValidationError
 from qiime2.plugin import model
-from q2_types.plugin_setup import plugin
 from q2_types.feature_data import AlignedProteinFASTAFormat
 
 
@@ -144,6 +143,3 @@ class BuscoDatabaseDirFmt(model.DirectoryFormat):
         for var_name, var_value in vars(self.__class__).items():
             if isinstance(var_value, model.FileCollection):
                 var_value.set_path_maker(self._path_maker)
-
-
-plugin.register_formats(BuscoDatabaseDirFmt)

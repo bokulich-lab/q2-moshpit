@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 from q2_moshpit._utils import colorify, run_command
-from q2_types.reference_db._format import BuscoDatabaseDirFmt
+from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 
 
 def fetch_busco_db(virus: bool, prok: bool, euk: bool) -> BuscoDatabaseDirFmt:

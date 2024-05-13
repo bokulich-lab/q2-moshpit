@@ -1260,7 +1260,9 @@ plugin.register_semantic_types(BUSCOResults)
 plugin.register_semantic_type_to_format(
     BUSCOResults,
     artifact_format=BUSCOResultsDirectoryFormat)
-plugin.register_formats(BUSCOResultsFormat, BUSCOResultsDirectoryFormat)
+plugin.register_formats(
+    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt
+)
 importlib.import_module('q2_moshpit.busco.types._transformer')
 plugin.register_semantic_types(BuscoDB)
 plugin.register_semantic_type_to_format(

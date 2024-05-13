@@ -23,10 +23,12 @@ from q2_moshpit.busco.plots_summary import _draw_marker_summary_histograms, \
 from q2_moshpit.busco.utils import (
     _parse_busco_params, _collect_summaries, _rename_columns,
     _parse_df_columns, _partition_dataframe, _calculate_summary_stats,
-    _get_feature_table, _cleanup_bootstrap, _get_mag_lengths
+    _get_feature_table, _cleanup_bootstrap, _get_mag_lengths,
+    _validate_lineage_dataset_input
 )
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.reference_db import BuscoDB
 
 
 def _run_busco(
@@ -104,6 +106,7 @@ def _busco_helper(bins, common_args):
 
 def _evaluate_busco(
     bins: MultiMAGSequencesDirFmt,
+    busco_db: BuscoDB = None,
     mode: str = "genome",
     lineage_dataset: str = None,
     augustus: bool = False,
@@ -125,8 +128,19 @@ def _evaluate_busco(
     scaffold_composition: bool = False,
 ) -> pd.DataFrame:
     kwargs = {
-        k: v for k, v in locals().items() if k not in ["bins",]
+        k: v for k, v in locals().items() if k not in ["bins", "busco_db"]
     }
+
+    # Add busco_db to kwargs
+    if busco_db is not None:
+        kwargs["offline"] = True
+        kwargs["download_path"] = f"{str(busco_db)}/busco_downloads"
+
+    if lineage_dataset is not None:
+        _validate_lineage_dataset_input(
+            lineage_dataset, auto_lineage, auto_lineage_euk, auto_lineage_prok,
+            busco_db, kwargs  # this may be modifies inside this function
+        )
 
     # Filter out all kwargs that are None, False or 0.0
     common_args = _process_common_input_params(
@@ -216,6 +230,7 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
 def evaluate_busco(
     ctx,
     bins,
+    busco_db=None,
     mode="genome",
     lineage_dataset=None,
     augustus=False,

@@ -1103,6 +1103,21 @@ plugin.methods.register_function(
     description="Collates BUSCO results."
 )
 
+plugin.visualizers.register_function(
+    function=q2_moshpit.busco._visualize_busco,
+    inputs={
+        "busco_results": BUSCOResults,
+    },
+    parameters={},
+    input_descriptions={
+        "busco_results": "BUSCO results table.",
+    },
+    parameter_descriptions={},
+    name="Visualize BUSCO results.",
+    description="This method generates a visualization "
+                "from the BUSCO results table.",
+    citations=[citations["manni_busco_2021"]],
+)
 
 plugin.methods.register_function(
     function=q2_moshpit.busco._evaluate_busco,
@@ -1117,7 +1132,9 @@ plugin.methods.register_function(
     input_descriptions={
         "bins": "MAGs to be analyzed.",
         "busco_db": "BUSCO database. If provided BUSCO will run in offline "
-                    "mode."
+                    "mode. If not provided a BUSCO database "
+                    "will be downloaded to a temporary location and then "
+                    "deleted."
     },
     parameter_descriptions=busco_param_descriptions,
     output_descriptions={
@@ -1128,22 +1145,6 @@ plugin.methods.register_function(
                 "(Benchmarking Universal Single-Copy Ortholog assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
                 "a table summarizing the results.",
-    citations=[citations["manni_busco_2021"]],
-)
-
-plugin.visualizers.register_function(
-    function=q2_moshpit.busco._visualize_busco,
-    inputs={
-        "busco_results": BUSCOResults,
-    },
-    parameters={},
-    input_descriptions={
-        "busco_results": "BUSCO results table.",
-    },
-    parameter_descriptions={},
-    name="Visualize BUSCO results.",
-    description="This method generates a visualization "
-                "from the BUSCO results table.",
     citations=[citations["manni_busco_2021"]],
 )
 
@@ -1161,7 +1162,9 @@ plugin.pipelines.register_function(
     input_descriptions={
         "bins": "MAGs to be analyzed.",
         "busco_db": "BUSCO database. If provided BUSCO will run in offline "
-                    "mode."
+                    "mode. If not provided a BUSCO database "
+                    "will be downloaded to a temporary location and then "
+                    "deleted."
     },
     parameter_descriptions={
         **busco_param_descriptions, **partition_param_descriptions
@@ -1174,7 +1177,7 @@ plugin.pipelines.register_function(
     description="This method uses BUSCO "
                 "(Benchmarking Universal Single-Copy Ortholog assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
-                "visualizations summarizing the results.",
+                "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
 )
 

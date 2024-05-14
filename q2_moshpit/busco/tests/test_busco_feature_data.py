@@ -97,8 +97,8 @@ class TestBUSCOFeatureData(TestPluginBase):
         exp_context = {
             "tabs": [
                 {"title": "QC overview", "url": "index.html"},
-                {"title": "BUSCO Plots", "url": "detailed_view.html"},
-                {"title": "BUSCO Table", "url": "table.html"}
+                {"title": "BUSCO plots", "url": "detailed_view.html"},
+                {"title": "BUSCO table", "url": "table.html"}
             ],
             "vega_json": json.dumps(
                 {

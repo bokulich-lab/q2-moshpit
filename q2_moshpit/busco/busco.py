@@ -156,13 +156,15 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
     )
     # Outputs different df for sample and feature data
     busco_results = _parse_df_columns(busco_results)
-    n = 100  # Max number of rows
+    max_rows = 100
 
+    # Partition data frames
     if len(busco_results["sample_id"].unique()) >= 2:
-        dfs = _partition_dataframe_sample_data(busco_results, max_rows=n)
-        column_name = "sample_id"
+        dfs = _partition_dataframe_sample_data(busco_results, max_rows)
+        counter_col = "sample_id"
         assets_subdir = "sample_data"
         tab_title = ["Sample details", "Feature details"]
+        is_sample_data = True
 
         # Draw selectable histograms (only for sample data mags)
         tabbed_context = {
@@ -170,10 +172,11 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
             json.dumps(_draw_selectable_summary_histograms(busco_results))
         }
     else:
-        dfs = _partition_dataframe_feature_data(busco_results, n)
-        column_name = "mag_id"
-        tab_title = ["BUSCO Plots", "BUSCO Table"]
+        dfs = _partition_dataframe_feature_data(busco_results, max_rows)
+        counter_col = "mag_id"
+        tab_title = ["BUSCO plots", "BUSCO table"]
         assets_subdir = "feature_data"
+        is_sample_data = True
         tabbed_context = {}  # Init as empty bc we update it below
 
     # Copy BUSCO results from tmp dir to output_dir
@@ -203,24 +206,25 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
     context = {}
     counter_left = 1
     for i, df in enumerate(dfs):
-        count = df[column_name].nunique()
+        count = df[counter_col].nunique()
         counter_right = counter_left + count - 1
         counters = {"from": counter_left, "to": counter_right}
         counter_left += count
         subcontext = _draw_detailed_plots(
             df,
+            is_sample_data,
             width=600,
             height=30,
             title_font_size=20,
             label_font_size=17,
-            spacing=20
+            spacing=20,
         )
         context.update({
             f"partition_{i}":
             {
                 "subcontext": subcontext,
                 "counters": counters,
-                "ids": df[column_name].unique().tolist(),
+                "ids": df[counter_col].unique().tolist(),
             }
         })
 
@@ -280,12 +284,12 @@ def evaluate_busco(
     _evaluate_busco = ctx.get_action("moshpit", "_evaluate_busco")
     collate_busco_results = ctx.get_action("moshpit", "collate_busco_results")
     _visualize_busco = ctx.get_action("moshpit", "_visualize_busco")
-    partition_mags = ctx.get_action(
-        "moshpit",
-        "partition_sample_data_mags"
-        if issubclass(bins.format, MultiMAGSequencesDirFmt)
-        else "partition_feature_data_mags"
-    )
+
+    if issubclass(bins.format, MultiMAGSequencesDirFmt):
+        partition_action = "partition_sample_data_mags"
+    else:
+        partition_action = "partition_feature_data_mags"
+    partition_mags = ctx.get_action("moshpit", partition_action)
 
     (partitioned_mags, ) = partition_mags(bins, num_partitions)
     results = []

@@ -13,11 +13,12 @@ alt.data_transformers.disable_max_rows()
 
 def _draw_detailed_plots(
     df: pd.DataFrame,
+    is_sample_data: bool,
     width: int = None,
     height: int = None,
     label_font_size: int = None,
     title_font_size: int = None,
-    spacing: int = None
+    spacing: int = None,
 ) -> dict:
     """
     Draws a horizontal normalized bar plot for every sample for which BUSCO was
@@ -67,7 +68,7 @@ def _draw_detailed_plots(
     )
 
     # Define title
-    if len(busco_plot_data["sample_id"].unique()) >= 2:
+    if is_sample_data:
         title = "Sample ID and MAG ID"
         subtitle_size = 15
     else:

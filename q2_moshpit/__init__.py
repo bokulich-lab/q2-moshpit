@@ -19,6 +19,7 @@ from .kraken2 import (
     helpers as kraken_helpers
 )
 from .metabat2 import metabat2
+from ._utils import get_feature_lengths
 
 __version__ = get_versions()['version']
 del get_versions
@@ -26,5 +27,6 @@ del get_versions
 __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
     'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog',
-    'busco', 'prodigal', 'kraken_helpers', 'partition'
+    'busco', 'prodigal', 'kraken_helpers', 'partition',
+    'get_feature_lengths'
 ]

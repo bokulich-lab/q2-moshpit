@@ -1377,15 +1377,14 @@ plugin.methods.register_function(
     citations=[citations["manni_busco_2021"]],
 )
 
-plugin.register_semantic_types(BUSCOResults)
-plugin.register_semantic_type_to_format(
-    BUSCOResults,
-    artifact_format=BUSCOResultsDirectoryFormat)
+plugin.register_semantic_types(BUSCOResults, BuscoDB)
 plugin.register_formats(
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt
 )
-importlib.import_module('q2_moshpit.busco.types._transformer')
-plugin.register_semantic_types(BuscoDB)
+plugin.register_semantic_type_to_format(
+    BUSCOResults,
+    artifact_format=BUSCOResultsDirectoryFormat)
 plugin.register_semantic_type_to_format(
     ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
 )
+importlib.import_module('q2_moshpit.busco.types._transformer')

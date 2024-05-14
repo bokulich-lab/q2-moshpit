@@ -143,3 +143,6 @@ class BuscoDatabaseDirFmt(model.DirectoryFormat):
         for var_name, var_value in vars(self.__class__).items():
             if isinstance(var_value, model.FileCollection):
                 var_value.set_path_maker(self._path_maker)
+
+    def _validate_(self, level):
+        pass

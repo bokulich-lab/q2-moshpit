@@ -12,6 +12,7 @@ from . import partition
 from . import prodigal
 from ._version import get_versions
 from .dereplication import dereplicate_mags
+from .filter import filter_derep_mags, filter_mags
 from .kaiju import classification as kaiju_class, database as kaiju_db
 from .kraken2 import (
     classification as kraken_class,
@@ -26,5 +27,6 @@ del get_versions
 __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
     'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog',
-    'busco', 'prodigal', 'kraken_helpers', 'partition'
+    'busco', 'prodigal', 'kraken_helpers', 'partition',
+    'filter_derep_mags', 'filter_mags'
 ]

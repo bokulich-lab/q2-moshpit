@@ -28,7 +28,7 @@ from q2_moshpit.busco.utils import (
 )
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
-from q2_moshpit.busco.types import BuscoDB
+from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 
 
 def _run_busco(
@@ -106,7 +106,7 @@ def _busco_helper(bins, common_args):
 
 def _evaluate_busco(
     bins: MultiMAGSequencesDirFmt,
-    busco_db: BuscoDB = None,
+    busco_db: BuscoDatabaseDirFmt = None,
     mode: str = "genome",
     lineage_dataset: str = None,
     augustus: bool = False,

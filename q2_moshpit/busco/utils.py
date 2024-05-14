@@ -12,6 +12,7 @@ import pandas as pd
 from typing import List
 import skbio.io
 from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
+from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 
 arguments_with_hyphens = {
     "auto_lineage": "auto-lineage",
@@ -25,18 +26,18 @@ MARKER_COLS = ["single", "duplicated", "fragmented", "missing", "complete"]
 
 
 def _validate_lineage_dataset_input(
-        lineage_dataset,
-        auto_lineage,
-        auto_lineage_euk,
-        auto_lineage_prok,
-        busco_db,
+        lineage_dataset: str,
+        auto_lineage: bool,
+        auto_lineage_euk: bool,
+        auto_lineage_prok: bool,
+        busco_db: BuscoDatabaseDirFmt,
         kwargs
         ) -> None:
     # When lineage_dataset is specified all other lineage flags are ignored
     if any([auto_lineage, auto_lineage_euk, auto_lineage_prok]):
         warnings.warn(
-            f"`--p-lineage-dataset` was specified as {lineage_dataset}. "
-            "--p-auto-lineage flags will be ignored."
+            f"`--p-lineage-dataset` was specified as '{lineage_dataset}'. "
+            "`--p-auto-lineage` flags will be ignored."
         )
         kwargs["auto_lineage"] = False
         kwargs["auto_lineage_euk"] = False
@@ -51,8 +52,8 @@ def _validate_lineage_dataset_input(
                 os.path.join(str(busco_db), "busco_downloads/lineages/")
             )
             raise ValueError(
-                f"The specified --p-lineage-dataset {lineage_dataset} "
-                "is not present in input database (--i-busco-db). \n"
+                f"The specified lineage_dataset ({lineage_dataset}) "
+                "is not present in input database. \n"
                 "Printing lineage datasets present in input database: \n"
                 f"{present_lineages}"
             )

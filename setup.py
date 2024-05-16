@@ -87,7 +87,10 @@ setup(
         'q2_moshpit.partition.tests': [
             'data/*', 'data/*/*', 'data/*/*/*', 'data/*/*/*/*',
             'data/*/*/*/*/*',
-        ]
+        ],
+        'q2_moshpit.filtering.tests': [
+            'data/*', 'data/mags/*', 'data/mags/*/*',
+        ],
     },
     zip_safe=False,
 )

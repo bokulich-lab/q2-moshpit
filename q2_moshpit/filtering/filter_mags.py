@@ -36,15 +36,14 @@ def _filter_ids(
     Returns:
         set: The filtered set of IDs.
     """
-    if metadata:
-        selected_ids = metadata.get_ids(where=where)
-        if not selected_ids:
-            print("The filter query returned no IDs to filter out.")
+    selected_ids = metadata.get_ids(where=where)
+    if not selected_ids:
+        print("The filter query returned no IDs to filter out.")
+    else:
+        if exclude_ids:
+            ids -= set(selected_ids)
         else:
-            if exclude_ids:
-                ids -= set(selected_ids)
-            else:
-                ids &= set(selected_ids)
+            ids &= set(selected_ids)
     print(f"Found {len(ids)} IDs to keep.")
     return ids
 
@@ -74,7 +73,6 @@ def _filter_manifest(
     manifest["filename"] = \
         manifest.index.get_level_values('sample-id') + "/" + \
         manifest.index.get_level_values('mag-id') + ".fasta"
-
 
     return manifest[manifest.index.get_level_values(lvl).isin(ids_to_keep)]
 
@@ -147,11 +145,14 @@ def filter_mags(
     )
     try:
         for _id, row in filtered_mags.iterrows():
-            sample_dir = os.path.join(str(results), row["sample_id"])
+            if on == 'mag':
+                sample_dir = os.path.join(str(results), row["sample_id"])
+                mag_dest = os.path.join(sample_dir, f"{_id}.fasta")
+            else:
+                sample_dir = os.path.join(str(results), _id)
+                mag_dest = os.path.join(sample_dir, f"{row['mag_id']}.fasta")
             os.makedirs(sample_dir, exist_ok=True)
-            duplicate(
-                row["mag_fp"], os.path.join(sample_dir, f"{_id}.fasta")
-            )
+            duplicate(row['mag_fp'], mag_dest)
     except KeyError:
         raise ValueError(f"{_id!r} is not a MAG present in the input data.")
 

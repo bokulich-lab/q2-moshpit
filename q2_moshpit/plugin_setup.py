@@ -1216,7 +1216,7 @@ filter_contigs_param_descriptions = {
                    "excluded from the filtered data.",
 }
 plugin.methods.register_function(
-    function=q2_moshpit.filter.filter_derep_mags,
+    function=q2_moshpit.filtering.filter_derep_mags,
     inputs={"mags": FeatureData[MAG]},
     parameters=filter_mags_params,
     outputs={"filtered_mags": FeatureData[MAG]},
@@ -1227,7 +1227,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.filter.filter_mags,
+    function=q2_moshpit.filtering.filter_mags,
     inputs={"mags": SampleData[MAGs]},
     parameters={
         **filter_mags_params,

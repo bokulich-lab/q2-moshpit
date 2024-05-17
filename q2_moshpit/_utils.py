@@ -9,6 +9,11 @@ import subprocess
 import hashlib
 from typing import List
 
+import pandas as pd
+import skbio
+
+from q2_types.feature_data_mag import MAGSequencesDirFmt
+
 
 def run_command(cmd, env=None, verbose=True, pipe=False, **kwargs):
     if verbose:
@@ -84,3 +89,16 @@ def _calculate_md5_from_file(file_path: str) -> str:
         for chunk in iter(lambda: f.read(4096), b""):
             md5_hash.update(chunk)
     return md5_hash.hexdigest()
+
+
+def get_feature_lengths(features: MAGSequencesDirFmt) -> pd.DataFrame:
+    """Calculate lengths of features in a feature data object."""
+    ids, lengths = [], []
+    for _id, fp in features.feature_dict().items():
+        sequences = skbio.io.read(fp, format='fasta', verify=False)
+        ids.append(_id)
+        lengths.append(sum(len(seq) for seq in sequences))
+
+    df = pd.DataFrame({'id': ids, 'length': lengths})
+    df.set_index('id', inplace=True)
+    return df

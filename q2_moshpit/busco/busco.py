@@ -139,7 +139,7 @@ def _evaluate_busco(
     if lineage_dataset is not None:
         _validate_lineage_dataset_input(
             lineage_dataset, auto_lineage, auto_lineage_euk, auto_lineage_prok,
-            busco_db, kwargs  # this may be modifies inside this function
+            busco_db, kwargs  # kwargs may be modified inside this function
         )
 
     # Filter out all kwargs that are None, False or 0.0

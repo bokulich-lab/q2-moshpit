@@ -12,7 +12,7 @@ from q2_moshpit.busco.types import (
 )
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
-    FeatureData, Sequence, Taxonomy, ProteinSequence
+    FeatureData, Sequence, Taxonomy, ProteinSequence, SequenceCharacteristics
 )
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
@@ -1378,6 +1378,26 @@ plugin.methods.register_function(
                 "Output can be used to run BUSCO with the 'evaluate-busco' "
                 "action.",
     citations=[citations["manni_busco_2021"]],
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit._utils.get_feature_lengths,
+    inputs={
+        "features": FeatureData[MAG],
+    },
+    parameters={},
+    outputs=[
+        ('lengths',
+         FeatureData[SequenceCharacteristics % Properties('length')])
+    ],
+    input_descriptions={
+        "features": "Features to get lengths for."
+    },
+    parameter_descriptions={},
+    output_descriptions={'lengths': 'Feature lengths.', },
+    name='Get feature lengths.',
+    description='This method extract lengths for the provided feature set.',
+    citations=[]
 )
 
 plugin.register_semantic_types(BUSCOResults, BuscoDB)

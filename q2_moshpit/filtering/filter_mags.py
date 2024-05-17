@@ -102,7 +102,7 @@ def _mags_to_df(mags: MultiMAGSequencesDirFmt, on: str):
 
 def filter_derep_mags(
         mags: MAGSequencesDirFmt,
-        metadata: Metadata = None,
+        metadata: Metadata,
         where: str = None,
         exclude_ids: bool = False,
 ) -> MAGSequencesDirFmt:
@@ -124,7 +124,7 @@ def filter_derep_mags(
 
 def filter_mags(
         mags: MultiMAGSequencesDirFmt,
-        metadata: Metadata = None,
+        metadata: Metadata,
         where: str = None,
         exclude_ids: bool = False,
         on: str = 'mag'

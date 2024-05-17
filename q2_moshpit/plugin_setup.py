@@ -14,7 +14,7 @@ from q2_moshpit.busco.types import (
 )
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
-    FeatureData, Sequence, Taxonomy, ProteinSequence
+    FeatureData, Sequence, Taxonomy, ProteinSequence, SequenceCharacteristics
 )
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
@@ -1196,6 +1196,26 @@ plugin.methods.register_function(
     citations=[citations["menzel2016"]],
 )
 
+plugin.methods.register_function(
+    function=q2_moshpit._utils.get_feature_lengths,
+    inputs={
+        "features": FeatureData[MAG],
+    },
+    parameters={},
+    outputs=[
+        ('lengths',
+         FeatureData[SequenceCharacteristics % Properties('length')])
+    ],
+    input_descriptions={
+        "features": "Features to get lengths for."
+    },
+    parameter_descriptions={},
+    output_descriptions={'lengths': 'Feature lengths.', },
+    name='Get feature lengths.',
+    description='This method extract lengths for the provided feature set.',
+    citations=[]
+)
+
 filter_mags_params = {
     "metadata": Metadata,
     "where": Str,
@@ -1215,6 +1235,7 @@ filter_contigs_param_descriptions = {
                    "the `metadata` and optional `where` parameter will be "
                    "excluded from the filtered data.",
 }
+
 plugin.methods.register_function(
     function=q2_moshpit.filtering.filter_derep_mags,
     inputs={"mags": FeatureData[MAG]},

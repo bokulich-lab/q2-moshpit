@@ -1361,7 +1361,7 @@ plugin.methods.register_function(
     inputs={},
     outputs=[('busco_db', o_busco_db)],
     output_descriptions={
-        'busco_db': "BUSCO database for the specified lineages"
+        'busco_db': "BUSCO database for the specified lineages."
     },
     parameters={
         "virus": p_virus,

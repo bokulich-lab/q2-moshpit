@@ -28,7 +28,7 @@ def fetch_busco_db(virus: bool, prok: bool, euk: bool) -> BuscoDatabaseDirFmt:
     print(colorify("Downloading BUSCO database..."))
     run_command(cmd=["busco", "--download", *args], cwd=str(busco_db))
 
-    # Let user know that the process is compleat but it still needs
+    # Let user know that the process is complete but it still needs
     # some time to copy files over.
     print(colorify(
         "Download completed. \n"

@@ -26,7 +26,12 @@ def fetch_busco_db(virus: bool, prok: bool, euk: bool) -> BuscoDatabaseDirFmt:
 
     # Download
     print(colorify("Downloading BUSCO database..."))
-    run_command(cmd=["busco", "--download", *args], cwd=str(busco_db))
+    try:
+        run_command(cmd=["busco", "--download", *args], cwd=str(busco_db))
+    except subprocess.CalledProcessError as e:
+        raise Exception(
+            f"Error during BUSCO database download: {e.returncode}"
+        )
 
     # Let user know that the process is complete but it still needs
     # some time to copy files over.

@@ -18,8 +18,8 @@ def fetch_busco_db(virus: bool, prok: bool, euk: bool) -> BuscoDatabaseDirFmt:
         args = ["all"]
     else:
         variable_and_flag = [
-            ('virus', virus), 
-            ('prokaryota', prok), 
+            ('virus', virus),
+            ('prokaryota', prok),
             ('eukaryota', euk)
         ]
         args = [name for name, flag in variable_and_flag if flag]

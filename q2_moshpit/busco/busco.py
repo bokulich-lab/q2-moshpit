@@ -176,7 +176,7 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
         counter_col = "mag_id"
         tab_title = ["BUSCO plots", "BUSCO table"]
         assets_subdir = "feature_data"
-        is_sample_data = True
+        is_sample_data = False
         tabbed_context = {}  # Init as empty bc we update it below
 
     # Copy BUSCO results from tmp dir to output_dir

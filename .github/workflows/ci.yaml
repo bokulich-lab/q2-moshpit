@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    environment: test-env
+    environment: dev
     runs-on: ubuntu-latest
     outputs:
       latest-dev-tag: ${{ steps.fetch_latest_tags.outputs.latest-dev-tag }}

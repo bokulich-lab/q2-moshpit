@@ -1369,9 +1369,9 @@ plugin.methods.register_function(
         "euk": p_euk,
     },
     parameter_descriptions={
-        "virus": "Download the virus dataset",
-        "prok": "Download the prokaryote dataset",
-        "euk": "Download the eukaryote dataset",
+        "virus": "Download the virus dataset.",
+        "prok": "Download the prokaryote dataset.",
+        "euk": "Download the eukaryote dataset.",
     },
     name="Download BUSCO database.",
     description="Downloads BUSCO database for the specified lineage. "

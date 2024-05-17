@@ -6,10 +6,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import unittest
+
+import pandas as pd
 from qiime2.plugin.testing import TestPluginBase
+
+from q2_types.feature_data_mag import MAGSequencesDirFmt
 from .._utils import (
     _construct_param, _process_common_input_params,
-    _calculate_md5_from_file
+    _calculate_md5_from_file, get_feature_lengths
 )
 
 
@@ -122,6 +126,20 @@ class TestUtils(TestPluginBase):
         path_to_file = self.get_data_path("md5/b.txt")
         observed_hash = _calculate_md5_from_file(path_to_file)
         self.assertNotEqual(observed_hash, "a583054a9831a6e7cc56ea5cd9cac40a")
+
+    def test_get_feature_lengths(self):
+        mags = MAGSequencesDirFmt(self.get_data_path('mags-derep'), mode='r')
+        obs = get_feature_lengths(mags)
+        exp = pd.DataFrame({
+            'id': [
+                '24dee6fe-9b84-45bb-8145-de7b092533a1',
+                'ca7012fc-ba65-40c3-84f5-05aa478a7585',
+                'd65a71fa-4279-4588-b937-0747ed5d604d'
+            ],
+            'length': [66, 70, 363]
+        })
+        exp.set_index('id', inplace=True)
+        pd.testing.assert_frame_equal(obs, exp)
 
 
 if __name__ == '__main__':

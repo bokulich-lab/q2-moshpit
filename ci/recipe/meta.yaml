@@ -26,12 +26,11 @@ requirements:
     - kaiju
     - kraken2
     - metabat2
+    - pandas
     - qiime2 {{ qiime2_epoch }}.*
     - q2-types {{ qiime2_epoch }}.*
     - q2templates {{ qiime2_epoch }}.*
     - q2-assembly {{ qiime2_epoch }}.*
-    - eggnog-mapper >=2.1.10
-    - diamond
     - samtools
     - tqdm
     - xmltodict

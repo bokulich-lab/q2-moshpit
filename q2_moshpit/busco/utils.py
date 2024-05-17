@@ -50,11 +50,14 @@ def _parse_busco_params(arg_key, arg_val) -> List[str]:
         return [f"--{arg_key}", str(arg_val)]
 
 
-def _partition_dataframe_sample_data(df: pd.DataFrame, max_rows: int) -> list:
+def _partition_dataframe(
+    df: pd.DataFrame, max_rows: int, is_sample_data: bool
+) -> list:
     """
     Partitions a DataFrame into smaller DataFrames based on
     a maximum row limit.
 
+    If is_sample_data = True:
     This function groups the DataFrame by 'sample_id' and then partitions
     these groups into smaller DataFrames. Each partition will have a total
     row count less than or equal to the max_rows parameter (unless a single
@@ -62,39 +65,7 @@ def _partition_dataframe_sample_data(df: pd.DataFrame, max_rows: int) -> list:
     MAGs included). The last group in a partition can exceed the max_rows
     limit.
 
-    Args:
-        df (pd.DataFrame): The DataFrame to partition. It should have a
-            'sample_id' column.
-        max_rows (int): The maximum number of rows that each partitioned
-            DataFrame should have.
-
-    Returns:
-        list: A list of partitioned DataFrames. Each DataFrame in the
-            list is a partition of the original DataFrame.
-    """
-    groups = [group for _, group in df.groupby('sample_id')]
-    partitions = []
-    temp = []
-    total_rows = 0
-
-    for group in groups:
-        if total_rows + len(group) > max_rows:
-            if temp:
-                partitions.append(pd.concat(temp))
-            temp = [group]
-            total_rows = len(group)
-        else:
-            temp.append(group)
-            total_rows += len(group)
-
-    if temp:
-        partitions.append(pd.concat(temp))
-
-    return partitions
-
-
-def _partition_dataframe_feature_data(df: pd.DataFrame, max_rows: int) -> list:
-    """
+    If is_sample_data = False:
     Partitions a DataFrame into smaller DataFrames based on
     a maximum row limit. Each partition will have a total
     row count less than or equal to the `max_rows` parameter.
@@ -109,7 +80,28 @@ def _partition_dataframe_feature_data(df: pd.DataFrame, max_rows: int) -> list:
         list: A list of partitioned DataFrames. Each DataFrame in the
             list is a partition of the original DataFrame.
     """
-    return [df[i:i+max_rows] for i in range(0, len(df), max_rows)]
+    if is_sample_data:
+        groups = [group for _, group in df.groupby('sample_id')]
+        partitions = []
+        temp = []
+        total_rows = 0
+
+        for group in groups:
+            if total_rows + len(group) > max_rows:
+                if temp:
+                    partitions.append(pd.concat(temp))
+                temp = [group]
+                total_rows = len(group)
+            else:
+                temp.append(group)
+                total_rows += len(group)
+
+        if temp:
+            partitions.append(pd.concat(temp))
+
+        return partitions
+    else:
+        return [df[i:i+max_rows] for i in range(0, len(df), max_rows)]
 
 
 def _collect_summaries(run_summaries_fp_map: dict) -> pd.DataFrame:

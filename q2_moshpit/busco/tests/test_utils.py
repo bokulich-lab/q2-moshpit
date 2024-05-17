@@ -13,8 +13,8 @@ from qiime2.plugin.testing import TestPluginBase
 
 from q2_moshpit.busco.utils import (
     _parse_busco_params, _collect_summaries, _parse_df_columns,
-    _partition_dataframe_sample_data, _partition_dataframe_feature_data,
     _get_feature_table, _calculate_summary_stats, _get_mag_lengths,
+    _partition_dataframe,
 )
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 from q2_types.feature_data_mag import MAGSequencesDirFmt
@@ -122,39 +122,39 @@ class TestBUSCOUtils(TestPluginBase):
         pd.testing.assert_frame_equal(obs, exp)
 
     def test_partition_dataframe_sample_data_max_rows_5(self):
-        partitions = _partition_dataframe_sample_data(self.df1, max_rows=5)
+        partitions = _partition_dataframe(self.df1, 5, True)
         self.assertEqual(len(partitions), 3)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3), (4, 3), (5, 3)]
         self.assertListEqual(obs_shapes, exp_shapes)
 
-        partitions = _partition_dataframe_sample_data(self.df2, max_rows=5)
+        partitions = _partition_dataframe(self.df2, 5, True)
         self.assertEqual(len(partitions), 3)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3), (6, 3), (3, 3)]
         self.assertListEqual(obs_shapes, exp_shapes)
 
     def test_partition_dataframe_sample_data_max_rows_10(self):
-        partitions = _partition_dataframe_sample_data(self.df1, max_rows=10)
+        partitions = _partition_dataframe(self.df1, 10, True)
         self.assertEqual(len(partitions), 2)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(10, 3), (5, 3)]
         self.assertListEqual(obs_shapes, exp_shapes)
 
-        partitions = _partition_dataframe_sample_data(self.df2, max_rows=10)
+        partitions = _partition_dataframe(self.df2, 10, True)
         self.assertEqual(len(partitions), 2)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3), (9, 3)]
         self.assertListEqual(obs_shapes, exp_shapes)
 
     def test_partition_dataframe_sample_data_max_rows_15(self):
-        partitions = _partition_dataframe_sample_data(self.df1, max_rows=15)
+        partitions = _partition_dataframe(self.df1, 15, True)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(15, 3),]
         self.assertListEqual(obs_shapes, exp_shapes)
 
-        partitions = _partition_dataframe_sample_data(self.df2, max_rows=15)
+        partitions = _partition_dataframe(self.df2, 15, True)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(15, 3), ]
@@ -164,7 +164,7 @@ class TestBUSCOUtils(TestPluginBase):
         n = 5
         df1 = self.df1.copy()
         df1 = df1.loc[df1["sample_id"] == "sample1"]
-        partitions = _partition_dataframe_feature_data(df1, max_rows=n)
+        partitions = _partition_dataframe(df1, n, False)
         self.assertEqual(len(partitions), 2)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(5, 3), (1, 3)]
@@ -172,7 +172,7 @@ class TestBUSCOUtils(TestPluginBase):
 
         df2 = self.df2.copy()
         df2 = df2.loc[df2["sample_id"] == "sample3"]
-        partitions = _partition_dataframe_feature_data(df2, max_rows=n)
+        partitions = _partition_dataframe(df2, n, False)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(3, 3)]
@@ -182,7 +182,7 @@ class TestBUSCOUtils(TestPluginBase):
         n = 10
         df1 = self.df1.copy()
         df1 = df1.loc[df1["sample_id"] == "sample1"]
-        partitions = _partition_dataframe_feature_data(df1, max_rows=n)
+        partitions = _partition_dataframe(df1, n, False)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3)]
@@ -190,7 +190,7 @@ class TestBUSCOUtils(TestPluginBase):
 
         df2 = self.df2.copy()
         df2 = df2.loc[df2["sample_id"] == "sample2"]
-        partitions = _partition_dataframe_feature_data(df2, max_rows=n)
+        partitions = _partition_dataframe(df2, n, False)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3)]
@@ -200,7 +200,7 @@ class TestBUSCOUtils(TestPluginBase):
         n = 10
         df1 = self.df1.copy()
         df1 = df1.loc[df1["sample_id"] == "sample1"]
-        partitions = _partition_dataframe_feature_data(df1, max_rows=n)
+        partitions = _partition_dataframe(df1, n, False)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3)]
@@ -208,7 +208,7 @@ class TestBUSCOUtils(TestPluginBase):
 
         df2 = self.df2.copy()
         df2 = df2.loc[df2["sample_id"] == "sample2"]
-        partitions = _partition_dataframe_feature_data(df2, max_rows=n)
+        partitions = _partition_dataframe(df2, n, False)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3)]

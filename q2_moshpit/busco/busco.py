@@ -22,8 +22,7 @@ from q2_moshpit.busco.plots_summary import _draw_marker_summary_histograms, \
 
 from q2_moshpit.busco.utils import (
     _parse_busco_params, _collect_summaries, _rename_columns,
-    _parse_df_columns, _partition_dataframe_sample_data,
-    _calculate_summary_stats, _partition_dataframe_feature_data,
+    _parse_df_columns, _partition_dataframe, _calculate_summary_stats,
     _get_feature_table, _cleanup_bootstrap, _get_mag_lengths
 )
 from q2_moshpit._utils import _process_common_input_params, run_command
@@ -160,7 +159,6 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
 
     # Partition data frames
     if len(busco_results["sample_id"].unique()) >= 2:
-        dfs = _partition_dataframe_sample_data(busco_results, max_rows)
         counter_col = "sample_id"
         assets_subdir = "sample_data"
         tab_title = ["Sample details", "Feature details"]
@@ -172,12 +170,13 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
             json.dumps(_draw_selectable_summary_histograms(busco_results))
         }
     else:
-        dfs = _partition_dataframe_feature_data(busco_results, max_rows)
         counter_col = "mag_id"
         tab_title = ["BUSCO plots", "BUSCO table"]
         assets_subdir = "feature_data"
         is_sample_data = False
         tabbed_context = {}  # Init as empty bc we update it below
+
+    dfs = _partition_dataframe(busco_results, max_rows, is_sample_data)
 
     # Copy BUSCO results from tmp dir to output_dir
     TEMPLATES = os.path.join(

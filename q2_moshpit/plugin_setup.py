@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 import importlib
 
+from qiime2.plugin import Metadata
+
 from q2_moshpit.busco.types import (
     BUSCOResults, BUSCOResultsDirectoryFormat, BUSCOResultsFormat
 )
@@ -1212,6 +1214,54 @@ plugin.methods.register_function(
     name='Get feature lengths.',
     description='This method extract lengths for the provided feature set.',
     citations=[]
+)
+
+filter_mags_params = {
+    "metadata": Metadata,
+    "where": Str,
+    "exclude_ids": Bool,
+}
+filter_contigs_param_descriptions = {
+    "metadata": "Sample metadata indicating which MAG ids to filter. "
+                "The optional `where` parameter may be used to filter ids "
+                "based on specified conditions in the metadata. The "
+                "optional `exclude_ids` parameter may be used to exclude "
+                "the ids specified in the metadata from the filter.",
+    "where": "Optional SQLite WHERE clause specifying MAG metadata "
+             "criteria that must be met to be included in the filtered "
+             "data. If not provided, all MAGs in `metadata` that are "
+             "also in the MAG data will be retained.",
+    "exclude_ids": "Defaults to False. If True, the MAGs selected by "
+                   "the `metadata` and optional `where` parameter will be "
+                   "excluded from the filtered data.",
+}
+
+plugin.methods.register_function(
+    function=q2_moshpit.filtering.filter_derep_mags,
+    inputs={"mags": FeatureData[MAG]},
+    parameters=filter_mags_params,
+    outputs={"filtered_mags": FeatureData[MAG]},
+    input_descriptions={"mags": "Dereplicated MAGs to filter."},
+    parameter_descriptions=filter_contigs_param_descriptions,
+    name="Filter dereplicated MAGs.",
+    description="Filter dereplicated MAGs based on metadata.",
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.filtering.filter_mags,
+    inputs={"mags": SampleData[MAGs]},
+    parameters={
+        **filter_mags_params,
+        "on": Str % Choices(["sample", "mag"]),
+    },
+    outputs={"filtered_mags": SampleData[MAGs]},
+    input_descriptions={"mags": "MAGs to filter."},
+    parameter_descriptions={
+        **filter_contigs_param_descriptions,
+        "on": "Whether to filter based on sample or MAG metadata."
+    },
+    name="Filter MAGs.",
+    description="Filter MAGs based on metadata.",
 )
 
 plugin.register_semantic_types(BUSCOResults)

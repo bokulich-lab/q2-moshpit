@@ -230,7 +230,9 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
 
     # Render
     vega_json = json.dumps(context)
-    vega_json_sum = json.dumps(_draw_marker_summary_histograms(busco_results))
+    vega_json_summary = json.dumps(
+        _draw_marker_summary_histograms(busco_results)
+    )
     table_json = _get_feature_table(busco_results)
     stats_json = _calculate_summary_stats(busco_results)
     tabbed_context.update({
@@ -240,7 +242,7 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
             {"title": tab_title[1], "url": "table.html"}
         ],
         "vega_json": vega_json,
-        "vega_summary_json": vega_json_sum,
+        "vega_summary_json": vega_json_summary,
         "table": table_json,
         "summary_stats_json": stats_json,
         "page_size": 100

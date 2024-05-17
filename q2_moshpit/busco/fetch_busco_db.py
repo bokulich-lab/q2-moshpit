@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import subprocess
 from q2_moshpit._utils import colorify, run_command
 from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 

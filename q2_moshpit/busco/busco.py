@@ -50,16 +50,10 @@ def _run_busco(
     base_cmd = ["busco", *params]
 
     if isinstance(mags, MultiMAGSequencesDirFmt):
-        # Creates pandas df "manifest" from bins
         manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
-
-        # Make a new column in manifest with the directories of files
-        # listed in column "filename"
         manifest["sample_dir"] = manifest.filename.apply(
             lambda x: os.path.dirname(x)
         )
-
-        # numpy.ndarray with unique dirs
         sample_dirs = manifest["sample_dir"].unique()
 
     elif isinstance(mags, MAGSequencesDirFmt):

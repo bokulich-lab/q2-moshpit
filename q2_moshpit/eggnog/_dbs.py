@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
-import tqdm
 import shutil
 import subprocess
 import pandas as pd
@@ -20,7 +19,10 @@ from .._utils import (
     run_command, _process_common_input_params, colorify,
     _calculate_md5_from_file
 )
-from ._utils import _parse_build_diamond_db_params
+from ._utils import (
+    _parse_build_diamond_db_params, _download_and_build_hmm_db,
+    _download_fastas_into_hmmer_db
+)
 import tempfile
 
 
@@ -357,62 +359,7 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
     ))
 
     # Download HMMER data base
-    hmmer_db = HmmerDirFmt()
-    with tempfile.TemporaryDirectory() as tmp:
-        try:
-            run_command(
-                cmd=[
-                    "wget", "-O", f"{tmp}/{taxon_id}_hmms.tar.gz",
-                    "http://eggnog5.embl.de/download/eggnog_5.0/per_tax_level/"
-                    f"{taxon_id}/{taxon_id}_hmms.tar.gz"
-                ]
-            )
-        except subprocess.CalledProcessError as e:
-            raise Exception(
-                f"Error during HMMER database download: {e.returncode}"
-            )
-        # Extracting
-        print(colorify("Decompressing..."))
-        run_command(
-            cmd=["tar", "zxf", f"{taxon_id}_hmms.tar.gz"],
-            cwd=tmp
-        )
+    hmmer_db = _download_and_build_hmm_db(taxon_id)
 
-        # Merge hmm files + write .hmm.idmap
-        print(colorify("Merging hmm files..."))
-        hmms_merged_p = f"{str(hmmer_db)}/{taxon_id}.hmm"
-        idmap_p = f"{str(hmmer_db)}/{taxon_id}.hmm.idmap"
-
-        # Open output files
-        with open(hmms_merged_p, "a") as hmms, open(idmap_p, "a") as idmap:
-
-            # Iterate through all decompressed files
-            for root, _, files in os.walk(f"{tmp}/{taxon_id}"):
-                for i, file in tqdm(enumerate(files, start=1)):
-                    if file.endswith(".hmm"):
-
-                        # process hmm files
-                        with open(f"{root}/{file}", "r") as hmm_file:
-                            lines = hmm_file.readlines()
-
-                            # Find "NAME" line
-                            for j, line in enumerate(lines):
-                                if line.startswith("NAME "):
-                                    modified_line = line.replace(
-                                        r'\.faa\.final_tree(\.fa)', "", 1
-                                    )
-
-                                    # write modified content to hmms_merged
-                                    lines[j] = modified_line
-                                    hmms.write(lines)
-
-                                    # get name and write to idmap
-                                    id = modified_line.replace("NAME ", "", 1)
-                                    idmap.write(f"{i} {id}")
-
-                                    break
-
-    # prepare an HMM database for faster hmmscan searches
-    print(colorify("Preparing HMM database..."))
-    run_command(cmd=["hmmpress", hmms_merged_p])
-    os.remove(hmms_merged_p)
+    # Downland fasta sequences
+    _download_fastas_into_hmmer_db(hmmer_db)

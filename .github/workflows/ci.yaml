@@ -83,7 +83,7 @@ jobs:
         run: conda list
 
       - name: Run tests
-        run: make test-cov
+        run: mamba run -n conda-env make test-cov
 
       - uses: codecov/codecov-action@v4
         name: Upload coverage report

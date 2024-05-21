@@ -30,6 +30,8 @@ setup(
             'tests/data/*',
             'tests/data/md5/*',
             "assets/busco/*",
+            "assets/busco/feature_data/*",
+            "assets/busco/sample_data/*",
             "assets/busco/js/*",
             "assets/busco/css/*",
         ],

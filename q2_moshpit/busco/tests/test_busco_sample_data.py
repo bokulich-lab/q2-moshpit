@@ -8,23 +8,18 @@
 import json
 import os
 import shutil
+import qiime2
 import pandas as pd
 from q2_moshpit.busco.busco import (
     _run_busco, _busco_helper, _evaluate_busco,
     _visualize_busco, evaluate_busco
 )
-from unittest.mock import patch, ANY, call, Mock, MagicMock
+from unittest.mock import patch, ANY, call, MagicMock
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 
 
-class MockContext(Mock):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.get_action = Mock()
-
-
-class TestBUSCO(TestPluginBase):
+class TestBUSCOSampleData(TestPluginBase):
     package = "q2_moshpit.busco.tests"
 
     def setUp(self):
@@ -158,10 +153,10 @@ class TestBUSCO(TestPluginBase):
                 {"title": "Feature details", "url": "table.html"}
             ],
             "vega_json": json.dumps(
-                {"sample0": {
+                {"partition_0": {
                     "subcontext": {"fake1": {"plot": "spec"}},
-                    "sample_counter": {"from": 1, "to": 2},
-                    "sample_ids": ["sample1", "sample2"]}}
+                    "counters": {"from": 1, "to": 2},
+                    "ids": ["sample1", "sample2"]}}
             ),
             "vega_summary_json": json.dumps({"fake2": {"plot": "spec"}}),
             "vega_summary_selectable_json": json.dumps(
@@ -180,14 +175,18 @@ class TestBUSCO(TestPluginBase):
     def test_evaluate_busco_action(self):
         mock_action = MagicMock(side_effect=[
             lambda x, **kwargs: (0, ),
-            lambda x, y: ({"mag1": {}, "mag2": {}}, ),
             lambda x: ("collated_result", ),
-            lambda x: ("visualization", )
+            lambda x: ("visualization", ),
+            lambda x, y: ({"mag1": {}, "mag2": {}}, )
         ])
         mock_ctx = MagicMock(get_action=mock_action)
+        mags = qiime2.Artifact.import_data(
+            'SampleData[MAGs]',
+            self.get_data_path('mags')
+        )
         obs = evaluate_busco(
             ctx=mock_ctx,
-            bins=self.mags,
+            bins=mags,
             num_partitions=2
         )
         exp = ("collated_result", "visualization")

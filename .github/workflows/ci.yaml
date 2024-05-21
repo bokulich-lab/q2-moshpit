@@ -4,8 +4,21 @@ on:
     branches: ["main"]
   push:
     branches: ["main"]
+env:
+    DISTRO_VAR: metagenome
 
 jobs:
+  display-variables:
+    name: ${{ vars.JOB_NAME }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Use variables
+      run: |
+        echo "repository variable : $DISTRO"
+        echo "variable from shell environment : $DISTRO_VAR"
+      env:
+        DISTRO: ${{ vars.DISTRO }}
+
   test:
     runs-on: ubuntu-latest
     outputs:
@@ -33,10 +46,8 @@ jobs:
 
       - name: Create conda yaml
         run: |
-          bash utilities/ci/get-dependencies.sh "$DISTRO" ${{ steps.fetch-tags.outputs.latest-dev-tag }}
+          bash utilities/ci/get-dependencies.sh "$DISTRO_VAR" ${{ steps.fetch-tags.outputs.latest-dev-tag }}
           cat environment.yml
-        env:
-          DISTRO: ${{ vars.DISTRO }}
 
       - name: Setup miniconda
         uses: conda-incubator/setup-miniconda@v3

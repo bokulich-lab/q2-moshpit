@@ -74,10 +74,10 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install plugin
-        run: pip install .
+        run: mamba run -n conda-env pip install .
 
       - name: Install dev dependencies
-        run: pip install pytest coverage
+        run: mamba run -n conda-env pip install pytest coverage
 
       - name: List all installed packages
         run: conda list

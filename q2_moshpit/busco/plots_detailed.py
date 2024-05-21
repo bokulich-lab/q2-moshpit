@@ -13,11 +13,12 @@ alt.data_transformers.disable_max_rows()
 
 def _draw_detailed_plots(
     df: pd.DataFrame,
+    is_sample_data: bool,
     width: int = None,
     height: int = None,
     label_font_size: int = None,
     title_font_size: int = None,
-    spacing: int = None
+    spacing: int = None,
 ) -> dict:
     """
     Draws a horizontal normalized bar plot for every sample for which BUSCO was
@@ -66,6 +67,14 @@ def _draw_detailed_plots(
         + "/" + busco_plot_data["n_markers"].map(str)
     )
 
+    # Define title
+    if is_sample_data:
+        title = "Sample ID and MAG ID"
+        subtitle_size = 15
+    else:
+        title = "MAG ID"
+        subtitle_size = 0
+
     # Plot
     domain = ["single", "duplicated", "fragmented", "missing"]
     range_ = ["#1E90FF", "#87CEFA", "#FFA500", "#FF7F50"]
@@ -106,7 +115,8 @@ def _draw_detailed_plots(
         .facet(
             row=alt.Row(
                 "sample_id",
-                title="Sample ID / MAG ID"
+                title=title,
+                header=alt.Header(labelFontSize=subtitle_size),
             ),
             spacing=spacing
         )

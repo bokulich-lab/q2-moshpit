@@ -15,6 +15,7 @@ from q2_moshpit.busco.utils import (
     _get_mag_lengths, _validate_lineage_dataset_input
 )
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.feature_data_mag import MAGSequencesDirFmt
 from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 
 
@@ -25,6 +26,10 @@ class TestBUSCOUtils(TestPluginBase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.mags = MultiMAGSequencesDirFmt(
             path=self.get_data_path('mags'),
+            mode="r",
+        )
+        self.feature_data_mags = MAGSequencesDirFmt(
+            path=self.get_data_path('mags/sample1'),
             mode="r",
         )
         self.df1 = pd.DataFrame({
@@ -115,50 +120,118 @@ class TestBUSCOUtils(TestPluginBase):
         exp = self.df5
         pd.testing.assert_frame_equal(obs, exp)
 
-    def test_partition_dataframe_max_rows_5(self):
-        partitions = _partition_dataframe(self.df1, max_rows=5)
+    def test_partition_dataframe_sample_data_max_rows_5(self):
+        partitions = _partition_dataframe(self.df1, 5, True)
         self.assertEqual(len(partitions), 3)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3), (4, 3), (5, 3)]
         self.assertListEqual(obs_shapes, exp_shapes)
 
-        partitions = _partition_dataframe(self.df2, max_rows=5)
+        partitions = _partition_dataframe(self.df2, 5, True)
         self.assertEqual(len(partitions), 3)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3), (6, 3), (3, 3)]
         self.assertListEqual(obs_shapes, exp_shapes)
 
-    def test_partition_dataframe_max_rows_10(self):
-        partitions = _partition_dataframe(self.df1, max_rows=10)
+    def test_partition_dataframe_sample_data_max_rows_10(self):
+        partitions = _partition_dataframe(self.df1, 10, True)
         self.assertEqual(len(partitions), 2)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(10, 3), (5, 3)]
         self.assertListEqual(obs_shapes, exp_shapes)
 
-        partitions = _partition_dataframe(self.df2, max_rows=10)
+        partitions = _partition_dataframe(self.df2, 10, True)
         self.assertEqual(len(partitions), 2)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(6, 3), (9, 3)]
         self.assertListEqual(obs_shapes, exp_shapes)
 
-    def test_partition_dataframe_max_rows_15(self):
-        partitions = _partition_dataframe(self.df1, max_rows=15)
+    def test_partition_dataframe_sample_data_max_rows_15(self):
+        partitions = _partition_dataframe(self.df1, 15, True)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(15, 3),]
         self.assertListEqual(obs_shapes, exp_shapes)
 
-        partitions = _partition_dataframe(self.df2, max_rows=15)
+        partitions = _partition_dataframe(self.df2, 15, True)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
         exp_shapes = [(15, 3), ]
         self.assertListEqual(obs_shapes, exp_shapes)
 
-    def test_get_feature_table(self):
+    def test_partition_dataframe_feature_data_max_rows_5(self):
+        n = 5
+        df1 = self.df1.copy()
+        df1 = df1.loc[df1["sample_id"] == "sample1"]
+        partitions = _partition_dataframe(df1, n, False)
+        self.assertEqual(len(partitions), 2)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(5, 3), (1, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+        df2 = self.df2.copy()
+        df2 = df2.loc[df2["sample_id"] == "sample3"]
+        partitions = _partition_dataframe(df2, n, False)
+        self.assertEqual(len(partitions), 1)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(3, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+    def test_partition_dataframe_feature_data_max_rows_10(self):
+        n = 10
+        df1 = self.df1.copy()
+        df1 = df1.loc[df1["sample_id"] == "sample1"]
+        partitions = _partition_dataframe(df1, n, False)
+        self.assertEqual(len(partitions), 1)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(6, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+        df2 = self.df2.copy()
+        df2 = df2.loc[df2["sample_id"] == "sample2"]
+        partitions = _partition_dataframe(df2, n, False)
+        self.assertEqual(len(partitions), 1)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(6, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+    def test_partition_dataframe_feature_data_max_rows_15(self):
+        n = 10
+        df1 = self.df1.copy()
+        df1 = df1.loc[df1["sample_id"] == "sample1"]
+        partitions = _partition_dataframe(df1, n, False)
+        self.assertEqual(len(partitions), 1)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(6, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+        df2 = self.df2.copy()
+        df2 = df2.loc[df2["sample_id"] == "sample2"]
+        partitions = _partition_dataframe(df2, n, False)
+        self.assertEqual(len(partitions), 1)
+        obs_shapes = [p.shape for p in partitions]
+        exp_shapes = [(6, 3)]
+        self.assertListEqual(obs_shapes, exp_shapes)
+
+    def test_get_feature_table_sample_data(self):
         obs = json.loads(
             _get_feature_table(self.df3)
         )
-        with open(self.get_data_path('feature_table.json'), 'r') as f:
+        with open(
+            self.get_data_path('feature_table_sample_data.json'), 'r'
+        ) as f:
+            exp = json.load(f)
+        self.assertDictEqual(obs, exp)
+
+    def test_get_feature_table_feature_data(self):
+        df3 = self.df3.copy()
+        df3 = df3.loc[df3["sample_id"] == "sample1"]
+        obs = json.loads(
+            _get_feature_table(df3)
+        )
+        with open(
+            self.get_data_path('feature_table_feature_data.json'), 'r'
+        ) as f:
             exp = json.load(f)
         self.assertDictEqual(obs, exp)
 
@@ -204,7 +277,7 @@ class TestBUSCOUtils(TestPluginBase):
 
         self.assertEqual(obs, exp)
 
-    def test_get_mag_lengths(self):
+    def test_get_mag_lengths_sample_data(self):
         obs = _get_mag_lengths(self.mags)
         exp = pd.Series(
             {
@@ -214,6 +287,17 @@ class TestBUSCOUtils(TestPluginBase):
                 'd65a71fa-4279-4588-b937-0747ed5d604d': 3000,
                 'db03f8b6-28e1-48c5-a47c-9c65f38f7357': 2000,
                 'fa4d7420-d0a4-455a-b4d7-4fa66e54c9bf': 3000
+            }, name="length"
+        )
+        pd.testing.assert_series_equal(obs, exp)
+
+    def test_get_mag_lengths_feature_data(self):
+        obs = _get_mag_lengths(self.feature_data_mags)
+        exp = pd.Series(
+            {
+                '24dee6fe-9b84-45bb-8145-de7b092533a1': 1935,
+                'ca7012fc-ba65-40c3-84f5-05aa478a7585': 3000,
+                'fb0bc871-04f6-486b-a10e-8e0cb66f8de3': 2000,
             }, name="length"
         )
         pd.testing.assert_series_equal(obs, exp)

@@ -11,7 +11,7 @@ import os
 import tempfile
 from copy import deepcopy
 from shutil import copytree
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import pandas as pd
 import q2templates
@@ -29,10 +29,13 @@ from q2_moshpit.busco.utils import (
 from q2_moshpit._utils import _process_common_input_params, run_command
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 from q2_moshpit.busco.types import BuscoDatabaseDirFmt
+from q2_types.feature_data_mag._format import MAGSequencesDirFmt
 
 
 def _run_busco(
-    output_dir: str, mags: MultiMAGSequencesDirFmt, params: List[str]
+    output_dir: str,
+    mags: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt],
+    params: List[str]
 ) -> Dict[str, str]:
     """Evaluates bins for all samples using BUSCO.
 
@@ -48,12 +51,15 @@ def _run_busco(
     """
     base_cmd = ["busco", *params]
 
-    manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
-    manifest["sample_dir"] = manifest.filename.apply(
-        lambda x: os.path.dirname(x)
-    )
+    if isinstance(mags, MultiMAGSequencesDirFmt):
+        manifest: pd.DataFrame = mags.manifest.view(pd.DataFrame)
+        manifest["sample_dir"] = manifest.filename.apply(
+            lambda x: os.path.dirname(x)
+        )
+        sample_dirs = manifest["sample_dir"].unique()
 
-    sample_dirs = manifest["sample_dir"].unique()
+    elif isinstance(mags, MAGSequencesDirFmt):
+        sample_dirs = [str(mags)]
 
     path_to_run_summaries = {}
 
@@ -105,7 +111,7 @@ def _busco_helper(bins, common_args):
 
 
 def _evaluate_busco(
-    bins: MultiMAGSequencesDirFmt,
+    bins: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt],
     busco_db: BuscoDatabaseDirFmt = None,
     mode: str = "genome",
     lineage_dataset: str = None,
@@ -155,72 +161,99 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
         os.path.join(output_dir, "busco_results.csv"),
         index=False
     )
+    # Outputs different df for sample and feature data
     busco_results = _parse_df_columns(busco_results)
-    dfs = _partition_dataframe(busco_results, max_rows=100)
+    max_rows = 100
 
+    # Partition data frames
+    if len(busco_results["sample_id"].unique()) >= 2:
+        counter_col = "sample_id"
+        assets_subdir = "sample_data"
+        tab_title = ["Sample details", "Feature details"]
+        is_sample_data = True
+
+        # Draw selectable histograms (only for sample data mags)
+        tabbed_context = {
+            "vega_summary_selectable_json":
+            json.dumps(_draw_selectable_summary_histograms(busco_results))
+        }
+    else:
+        counter_col = "mag_id"
+        tab_title = ["BUSCO plots", "BUSCO table"]
+        assets_subdir = "feature_data"
+        is_sample_data = False
+        tabbed_context = {}  # Init as empty bc we update it below
+
+    dfs = _partition_dataframe(busco_results, max_rows, is_sample_data)
+
+    # Copy BUSCO results from tmp dir to output_dir
+    TEMPLATES = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "assets",
+        "busco"
+    )
+    templates = [
+        os.path.join(TEMPLATES, assets_subdir, file_name)
+        for file_name in ["index.html", "detailed_view.html", "table.html"]
+    ]
+    copytree(
+        src=os.path.join(TEMPLATES, assets_subdir),
+        dst=output_dir,
+        dirs_exist_ok=True
+    )
+    for folder in ["css", "js"]:
+        os.makedirs(os.path.join(output_dir, folder))
+        copytree(
+            src=os.path.join(TEMPLATES, folder),
+            dst=os.path.join(output_dir, folder),
+            dirs_exist_ok=True
+        )
+
+    # Partition data frames and draw detailed plots
     context = {}
     counter_left = 1
     for i, df in enumerate(dfs):
-        sample_count = df['sample_id'].nunique()
-        counter_right = counter_left + sample_count - 1
-        sample_counter = {"from": counter_left, "to": counter_right}
-        counter_left += sample_count
+        count = df[counter_col].nunique()
+        counter_right = counter_left + count - 1
+        counters = {"from": counter_left, "to": counter_right}
+        counter_left += count
         subcontext = _draw_detailed_plots(
             df,
+            is_sample_data,
             width=600,
             height=30,
             title_font_size=20,
             label_font_size=17,
-            spacing=20
+            spacing=20,
         )
-        context.update(
-            {f"sample{i}": {
+        context.update({
+            f"partition_{i}":
+            {
                 "subcontext": subcontext,
-                "sample_counter": sample_counter,
-                "sample_ids": df['sample_id'].unique().tolist(),
-            }}
-        )
-
-    marker_summary_spec = _draw_marker_summary_histograms(busco_results)
-    selectable_summary_spec = _draw_selectable_summary_histograms(
-        busco_results
-    )
-
-    vega_json = json.dumps(context)
-    vega_json_summary = json.dumps(marker_summary_spec)
-    vega_json_summary_selectable = json.dumps(selectable_summary_spec)
-
-    # Copy BUSCO results from tmp dir to output_dir
-    TEMPLATES = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "assets"
-    )
-    index = os.path.join(TEMPLATES, "busco", "index.html")
-    details = os.path.join(TEMPLATES, "busco", "detailed_view.html")
-    table = os.path.join(TEMPLATES, "busco", "table.html")
-    copytree(
-        src=os.path.join(TEMPLATES, "busco"),
-        dst=output_dir,
-        dirs_exist_ok=True
-    )
-
-    table_json = _get_feature_table(busco_results)
-    stats_json = _calculate_summary_stats(busco_results)
+                "counters": counters,
+                "ids": df[counter_col].unique().tolist(),
+            }
+        })
 
     # Render
-    tabbed_context = {
+    vega_json = json.dumps(context)
+    vega_json_summary = json.dumps(
+        _draw_marker_summary_histograms(busco_results)
+    )
+    table_json = _get_feature_table(busco_results)
+    stats_json = _calculate_summary_stats(busco_results)
+    tabbed_context.update({
         "tabs": [
             {"title": "QC overview", "url": "index.html"},
-            {"title": "Sample details", "url": "detailed_view.html"},
-            {"title": "Feature details", "url": "table.html"}
+            {"title": tab_title[0], "url": "detailed_view.html"},
+            {"title": tab_title[1], "url": "table.html"}
         ],
         "vega_json": vega_json,
         "vega_summary_json": vega_json_summary,
-        "vega_summary_selectable_json": vega_json_summary_selectable,
         "table": table_json,
         "summary_stats_json": stats_json,
         "page_size": 100
-    }
-    templates = [index, details, table]
+    })
     q2templates.render(templates, output_dir, context=tabbed_context)
 
     # Final cleanup, needed until we fully migrate to Bootstrap 5
@@ -259,9 +292,14 @@ def evaluate_busco(
     }
 
     _evaluate_busco = ctx.get_action("moshpit", "_evaluate_busco")
-    partition_mags = ctx.get_action("moshpit", "partition_sample_data_mags")
     collate_busco_results = ctx.get_action("moshpit", "collate_busco_results")
     _visualize_busco = ctx.get_action("moshpit", "_visualize_busco")
+
+    if issubclass(bins.format, MultiMAGSequencesDirFmt):
+        partition_action = "partition_sample_data_mags"
+    else:
+        partition_action = "partition_feature_data_mags"
+    partition_mags = ctx.get_action("moshpit", partition_action)
 
     (partitioned_mags, ) = partition_mags(bins, num_partitions)
     results = []

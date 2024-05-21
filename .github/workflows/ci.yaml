@@ -33,8 +33,10 @@ jobs:
 
       - name: Create conda yaml
         run: |
-          bash utilities/ci/get-dependencies.sh ${{ vars.DISTRO }} ${{ steps.fetch-tags.outputs.latest-dev-tag }}
+          bash utilities/ci/get-dependencies.sh "$DISTRO" ${{ steps.fetch-tags.outputs.latest-dev-tag }}
           cat environment.yml
+        env:
+          DISTRO: ${{ vars.DISTRO }}
 
       - name: Setup miniconda
         uses: conda-incubator/setup-miniconda@v3

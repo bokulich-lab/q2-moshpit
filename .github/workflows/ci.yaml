@@ -96,6 +96,7 @@ jobs:
             if [[ $(yq '.repositories[].name' utilities/ci/repositories.yaml | grep -c $pkg_name) -eq 1 ]]; then
                 pkg_url=$(yq ".repositories[] | select(.name == \"$pkg_name\") | .url" utilities/ci/repositories.yaml | tr -d '"')
                 mamba run -n conda-env pip install "git+$pkg_url@$commit_hash"
+            fi
 
       - name: Install plugin
         run: |

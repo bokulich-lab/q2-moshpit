@@ -23,7 +23,11 @@ jobs:
           path: utilities
 
       - name: Test
-        run: echo "${{ github.event.head_commit.message }}"
+        run: |
+          echo "${{ github.event.head_commit.message }}"
+          echo "${{ github.event }}"
+          echo "${{ github.commits }}"
+          echo "${{ github.event.head_commit }}"
 
       - name: Install dependencies
         run: python -m pip install requests yq

@@ -77,6 +77,15 @@ jobs:
       - name: Install dev versions of QIIME repos
         run: mamba run -n conda-env pip install ${{ steps.create-conda-yaml.outputs.qiime-deps }}
 
+      - name: Update specific dependency, if required
+        if: contains(github.event.head_commit.message, '[add:')
+        run: |
+            pkg_name=$(echo ${{ github.event.head_commit.message }} | awk -F':' '/\[add/{print $2}')
+            commit_hash=$(echo ${{ github.event.head_commit.message }} | awk -F':' '/\[add/{print $3}' | awk -F']' '{print $1}')
+            if [[ $(yq '.repositories[].name' utilities/ci/repositories.yaml | grep -c $pkg_name) -eq 1 ]]; then
+                pkg_url=$(yq ".repositories[] | select(.name == \"$pkg_name\") | .url" utilities/ci/repositories.yaml | tr -d '"')
+                mamba run -n conda-env pip install "git+$pkg_url@$commit_hash"
+
       - name: Install plugin
         run: |
           mamba run -n conda-env pip install .

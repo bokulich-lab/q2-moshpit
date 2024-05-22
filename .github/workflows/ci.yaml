@@ -25,16 +25,9 @@ jobs:
           repository: bokulich-lab/utilities
           path: utilities
 
-      - name: Test
+      - name: Get last commit
         id: get-commit-msg
         run: |
-          echo "${{ github.event.head_commit.message }}"
-          echo "${{ github.event }}"
-          echo "${{ github.commits }}"
-          echo "${{ github.event.head_commit }}"
-          echo "event name is:" ${{ github.event_name }}
-          echo "event type is:" ${{ github.event.action }}
-          echo "$(git show -s --format=%s)"
           echo "$(git log --pretty=%B -n 1 --skip 1)"
           echo "commit-msg=$(git log --pretty=%B -n 1 --skip 1)" >> $GITHUB_OUTPUT
 
@@ -96,8 +89,10 @@ jobs:
       - name: Update specific dependency, if requested
         if: contains(${{ steps.get-commit-msg.output.commit-msg }}, '[add:')
         run: |
-            pkg_name=$(echo ${{ steps.get-commit-msg.output.commit-msg }} | awk -F':' '/\[add/{print $2}')
-            commit_hash=$(echo ${{ steps.get-commit-msg.output.commit-msg }} | awk -F':' '/\[add/{print $3}' | awk -F']' '{print $1}')
+            echo "${{ steps.get-commit-msg.output.commit-msg }}"
+            echo ${{ steps.get-commit-msg.output.commit-msg }}
+            pkg_name=$(echo "${{ steps.get-commit-msg.output.commit-msg }}" | awk -F':' '/\[add/{print $2}')
+            commit_hash=$(echo "${{ steps.get-commit-msg.output.commit-msg }}" | awk -F':' '/\[add/{print $3}' | awk -F']' '{print $1}')
             if [[ $(yq '.repositories[].name' utilities/ci/repositories.yaml | grep -c $pkg_name) -eq 1 ]]; then
                 pkg_url=$(yq ".repositories[] | select(.name == \"$pkg_name\") | .url" utilities/ci/repositories.yaml | tr -d '"')
                 mamba run -n conda-env pip install "git+$pkg_url@$commit_hash"

@@ -36,7 +36,7 @@ jobs:
       - name: Create conda yaml
         id: create-conda-yaml
         run: |
-          bash utilities/ci/get-dependencies.sh "$DISTRO" ${{ steps.fetch-tags.outputs.latest-dev-tag }}
+          bash utilities/ci/get-dependencies.sh "$DISTRO" ${{ steps.fetch-tags.outputs.latest-dev-tag }} utilities/ci/repositories.yaml
           cat environment.yml >> $GITHUB_STEP_SUMMARY
           echo "qiime-deps=$(tr '\n' ' ' < repo-urls.txt | xargs)" >> $GITHUB_OUTPUT
 

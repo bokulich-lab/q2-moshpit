@@ -1217,6 +1217,9 @@ plugin.methods.register_function(
     },
     name="Fetch the taxon specific database necessary to run the "
          "eggnog-hmmer-search action.",
-    description="Downloads HMMER reference database for the specified taxon",
-    citations=[citations["huerta_cepas_eggnog_2019"]]
+    description="Downloads HMMER database for the specified taxon.",
+    citations=[
+        citations["huerta_cepas_eggnog_2019"],
+        citations["noauthor_hmmer_nodate"]
+    ]
 )

@@ -39,12 +39,12 @@ def _parse_build_diamond_db_params(arg_key, arg_val) -> List[str]:
 def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
     hmmer_db = HmmerDirFmt()
     with tempfile.TemporaryDirectory() as tmp:
-        cmd = [
-            "wget", "-O", f"{tmp}/{taxon_id}_hmms.tar.gz",
+        _try_wget(
+            f"{tmp}/{taxon_id}_hmms.tar.gz",
             "http://eggnog5.embl.de/download/eggnog_5.0/per_tax_level/"
-            f"{taxon_id}/{taxon_id}_hmms.tar.gz"
-        ]
-        _try_download(cmd, "Error during HMMER database download")
+            f"{taxon_id}/{taxon_id}_hmms.tar.gz",
+            "Error during HMMER database download"
+        )
 
         # Extracting
         print(colorify("Decompressing..."))
@@ -97,12 +97,12 @@ def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
 
 def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
     with tempfile.TemporaryDirectory() as tmp:
-        cmd = [
-            "wget", "-O", f"{tmp}/{taxon_id}_raw_algs.tar",
+        _try_wget(
+            f"{tmp}/{taxon_id}_raw_algs.tar",
             "http://eggnog5.embl.de/download/eggnog_5.0/per_tax_level/"
-            f"{taxon_id}/{taxon_id}_raw_algs.tar"
-        ]
-        _try_download(cmd, "Error downloading FASTA files")
+            f"{taxon_id}/{taxon_id}_raw_algs.tar",
+            "Error downloading FASTA files"
+        )
 
         # Extracting
         print(colorify("Decompressing..."))
@@ -118,7 +118,8 @@ def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
         ]
 
         # Extract, remove '-' and save to hmmer_db location
-        for fpi in files:
+        print(colorify("Processing FASTA files (this can take a while)... "))
+        for fpi in tqdm(files):
             new_name = osp.basename(fpi).replace(r'\.raw_alg\.faa\.gz', ".fa")
             fpo = osp.join(str(hmmer_db), new_name)
             with gzip.open(fpi, 'rt') as f_in, open(fpo, 'w') as f_out:
@@ -127,9 +128,9 @@ def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
                 f_out.write(content)
 
 
-def _try_download(cmd: List, exception_msg: str):
+def _try_wget(output_file: str, url: str, exception_msg: str):
     try:
-        run_command(cmd=cmd)
+        run_command(cmd=["wget", "-O", output_file, url])
     except subprocess.CalledProcessError as e:
         raise Exception(
             f"{exception_msg}: {e.returncode}"

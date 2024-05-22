@@ -20,7 +20,7 @@ from .._utils import (
 )
 from ._utils import (
     _parse_build_diamond_db_params, _download_and_build_hmm_db,
-    _download_fastas_into_hmmer_db, _try_download
+    _download_fastas_into_hmmer_db, _try_wget
 )
 import tempfile
 
@@ -333,26 +333,32 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
     # Validate taxon ID
     with tempfile.TemporaryDirectory() as tmp:
         print(colorify(
-                "Validating taxon ID.\n"
+                "Validating taxon ID: \n"
                 "Downloading taxonomy file..."
         ))
-        cmd = [
-            "wget", "-O", f"{tmp}/e5.taxid_info.tsv",
-            "http://eggnog5.embl.de/download/eggnog_5.0/"
-            "e5.taxid_info.tsv"
-        ]
-        _try_download(cmd, "Error during taxon-info-file download")
+        _try_wget(
+            f"{tmp}/e5.taxid_info.tsv",
+            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv"
+            "Error during taxon-info-file download"
+        )
         _validate_taxon_id(f"{tmp}/e5.taxid_info.tsv", taxon_id)
 
-    print(colorify(
-        "Validating taxon ID. \n"
-        "Proceeding with HMMER database download..."
-    ))
-
     # Download HMMER data base
+    print(colorify(
+        "Valid taxon ID. \n"
+        "Proceeding with HMMER database download and build..."
+    ))
     hmmer_db = _download_and_build_hmm_db(taxon_id)
+    print(colorify(
+        "HMM database built successfully. \n"
+        "Proceeding with FASTA files download and processing..."
+    ))
 
     # Downland fasta sequences
     _download_fastas_into_hmmer_db(hmmer_db)
+    print(colorify(
+        "FASTA files processed successfully. \n"
+        "Moving data from temporary to final location..."
+    ))
 
     return hmmer_db

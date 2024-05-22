@@ -89,14 +89,16 @@ jobs:
       - name: Update specific dependency, if requested
         if: contains(${{ steps.get-commit-msg.outputs.commit-msg }}, '[add:')
         run: |
-            echo "${{ steps.get-commit-msg.outputs.commit-msg }}"
-            echo ${{ steps.get-commit-msg.outputs.commit-msg }}
-            pkg_name=$(echo "${{ steps.get-commit-msg.outputs.commit-msg }}" | awk -F':' '/\[add/{print $2}')
-            commit_hash=$(echo "${{ steps.get-commit-msg.outputs.commit-msg }}" | awk -F':' '/\[add/{print $3}' | awk -F']' '{print $1}')
-            if [[ $(yq '.repositories[].name' utilities/ci/repositories.yaml | grep -c $pkg_name) -eq 1 ]]; then
-                pkg_url=$(yq ".repositories[] | select(.name == \"$pkg_name\") | .url" utilities/ci/repositories.yaml | tr -d '"')
-                mamba run -n conda-env pip install "git+$pkg_url@$commit_hash"
-            fi
+            commit_msg="${{ steps.get-commit-msg.outputs.commit-msg }}"
+            IFS=',' read -ra ADDR <<< "$commit_msg"
+            for i in "${ADDR[@]}"; do
+                pkg_name=$(echo "$i" | awk -F':' '/\[add/{print $2}')
+                commit_hash=$(echo "$i" | awk -F':' '/\[add/{print $3}' | awk -F']' '{print $1}')
+                if [[ $(yq '.repositories[].name' utilities/ci/repositories.yaml | grep -c $pkg_name) -eq 1 ]]; then
+                    pkg_url=$(yq ".repositories[] | select(.name == \"$pkg_name\") | .url" utilities/ci/repositories.yaml | tr -d '"')
+                    mamba run -n conda-env pip install "git+$pkg_url@$commit_hash"
+                fi
+            done
 
       - name: Install plugin
         run: |

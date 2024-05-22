@@ -30,6 +30,7 @@ jobs:
           echo "${{ github.event.head_commit }}"
           echo "event name is:" ${{ github.event_name }}
           echo "event type is:" ${{ github.event.action }}
+          echo "$(git show -s --format=%s)"
 
       - name: Install dependencies
         run: python -m pip install requests yq

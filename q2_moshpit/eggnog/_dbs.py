@@ -237,14 +237,14 @@ def _validate_taxon_id(eggnog_proteins, taxon):
         )
 
     # Check for overlap with provided taxon id
-        if not str(taxon) in tax_ids:
-            raise ValueError(
-                f"'{taxon}' is not valid taxon ID. "
-                "To view all valid taxon IDs inspect e5.taxid_info.tsv. "
-                "You can download it with this command: "
-                "wget "
-                "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv"
-            )
+    if not str(taxon) in tax_ids:
+        raise ValueError(
+            f"'{taxon}' is not valid taxon ID. "
+            "To view all valid taxon IDs inspect e5.taxid_info.tsv. "
+            "You can download it with this command: "
+            "wget "
+            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv"
+        )
 
 
 def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
@@ -338,10 +338,10 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
         ))
         _try_wget(
             f"{tmp}/e5.taxid_info.tsv",
-            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv"
+            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv",
             "Error during taxon-info-file download"
         )
-        _validate_taxon_id(f"{tmp}/e5.taxid_info.tsv", taxon_id)
+        _validate_taxon_id(tmp, taxon_id)
 
     # Download HMMER data base
     print(colorify(
@@ -355,7 +355,7 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
     ))
 
     # Downland fasta sequences
-    _download_fastas_into_hmmer_db(hmmer_db)
+    _download_fastas_into_hmmer_db(hmmer_db, taxon_id)
     print(colorify(
         "FASTA files processed successfully. \n"
         "Moving data from temporary to final location..."

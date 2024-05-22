@@ -5,10 +5,11 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import re
 import os
 import os.path as osp
 import gzip
-import tqdm
+from tqdm import tqdm
 import tempfile
 import subprocess
 from typing import List
@@ -73,13 +74,13 @@ def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
                             # Find "NAME" line
                             for j, line in enumerate(lines):
                                 if line.startswith("NAME "):
-                                    modified_line = line.replace(
-                                        r'\.faa\.final_tree(\.fa)', "", 1
+                                    modified_line = re.sub(
+                                        r'\.faa\.final_tree(\.fa)?', "", line
                                     )
 
                                     # write modified content to hmms_merged
                                     lines[j] = modified_line
-                                    hmms.write(lines)
+                                    hmms.writelines(lines)
 
                                     # get name and write to idmap
                                     id = modified_line.replace("NAME ", "", 1)
@@ -112,15 +113,16 @@ def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
         )
 
         files = [
-            osp.join(tmp, taxon_id, f)
-            for f in os.listdir(osp.join(tmp, taxon_id))
+            f"{tmp}/{taxon_id}/{f}"
+            for f in os.listdir(f"{tmp}/{taxon_id}")
             if f.endswith('.gz')
         ]
 
         # Extract, remove '-' and save to hmmer_db location
         print(colorify("Processing FASTA files (this can take a while)... "))
         for fpi in tqdm(files):
-            new_name = osp.basename(fpi).replace(r'\.raw_alg\.faa\.gz', ".fa")
+            new_name = osp.basename(fpi).replace(".raw_alg.faa.gz", ".fa")
+            # pdb.set_trace()
             fpo = osp.join(str(hmmer_db), new_name)
             with gzip.open(fpi, 'rt') as f_in, open(fpo, 'w') as f_out:
                 content = f_in.read()

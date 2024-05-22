@@ -78,10 +78,12 @@ jobs:
         run: mamba run -n conda-env pip install ${{ steps.create-conda-yaml.outputs.qiime-deps }}
 
       - name: Install plugin
-        run: mamba run -n conda-env pip install .
+        run: |
+          mamba run -n conda-env pip install .
+          mamba run -n conda-env qiime dev refresh-cache
 
       - name: Install dev dependencies
-        run: mamba run -n conda-env pip install pytest coverage
+        run: mamba run -n conda-env pip install pytest coverage parameterized
 
       - name: Run tests
         run: mamba run -n conda-env make test-cov

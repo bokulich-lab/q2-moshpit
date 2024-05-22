@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 import os
 import shutil
-import subprocess
 import pandas as pd
 from qiime2.core.exceptions import ValidationError
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
@@ -21,7 +20,7 @@ from .._utils import (
 )
 from ._utils import (
     _parse_build_diamond_db_params, _download_and_build_hmm_db,
-    _download_fastas_into_hmmer_db
+    _download_fastas_into_hmmer_db, _try_download
 )
 import tempfile
 
@@ -332,25 +331,17 @@ def _collect_and_compare_md5(path_to_md5: str, path_to_file: str):
 
 def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
     # Validate taxon ID
-    with tempfile.TemporaryDirectory as tmp:
-        try:
-            # Download taxonomy file
-            print(colorify(
+    with tempfile.TemporaryDirectory() as tmp:
+        print(colorify(
                 "Validating taxon ID.\n"
                 "Downloading taxonomy file..."
-            ))
-            run_command(
-                cmd=[
-                    "wget", "-O", f"{tmp}/e5.taxid_info.tsv",
-                    "http://eggnog5.embl.de/download/eggnog_5.0/"
-                    "e5.taxid_info.tsv"
-                ]
-            )
-        except subprocess.CalledProcessError as e:
-            raise Exception(
-                f"Error during taxon-info-file download: {e.returncode}"
-            )
-
+        ))
+        cmd = [
+            "wget", "-O", f"{tmp}/e5.taxid_info.tsv",
+            "http://eggnog5.embl.de/download/eggnog_5.0/"
+            "e5.taxid_info.tsv"
+        ]
+        _try_download(cmd, "Error during taxon-info-file download")
         _validate_taxon_id(f"{tmp}/e5.taxid_info.tsv", taxon_id)
 
     print(colorify(
@@ -363,3 +354,5 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
 
     # Downland fasta sequences
     _download_fastas_into_hmmer_db(hmmer_db)
+
+    return hmmer_db

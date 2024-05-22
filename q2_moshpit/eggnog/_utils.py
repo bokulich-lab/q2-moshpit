@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+import os.path as osp
+import gzip
 import tqdm
 import tempfile
 import subprocess
@@ -60,7 +62,7 @@ def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
         with open(hmms_merged_p, "a") as hmms, open(idmap_p, "a") as idmap:
 
             # Iterate through all decompressed files
-            for root, _, files in os.walk(f"{tmp}/{taxon_id}"):
+            for root, dirnames, files in os.walk(f"{tmp}/{taxon_id}"):
                 for i, file in tqdm(enumerate(files, start=1)):
                     if file.endswith(".hmm"):
 
@@ -93,9 +95,7 @@ def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
     return hmmer_db
 
 
-def _download_fastas_into_hmmer_db(
-        hmmer_db: HmmerDirFmt, taxon_id: int
-        ) -> HmmerDirFmt:
+def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
     with tempfile.TemporaryDirectory() as tmp:
         cmd = [
             "wget", "-O", f"{tmp}/{taxon_id}_raw_algs.tar",
@@ -111,7 +111,20 @@ def _download_fastas_into_hmmer_db(
             cwd=tmp
         )
 
-    return hmmer_db
+        files = [
+            osp.join(tmp, taxon_id, f)
+            for f in os.listdir(osp.join(tmp, taxon_id))
+            if f.endswith('.gz')
+        ]
+
+        # Extract, remove '-' and save to hmmer_db location
+        for fpi in files:
+            new_name = osp.basename(fpi).replace(r'\.raw_alg\.faa\.gz', ".fa")
+            fpo = osp.join(str(hmmer_db), new_name)
+            with gzip.open(fpi, 'rt') as f_in, open(fpo, 'w') as f_out:
+                content = f_in.read()
+                content = content.replace('-', '')
+                f_out.write(content)
 
 
 def _try_download(cmd: List, exception_msg: str):

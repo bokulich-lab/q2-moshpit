@@ -38,7 +38,8 @@ from q2_types.kraken2 import (
 from q2_types.kraken2._type import BrackenDB
 from q2_types.per_sample_sequences._type import AlignmentMap
 from q2_types.reference_db import (
-    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
+    HMMER
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -1200,3 +1201,22 @@ plugin.register_semantic_type_to_format(
     artifact_format=BUSCOResultsDirectoryFormat)
 plugin.register_formats(BUSCOResultsFormat, BUSCOResultsDirectoryFormat)
 importlib.import_module('q2_moshpit.busco.types._transformer')
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_eggnog_hmmer_db,
+    inputs={},
+    parameters={
+        'taxon_id': Int % Range(2, 1579337)
+    },
+    parameter_descriptions={
+        'taxon_id': "Taxon ID number."
+    },
+    outputs=[("hmmer_db", ReferenceDB[HMMER])],
+    output_descriptions={
+        "hmmer_db": "HMMER database."
+    },
+    name="Fetch the taxon specific database necessary to run the "
+         "eggnog-hmmer-search action.",
+    description="Downloads HMMER reference database for the specified taxon",
+    citations=[citations["huerta_cepas_eggnog_2019"]]
+)

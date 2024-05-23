@@ -9,23 +9,13 @@ import subprocess
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.reference_db import HmmerDirFmt
-from .._dbs import (
-    _validate_taxon_id, _try_wget, _download_and_build_hmm_db,
-    _download_fastas_into_hmmer_db,
+from .._utils import (
+    _try_wget, _download_and_build_hmm_db, _download_fastas_into_hmmer_db,
 )
 
 
 class TestEggnogUtils(TestPluginBase):
     package = 'q2_moshpit.eggnog.tests'
-
-    def test_validate_taxon_id_invalid(self):
-        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
-        with self.assertRaisesRegex(ValueError, "'0' is not valid taxon ID. "):
-            _validate_taxon_id(path_to_data, 0)
-
-    def test_validate_taxon_id_valid(self):
-        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
-        _validate_taxon_id(path_to_data, 2)
 
     @patch("subprocess.run")
     def test_try_wget(self, mock_run):

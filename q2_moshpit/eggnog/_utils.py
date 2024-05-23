@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 import re
 import os
-import os.path as osp
 import gzip
 from tqdm import tqdm
 import tempfile
@@ -121,9 +120,8 @@ def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
         # Extract, remove '-' and save to hmmer_db location
         print(colorify("Processing FASTA files (this can take a while)... "))
         for fpi in tqdm(files):
-            new_name = osp.basename(fpi).replace(".raw_alg.faa.gz", ".fa")
-            # pdb.set_trace()
-            fpo = osp.join(str(hmmer_db), new_name)
+            new_name = os.path.basename(fpi).replace(".raw_alg.faa.gz", ".fa")
+            fpo = os.path.join(str(hmmer_db), new_name)
             with gzip.open(fpi, 'rt') as f_in, open(fpo, 'w') as f_out:
                 content = f_in.read()
                 content = content.replace('-', '')

@@ -12,11 +12,11 @@ from qiime2.core.exceptions import ValidationError
 from .._dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
     fetch_diamond_db, build_eggnog_diamond_db, fetch_ncbi_taxonomy,
-    _collect_and_compare_md5
+    _collect_and_compare_md5, fetch_eggnog_hmmer_db
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types.reference_db import (
-    NCBITaxonomyDirFmt, EggnogProteinSequencesDirFmt
+    NCBITaxonomyDirFmt, EggnogProteinSequencesDirFmt, HmmerDirFmt
 )
 
 
@@ -35,6 +35,29 @@ class TestFetchDB(TestPluginBase):
             "--data_dir", str(eggnog_db)
         ]
         subp_run.assert_called_once_with(cmd, check=True)
+
+    @patch('tempfile.TemporaryDirectory')
+    @patch("q2_moshpit.eggnog._dbs._download_and_build_hmm_db")
+    @patch("q2_moshpit.eggnog._dbs._download_fastas_into_hmmer_db")
+    @patch("q2_moshpit.eggnog._dbs._validate_taxon_id")
+    @patch("q2_moshpit.eggnog._dbs._try_wget")
+    def test_fetch_eggnog_hmmer_db(
+        self, mock_wget, mock_validate, mock_fastas, mock_build, tmpdir
+    ):
+        tmpdir.return_value.__enter__.return_value = "tmp"
+        mock_build.return_value = HmmerDirFmt()
+        taxon_id = 1
+
+        fetch_eggnog_hmmer_db(taxon_id)
+
+        mock_wget.assert_called_once_with(
+            "tmp/e5.taxid_info.tsv",
+            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv",
+            "Error during taxon-info-file download"
+        )
+        mock_validate.assert_called_once_with("tmp", taxon_id)
+        mock_build.assert_called_once_with(taxon_id)
+        mock_fastas.assert_called_once_with(mock_build.return_value, taxon_id)
 
 
 class TestBuildDiamondDB(TestPluginBase):

@@ -14,11 +14,11 @@ from q2_types.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
     EggnogProteinSequencesDirFmt, HmmerDirFmt
 )
-from .._utils import (
+from q2_moshpit._utils import (
     run_command, _process_common_input_params, colorify,
     _calculate_md5_from_file
 )
-from ._utils import (
+from q2_moshpit.eggnog._utils import (
     _parse_build_diamond_db_params, _download_and_build_hmm_db,
     _download_fastas_into_hmmer_db, _try_wget
 )

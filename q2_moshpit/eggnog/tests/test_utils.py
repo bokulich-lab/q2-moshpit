@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import subprocess
-import tempfile
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.reference_db import HmmerDirFmt
@@ -45,7 +44,7 @@ class TestEggnogUtils(TestPluginBase):
 
     @patch("q2_moshpit.eggnog._utils._try_wget")
     @patch("subprocess.run")
-    @patch.object(tempfile, 'TemporaryDirectory')
+    @patch('tempfile.TemporaryDirectory')
     def test_download_and_build_hmm_db(self, tmpdir, mock_run, mock_wet):
         tmp = self.get_data_path('hmmer/hmms')
         taxon_id = 1
@@ -74,7 +73,7 @@ class TestEggnogUtils(TestPluginBase):
 
     @patch("q2_moshpit.eggnog._utils._try_wget")
     @patch("subprocess.run")
-    @patch.object(tempfile, 'TemporaryDirectory')
+    @patch('tempfile.TemporaryDirectory')
     def test_download_fastas_into_hmmer_db(self, tmpdir, mock_run, mock_wet):
         tmp = self.get_data_path('hmmer/fastas')
         taxon_id = 1

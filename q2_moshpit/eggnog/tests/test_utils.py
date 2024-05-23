@@ -10,7 +10,10 @@ import tempfile
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.reference_db import HmmerDirFmt
-from .._dbs import _validate_taxon_id, _try_wget, _download_and_build_hmm_db
+from .._dbs import (
+    _validate_taxon_id, _try_wget, _download_and_build_hmm_db,
+    _download_fastas_into_hmmer_db,
+)
 
 
 class TestEggnogUtils(TestPluginBase):
@@ -44,7 +47,7 @@ class TestEggnogUtils(TestPluginBase):
     @patch("subprocess.run")
     @patch.object(tempfile, 'TemporaryDirectory')
     def test_download_and_build_hmm_db(self, tmpdir, mock_run, mock_wet):
-        tmp = self.get_data_path('hmmer')
+        tmp = self.get_data_path('hmmer/hmms')
         taxon_id = 1
         tmpdir.return_value.__enter__.return_value = tmp
 
@@ -68,3 +71,25 @@ class TestEggnogUtils(TestPluginBase):
                 check=True
             )
         ])
+
+    @patch("q2_moshpit.eggnog._utils._try_wget")
+    @patch("subprocess.run")
+    @patch.object(tempfile, 'TemporaryDirectory')
+    def test_download_fastas_into_hmmer_db(self, tmpdir, mock_run, mock_wet):
+        tmp = self.get_data_path('hmmer/fastas')
+        taxon_id = 1
+        tmpdir.return_value.__enter__.return_value = tmp
+        hmmer_db = HmmerDirFmt()
+        _download_fastas_into_hmmer_db(hmmer_db, 1)
+
+        mock_wet.assert_called_once_with(
+            f"{tmp}/{taxon_id}_raw_algs.tar",
+            "http://eggnog5.embl.de/download/eggnog_5.0/per_tax_level/"
+            f"{taxon_id}/{taxon_id}_raw_algs.tar",
+            "Error downloading FASTA files"
+        )
+        mock_run.assert_called_once_with(
+            ["tar", "xf", f"{taxon_id}_raw_algs.tar"],
+            check=True,
+            cwd=tmp
+        )

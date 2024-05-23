@@ -36,15 +36,6 @@ class TestFetchDB(TestPluginBase):
         ]
         subp_run.assert_called_once_with(cmd, check=True)
 
-    def test_validate_taxon_id_invalid(self):
-        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
-        with self.assertRaisesRegex(ValueError, "'0' is not valid taxon ID. "):
-            _validate_taxon_id(path_to_data, 0)
-
-    def test_validate_taxon_id_valid(self):
-        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
-        _validate_taxon_id(path_to_data, 2)
-
     @patch('tempfile.TemporaryDirectory')
     @patch("q2_moshpit.eggnog._dbs._download_and_build_hmm_db")
     @patch("q2_moshpit.eggnog._dbs._download_fastas_into_hmmer_db")
@@ -299,3 +290,12 @@ class TestBuildDiamondDB(TestPluginBase):
         source_path = os.path.join(str(proteins_and_taxa), "ref_db.dmnd")
         destination_path = os.path.join(str(diamond_db), "ref_db.dmnd")
         shut_mv.assert_called_once_with(source_path, destination_path)
+
+    def test_validate_taxon_id_invalid(self):
+        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
+        with self.assertRaisesRegex(ValueError, "'0' is not valid taxon ID. "):
+            _validate_taxon_id(path_to_data, 0)
+
+    def test_validate_taxon_id_valid(self):
+        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
+        _validate_taxon_id(path_to_data, 2)

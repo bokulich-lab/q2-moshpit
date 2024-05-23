@@ -12,7 +12,7 @@ from qiime2.core.exceptions import ValidationError
 from .._dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
     fetch_diamond_db, build_eggnog_diamond_db, fetch_ncbi_taxonomy,
-    _validate_taxon_id, _collect_and_compare_md5
+    _collect_and_compare_md5
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types.reference_db import (
@@ -267,21 +267,3 @@ class TestBuildDiamondDB(TestPluginBase):
         source_path = os.path.join(str(proteins_and_taxa), "ref_db.dmnd")
         destination_path = os.path.join(str(diamond_db), "ref_db.dmnd")
         shut_mv.assert_called_once_with(source_path, destination_path)
-
-    def test_validate_taxon_id_invalid(self):
-        # Init input data
-        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
-        eggnog_proteins = EggnogProteinSequencesDirFmt(path_to_data, 'r')
-
-        # Call function exception error since taxon 0 is invalid
-        with self.assertRaisesRegex(
-            ValueError,
-            "'0' is not valid taxon ID. "
-        ):
-            _validate_taxon_id(eggnog_proteins, 0)
-
-    def test_validate_taxon_id_valid(self):
-        # Init input data
-        path_to_data = self.get_data_path('build_eggnog_diamond_db/')
-        eggnog_proteins = EggnogProteinSequencesDirFmt(path_to_data, 'r')
-        _validate_taxon_id(eggnog_proteins, 2)

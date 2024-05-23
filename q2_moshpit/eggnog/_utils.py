@@ -83,7 +83,7 @@ def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
                                     hmms.writelines(lines)
 
                                     # get name and write to idmap
-                                    id = modified_line.replace("NAME ", "", 1)
+                                    id = modified_line.replace("NAME  ", "", 1)
                                     idmap.write(f"{i} {id}")
 
                                     break

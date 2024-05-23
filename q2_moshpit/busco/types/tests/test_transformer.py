@@ -62,6 +62,11 @@ class TestBUSCOTransformers(TestPluginBase):
             self.fp, sep='\t', header=0, index_col=0, dtype='str'
         )
         df.index.name = 'id'
+        for col in [
+            'complete', 'single', 'duplicated', 'fragmented', 'missing',
+            'n_markers', 'scaffold_n50', 'contigs_n50', 'scaffolds', 'length'
+        ]:
+            df[col] = pd.to_numeric(df[col])
         exp = qiime2.Metadata(df)
 
         self.assertEqual(obs, exp)

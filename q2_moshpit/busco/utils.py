@@ -8,11 +8,12 @@
 import json
 import os
 import pandas as pd
-from typing import List
+from typing import List, Union
 
 import skbio.io
 
 from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
+from q2_types.feature_data_mag import MAGSequencesDirFmt
 
 arguments_with_hyphens = {
     "auto_lineage": "auto-lineage",
@@ -49,17 +50,25 @@ def _parse_busco_params(arg_key, arg_val) -> List[str]:
         return [f"--{arg_key}", str(arg_val)]
 
 
-def _partition_dataframe(df: pd.DataFrame, max_rows: int) -> list:
+def _partition_dataframe(
+    df: pd.DataFrame, max_rows: int, is_sample_data: bool
+) -> list:
     """
     Partitions a DataFrame into smaller DataFrames based on
     a maximum row limit.
 
+    If is_sample_data = True:
     This function groups the DataFrame by 'sample_id' and then partitions
     these groups into smaller DataFrames. Each partition will have a total
     row count less than or equal to the max_rows parameter (unless a single
     partition exceeds the max_rows, in which case it will have all the
     MAGs included). The last group in a partition can exceed the max_rows
     limit.
+
+    If is_sample_data = False:
+    Partitions a DataFrame into smaller DataFrames based on
+    a maximum row limit. Each partition will have a total
+    row count less than or equal to the `max_rows` parameter.
 
     Args:
         df (pd.DataFrame): The DataFrame to partition. It should have a
@@ -71,25 +80,28 @@ def _partition_dataframe(df: pd.DataFrame, max_rows: int) -> list:
         list: A list of partitioned DataFrames. Each DataFrame in the
             list is a partition of the original DataFrame.
     """
-    groups = [group for _, group in df.groupby('sample_id')]
-    partitions = []
-    temp = []
-    total_rows = 0
+    if is_sample_data:
+        groups = [group for _, group in df.groupby('sample_id')]
+        partitions = []
+        temp = []
+        total_rows = 0
 
-    for group in groups:
-        if total_rows + len(group) > max_rows:
-            if temp:
-                partitions.append(pd.concat(temp))
-            temp = [group]
-            total_rows = len(group)
-        else:
-            temp.append(group)
-            total_rows += len(group)
+        for group in groups:
+            if total_rows + len(group) > max_rows:
+                if temp:
+                    partitions.append(pd.concat(temp))
+                temp = [group]
+                total_rows = len(group)
+            else:
+                temp.append(group)
+                total_rows += len(group)
 
-    if temp:
-        partitions.append(pd.concat(temp))
+        if temp:
+            partitions.append(pd.concat(temp))
 
-    return partitions
+        return partitions
+    else:
+        return [df[i:i+max_rows] for i in range(0, len(df), max_rows)]
 
 
 def _collect_summaries(run_summaries_fp_map: dict) -> pd.DataFrame:
@@ -117,6 +129,7 @@ def _collect_summaries(run_summaries_fp_map: dict) -> pd.DataFrame:
 
 def _get_feature_table(busco_results: pd.DataFrame):
     df = busco_results.reset_index(inplace=False, drop=False)
+
     new_cols = {
         "mag_id": "MAG", "sample_id": "Sample", "dataset": "Dataset",
         "single": "% single", "duplicated": "% duplicated",
@@ -125,6 +138,10 @@ def _get_feature_table(busco_results: pd.DataFrame):
         "contigs_n50": "N50 contigs", "percent_gaps": "Percent gaps",
         "scaffolds": "Contigs", "length": "Length (bp)"
     }
+
+    if len(busco_results["sample_id"].unique()) < 2:
+        del new_cols["sample_id"]
+
     df = df[list(new_cols.keys())].rename(columns=new_cols, inplace=False)
     return df.to_json(orient='split')
 
@@ -204,10 +221,16 @@ def _calculate_summary_stats(df: pd.DataFrame) -> json:
     return stats.T.to_json(orient='table')
 
 
-def _get_mag_lengths(bins: MultiMAGSequencesDirFmt):
+def _get_mag_lengths(bins: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt]):
     lengths = {}
-    for sample, mags in bins.sample_dict().items():
-        for mag_id, mag_fp in mags.items():
+    if isinstance(bins, MultiMAGSequencesDirFmt):
+        for sample, mags in bins.sample_dict().items():
+            for mag_id, mag_fp in mags.items():
+                seq = skbio.io.read(mag_fp, format="fasta")
+                lengths[mag_id] = sum([len(s) for s in seq])
+        return pd.Series(lengths, name="length")
+    else:
+        for mag_id, mag_fp in bins.feature_dict().items():
             seq = skbio.io.read(mag_fp, format="fasta")
             lengths[mag_id] = sum([len(s) for s in seq])
-    return pd.Series(lengths, name="length")
+        return pd.Series(lengths, name="length")

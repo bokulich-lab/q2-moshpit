@@ -30,6 +30,8 @@ setup(
             'tests/data/*',
             'tests/data/md5/*',
             "assets/busco/*",
+            "assets/busco/feature_data/*",
+            "assets/busco/sample_data/*",
             "assets/busco/js/*",
             "assets/busco/css/*",
         ],
@@ -87,7 +89,10 @@ setup(
         'q2_moshpit.partition.tests': [
             'data/*', 'data/*/*', 'data/*/*/*', 'data/*/*/*/*',
             'data/*/*/*/*/*',
-        ]
+        ],
+        'q2_moshpit.filtering.tests': [
+            'data/*', 'data/mags/*', 'data/mags/*/*',
+        ],
     },
     zip_safe=False,
 )

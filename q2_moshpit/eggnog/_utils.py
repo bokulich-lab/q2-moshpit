@@ -74,7 +74,7 @@ def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
                             for j, line in enumerate(lines):
                                 if line.startswith("NAME "):
                                     modified_line = re.sub(
-                                        r'\.faa\.final_tree(\.fa)?', "", line
+                                        r"\.faa\.final_tree(\.fa)?", "", line
                                     )
 
                                     # write modified content to hmms_merged
@@ -114,7 +114,7 @@ def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
         files = [
             f"{tmp}/{taxon_id}/{f}"
             for f in os.listdir(f"{tmp}/{taxon_id}")
-            if f.endswith('.gz')
+            if f.endswith(".gz")
         ]
 
         # Extract, remove '-' and save to hmmer_db location
@@ -122,9 +122,9 @@ def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
         for fpi in tqdm(files):
             new_name = os.path.basename(fpi).replace(".raw_alg.faa.gz", ".fa")
             fpo = os.path.join(str(hmmer_db), new_name)
-            with gzip.open(fpi, 'rt') as f_in, open(fpo, 'w') as f_out:
+            with gzip.open(fpi, "rt") as f_in, open(fpo, "w") as f_out:
                 content = f_in.read()
-                content = content.replace('-', '')
+                content = content.replace("-", "")
                 f_out.write(content)
 
 

@@ -15,7 +15,7 @@ from .._utils import (
 
 
 class TestEggnogUtils(TestPluginBase):
-    package = 'q2_moshpit.eggnog.tests'
+    package = "q2_moshpit.eggnog.tests"
 
     @patch("subprocess.run")
     def test_try_wget(self, mock_run):
@@ -34,7 +34,7 @@ class TestEggnogUtils(TestPluginBase):
 
     @patch("q2_moshpit.eggnog._utils._try_wget")
     @patch("subprocess.run")
-    @patch('tempfile.TemporaryDirectory')
+    @patch("tempfile.TemporaryDirectory")
     def test_download_and_build_hmm_db(self, tmpdir, mock_run, mock_wet):
         tmp = self.get_data_path('hmmer/hmms')
         taxon_id = 1
@@ -63,9 +63,9 @@ class TestEggnogUtils(TestPluginBase):
 
     @patch("q2_moshpit.eggnog._utils._try_wget")
     @patch("subprocess.run")
-    @patch('tempfile.TemporaryDirectory')
+    @patch("tempfile.TemporaryDirectory")
     def test_download_fastas_into_hmmer_db(self, tmpdir, mock_run, mock_wet):
-        tmp = self.get_data_path('hmmer/fastas')
+        tmp = self.get_data_path("hmmer/fastas")
         taxon_id = 1
         tmpdir.return_value.__enter__.return_value = tmp
         hmmer_db = HmmerDirFmt()

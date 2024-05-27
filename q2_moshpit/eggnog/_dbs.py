@@ -354,7 +354,7 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
         "Proceeding with FASTA files download and processing..."
     ))
 
-    # Downland fasta sequences
+    # Download fasta sequences
     _download_fastas_into_hmmer_db(hmmer_db, taxon_id)
     print(colorify(
         "FASTA files processed successfully. \n"

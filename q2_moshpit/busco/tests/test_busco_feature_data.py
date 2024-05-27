@@ -55,7 +55,7 @@ class TestBUSCOFeatureData(TestPluginBase):
             'busco', '--lineage_dataset', 'bacteria_odb10',
             '--cpu', '7', '--in', self.get_data_path('mags/sample1'),
             '--out_path', self.temp_dir.name, '-o', 'sample1'
-        ])
+        ], cwd=os.path.dirname(self.temp_dir.name))
 
     @patch(
         "q2_moshpit.busco.busco._draw_detailed_plots",

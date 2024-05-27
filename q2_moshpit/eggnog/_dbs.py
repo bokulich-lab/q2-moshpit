@@ -343,7 +343,7 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
         )
         _validate_taxon_id(tmp, taxon_id)
 
-    # Download HMMER data base
+    # Download HMMER database
     print(colorify(
         "Valid taxon ID. \n"
         "Proceeding with HMMER database download and build..."

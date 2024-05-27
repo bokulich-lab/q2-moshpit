@@ -28,6 +28,7 @@ setup(
         'q2_moshpit': [
             'citations.bib',
             'tests/data/*',
+            'tests/data/mags-derep/*',
             'tests/data/md5/*',
             "assets/busco/*",
             "assets/busco/feature_data/*",

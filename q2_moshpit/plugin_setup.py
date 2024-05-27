@@ -1276,10 +1276,10 @@ plugin.methods.register_function(
     function=q2_moshpit.eggnog.fetch_eggnog_hmmer_db,
     inputs={},
     parameters={
-        'taxon_id': Int % Range(2, 1579337)
+        "taxon_id": Int % Range(1, None)
     },
     parameter_descriptions={
-        'taxon_id': "Taxon ID number."
+        "taxon_id": "Taxon ID number."
     },
     outputs=[("hmmer_db", ReferenceDB[HMMER])],
     output_descriptions={

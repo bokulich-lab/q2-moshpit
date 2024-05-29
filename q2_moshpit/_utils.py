@@ -72,8 +72,6 @@ def _process_common_input_params(processing_func, params: dict) -> List[str]:
             arg_val
         ):
             processed_args.extend(processing_func(arg_key, arg_val))
-        else:
-            continue
 
     return processed_args
 

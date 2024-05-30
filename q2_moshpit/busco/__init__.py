@@ -7,5 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from .busco import evaluate_busco, _evaluate_busco, _visualize_busco
+from .partition import collate_busco_results
 
-__all__ = ["evaluate_busco", "_evaluate_busco", "_visualize_busco"]
+__all__ = ["evaluate_busco", "_evaluate_busco", "_visualize_busco",
+           "collate_busco_results"]

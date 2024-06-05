@@ -10,7 +10,11 @@ from q2_moshpit._utils import colorify, run_command
 from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 
 
-def fetch_busco_db(virus: bool, prok: bool, euk: bool) -> BuscoDatabaseDirFmt:
+def fetch_busco_db(
+    virus: bool = False,
+    prok: bool = False,
+    euk: bool = False
+) -> BuscoDatabaseDirFmt:
     busco_db = BuscoDatabaseDirFmt(path=None, mode='w')
 
     # Parse kwargs

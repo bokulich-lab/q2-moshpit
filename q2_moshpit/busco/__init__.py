@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 from .busco import evaluate_busco, _evaluate_busco, _visualize_busco
-from .fetch_busco_db import fetch_busco_db
+from .database import fetch_busco_db
 
 __all__ = [
     "evaluate_busco", "_evaluate_busco", "_visualize_busco", "fetch_busco_db"

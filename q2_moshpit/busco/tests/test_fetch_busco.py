@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from q2_moshpit.busco.fetch_busco_db import fetch_busco_db
+from q2_moshpit.busco.database import fetch_busco_db
 from unittest.mock import patch
 from qiime2.plugin.testing import TestPluginBase
 

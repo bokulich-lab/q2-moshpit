@@ -45,7 +45,13 @@ jobs:
       - name: Create conda yaml
         id: create-conda-yaml
         run: |
-          bash utilities/ci/get-dependencies.sh "$DISTRO" ${{ steps.fetch-tags.outputs.latest-dev-tag }} utilities/ci/repositories.yaml
+          commit_msg="${{ steps.get-commit-msg.outputs.commit-msg }}"
+          if [[ "$commit_msg" == *"[stable]"* ]] || [[ "$commit_msg" == *"[prod]"* ]]; then
+              tag="${{ steps.fetch-tags.outputs.latest-stable-tag }}"
+          else
+              tag="${{ steps.fetch-tags.outputs.latest-dev-tag }}"
+          fi
+          bash utilities/ci/get-dependencies.sh "$DISTRO" $tag utilities/ci/repositories.yaml
           cat environment.yml >> $GITHUB_STEP_SUMMARY
           echo "qiime-deps=$(tr '\n' ' ' < repo-urls.txt | xargs)" >> $GITHUB_OUTPUT
 
@@ -109,12 +115,12 @@ jobs:
         run: mamba run -n conda-env pip install pytest coverage parameterized
 
       - name: Run tests
+        id: test
         run: mamba run -n conda-env make test-cov
 
-      - uses: codecov/codecov-action@v4
-        name: Upload coverage report
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        if: steps.test.outcome == 'success'
         with:
-          files: ./coverage.xml
-          fail_ci_if_error: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage
+          path: coverage.xml

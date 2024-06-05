@@ -135,9 +135,14 @@ class TestBUSCOFeatureData(TestPluginBase):
             'FeatureData[MAG]',
             self.get_data_path('mags/sample2')
         )
+        busco_db = qiime2.Artifact.import_data(
+            'ReferenceDB[BuscoDB]',
+            self.get_data_path('busco_db')
+        )
         obs = evaluate_busco(
             ctx=mock_ctx,
             bins=mags,
+            busco_db=busco_db,
             num_partitions=2
         )
         exp = ("collated_result", "visualization")

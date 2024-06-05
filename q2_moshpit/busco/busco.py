@@ -112,7 +112,7 @@ def _busco_helper(bins, common_args):
 
 def _evaluate_busco(
     bins: Union[MultiMAGSequencesDirFmt, MAGSequencesDirFmt],
-    busco_db: BuscoDatabaseDirFmt = None,
+    busco_db: BuscoDatabaseDirFmt,
     mode: str = "genome",
     lineage_dataset: str = None,
     augustus: bool = False,
@@ -136,11 +136,8 @@ def _evaluate_busco(
     kwargs = {
         k: v for k, v in locals().items() if k not in ["bins", "busco_db"]
     }
-
-    # Add busco_db to kwargs
-    if busco_db is not None:
-        kwargs["offline"] = True
-        kwargs["download_path"] = f"{str(busco_db)}/busco_downloads"
+    kwargs["offline"] = True
+    kwargs["download_path"] = f"{str(busco_db)}/busco_downloads"
 
     if lineage_dataset is not None:
         _validate_lineage_dataset_input(
@@ -263,7 +260,7 @@ def _visualize_busco(output_dir: str, busco_results: pd.DataFrame) -> None:
 def evaluate_busco(
     ctx,
     bins,
-    busco_db=None,
+    busco_db,
     mode="genome",
     lineage_dataset=None,
     augustus=False,

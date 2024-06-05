@@ -115,12 +115,12 @@ jobs:
         run: mamba run -n conda-env pip install pytest coverage parameterized
 
       - name: Run tests
+        id: test
         run: mamba run -n conda-env make test-cov
 
-      - uses: codecov/codecov-action@v4
-        name: Upload coverage report
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        if: steps.test.outcome == 'success'
         with:
-          files: ./coverage.xml
-          fail_ci_if_error: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          name: coverage
+          path: coverage.xml

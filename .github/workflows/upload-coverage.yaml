@@ -1,4 +1,4 @@
-name: Comment on the pull request
+name: Upload coverage report
 
 on:
   workflow_run:

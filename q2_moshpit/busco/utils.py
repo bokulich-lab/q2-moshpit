@@ -54,8 +54,8 @@ def _validate_lineage_dataset_input(
             )
             raise ValueError(
                 f"The specified lineage_dataset ({lineage_dataset}) "
-                "is not present in input database. \n"
-                "Printing lineage datasets present in input database: \n"
+                "is not present in input database. "
+                "The datasets present in the input database are: "
                 f"{present_lineages}"
             )
 

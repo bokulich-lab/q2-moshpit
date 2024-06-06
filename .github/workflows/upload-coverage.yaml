@@ -17,7 +17,7 @@ jobs:
         name: 'Fetch coverage from builds'
         with:
           name: coverage
-          path: coverage.xml
+          path: ./coverage.xml
 
       - uses: codecov/codecov-action@v4
         name: Upload coverage report

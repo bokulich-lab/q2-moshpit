@@ -18,6 +18,7 @@ jobs:
         with:
           name: coverage
           path: ./coverage.xml
+          run-id: ${{ github.event.workflow_run.id }}
 
       - uses: codecov/codecov-action@v4
         name: Upload coverage report

@@ -22,7 +22,7 @@ jobs:
 #           github-token: ${{ secrets.MY_TOKEN }}
 
       - name: 'Download artifact'
-        uses: actions/github-script@v3.1.0
+        uses: actions/github-script@v7.0.1
         with:
           script: |
             var artifacts = await github.actions.listWorkflowRunArtifacts({

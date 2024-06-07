@@ -8,7 +8,6 @@
 import pandas as pd
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
-
 from q2_moshpit.busco.types import BUSCOResultsFormat
 from q2_moshpit.busco.types._transformer import _read_dataframe
 

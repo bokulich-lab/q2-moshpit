@@ -17,6 +17,7 @@ from q2_moshpit.busco.busco import (
 from unittest.mock import patch, ANY, call, MagicMock
 from qiime2.plugin.testing import TestPluginBase
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 
 
 class TestBUSCOSampleData(TestPluginBase):
@@ -27,6 +28,10 @@ class TestBUSCOSampleData(TestPluginBase):
         self.mags = MultiMAGSequencesDirFmt(
             path=self.get_data_path('mags'),
             mode="r",
+        )
+        self.busco_db = BuscoDatabaseDirFmt(
+            path=self.get_data_path("busco_db"),
+            mode="r"
         )
 
     def _prepare_summaries(self):
@@ -56,15 +61,21 @@ class TestBUSCOSampleData(TestPluginBase):
         self.assertDictEqual(obs, exp)
         mock_run.assert_has_calls([
             call(
-                ['busco', '--lineage_dataset', 'bacteria_odb10',
-                 '--cpu', '7', '--in', self.get_data_path('mags/sample1'),
-                 '--out_path', self.temp_dir.name, '-o', 'sample1'],
+                [
+                    'busco', '--lineage_dataset', 'bacteria_odb10',
+                    '--cpu', '7', '--in', self.get_data_path('mags/sample1'),
+                    '--out_path', self.temp_dir.name, '-o', 'sample1'
+                ],
+                cwd=os.path.dirname(self.temp_dir.name)
             ),
             call(
-                ['busco', '--lineage_dataset', 'bacteria_odb10',
-                 '--cpu', '7', '--in', self.get_data_path('mags/sample2'),
-                 '--out_path', self.temp_dir.name, '-o', 'sample2'],
-            )
+                [
+                    'busco', '--lineage_dataset', 'bacteria_odb10',
+                    '--cpu', '7', '--in', self.get_data_path('mags/sample2'),
+                    '--out_path', self.temp_dir.name, '-o', 'sample2'
+                ],
+                cwd=os.path.dirname(self.temp_dir.name)
+            ),
         ])
 
     @patch('q2_moshpit.busco.busco._run_busco')
@@ -99,15 +110,21 @@ class TestBUSCOSampleData(TestPluginBase):
         )
 
     @patch("q2_moshpit.busco.busco._busco_helper")
-    def test_evaluate_busco(self, mock_helper):
+    def test_evaluate_busco_offline(self, mock_helper):
         _evaluate_busco(
-            bins=self.mags, mode="some_mode", lineage_dataset="bacteria_odb10"
+            bins=self.mags,
+            busco_db=self.busco_db,
+            mode="some_mode",
+            lineage_dataset="lineage_1"
         )
         mock_helper.assert_called_with(
             self.mags,
-            ['--mode', 'some_mode', '--lineage_dataset', 'bacteria_odb10',
-             '--cpu', '1', '--contig_break', '10', '--evalue', '0.001',
-             '--limit', '3']
+            [
+                '--mode', 'some_mode', '--lineage_dataset', 'lineage_1',
+                '--cpu', '1', '--contig_break', '10', '--evalue', '0.001',
+                '--limit', '3', '--offline', "--download_path",
+                f"{str(self.busco_db)}/busco_downloads"
+            ]
         )
 
     @patch(
@@ -184,9 +201,14 @@ class TestBUSCOSampleData(TestPluginBase):
             'SampleData[MAGs]',
             self.get_data_path('mags')
         )
+        busco_db = qiime2.Artifact.import_data(
+            'ReferenceDB[BuscoDB]',
+            self.get_data_path('busco_db')
+        )
         obs = evaluate_busco(
             ctx=mock_ctx,
             bins=mags,
+            busco_db=busco_db,
             num_partitions=2
         )
         exp = ("collated_result", "visualization")

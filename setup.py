@@ -44,10 +44,19 @@ setup(
         ],
         "q2_moshpit.busco.tests": [
             "data/*",
-            "data/mags/*", "data/mags/*/*",
-            "data/summaries/*"
+            "data/*/*",
+            "data/*/*/*",
+            "data/*/*/*/*",
+            "data/*/*/*/*/*",
         ],
-        "q2_moshpit.busco.types.tests": ["data/*"],
+        "q2_moshpit.busco.types.tests": [
+            "data/*",
+            "data/*/*",
+            "data/*/*/*",
+            "data/*/*/*/*",
+            "data/*/*/*/*/*",
+            "data/*/*/*/*/*/*",
+        ],
         'q2_moshpit.eggnog': [
             'tests/data/*',
             'tests/data/md5/*',

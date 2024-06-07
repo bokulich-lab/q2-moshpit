@@ -5,11 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-import unittest
-
 import pandas as pd
 from qiime2.plugin.testing import TestPluginBase
-
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 from .._utils import (
     _construct_param, _process_common_input_params,
@@ -18,9 +15,7 @@ from .._utils import (
 
 
 def fake_processing_func(key, val):
-    if not val:
-        return
-    elif isinstance(val, bool):
+    if isinstance(val, bool):
         return [_construct_param(key)]
     else:
         return [_construct_param(key), str(val)]
@@ -140,7 +135,3 @@ class TestUtils(TestPluginBase):
         })
         exp.set_index('id', inplace=True)
         pd.testing.assert_frame_equal(obs, exp)
-
-
-if __name__ == '__main__':
-    unittest.main()

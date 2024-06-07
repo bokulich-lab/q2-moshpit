@@ -55,7 +55,7 @@ class TestBUSCOFeatureData(TestPluginBase):
             'busco', '--lineage_dataset', 'bacteria_odb10',
             '--cpu', '7', '--in', self.get_data_path('mags/sample1'),
             '--out_path', self.temp_dir.name, '-o', 'sample1'
-        ])
+        ], cwd=os.path.dirname(self.temp_dir.name))
 
     @patch(
         "q2_moshpit.busco.busco._draw_detailed_plots",
@@ -135,9 +135,14 @@ class TestBUSCOFeatureData(TestPluginBase):
             'FeatureData[MAG]',
             self.get_data_path('mags/sample2')
         )
+        busco_db = qiime2.Artifact.import_data(
+            'ReferenceDB[BuscoDB]',
+            self.get_data_path('busco_db')
+        )
         obs = evaluate_busco(
             ctx=mock_ctx,
             bins=mags,
+            busco_db=busco_db,
             num_partitions=2
         )
         exp = ("collated_result", "visualization")

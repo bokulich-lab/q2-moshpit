@@ -7,12 +7,12 @@
 # ----------------------------------------------------------------------------
 import json
 import os
+import warnings
 import pandas as pd
 from typing import List, Union
-
 import skbio.io
-
 from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
+from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 
 arguments_with_hyphens = {
@@ -24,6 +24,40 @@ arguments_with_hyphens = {
 }
 
 MARKER_COLS = ["single", "duplicated", "fragmented", "missing", "complete"]
+
+
+def _validate_lineage_dataset_input(
+        lineage_dataset: str,
+        auto_lineage: bool,
+        auto_lineage_euk: bool,
+        auto_lineage_prok: bool,
+        busco_db: BuscoDatabaseDirFmt,
+        kwargs
+        ) -> None:
+    # When lineage_dataset is specified all other lineage flags are ignored
+    if any([auto_lineage, auto_lineage_euk, auto_lineage_prok]):
+        warnings.warn(
+            f"`--p-lineage-dataset` was specified as '{lineage_dataset}'. "
+            "`--p-auto-lineage` flags will be ignored."
+        )
+        kwargs["auto_lineage"] = False
+        kwargs["auto_lineage_euk"] = False
+        kwargs["auto_lineage_prok"] = False
+
+    # Check that lineage in deed exits inside Busco DB (if provided)
+    if busco_db is not None:
+        if not os.path.exists(
+            f"{str(busco_db)}/busco_downloads/lineages/{lineage_dataset}"
+        ):
+            present_lineages = os.listdir(
+                os.path.join(str(busco_db), "busco_downloads/lineages/")
+            )
+            raise ValueError(
+                f"The specified lineage_dataset ({lineage_dataset}) "
+                "is not present in input database. "
+                "The datasets present in the input database are: "
+                f"{present_lineages}"
+            )
 
 
 def _parse_busco_params(arg_key, arg_val) -> List[str]:

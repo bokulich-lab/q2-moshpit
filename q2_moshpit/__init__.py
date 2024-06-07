@@ -8,7 +8,6 @@
 
 from . import busco
 from . import eggnog
-from . import partition
 from . import prodigal
 from ._version import get_versions
 from .dereplication import dereplicate_mags
@@ -28,6 +27,6 @@ del get_versions
 __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
     'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog',
-    'busco', 'prodigal', 'kraken_helpers', 'partition',
-    'filter_derep_mags', 'filter_mags', 'get_feature_lengths'
+    'busco', 'prodigal', 'kraken_helpers', 'filter_derep_mags',
+    'filter_mags', 'get_feature_lengths'
 ]

@@ -40,18 +40,15 @@ def eggnog_diamond_search(
         "moshpit", "_eggnog_diamond_search")
 
     if sequences.type <= FeatureData[MAG]:
-        partition_method = ctx.get_action(
-            "moshpit", "partition_feature_data_mags")
+        partition_method = ctx.get_action("types", "partition_feature_data_mags")
     elif sequences.type <= SampleData[Contigs]:
         partition_method = ctx.get_action("assembly", "partition_contigs")
     elif sequences.type <= SampleData[MAGs]:
-        partition_method = ctx.get_action(
-            "moshpit", "partition_sample_data_mags"
-        )
+        partition_method = ctx.get_action("types", "partition_sample_data_mags")
     else:
         raise NotImplementedError()
 
-    collate_hits = ctx.get_action("moshpit", "collate_orthologs")
+    collate_hits = ctx.get_action("types", "collate_ortholog_annotations")
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
 
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
@@ -186,10 +183,10 @@ def eggnog_annotate(
         num_partitions=None
 ):
     _eggnog_annotate = ctx.get_action("moshpit", "_eggnog_annotate")
-    collate_annotations = ctx.get_action("moshpit", "collate_annotations")
+    collate_annotations = ctx.get_action("types", "collate_annotations")
 
     if eggnog_hits.type <= SampleData[BLAST6]:
-        partition_method = ctx.get_action("moshpit", "partition_orthologs")
+        partition_method = ctx.get_action("types", "partition_orthologs")
     else:
         raise NotImplementedError()
 

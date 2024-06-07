@@ -8,25 +8,12 @@
 import glob
 import os
 import tempfile
-from typing import Union
 
 import pandas as pd
-import skbio.io
-import skbio.sequence
 
 from q2_assembly._utils import run_commands_with_pipe
 from q2_moshpit._utils import run_command
-from q2_types.feature_data_mag import MAGSequencesDirFmt
-from q2_types.per_sample_sequences import (
-    BAMDirFmt,
-    SingleLanePerSamplePairedEndFastqDirFmt,
-    SingleLanePerSampleSingleEndFastqDirFmt
-)
-
-
-def get_mag_length(fasta_file: str):
-    sequences = skbio.io.read(fasta_file, format='fasta', into=skbio.DNA)
-    return sum(len(seq) for seq in sequences)
+from q2_types.per_sample_sequences import BAMDirFmt
 
 
 def rpkm(

@@ -6,12 +6,15 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import importlib
-
 from qiime2.plugin import Metadata
-
+from q2_moshpit.eggnog._type import EggnogHmmerIdmap
+from q2_moshpit.eggnog._format import (
+    EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt
+)
 from q2_moshpit.busco.types import (
     BUSCOResults, BUSCOResultsDirectoryFormat, BUSCOResultsFormat
 )
+from q2_types.profile_hmms import ProfileHMM, MultipleProtein, PressedProtein
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
     FeatureData, Sequence, Taxonomy, ProteinSequence, SequenceCharacteristics
@@ -40,8 +43,7 @@ from q2_types.kraken2 import (
 from q2_types.kraken2._type import BrackenDB
 from q2_types.per_sample_sequences._type import AlignmentMap
 from q2_types.reference_db import (
-    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
-    HMMER
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -1281,7 +1283,12 @@ plugin.methods.register_function(
     parameter_descriptions={
         "taxon_id": "Taxon ID number."
     },
-    outputs=[("hmmer_db", ReferenceDB[HMMER])],
+    outputs=[
+        ("idmap", EggnogHmmerIdmap),
+        ("hmmer_db", ProfileHMM[MultipleProtein]),
+        ("pressed_hmmer_db", ProfileHMM[PressedProtein]),
+        ("fastas", GenomeData[Proteins])
+    ],
     output_descriptions={
         "hmmer_db": "HMMER database."
     },
@@ -1292,4 +1299,10 @@ plugin.methods.register_function(
         citations["huerta_cepas_eggnog_2019"],
         citations["noauthor_hmmer_nodate"]
     ]
+)
+
+plugin.register_formats(EggnogHmmerIdmapFileFmt, EggnogHmmerIdmapDirectoryFmt)
+plugin.register_semantic_types(EggnogHmmerIdmap)
+plugin.register_semantic_type_to_format(
+    EggnogHmmerIdmap, EggnogHmmerIdmapDirectoryFmt
 )

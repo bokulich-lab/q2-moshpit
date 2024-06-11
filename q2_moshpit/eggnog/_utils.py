@@ -8,12 +8,17 @@
 import re
 import os
 import gzip
+import shutil
 from tqdm import tqdm
 import tempfile
 import subprocess
 from typing import List
-from q2_types.reference_db import HmmerDirFmt
 from .._utils import run_command, colorify
+from q2_types.profile_hmms import (
+    ProteinMultipleProfileHmmDirectoryFmt, PressedProfileHmmsDirectoryFmt
+)
+from q2_types.genome_data import ProteinsDirectoryFormat
+from q2_moshpit.eggnog._format import EggnogHmmerIdmapDirectoryFmt
 
 
 def _parse_build_diamond_db_params(arg_key, arg_val) -> List[str]:
@@ -36,8 +41,11 @@ def _parse_build_diamond_db_params(arg_key, arg_val) -> List[str]:
         return [f"--{arg_key}", str(arg_val)]
 
 
-def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
-    hmmer_db = HmmerDirFmt()
+def _download_and_build_hmm_db(taxon_id):
+    pressed_hmm_db_obj = PressedProfileHmmsDirectoryFmt()
+    hmm_db_obj = ProteinMultipleProfileHmmDirectoryFmt()
+    idmap_obj = EggnogHmmerIdmapDirectoryFmt()
+
     with tempfile.TemporaryDirectory() as tmp:
         _try_wget(
             f"{tmp}/{taxon_id}_hmms.tar.gz",
@@ -55,8 +63,8 @@ def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
 
         # Merge hmm files + write .hmm.idmap
         print(colorify("Merging hmm files..."))
-        hmms_merged_p = f"{str(hmmer_db)}/{taxon_id}.hmm"
-        idmap_p = f"{str(hmmer_db)}/{taxon_id}.hmm.idmap"
+        hmms_merged_p = f"{str(pressed_hmm_db_obj)}/{taxon_id}.hmm"
+        idmap_p = f"{str(idmap_obj)}/{taxon_id}.hmm.idmap"
 
         # Open output files
         with open(hmms_merged_p, "a") as hmms, open(idmap_p, "a") as idmap:
@@ -90,12 +98,13 @@ def _download_and_build_hmm_db(taxon_id) -> HmmerDirFmt:
     # prepare an HMM database for faster hmmscan searches
     print(colorify("Preparing HMM database..."))
     run_command(cmd=["hmmpress", hmms_merged_p])
-    os.remove(hmms_merged_p)
+    shutil.move(hmms_merged_p, f"{str(hmm_db_obj)}/{taxon_id}.hmm")
 
-    return hmmer_db
+    return idmap_obj, hmm_db_obj, pressed_hmm_db_obj
 
 
-def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
+def _download_fastas_into_hmmer_db(taxon_id: int):
+    fastas_obj = ProteinsDirectoryFormat()
     with tempfile.TemporaryDirectory() as tmp:
         _try_wget(
             f"{tmp}/{taxon_id}_raw_algs.tar",
@@ -121,11 +130,13 @@ def _download_fastas_into_hmmer_db(hmmer_db: HmmerDirFmt, taxon_id: int):
         print(colorify("Processing FASTA files (this can take a while)... "))
         for fpi in tqdm(files):
             new_name = os.path.basename(fpi).replace(".raw_alg.faa.gz", ".fa")
-            fpo = os.path.join(str(hmmer_db), new_name)
+            fpo = os.path.join(str(fastas_obj), new_name)
             with gzip.open(fpi, "rt") as f_in, open(fpo, "w") as f_out:
                 content = f_in.read()
                 content = content.replace("-", "")
                 f_out.write(content)
+
+    return fastas_obj
 
 
 def _try_wget(output_file: str, url: str, exception_msg: str):

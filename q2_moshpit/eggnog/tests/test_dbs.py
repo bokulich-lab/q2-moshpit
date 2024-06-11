@@ -16,7 +16,7 @@ from .._dbs import (
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types.reference_db import (
-    NCBITaxonomyDirFmt, EggnogProteinSequencesDirFmt, HmmerDirFmt
+    NCBITaxonomyDirFmt, EggnogProteinSequencesDirFmt
 )
 
 
@@ -45,10 +45,10 @@ class TestFetchDB(TestPluginBase):
         self, mock_wget, mock_validate, mock_fastas, mock_build, tmpdir
     ):
         tmpdir.return_value.__enter__.return_value = "tmp"
-        mock_build.return_value = HmmerDirFmt()
         taxon_id = 1
+        mock_build.return_value = (1, 2, 3)
 
-        fetch_eggnog_hmmer_db(taxon_id)
+        _, _, _, _ = fetch_eggnog_hmmer_db(taxon_id)
 
         mock_wget.assert_called_once_with(
             "tmp/e5.taxid_info.tsv",
@@ -57,7 +57,7 @@ class TestFetchDB(TestPluginBase):
         )
         mock_validate.assert_called_once_with("tmp", taxon_id)
         mock_build.assert_called_once_with(taxon_id)
-        mock_fastas.assert_called_once_with(mock_build.return_value, taxon_id)
+        mock_fastas.assert_called_once_with(taxon_id)
 
 
 class TestBuildDiamondDB(TestPluginBase):

@@ -12,8 +12,13 @@ from qiime2.core.exceptions import ValidationError
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
-    EggnogProteinSequencesDirFmt, HmmerDirFmt
+    EggnogProteinSequencesDirFmt
 )
+from q2_types.profile_hmms import (
+    ProteinMultipleProfileHmmDirectoryFmt,
+    PressedProfileHmmsDirectoryFmt
+)
+from q2_types.genome_data import ProteinsDirectoryFormat
 from q2_moshpit._utils import (
     run_command, _process_common_input_params, colorify,
     _calculate_md5_from_file
@@ -22,6 +27,7 @@ from q2_moshpit.eggnog._utils import (
     _parse_build_diamond_db_params, _download_and_build_hmm_db,
     _download_fastas_into_hmmer_db, _try_wget
 )
+from q2_moshpit.eggnog._format import EggnogHmmerIdmapDirectoryFmt
 import tempfile
 
 
@@ -329,7 +335,12 @@ def _collect_and_compare_md5(path_to_md5: str, path_to_file: str):
     os.remove(path_to_md5)
 
 
-def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
+def fetch_eggnog_hmmer_db(taxon_id: int) -> (
+    EggnogHmmerIdmapDirectoryFmt,
+    ProteinMultipleProfileHmmDirectoryFmt,
+    PressedProfileHmmsDirectoryFmt,
+    ProteinsDirectoryFormat
+):
     # Validate taxon ID
     with tempfile.TemporaryDirectory() as tmp:
         print(colorify(
@@ -348,17 +359,17 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> HmmerDirFmt:
         "Valid taxon ID. \n"
         "Proceeding with HMMER database download and build..."
     ))
-    hmmer_db = _download_and_build_hmm_db(taxon_id)
+    idmap, hmmer_db, pressed_hmmer_db = _download_and_build_hmm_db(taxon_id)
     print(colorify(
         "HMM database built successfully. \n"
         "Proceeding with FASTA files download and processing..."
     ))
 
     # Download fasta sequences
-    _download_fastas_into_hmmer_db(hmmer_db, taxon_id)
+    fastas = _download_fastas_into_hmmer_db(taxon_id)
     print(colorify(
         "FASTA files processed successfully. \n"
         "Moving data from temporary to final location..."
     ))
 
-    return hmmer_db
+    return idmap, hmmer_db, pressed_hmmer_db, fastas

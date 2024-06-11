@@ -8,9 +8,13 @@
 import subprocess
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
-from q2_types.reference_db import HmmerDirFmt
 from .._utils import (
     _try_wget, _download_and_build_hmm_db, _download_fastas_into_hmmer_db,
+)
+from q2_moshpit.eggnog._format import EggnogHmmerIdmapDirectoryFmt
+from q2_types.genome_data import ProteinsDirectoryFormat
+from q2_types.profile_hmms import (
+    PressedProfileHmmsDirectoryFmt, ProteinMultipleProfileHmmDirectoryFmt
 )
 
 
@@ -40,9 +44,12 @@ class TestEggnogUtils(TestPluginBase):
         taxon_id = 1
         tmpdir.return_value.__enter__.return_value = tmp
 
-        hmmer_db = _download_and_build_hmm_db(taxon_id)
+        idmap, hmm_db, pressed_hmm_db = _download_and_build_hmm_db(taxon_id)
 
-        self.assertIsInstance(hmmer_db, HmmerDirFmt)
+        self.assertIsInstance(idmap, EggnogHmmerIdmapDirectoryFmt)
+        self.assertIsInstance(hmm_db, ProteinMultipleProfileHmmDirectoryFmt)
+        self.assertIsInstance(pressed_hmm_db, PressedProfileHmmsDirectoryFmt)
+
         mock_wet.assert_called_once_with(
             f"{tmp}/{taxon_id}_hmms.tar.gz",
             "http://eggnog5.embl.de/download/eggnog_5.0/per_tax_level/"
@@ -56,7 +63,7 @@ class TestEggnogUtils(TestPluginBase):
                 cwd=tmp
             ),
             call(
-                ["hmmpress", f"{str(hmmer_db)}/{taxon_id}.hmm"],
+                ["hmmpress", f"{str(pressed_hmm_db)}/{taxon_id}.hmm"],
                 check=True
             )
         ])
@@ -68,8 +75,9 @@ class TestEggnogUtils(TestPluginBase):
         tmp = self.get_data_path("hmmer/fastas")
         taxon_id = 1
         tmpdir.return_value.__enter__.return_value = tmp
-        hmmer_db = HmmerDirFmt()
-        _download_fastas_into_hmmer_db(hmmer_db, 1)
+        fastas = _download_fastas_into_hmmer_db(1)
+
+        self.assertIsInstance(fastas, ProteinsDirectoryFormat)
 
         mock_wet.assert_called_once_with(
             f"{tmp}/{taxon_id}_raw_algs.tar",

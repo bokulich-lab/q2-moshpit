@@ -12,7 +12,8 @@ from q2_moshpit.eggnog._format import (
     EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt
 )
 from q2_moshpit.busco.types import (
-    BUSCOResults, BUSCOResultsDirectoryFormat, BUSCOResultsFormat
+    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
+    BUSCOResults, BuscoDB
 )
 from q2_types.profile_hmms import ProfileHMM, MultipleProtein, PressedProtein
 from q2_types.distance_matrix import DistanceMatrix
@@ -43,7 +44,7 @@ from q2_types.kraken2 import (
 from q2_types.kraken2._type import BrackenDB
 from q2_types.per_sample_sequences._type import AlignmentMap
 from q2_types.reference_db import (
-    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -910,15 +911,130 @@ plugin.methods.register_function(
                 "and collates them into a single artifact.",
 )
 
+# First bool flag only allowed to be True when the DB contains all lineages
+# Second bool flag only allowed to be True when the DB has property "eukaryota"
+# Third bool flag only allowed to be True when the DB has property "prokaryota"
+# Triple false option = setting where user specifies the lineage dataset
+(
+    i_busco_db,
+    p_auto_lineage, p_auto_lineage_euk, p_auto_lineage_prok,
+    _
+) = TypeMap({
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,  # Placeholder type because visualizations have no output
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('prokaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('prokaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('eukaryota')],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('eukaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('virus')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+})
+
 busco_params = {
     "mode": Str % Choices(["genome"]),
     "lineage_dataset": Str,
     "augustus": Bool,
     "augustus_parameters": Str,
     "augustus_species": Str,
-    "auto_lineage": Bool,
-    "auto_lineage_euk": Bool,
-    "auto_lineage_prok": Bool,
+    "auto_lineage": p_auto_lineage,
+    "auto_lineage_euk": p_auto_lineage_euk,
+    "auto_lineage_prok": p_auto_lineage_prok,
     "cpu": Int % Range(1, None),
     "config": Str,
     "contig_break": Int % Range(0, None),
@@ -993,31 +1109,6 @@ plugin.methods.register_function(
     description="Collates BUSCO results."
 )
 
-
-plugin.methods.register_function(
-    function=q2_moshpit.busco._evaluate_busco,
-    inputs={
-        "bins": SampleData[MAGs] | FeatureData[MAG],
-    },
-    parameters=busco_params,
-    outputs={
-        "results": BUSCOResults
-    },
-    input_descriptions={
-        "bins": "MAGs to be analyzed.",
-    },
-    parameter_descriptions=busco_param_descriptions,
-    output_descriptions={
-        "results": "BUSCO result table."
-    },
-    name="Evaluate quality of the generated MAGs using BUSCO.",
-    description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
-                "tool) to assess the quality of assembled MAGs and generates "
-                "a table summarizing the results.",
-    citations=[citations["manni_busco_2021"]],
-)
-
 plugin.visualizers.register_function(
     function=q2_moshpit.busco._visualize_busco,
     inputs={
@@ -1034,10 +1125,40 @@ plugin.visualizers.register_function(
     citations=[citations["manni_busco_2021"]],
 )
 
+plugin.methods.register_function(
+    function=q2_moshpit.busco._evaluate_busco,
+    inputs={
+        "bins": SampleData[MAGs] | FeatureData[MAG],
+        "busco_db": i_busco_db
+    },
+    parameters=busco_params,
+    outputs={
+        "results": BUSCOResults
+    },
+    input_descriptions={
+        "bins": "MAGs to be analyzed.",
+        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
+                    "mode. If not provided a BUSCO database "
+                    "will be downloaded to a temporary location and then "
+                    "deleted."
+    },
+    parameter_descriptions=busco_param_descriptions,
+    output_descriptions={
+        "results": "BUSCO result table."
+    },
+    name="Evaluate quality of the generated MAGs using BUSCO.",
+    description="This method uses BUSCO "
+                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "tool) to assess the quality of assembled MAGs and generates "
+                "a table summarizing the results.",
+    citations=[citations["manni_busco_2021"]],
+)
+
 plugin.pipelines.register_function(
     function=q2_moshpit.busco.evaluate_busco,
     inputs={
         "bins": SampleData[MAGs] | FeatureData[MAG],
+        "busco_db": i_busco_db
     },
     parameters={**busco_params, **partition_params},
     outputs={
@@ -1046,6 +1167,10 @@ plugin.pipelines.register_function(
     },
     input_descriptions={
         "bins": "MAGs to be analyzed.",
+        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
+                    "mode. If not provided a BUSCO database "
+                    "will be downloaded to a temporary location and then "
+                    "deleted."
     },
     parameter_descriptions={
         **busco_param_descriptions, **partition_param_descriptions
@@ -1058,7 +1183,7 @@ plugin.pipelines.register_function(
     description="This method uses BUSCO "
                 "(Benchmarking Universal Single-Copy Ortholog assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
-                "visualizations summarizing the results.",
+                "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
 )
 
@@ -1199,6 +1324,68 @@ plugin.methods.register_function(
     citations=[citations["menzel2016"]],
 )
 
+p_virus, p_prok, p_euk, o_busco_db = TypeMap({
+    (
+        Bool % Choices(True),
+        Bool % Choices(True),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])],
+    (
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+    (
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+    (
+        Bool % Choices(True),
+        Bool % Choices(True),
+        Bool % Choices(False)
+    ): ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+    (
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(False)
+    ): ReferenceDB[BuscoDB % Properties('virus')],
+    (
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False)
+    ): ReferenceDB[BuscoDB % Properties('prokaryota')],
+    (
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties('eukaryota')],
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.busco.fetch_busco_db,
+    inputs={},
+    outputs=[('busco_db', o_busco_db)],
+    output_descriptions={
+        'busco_db': "BUSCO database for the specified lineages."
+    },
+    parameters={
+        "virus": p_virus,
+        "prok": p_prok,
+        "euk": p_euk,
+    },
+    parameter_descriptions={
+        "virus": "Download the virus dataset.",
+        "prok": "Download the prokaryote dataset.",
+        "euk": "Download the eukaryote dataset.",
+    },
+    name="Download BUSCO database.",
+    description="Downloads BUSCO database for the specified lineage. "
+                "Output can be used to run BUSCO with the 'evaluate-busco' "
+                "action.",
+    citations=[citations["manni_busco_2021"]],
+)
+
 plugin.methods.register_function(
     function=q2_moshpit._utils.get_feature_lengths,
     inputs={
@@ -1267,11 +1454,16 @@ plugin.methods.register_function(
     description="Filter MAGs based on metadata.",
 )
 
-plugin.register_semantic_types(BUSCOResults)
+plugin.register_semantic_types(BUSCOResults, BuscoDB)
+plugin.register_formats(
+    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt
+)
 plugin.register_semantic_type_to_format(
     BUSCOResults,
     artifact_format=BUSCOResultsDirectoryFormat)
-plugin.register_formats(BUSCOResultsFormat, BUSCOResultsDirectoryFormat)
+plugin.register_semantic_type_to_format(
+    ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
+)
 importlib.import_module('q2_moshpit.busco.types._transformer')
 
 plugin.methods.register_function(

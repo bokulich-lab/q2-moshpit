@@ -7,8 +7,7 @@
 # ----------------------------------------------------------------------------
 from qiime2.core.exceptions import ValidationError
 from qiime2.plugin.testing import TestPluginBase
-
-from q2_moshpit.busco.types import BUSCOResultsFormat
+from q2_moshpit.busco.types import BUSCOResultsFormat, BuscoDatabaseDirFmt
 
 
 class TestBUSCOFormats(TestPluginBase):
@@ -40,3 +39,17 @@ class TestBUSCOFormats(TestPluginBase):
                 'Line 4 has 14 columns'
         ):
             results.validate()
+
+    def test_BuscoDatabaseDirFmt_valid(self):
+        dirpath = self.get_data_path("busco_db_valid")
+        format = BuscoDatabaseDirFmt(dirpath, mode="r")
+        format.validate()
+
+    def test_BuscoDatabaseDirFmt_invalid(self):
+        dirpath = self.get_data_path("busco_db_invalid")
+        format = BuscoDatabaseDirFmt(dirpath, mode="r")
+        with self.assertRaisesRegex(
+            ValidationError,
+            "Missing one or more files"
+        ):
+            format.validate()

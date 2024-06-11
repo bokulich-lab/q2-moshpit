@@ -7,17 +7,16 @@
 # ----------------------------------------------------------------------------
 import json
 import tempfile
-
 import pandas as pd
 from qiime2.plugin.testing import TestPluginBase
-
 from q2_moshpit.busco.utils import (
     _parse_busco_params, _collect_summaries, _parse_df_columns,
-    _get_feature_table, _calculate_summary_stats, _get_mag_lengths,
-    _partition_dataframe,
+    _partition_dataframe, _get_feature_table, _calculate_summary_stats,
+    _get_mag_lengths, _validate_lineage_dataset_input
 )
 from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
 from q2_types.feature_data_mag import MAGSequencesDirFmt
+from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 
 
 class TestBUSCOUtils(TestPluginBase):
@@ -302,3 +301,67 @@ class TestBUSCOUtils(TestPluginBase):
             }, name="length"
         )
         pd.testing.assert_series_equal(obs, exp)
+
+    def test_validate_lineage_dataset_input_valid(self):
+        # Give path to valid database
+        p = self.get_data_path("busco_db")
+        busco_db = BuscoDatabaseDirFmt(path=p, mode="r")
+        _validate_lineage_dataset_input(
+            lineage_dataset="lineage_1",
+            auto_lineage=False,
+            auto_lineage_euk=False,
+            auto_lineage_prok=False,
+            busco_db=busco_db,
+            kwargs={}
+        )
+
+    def test_validate_lineage_dataset_input_invalid(self):
+        # Give path to valid database
+        p = self.get_data_path("busco_db")
+        busco_db = BuscoDatabaseDirFmt(path=p, mode="r")
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "is not present in input database."
+        ):
+            # Run busco
+            _validate_lineage_dataset_input(
+                lineage_dataset="lineage2",
+                auto_lineage=False,
+                auto_lineage_euk=False,
+                auto_lineage_prok=False,
+                busco_db=busco_db,
+                kwargs={}
+            )
+
+    def test_validate_lineage_dataset_input_warning(self):
+        # Give path to valid database
+        p = self.get_data_path("busco_db")
+        busco_db = BuscoDatabaseDirFmt(path=p, mode="r")
+        kwargs = {
+            "auto_lineage": True,
+            "auto_lineage_euk": False,
+            "auto_lineage_prok": False
+        }
+        with self.assertWarnsRegex(
+            Warning,
+            "`--p-auto-lineage` flags will be ignored."
+        ):
+            # Run busco
+            _validate_lineage_dataset_input(
+                lineage_dataset="lineage_1",
+                auto_lineage=True,
+                auto_lineage_euk=False,
+                auto_lineage_prok=False,
+                busco_db=busco_db,
+                kwargs=kwargs
+            )
+
+        self.assertDictEqual(
+            kwargs,
+            {
+                "auto_lineage": False,
+                "auto_lineage_euk": False,
+                "auto_lineage_prok": False
+            }
+        )

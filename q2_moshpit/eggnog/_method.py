@@ -151,6 +151,19 @@ def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
     subprocess.run(cmds, check=True)
 
 
+def _hmmer_search_runner(
+    input_path, hmm_db, sample_label, output_loc, num_cpus, db_in_memory
+):
+    cmds = ['emapper.py', '-i', str(input_path), '-o', sample_label,
+            '-m', 'hmmer', '--no_annot', '--data_dir', str(hmm_db),
+            '--itype', 'metagenome', '--output_dir', output_loc, '--cpu',
+            str(num_cpus)]
+    if db_in_memory:
+        cmds.append('--dbmem')
+
+    subprocess.run(cmds, check=True)
+
+
 def _eggnog_annotate(
         eggnog_hits: SeedOrthologDirFmt,
         eggnog_db: EggnogRefDirFmt,

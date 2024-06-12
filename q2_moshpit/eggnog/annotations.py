@@ -46,12 +46,12 @@ def extract_annotations(
         )
 
     cogs = []
-    for _id, fp in ortholog_annotations.annotation_dict():
+    for _id, fp in ortholog_annotations.annotation_dict().items():
         annot_df = pd.read_csv(
             fp, sep="\t", skiprows=4, index_col=0
         )
         cog_df = extract_method(annot_df)
-        cog_freqs = _merge(cog_df, ortholog_frequencies, _id)
+        cog_freqs = _merge(cog_df, ortholog_frequencies.T, _id)
         cogs.append(cog_freqs)
 
     result = pd.concat(cogs, axis=1).T

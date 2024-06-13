@@ -84,7 +84,7 @@ def _ensure_dim(table1: pd.DataFrame, table2: pd.DataFrame):
 def _filter(
         data: pd.DataFrame, max_evalue: float, min_score: float
 ) -> pd.DataFrame:
-    data = data[data["evalue"] <= max_evalue and data["score"] >= min_score]
+    data = data[(data["evalue"] <= max_evalue) & (data["score"] >= min_score)]
     return data
 
 

@@ -40,6 +40,12 @@ def _extract_kegg_ko(data: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def _extract_caz(data: pd.DataFrame) -> pd.DataFrame:
+    return _extract_generic(
+        data, "CAZy", lambda x: pd.Series(x.split(","))
+    )
+
+
 def _ensure_dim(table1: pd.DataFrame, table2: pd.DataFrame):
     # check that tables are compatible for dot product
     if table1.shape[1] != table2.shape[0]:
@@ -61,6 +67,7 @@ def _merge(
 
 METHODS = {
     "cog": _extract_cog,
+    "caz": _extract_caz,
     "kegg_ko": _extract_kegg_ko
 }
 
@@ -70,7 +77,7 @@ def extract_annotations(
         ortholog_annotations: OrthologAnnotationDirFmt,
         annotation: str
 ) -> pd.DataFrame:
-    extract_method = METHODS.get("annotation")
+    extract_method = METHODS.get(annotation)
     if not extract_method:
         raise NotImplementedError(
             f"Annotation method {annotation} not supported"

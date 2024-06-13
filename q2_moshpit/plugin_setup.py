@@ -742,7 +742,11 @@ plugin.methods.register_function(
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
-        'db': ReferenceDB[Diamond] | ProfileHMM[PressedProtein],
+        'db': ReferenceDB[Diamond] | List[
+                ProfileHMM[PressedProtein],
+                EggnogHmmerIdmap,
+                GenomeData[Proteins]
+              ]
     },
     parameters={
         'num_cpus': Int,

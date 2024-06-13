@@ -9,16 +9,19 @@ import glob
 import os
 import subprocess
 import tempfile
-from typing import Union
+from typing import Union, List
 from functools import partial
 import pandas as pd
 import qiime2.util
+from q2_moshpit.eggnog import EggnogHmmerIdmapDirectoryFmt
 from q2_types.profile_hmms import PressedProfileHmmsDirectoryFmt
 from q2_types.feature_data import FeatureData, BLAST6
 from q2_types.feature_data_mag import (
     OrthologAnnotationDirFmt, MAGSequencesDirFmt, MAG
 )
-from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.genome_data import (
+    SeedOrthologDirFmt, OrthologFileFmt, ProteinsDirectoryFormat
+)
 from q2_types.per_sample_sequences import (
     ContigSequencesDirFmt, MultiMAGSequencesDirFmt, Contigs, MAGs
 )
@@ -39,9 +42,9 @@ def eggnog_hmmer_search(
     ctx, sequences, pressed_hmm_db, idmap, fastas,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
-    # TODO unify the input artifacts into one
     _run_eggnog_search_pipeline(
-        ctx, sequences, pressed_hmm_db, num_cpus, db_in_memory, num_partitions
+        ctx, sequences, [pressed_hmm_db, idmap, fastas], num_cpus,
+        db_in_memory, num_partitions
     )
 
 
@@ -83,7 +86,11 @@ def _eggnog_search(
         ],
         db: Union[
             DiamondDatabaseDirFmt,
-            PressedProfileHmmsDirectoryFmt
+            List[
+                PressedProfileHmmsDirectoryFmt,
+                EggnogHmmerIdmapDirectoryFmt,
+                ProteinsDirectoryFormat
+            ]
         ],
         num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):
@@ -95,9 +102,9 @@ def _eggnog_search(
             _diamond_search_runner, diamond_db=db_fp,
             output_loc=temp.name, num_cpus=num_cpus, db_in_memory=db_in_memory
         )
-    elif isinstance(db, PressedProfileHmmsDirectoryFmt):
+    elif isinstance(db[0], PressedProfileHmmsDirectoryFmt):
         search_runner = partial(
-            _hmmer_search_runner, hmm_db=str(db),
+            _hmmer_search_runner, hmm_db=db,
             output_loc=temp.name, num_cpus=num_cpus, db_in_memory=db_in_memory
         )
     else:

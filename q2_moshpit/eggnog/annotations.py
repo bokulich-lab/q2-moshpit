@@ -113,6 +113,7 @@ def extract_annotations(
         annotations.append(annot_freqs)
 
     result = pd.concat(annotations, axis=1).T
+    result.fillna(0, inplace=True)
     result.index.name = "id"
     return result
 

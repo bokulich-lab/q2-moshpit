@@ -1479,6 +1479,31 @@ plugin.methods.register_function(
     citations=[]
 )
 
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.collapse_tables,
+    inputs={
+        "mags_pa": FeatureTable[PresenceAbsence],
+        "annotation_frequency": FeatureTable[Frequency],
+    },
+    parameters={},
+    outputs=[
+        ('table', FeatureTable[Frequency])
+    ],
+    input_descriptions={
+        "mags_pa": "Feature table with presence/absence of MAGs per sample.",
+        "annotation_frequency": 'Feature table with frequency of '
+                                'each annotation.'
+    },
+    parameter_descriptions={},
+    output_descriptions={
+        'table': 'Feature table with frequency of each annotation '
+                 'per sample.',
+    },
+    name='',
+    description='',
+    citations=[]
+)
+
 plugin.register_semantic_types(BUSCOResults, BuscoDB)
 plugin.register_formats(
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt

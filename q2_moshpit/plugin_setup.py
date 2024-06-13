@@ -1456,7 +1456,7 @@ plugin.methods.register_function(
         "ortholog_annotations": FeatureData[NOG],
     },
     parameters={
-        "annotation": Str % Choices(["cog",]),
+        "annotation": Str % Choices(["cog", "kegg_ko"]),
     },
     outputs=[
         ('annotation_frequency', FeatureTable[Frequency])

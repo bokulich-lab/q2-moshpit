@@ -5,24 +5,39 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-import numpy as np
 import pandas as pd
 
 from q2_types.feature_data_mag import OrthologAnnotationDirFmt
 
 
-def _extract_cog(data: pd.DataFrame) -> pd.DataFrame:
-    data = data.set_index("seed_ortholog", inplace=False)
-    data = data["COG_category"].fillna("")
-    data = data.apply(lambda x: pd.Series(list(x)) if x is not np.nan else x)
+def _extract_generic(
+        data: pd.DataFrame, column: str, transform_func: callable
+) -> pd.DataFrame:
+    data = data.set_index("seed_ortholog", inplace=False)[column]
+    data = data[data.index.notna()]  # remove the last 3 comment rows
+    data = data.apply(transform_func if data.notna().any() else lambda x: x)
     data = data.stack().reset_index(level=1, drop=True)
-    data = data.reset_index(name='COG_category')
+    data = data.reset_index(name=column)
     data = data.pivot_table(
-        index='COG_category', columns='seed_ortholog',
+        index=column, columns='seed_ortholog',
         aggfunc='size', fill_value=0
     )
-    data = data.drop("-", axis=0, inplace=False)
+    for char in ("", "-"):
+        if char in data.index:
+            data = data.drop(char, axis=0, inplace=False)
     return data
+
+
+def _extract_cog(data: pd.DataFrame) -> pd.DataFrame:
+    return _extract_generic(
+        data, "COG_category", lambda x: pd.Series(list(x))
+    )
+
+
+def _extract_kegg_ko(data: pd.DataFrame) -> pd.DataFrame:
+    return _extract_generic(
+        data, "KEGG_ko", lambda x: pd.Series([i[3:] for i in x.split(",")])
+    )
 
 
 def _ensure_dim(table1: pd.DataFrame, table2: pd.DataFrame):
@@ -44,14 +59,19 @@ def _merge(
     return result
 
 
+METHODS = {
+    "cog": _extract_cog,
+    "kegg_ko": _extract_kegg_ko
+}
+
+
 def extract_annotations(
         ortholog_frequencies: pd.DataFrame,
         ortholog_annotations: OrthologAnnotationDirFmt,
         annotation: str
 ) -> pd.DataFrame:
-    if annotation == "cog":
-        extract_method = _extract_cog
-    else:
+    extract_method = METHODS.get("annotation")
+    if not extract_method:
         raise NotImplementedError(
             f"Annotation method {annotation} not supported"
         )

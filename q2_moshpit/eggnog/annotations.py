@@ -81,6 +81,13 @@ def _ensure_dim(table1: pd.DataFrame, table2: pd.DataFrame):
         )
 
 
+def _filter(
+        data: pd.DataFrame, max_evalue: float, min_score: float
+) -> pd.DataFrame:
+    data = data[data["evalue"] <= max_evalue and data["score"] >= min_score]
+    return data
+
+
 def _merge(
         annotations: pd.DataFrame, frequencies: pd.DataFrame, mag_id: str
 ) -> pd.DataFrame:
@@ -94,7 +101,9 @@ def _merge(
 def extract_annotations(
         ortholog_frequencies: pd.DataFrame,
         ortholog_annotations: OrthologAnnotationDirFmt,
-        annotation: str
+        annotation: str,
+        max_evalue: float = 1.0,
+        min_score: float = 0.0
 ) -> pd.DataFrame:
     extract_method = globals().get(f"_extract_{annotation}")
     if not extract_method:
@@ -116,6 +125,7 @@ def extract_annotations(
         annot_df = pd.read_csv(
             fp, sep="\t", skiprows=4, index_col=0
         )
+        annot_df = _filter(annot_df, max_evalue, min_score)
         annot_df = extract_method(annot_df)
         annot_freqs = _merge(annot_df, ortholog_frequencies, _id)
         annotations.append(annot_freqs)

@@ -1460,6 +1460,8 @@ plugin.methods.register_function(
             "cog", "caz", "kegg_ko", "kegg_pathway", "kegg_reaction",
             "kegg_module", "brite"
         ]),
+        "max_evalue": Float % Range(0, None),
+        "min_score": Float % Range(0, None),
     },
     outputs=[
         ('annotation_frequency', FeatureTable[Frequency])

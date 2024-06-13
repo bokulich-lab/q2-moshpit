@@ -10,11 +10,10 @@ import os
 import subprocess
 import tempfile
 from typing import Union
-from qiime2.core.type import Str
 from functools import partial
 import pandas as pd
 import qiime2.util
-from q2_moshpit.eggnog import EggnogHmmerIdmapDirectoryFmt
+from q2_moshpit.eggnog._format import EggnogHmmerIdmapDirectoryFmt
 from q2_types.profile_hmms import PressedProfileHmmsDirectoryFmt
 from q2_types.feature_data import FeatureData, BLAST6
 from q2_types.feature_data_mag import (
@@ -102,7 +101,7 @@ def _eggnog_search(
             MultiMAGSequencesDirFmt,
             MAGSequencesDirFmt
         ],
-        db: Union[DiamondDatabaseDirFmt, Str],
+        db: Union[DiamondDatabaseDirFmt, str],
         num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):
 

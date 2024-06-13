@@ -40,6 +40,32 @@ def _extract_kegg_ko(data: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def _extract_kegg_pathway(data: pd.DataFrame) -> pd.DataFrame:
+    return _extract_generic(
+        data, "KEGG_Pathway", lambda x: pd.Series(
+            [i for i in x.split(",") if i.startswith("map")]
+        )
+    )
+
+
+def _extract_kegg_module(data: pd.DataFrame) -> pd.DataFrame:
+    return _extract_generic(
+        data, "KEGG_Module", lambda x: pd.Series(x.split(","))
+    )
+
+
+def _extract_kegg_reaction(data: pd.DataFrame) -> pd.DataFrame:
+    return _extract_generic(
+        data, "KEGG_Reaction", lambda x: pd.Series(x.split(","))
+    )
+
+
+def _extract_brite(data: pd.DataFrame) -> pd.DataFrame:
+    return _extract_generic(
+        data, "BRITE", lambda x: pd.Series(x.split(","))
+    )
+
+
 def _extract_caz(data: pd.DataFrame) -> pd.DataFrame:
     return _extract_generic(
         data, "CAZy", lambda x: pd.Series(x.split(","))
@@ -65,19 +91,12 @@ def _merge(
     return result
 
 
-METHODS = {
-    "cog": _extract_cog,
-    "caz": _extract_caz,
-    "kegg_ko": _extract_kegg_ko
-}
-
-
 def extract_annotations(
         ortholog_frequencies: pd.DataFrame,
         ortholog_annotations: OrthologAnnotationDirFmt,
         annotation: str
 ) -> pd.DataFrame:
-    extract_method = METHODS.get(annotation)
+    extract_method = globals().get(f"_extract_{annotation}")
     if not extract_method:
         raise NotImplementedError(
             f"Annotation method {annotation} not supported"

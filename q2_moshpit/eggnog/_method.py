@@ -44,7 +44,9 @@ def eggnog_hmmer_search(
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
     with tempfile.TemporaryDirectory() as tmp:
-        _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, tmp)
+        tmp_subdir = f"{tmp}/hmmer/hmmer_db"
+        os.makedirs(tmp_subdir)
+        _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, tmp_subdir)
         _run_eggnog_search_pipeline(
             ctx, sequences, tmp, num_cpus, db_in_memory, num_partitions
         )
@@ -168,10 +170,12 @@ def _eggnog_feature_table(seed_orthologs: SeedOrthologDirFmt) -> pd.DataFrame:
 def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
                            num_cpus, db_in_memory):
 
-    cmds = ['emapper.py', '-i', str(input_path), '-o', sample_label,
-            '-m', 'diamond', '--no_annot', '--dmnd_db', str(diamond_db),
-            '--itype', 'metagenome', '--output_dir', output_loc, '--cpu',
-            str(num_cpus)]
+    cmds = [
+        'emapper.py', '-i', str(input_path), '-o', sample_label,
+        '-m', 'diamond', '--dmnd_db', str(diamond_db),
+        '--itype', 'metagenome', '--output_dir', output_loc,
+        '--cpu', str(num_cpus), '--no_annot'
+    ]
     if db_in_memory:
         cmds.append('--dbmem')
 
@@ -181,10 +185,12 @@ def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
 def _hmmer_search_runner(
     input_path, hmm_db, sample_label, output_loc, num_cpus, db_in_memory
 ):
-    cmds = ['emapper.py', '-i', str(input_path), '-o', sample_label,
-            '-m', 'hmmer', '--no_annot', '--data_dir', hmm_db,
-            '--itype', 'metagenome', '--output_dir', output_loc, '--cpu',
-            str(num_cpus)]
+    cmds = [
+        'emapper.py', '-i', str(input_path), '-o', sample_label,
+        '-m', 'hmmer', '--data_dir', hmm_db, '-d', 'hmmer_db',
+        '--itype', 'metagenome', '--output_dir', output_loc,
+        '--cpu', str(num_cpus), '--no_annot'
+    ]
     if db_in_memory:
         cmds.append('--dbmem')
 

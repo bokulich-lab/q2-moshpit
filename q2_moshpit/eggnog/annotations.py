@@ -82,11 +82,11 @@ def _ensure_dim(table1: pd.DataFrame, table2: pd.DataFrame):
 
 
 def _merge(
-        cogs: pd.DataFrame, frequencies: pd.DataFrame, mag_id: str
+        annotations: pd.DataFrame, frequencies: pd.DataFrame, mag_id: str
 ) -> pd.DataFrame:
-    frequencies_filtered = frequencies.loc[mag_id, cogs.columns]
-    _ensure_dim(cogs, frequencies_filtered)
-    result = cogs.dot(frequencies_filtered)
+    frequencies_filtered = frequencies.loc[mag_id, annotations.columns]
+    _ensure_dim(annotations, frequencies_filtered)
+    result = annotations.dot(frequencies_filtered)
     result.name = mag_id
     return result
 
@@ -100,6 +100,14 @@ def extract_annotations(
     if not extract_method:
         raise NotImplementedError(
             f"Annotation method {annotation} not supported"
+        )
+
+    # MAG IDs need to match between the feature table and annotations
+    if set(ortholog_frequencies.index) != \
+            set(ortholog_annotations.annotation_dict().keys()):
+        raise ValueError(
+            "MAG IDs need to match between the ortholog frequencies feature "
+            "table and functional annotations."
         )
 
     annotations = []

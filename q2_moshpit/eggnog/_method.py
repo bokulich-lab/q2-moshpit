@@ -9,7 +9,8 @@ import glob
 import os
 import subprocess
 import tempfile
-from typing import Union, List
+from typing import Union
+from qiime2.core.type import Str
 from functools import partial
 import pandas as pd
 import qiime2.util
@@ -42,10 +43,25 @@ def eggnog_hmmer_search(
     ctx, sequences, pressed_hmm_db, idmap, fastas,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
-    _run_eggnog_search_pipeline(
-        ctx, sequences, [pressed_hmm_db, idmap, fastas], num_cpus,
-        db_in_memory, num_partitions
-    )
+    with tempfile.TemporaryDirectory() as tmp:
+        _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, tmp)
+        _run_eggnog_search_pipeline(
+            ctx, sequences, tmp, num_cpus, db_in_memory, num_partitions
+        )
+
+
+def _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, target_dir):
+    path_list = [
+        str(pressed_hmm_db.view(PressedProfileHmmsDirectoryFmt)),
+        str(idmap.view(EggnogHmmerIdmapDirectoryFmt)),
+        str(fastas.view(ProteinsDirectoryFormat))
+    ]
+
+    for source_dir in path_list:
+        for filename in os.listdir(source_dir):
+            source_file = os.path.join(source_dir, filename)
+            target_file = os.path.join(target_dir, filename)
+            os.symlink(source_file, target_file)
 
 
 def _run_eggnog_search_pipeline(
@@ -84,56 +100,50 @@ def _eggnog_search(
             MultiMAGSequencesDirFmt,
             MAGSequencesDirFmt
         ],
-        db: Union[
-            DiamondDatabaseDirFmt,
-            List[
-                PressedProfileHmmsDirectoryFmt,
-                EggnogHmmerIdmapDirectoryFmt,
-                ProteinsDirectoryFormat
-            ]
-        ],
+        db: Union[DiamondDatabaseDirFmt, Str],
         num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):
 
-    temp = tempfile.TemporaryDirectory()
-    if isinstance(db, DiamondDatabaseDirFmt):
-        db_fp = os.path.join(str(db), 'ref_db.dmnd')
-        search_runner = partial(
-            _diamond_search_runner, diamond_db=db_fp,
-            output_loc=temp.name, num_cpus=num_cpus, db_in_memory=db_in_memory
-        )
-    elif isinstance(db[0], PressedProfileHmmsDirectoryFmt):
-        search_runner = partial(
-            _hmmer_search_runner, hmm_db=db,
-            output_loc=temp.name, num_cpus=num_cpus, db_in_memory=db_in_memory
-        )
-    else:
-        NotImplementedError()
+    with tempfile.TemporaryDirectory() as output_loc:
+        if isinstance(db, DiamondDatabaseDirFmt):
+            db_fp = os.path.join(str(db), 'ref_db.dmnd')
+            search_runner = partial(
+                _diamond_search_runner, diamond_db=db_fp,
+                output_loc=output_loc.name, num_cpus=num_cpus,
+                db_in_memory=db_in_memory
+            )
+        elif isinstance(db[0], PressedProfileHmmsDirectoryFmt):
+            search_runner = partial(
+                _hmmer_search_runner, hmm_db=db, output_loc=output_loc.name,
+                num_cpus=num_cpus, db_in_memory=db_in_memory
+            )
+        else:
+            NotImplementedError()
 
-    # run analysis
-    if isinstance(sequences, ContigSequencesDirFmt):
-        for sample_id, contigs_fp in sequences.sample_dict().items():
-            search_runner(input_path=contigs_fp, sample_label=sample_id)
-    elif isinstance(sequences, MAGSequencesDirFmt):
-        for mag_id, mag_fp in sequences.feature_dict().items():
-            search_runner(input_path=mag_fp, sample_label=mag_id)
-    elif isinstance(sequences, MultiMAGSequencesDirFmt):
-        for sample_id, mags in sequences.sample_dict().items():
-            for mag_id, mag_fp in mags.items():
+        # run analysis
+        if isinstance(sequences, ContigSequencesDirFmt):
+            for sample_id, contigs_fp in sequences.sample_dict().items():
+                search_runner(input_path=contigs_fp, sample_label=sample_id)
+        elif isinstance(sequences, MAGSequencesDirFmt):
+            for mag_id, mag_fp in sequences.feature_dict().items():
                 search_runner(input_path=mag_fp, sample_label=mag_id)
+        elif isinstance(sequences, MultiMAGSequencesDirFmt):
+            for sample_id, mags in sequences.sample_dict().items():
+                for mag_id, mag_fp in mags.items():
+                    search_runner(input_path=mag_fp, sample_label=mag_id)
 
-    result = SeedOrthologDirFmt()
-    ortholog_fps = [
-        os.path.basename(x) for x
-        in glob.glob(f'{temp.name}/*.seed_orthologs')
-    ]
-    for item in ortholog_fps:
-        qiime2.util.duplicate(
-            os.path.join(temp.name, item), os.path.join(result.path, item)
-        )
+        result = SeedOrthologDirFmt()
+        ortholog_fps = [
+            os.path.basename(x) for x
+            in glob.glob(f'{output_loc.name}/*.seed_orthologs')
+        ]
+        for item in ortholog_fps:
+            qiime2.util.duplicate(
+                os.path.join(output_loc.name, item),
+                os.path.join(result.path, item)
+            )
 
     ft = _eggnog_feature_table(result)
-
     return result, ft
 
 

@@ -742,11 +742,7 @@ plugin.methods.register_function(
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
-        'db': ReferenceDB[Diamond] | List[
-                ProfileHMM[PressedProtein],
-                EggnogHmmerIdmap,
-                GenomeData[Proteins]
-              ]
+        'db': ReferenceDB[Diamond] | Str
     },
     parameters={
         'num_cpus': Int,
@@ -755,7 +751,7 @@ plugin.methods.register_function(
     input_descriptions={
         'sequences': 'Sequence data of the contigs we want to '
                      'search for hits.',
-        'db': 'The filepath to an artifact containing the database.',
+        'db': 'Database object of file path to it.',
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '

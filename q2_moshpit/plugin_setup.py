@@ -1487,7 +1487,7 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.collapse_tables,
     inputs={
-        "mags_pa": FeatureTable[PresenceAbsence],
+        "mags_ft": FeatureTable[Frequency],
         "annotation_frequency": FeatureTable[Frequency],
     },
     parameters={},
@@ -1495,7 +1495,7 @@ plugin.methods.register_function(
         ('table', FeatureTable[Frequency])
     ],
     input_descriptions={
-        "mags_pa": "Feature table with presence/absence of MAGs per sample.",
+        "mags_ft": "Feature table with MAG abundance per sample.",
         "annotation_frequency": 'Feature table with frequency of '
                                 'each annotation.'
     },

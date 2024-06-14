@@ -137,9 +137,9 @@ def extract_annotations(
 
 
 def collapse_tables(
-        mags_pa: pd.DataFrame,
+        mags_ft: pd.DataFrame,
         annotation_frequency: pd.DataFrame
 ) -> pd.DataFrame:
-    _ensure_dim(mags_pa, annotation_frequency)
-    result = mags_pa.dot(annotation_frequency)
+    _ensure_dim(mags_ft, annotation_frequency)
+    result = mags_ft.dot(annotation_frequency)
     return result

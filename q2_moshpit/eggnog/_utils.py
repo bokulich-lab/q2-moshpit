@@ -71,7 +71,9 @@ def _download_and_build_hmm_db(taxon_id):
 
             # Iterate through all decompressed files
             for root, dirnames, files in os.walk(f"{tmp}/{taxon_id}"):
-                for i, file in tqdm(enumerate(files, start=1)):
+                for i, file in tqdm(
+                    enumerate(files, start=1), total=len(files)
+                ):
                     if file.endswith(".hmm"):
 
                         # process hmm files

@@ -14,14 +14,9 @@ def _extract_generic(
         data: pd.DataFrame, column: str, transform_func: callable
 ) -> pd.DataFrame:
     data = data.set_index("seed_ortholog", inplace=False)[column]
-    data = data[data.index.notna()]  # remove the last 3 comment rows
     data = data.apply(transform_func if data.notna().any() else lambda x: x)
     data = data.stack().reset_index(level=1, drop=True)
-    data = data.reset_index(name=column)
-    data = data.pivot_table(
-        index=column, columns='seed_ortholog',
-        aggfunc='size', fill_value=0
-    )
+    data = data.value_counts()
     for char in ("", "-"):
         if char in data.index:
             data = data.drop(char, axis=0, inplace=False)
@@ -88,18 +83,7 @@ def _filter(
     return data
 
 
-def _merge(
-        annotations: pd.DataFrame, frequencies: pd.DataFrame, mag_id: str
-) -> pd.DataFrame:
-    frequencies_filtered = frequencies.loc[mag_id, annotations.columns]
-    _ensure_dim(annotations, frequencies_filtered)
-    result = annotations.dot(frequencies_filtered)
-    result.name = mag_id
-    return result
-
-
 def extract_annotations(
-        ortholog_frequencies: pd.DataFrame,
         ortholog_annotations: OrthologAnnotationDirFmt,
         annotation: str,
         max_evalue: float = 1.0,
@@ -111,27 +95,18 @@ def extract_annotations(
             f"Annotation method {annotation} not supported"
         )
 
-    # MAG IDs need to match between the feature table and annotations
-    if set(ortholog_frequencies.index) != \
-            set(ortholog_annotations.annotation_dict().keys()):
-        raise ValueError(
-            "MAG IDs need to match between the ortholog frequencies feature "
-            "table and functional annotations."
-        )
-
     annotations = []
     for _id, fp in ortholog_annotations.annotation_dict().items():
-        # we need to skip the first 4 rows as they contain comments
         annot_df = pd.read_csv(
             fp, sep="\t", skiprows=4, index_col=0
-        )
+        )  # skip the first 4 rows as they contain comments
+        annot_df = annot_df.iloc[:-3, :]  # remove the last 3 comment rows
         annot_df = _filter(annot_df, max_evalue, min_score)
         annot_df = extract_method(annot_df)
-        annot_freqs = _merge(annot_df, ortholog_frequencies, _id)
-        annotations.append(annot_freqs)
+        annot_df.name = _id
+        annotations.append(annot_df)
 
-    result = pd.concat(annotations, axis=1).T
-    result.fillna(0, inplace=True)
+    result = pd.concat(annotations, axis=1).fillna(0).T
     result.index.name = "id"
     return result
 

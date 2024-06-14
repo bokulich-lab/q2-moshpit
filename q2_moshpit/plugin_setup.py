@@ -1451,10 +1451,7 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.extract_annotations,
-    inputs={
-        "ortholog_frequencies": FeatureTable[Frequency],
-        "ortholog_annotations": FeatureData[NOG],
-    },
+    inputs={"ortholog_annotations": FeatureData[NOG],},
     parameters={
         "annotation": Str % Choices([
             "cog", "caz", "kegg_ko", "kegg_pathway", "kegg_reaction",
@@ -1467,7 +1464,6 @@ plugin.methods.register_function(
         ('annotation_frequency', FeatureTable[Frequency])
     ],
     input_descriptions={
-        "ortholog_frequencies": "Feature table with ortholog counts.",
         "ortholog_annotations": "Ortholog annotations."
     },
     parameter_descriptions={

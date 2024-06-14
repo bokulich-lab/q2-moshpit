@@ -738,11 +738,11 @@ plugin.pipelines.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.eggnog._eggnog_search,
+    function=q2_moshpit.eggnog._eggnog_diamond_search,
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
-        'db': ReferenceDB[Diamond] | Str
+        'db': ReferenceDB[Diamond]
     },
     parameters={
         'num_cpus': Int,
@@ -751,7 +751,7 @@ plugin.methods.register_function(
     input_descriptions={
         'sequences': 'Sequence data of the contigs we want to '
                      'search for hits.',
-        'db': 'Database object of file path to it.',
+        'db': 'Diamond database.',
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
@@ -770,10 +770,54 @@ plugin.methods.register_function(
                        'orthologs. One table per sample or MAG in the input.',
         'table': 'Feature table with counts of orthologs per sample/MAG.'
     },
-    name='Run eggNOG search using Diamond or HMMER aligner',
+    name='Run eggNOG search using Diamond aligner',
     description="This method performs the steps by which we find our "
                 "possible target sequences to annotate using the Diamond "
-                "or HMMER search functionality from the eggnog `emapper.py` "
+                "search functionality from the eggnog `emapper.py` "
+                "script.",
+    citations=[
+        citations["buchfink_sensitive_2021"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog._eggnog_hmmer_search,
+    inputs={
+        'sequences':
+            SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
+    },
+    parameters={
+        'db': Str,
+        'num_cpus': Int,
+        'db_in_memory': Bool,
+    },
+    input_descriptions={
+        'sequences': 'Sequence data of the contigs we want to '
+                     'search for hits.',
+    },
+    parameter_descriptions={
+        'db': 'File path to eggnog-hmmer database.',
+        'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+                    'use all available.',
+        'db_in_memory': 'Read database into memory. The '
+                        'database can be very large, so this '
+                        'option should only be used on clusters or other '
+                        'machines with enough memory.',
+    },
+    outputs=[
+        ('eggnog_hits', SampleData[BLAST6]),
+        ('table', FeatureTable[Frequency])
+    ],
+    output_descriptions={
+        'eggnog_hits': 'BLAST6-like table(s) describing the identified '
+                       'orthologs. One table per sample or MAG in the input.',
+        'table': 'Feature table with counts of orthologs per sample/MAG.'
+    },
+    name='Run eggNOG search using HMMER aligner',
+    description="This method performs the steps by which we find our "
+                "possible target sequences to annotate using the "
+                "HMMER search functionality from the eggnog `emapper.py` "
                 "script.",
     citations=[
         citations["buchfink_sensitive_2021"],

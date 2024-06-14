@@ -33,32 +33,36 @@ def eggnog_diamond_search(
     ctx, sequences, diamond_db,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
-    _run_eggnog_search_pipeline(
-        ctx, sequences, diamond_db, num_cpus, db_in_memory, num_partitions
+    _eggnog_search = ctx.get_action("moshpit", "_eggnog_diamond_search")
+    collated_hits, collated_tables = _run_eggnog_search_pipeline(
+        ctx, sequences, diamond_db, num_cpus, db_in_memory, num_partitions,
+        _eggnog_search
     )
+    return collated_hits, collated_tables
 
 
 def eggnog_hmmer_search(
     ctx, sequences, pressed_hmm_db, idmap, fastas,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
+    _eggnog_search = ctx.get_action("moshpit", "_eggnog_hmmer_search")
     with tempfile.TemporaryDirectory() as tmp:
         tmp_subdir = f"{tmp}/hmmer/hmmer_db"
         os.makedirs(tmp_subdir)
         _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, tmp_subdir)
-        _run_eggnog_search_pipeline(
-            ctx, sequences, tmp, num_cpus, db_in_memory, num_partitions
+        collated_hits, collated_tables = _run_eggnog_search_pipeline(
+            ctx, sequences, tmp, num_cpus, db_in_memory, num_partitions,
+            _eggnog_search
         )
+    return collated_hits, collated_tables
 
 
 def _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, target_dir):
-    path_list = [
+    for source_dir in [
         str(pressed_hmm_db.view(PressedProfileHmmsDirectoryFmt)),
         str(idmap.view(EggnogHmmerIdmapDirectoryFmt)),
         str(fastas.view(ProteinsDirectoryFormat))
-    ]
-
-    for source_dir in path_list:
+    ]:
         for filename in os.listdir(source_dir):
             source_file = os.path.join(source_dir, filename)
             target_file = os.path.join(target_dir, filename)
@@ -66,7 +70,7 @@ def _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, target_dir):
 
 
 def _run_eggnog_search_pipeline(
-    ctx, sequences, db, num_cpus, db_in_memory, num_partitions
+    ctx, sequences, db, num_cpus, db_in_memory, num_partitions, _eggnog_search
 ):
     if sequences.type <= FeatureData[MAG]:
         partition_action_name = "partition_feature_data_mags"
@@ -78,10 +82,8 @@ def _run_eggnog_search_pipeline(
         raise NotImplementedError()
 
     partition_method = ctx.get_action("moshpit", partition_action_name)
-    _eggnog_search = ctx.get_action("moshpit", "_eggnog_search")
     collate_hits = ctx.get_action("moshpit", "collate_orthologs")
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
-
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
 
     hits = []
@@ -95,54 +97,67 @@ def _run_eggnog_search_pipeline(
     return collated_hits, collated_tables
 
 
-def _eggnog_search(
-        sequences: Union[
-            ContigSequencesDirFmt,
-            MultiMAGSequencesDirFmt,
-            MAGSequencesDirFmt
-        ],
-        db: Union[DiamondDatabaseDirFmt, str],
-        num_cpus: int = 1, db_in_memory: bool = False
-) -> (SeedOrthologDirFmt, pd.DataFrame):
-
+def _eggnog_diamond_search(
+    sequences: Union[
+        ContigSequencesDirFmt,
+        MultiMAGSequencesDirFmt,
+        MAGSequencesDirFmt
+    ],
+    db: DiamondDatabaseDirFmt,   # type: ignore
+    num_cpus: int = 1, db_in_memory: bool = False
+) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
     with tempfile.TemporaryDirectory() as output_loc:
-        if isinstance(db, DiamondDatabaseDirFmt):
-            db_fp = os.path.join(str(db), 'ref_db.dmnd')
-            search_runner = partial(
-                _diamond_search_runner, diamond_db=db_fp,
-                output_loc=output_loc.name, num_cpus=num_cpus,
-                db_in_memory=db_in_memory
-            )
-        elif isinstance(db[0], PressedProfileHmmsDirectoryFmt):
-            search_runner = partial(
-                _hmmer_search_runner, hmm_db=db, output_loc=output_loc.name,
+        db_fp = os.path.join(str(db), 'ref_db.dmnd')
+        search_runner = partial(
+            _diamond_search_runner, diamond_db=db_fp, output_loc=output_loc,
+            num_cpus=num_cpus, db_in_memory=db_in_memory
+        )
+        result, ft = _eggnog_search(sequences, search_runner, output_loc)
+    return result, ft
+
+
+def _eggnog_hmmer_search(
+    sequences: Union[
+        ContigSequencesDirFmt,
+        MultiMAGSequencesDirFmt,
+        MAGSequencesDirFmt
+    ],
+    db: str, num_cpus: int = 1, db_in_memory: bool = False
+) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
+    with tempfile.TemporaryDirectory() as output_loc:
+        search_runner = partial(
+                _hmmer_search_runner, hmm_db=db, output_loc=output_loc,
                 num_cpus=num_cpus, db_in_memory=db_in_memory
             )
-        else:
-            NotImplementedError()
+        result, ft = _eggnog_search(sequences, search_runner, output_loc)
+    return result, ft
 
-        # run analysis
-        if isinstance(sequences, ContigSequencesDirFmt):
-            for sample_id, contigs_fp in sequences.sample_dict().items():
-                search_runner(input_path=contigs_fp, sample_label=sample_id)
-        elif isinstance(sequences, MAGSequencesDirFmt):
-            for mag_id, mag_fp in sequences.feature_dict().items():
+
+def _eggnog_search(
+    sequences, search_runner, output_loc
+) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
+    # run analysis
+    if isinstance(sequences, ContigSequencesDirFmt):
+        for sample_id, contigs_fp in sequences.sample_dict().items():
+            search_runner(input_path=contigs_fp, sample_label=sample_id)
+    elif isinstance(sequences, MAGSequencesDirFmt):
+        for mag_id, mag_fp in sequences.feature_dict().items():
+            search_runner(input_path=mag_fp, sample_label=mag_id)
+    elif isinstance(sequences, MultiMAGSequencesDirFmt):
+        for sample_id, mags in sequences.sample_dict().items():
+            for mag_id, mag_fp in mags.items():
                 search_runner(input_path=mag_fp, sample_label=mag_id)
-        elif isinstance(sequences, MultiMAGSequencesDirFmt):
-            for sample_id, mags in sequences.sample_dict().items():
-                for mag_id, mag_fp in mags.items():
-                    search_runner(input_path=mag_fp, sample_label=mag_id)
 
-        result = SeedOrthologDirFmt()
-        ortholog_fps = [
-            os.path.basename(x) for x
-            in glob.glob(f'{output_loc.name}/*.seed_orthologs')
-        ]
-        for item in ortholog_fps:
-            qiime2.util.duplicate(
-                os.path.join(output_loc.name, item),
-                os.path.join(result.path, item)
-            )
+    result = SeedOrthologDirFmt()
+    ortholog_fps = [
+        os.path.basename(x) for x
+        in glob.glob(f'{output_loc}/*.seed_orthologs')
+    ]
+    for item in ortholog_fps:
+        qiime2.util.duplicate(
+            os.path.join(output_loc, item),
+            os.path.join(result.path, item)
+        )
 
     ft = _eggnog_feature_table(result)
     return result, ft
@@ -166,8 +181,9 @@ def _eggnog_feature_table(seed_orthologs: SeedOrthologDirFmt) -> pd.DataFrame:
     return df
 
 
-def _diamond_search_runner(input_path, diamond_db, sample_label, output_loc,
-                           num_cpus, db_in_memory):
+def _diamond_search_runner(
+    input_path, diamond_db, sample_label, output_loc, num_cpus, db_in_memory
+):
 
     cmds = [
         'emapper.py', '-i', str(input_path), '-o', sample_label,

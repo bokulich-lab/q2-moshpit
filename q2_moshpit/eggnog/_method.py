@@ -73,15 +73,15 @@ def _run_eggnog_search_pipeline(
     ctx, sequences, db, num_cpus, db_in_memory, num_partitions, _eggnog_search
 ):
     if sequences.type <= FeatureData[MAG]:
-        partition_action_name = "partition_feature_data_mags"
+        plugin, action_name = "moshpit", "partition_feature_data_mags"
     elif sequences.type <= SampleData[Contigs]:
-        partition_action_name = "partition_contigs"
+        plugin, action_name = "assembly", "partition_contigs"
     elif sequences.type <= SampleData[MAGs]:
-        partition_action_name = "partition_sample_data_mags"
+        plugin, action_name = "moshpit", "partition_sample_data_mags"
     else:
         raise NotImplementedError()
 
-    partition_method = ctx.get_action("moshpit", partition_action_name)
+    partition_method = ctx.get_action(plugin, action_name)
     collate_hits = ctx.get_action("moshpit", "collate_orthologs")
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
@@ -103,11 +103,11 @@ def _eggnog_diamond_search(
         MultiMAGSequencesDirFmt,
         MAGSequencesDirFmt
     ],
-    db: DiamondDatabaseDirFmt,   # type: ignore
+    diamond_db: DiamondDatabaseDirFmt,   # type: ignore
     num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
     with tempfile.TemporaryDirectory() as output_loc:
-        db_fp = os.path.join(str(db), 'ref_db.dmnd')
+        db_fp = os.path.join(str(diamond_db), 'ref_db.dmnd')
         search_runner = partial(
             _diamond_search_runner, diamond_db=db_fp, output_loc=output_loc,
             num_cpus=num_cpus, db_in_memory=db_in_memory
@@ -122,11 +122,11 @@ def _eggnog_hmmer_search(
         MultiMAGSequencesDirFmt,
         MAGSequencesDirFmt
     ],
-    db: str, num_cpus: int = 1, db_in_memory: bool = False
+    hmm_db: str, num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
     with tempfile.TemporaryDirectory() as output_loc:
         search_runner = partial(
-                _hmmer_search_runner, hmm_db=db, output_loc=output_loc,
+                _hmmer_search_runner, hmm_db=hmm_db, output_loc=output_loc,
                 num_cpus=num_cpus, db_in_memory=db_in_memory
             )
         result, ft = _eggnog_search(sequences, search_runner, output_loc)

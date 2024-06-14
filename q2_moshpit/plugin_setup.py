@@ -742,7 +742,7 @@ plugin.methods.register_function(
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
-        'db': ReferenceDB[Diamond]
+        'diamond_db': ReferenceDB[Diamond]
     },
     parameters={
         'num_cpus': Int,
@@ -751,7 +751,7 @@ plugin.methods.register_function(
     input_descriptions={
         'sequences': 'Sequence data of the contigs we want to '
                      'search for hits.',
-        'db': 'Diamond database.',
+        'diamond_db': 'Diamond database.',
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
@@ -788,7 +788,7 @@ plugin.methods.register_function(
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
     },
     parameters={
-        'db': Str,
+        'hmm_db': Str,
         'num_cpus': Int,
         'db_in_memory': Bool,
     },
@@ -797,7 +797,7 @@ plugin.methods.register_function(
                      'search for hits.',
     },
     parameter_descriptions={
-        'db': 'File path to eggnog-hmmer database.',
+        'hmm_db': 'File path to eggnog-hmmer database.',
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
                     'use all available.',
         'db_in_memory': 'Read database into memory. The '

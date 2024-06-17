@@ -13,6 +13,7 @@ import pandas as pd
 import skbio
 
 from q2_types.feature_data_mag import MAGSequencesDirFmt
+from q2_types.feature_table import FeatureTable, PresenceAbsence, RelativeFrequency
 
 
 def run_command(cmd, env=None, verbose=True, pipe=False, **kwargs):
@@ -100,3 +101,57 @@ def get_feature_lengths(features: MAGSequencesDirFmt) -> pd.DataFrame:
     df = pd.DataFrame({'id': ids, 'length': lengths})
     df.set_index('id', inplace=True)
     return df
+
+
+def _multiply(
+        table1: pd.DataFrame, table2: pd.DataFrame
+) -> pd.DataFrame:
+    """Calculate dot product of two tables."""
+    if table1.shape[1] != table2.shape[0]:
+        raise ValueError(
+            f"Tables do not have compatible dimensions for dot product: "
+            f"{table1.shape[1]} != {table2.shape[0]}."
+        )
+    return table1.dot(table2)
+
+
+def _multiply_tables(
+        table1: pd.DataFrame, table2: pd.DataFrame
+) -> pd.DataFrame:
+    """Calculate dot product of two feature tables."""
+    result = _multiply(table1, table2)
+    return result
+
+
+def _multiply_tables_relative(
+        table1: pd.DataFrame, table2: pd.DataFrame
+) -> pd.DataFrame:
+    """Calculate dot product of two feature tables and convert to
+        a relative frequency table."""
+    result = _multiply(table1, table2)
+    sum_per_sample = result.sum(axis=1)
+    result = result.div(sum_per_sample, axis=0)
+    return result
+
+
+def _multiply_tables_pa(
+        table1: pd.DataFrame, table2: pd.DataFrame
+) -> pd.DataFrame:
+    """Calculate dot product of two feature tables and convert to
+        a presence-absence table."""
+    result = _multiply(table1, table2)
+    result = result.applymap(lambda x: 1 if x != 0 else 0)
+    return result
+
+
+def multiply_tables(ctx, table1, table2):
+    """Calculate dot product of two feature tables."""
+    if (table1.type <= FeatureTable[PresenceAbsence]
+            or table2.type <= FeatureTable[PresenceAbsence]):
+        multiply = ctx.get_action("moshpit", "_multiply_tables_pa")
+    elif (table1.type <= FeatureTable[RelativeFrequency]
+            or table2.type <= FeatureTable[RelativeFrequency]):
+        multiply = ctx.get_action("moshpit", "_multiply_tables_relative")
+    else:
+        multiply = ctx.get_action("moshpit", "_multiply_tables")
+    return multiply(table1, table2)

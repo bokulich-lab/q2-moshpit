@@ -19,7 +19,10 @@ from .kraken2 import (
     helpers as kraken_helpers
 )
 from .metabat2 import metabat2
-from ._utils import get_feature_lengths
+from ._utils import (
+    get_feature_lengths, multiply_tables, _multiply_tables,
+    _multiply_tables_pa, _multiply_tables_relative
+)
 
 __version__ = get_versions()['version']
 del get_versions
@@ -28,5 +31,7 @@ __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
     'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog',
     'busco', 'prodigal', 'kraken_helpers', 'partition',
-    'filter_derep_mags', 'filter_mags', 'get_feature_lengths'
+    'filter_derep_mags', 'filter_mags', 'get_feature_lengths',
+    'multiply_tables', '_multiply_tables', '_multiply_tables_pa',
+    '_multiply_tables_relative'
 ]

@@ -67,15 +67,6 @@ def _extract_caz(data: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def _ensure_dim(table1: pd.DataFrame, table2: pd.DataFrame):
-    # check that tables are compatible for dot product
-    if table1.shape[1] != table2.shape[0]:
-        raise ValueError(
-            f"Tables do not have compatible dimensions for dot product: "
-            f"{table1.shape[1]} != {table2.shape[0]}"
-        )
-
-
 def _filter(
         data: pd.DataFrame, max_evalue: float, min_score: float
 ) -> pd.DataFrame:
@@ -108,13 +99,4 @@ def extract_annotations(
 
     result = pd.concat(annotations, axis=1).fillna(0).T
     result.index.name = "id"
-    return result
-
-
-def collapse_tables(
-        mags_ft: pd.DataFrame,
-        annotation_frequency: pd.DataFrame
-) -> pd.DataFrame:
-    _ensure_dim(mags_ft, annotation_frequency)
-    result = mags_ft.dot(annotation_frequency)
     return result

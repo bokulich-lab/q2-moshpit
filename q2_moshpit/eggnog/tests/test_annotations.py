@@ -11,6 +11,12 @@ from qiime2.plugin.testing import TestPluginBase
 from q2_moshpit.eggnog import extract_annotations
 from q2_types.feature_data_mag import OrthologAnnotationDirFmt
 
+from q2_moshpit.eggnog.annotations import (
+    _filter, _extract_generic, _extract_cog, _extract_kegg_ko,
+    _extract_kegg_pathway, _extract_kegg_module, _extract_kegg_reaction,
+    _extract_brite, _extract_caz
+)
+
 
 class TestAnnotationExtraction(TestPluginBase):
     package = 'q2_moshpit.eggnog.tests'
@@ -44,6 +50,17 @@ class TestAnnotationExtraction(TestPluginBase):
         self.annotations = OrthologAnnotationDirFmt(
             self.get_data_path("annotations/"), mode='r'
         )
+        self.annotation_df = pd.read_csv(
+            self.get_data_path(
+                "annotations/1e9ffc02-0847-4f2c-b1e2-3965a4a78b15."
+                "emapper.annotations"
+            ), sep="\t", skiprows=4, index_col=0
+        ).iloc[:-3, :]
+        self.df = pd.DataFrame({
+            "evalue": [0, 0.1, 0.2, 0.3],
+            "score": [400.0, 300.0, 200.0, 100.0],
+            "column": ["val1", "val2", "val3", "val4"]
+        }, index=["s1", "s2", "s3", "s4"])
 
     def test_extract_annotations(self):
         obs_ft = extract_annotations(
@@ -64,3 +81,78 @@ class TestAnnotationExtraction(TestPluginBase):
             ], name="id")
         )
         pd.testing.assert_frame_equal(obs_ft, exp_ft)
+
+    def test_extract_generic(self):
+        obs = _extract_generic(
+            self.annotation_df, "EC", lambda x: pd.Series(x.split("."))
+        )
+        exp = pd.Series(
+            [3, 3, 2, 2, 2], ["6", "3", "5", "4", "12"], name="count"
+        )
+        pd.testing.assert_series_equal(obs, exp)
+
+    def test_extract_cog(self):
+        obs = _extract_cog(self.annotation_df)
+        exp = pd.Series([2, 1, 1], ["L", "F", "A"], name="count")
+        pd.testing.assert_series_equal(obs, exp)
+
+    def test_extract_kegg_ko(self):
+        obs = _extract_kegg_ko(self.annotation_df)
+        exp = pd.Series(
+            [1, 1, 1, 1], ["K01955", "K02621", "K16898", "K03722"],
+            name="count"
+        )
+        pd.testing.assert_series_equal(obs, exp)
+
+    def test_extract_kegg_pathway(self):
+        obs = _extract_kegg_pathway(self.annotation_df)
+        exp = pd.Series(
+            [1, 1, 1], ["map00240", "map00250", "map01100"],
+            name="count"
+        )
+        pd.testing.assert_series_equal(obs, exp)
+
+    def test_extract_kegg_module(self):
+        obs = _extract_kegg_module(self.annotation_df)
+        exp = pd.Series([1], ["M00051"], name="count")
+        pd.testing.assert_series_equal(obs, exp)
+
+    def test_extract_kegg_reaction(self):
+        obs = _extract_kegg_reaction(self.annotation_df)
+        exp = pd.Series(
+            [1, 1, 1, 1, 1],
+            ["R00256", "R00575", "R01395", "R10948", "R10949"],
+            name="count"
+        )
+        pd.testing.assert_series_equal(obs, exp)
+
+    def test_extract_brite(self):
+        obs = _extract_brite(self.annotation_df)
+        exp = pd.Series(
+            [4, 4, 2, 1, 1, 1, 1, 1],
+            ["ko00000", "ko01000", "ko03400", "ko00001",
+                "ko00002", "ko02048", "ko03032", "ko03036"],
+            name="count"
+        )
+        pd.testing.assert_series_equal(obs, exp)
+
+    def test_extract_caz(self):
+        obs = _extract_caz(self.annotation_df)
+        exp = pd.Series(name="count")
+        pd.testing.assert_series_equal(
+            obs, exp, check_index=False, check_dtype=False
+        )
+
+    def test_filter(self):
+        obs = _filter(self.df, 0.2, 300.0)
+        exp = pd.DataFrame({
+            "evalue": [0.0, 0.1], "score": [400.0, 300.0],
+            "column": ["val1", "val2"]
+        }, index=["s1", "s2"])
+        pd.testing.assert_frame_equal(obs, exp)
+
+    def test_filter_empty(self):
+        with self.assertRaisesRegex(
+            ValueError, " resulted in an empty table"
+        ):
+            _filter(self.df, 0.1, 500.0)

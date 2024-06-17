@@ -71,6 +71,11 @@ def _filter(
         data: pd.DataFrame, max_evalue: float, min_score: float
 ) -> pd.DataFrame:
     data = data[(data["evalue"] <= max_evalue) & (data["score"] >= min_score)]
+    if len(data) == 0:
+        raise ValueError(
+            "E-value/score filtering resulted in an empty table - "
+            "please adjust your thresholds and try again."
+        )
     return data
 
 

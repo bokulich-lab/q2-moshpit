@@ -698,8 +698,8 @@ plugin.pipelines.register_function(
     inputs={
         'sequences': SampleData[Contigs | MAGs] | FeatureData[MAG],
         'pressed_hmm_db': ProfileHMM[PressedProtein % Properties("eggnog")],
-        "idmap": EggnogHmmerIdmap % Properties("eggnog"),
-        "fastas": GenomeData[Proteins % Properties("eggnog")]
+        'idmap': EggnogHmmerIdmap % Properties("eggnog"),
+        'fastas': GenomeData[Proteins % Properties("eggnog")]
     },
     parameters={
         'num_cpus': Int,
@@ -786,18 +786,23 @@ plugin.methods.register_function(
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
+        'idmap': EggnogHmmerIdmap % Properties("eggnog"),
+        'pressed_hmm_db': ProfileHMM[PressedProtein] % Properties("eggnog"),
+        'fastas': GenomeData[Proteins] % Properties("eggnog")
     },
     parameters={
-        'hmm_db': Str,
         'num_cpus': Int,
         'db_in_memory': Bool,
     },
     input_descriptions={
         'sequences': 'Sequence data of the contigs we want to '
                      'search for hits.',
+        'idmap': 'List of protein families in `hmm_db`.',
+        'pressed_hmm_db': 'Collection of Profile HMMs in binary format '
+                          'and indexed.',
+        'fastas': 'Seed alignments for the protein families in `hmm_db`.'
     },
     parameter_descriptions={
-        'hmm_db': 'File path to eggnog-hmmer database.',
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
                     'use all available.',
         'db_in_memory': 'Read database into memory. The '
@@ -815,13 +820,13 @@ plugin.methods.register_function(
         'table': 'Feature table with counts of orthologs per sample/MAG.'
     },
     name='Run eggNOG search using HMMER aligner',
-    description="This method performs the steps by which we find our "
-                "possible target sequences to annotate using the "
-                "HMMER search functionality from the eggnog `emapper.py` "
-                "script.",
+    description='This method performs the steps by which we find our '
+                'possible target sequences to annotate using the '
+                'HMMER search functionality from the eggnog `emapper.py` '
+                'script.',
     citations=[
-        citations["buchfink_sensitive_2021"],
-        citations["huerta_cepas_eggnog_2019"]
+        citations['buchfink_sensitive_2021'],
+        citations['huerta_cepas_eggnog_2019']
     ]
 )
 
@@ -852,7 +857,7 @@ plugin.pipelines.register_function(
     input_descriptions={
         'eggnog_hits': 'BLAST6-like table(s) describing the '
                        'identified orthologs. ',
-        "eggnog_db": "eggNOG annotation database."
+        'eggnog_db': 'eggNOG annotation database.'
     },
     parameters={
         'db_in_memory': Bool,

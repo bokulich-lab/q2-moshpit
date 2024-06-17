@@ -33,10 +33,9 @@ def eggnog_diamond_search(
     ctx, sequences, diamond_db,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
-    _eggnog_search = ctx.get_action("moshpit", "_eggnog_diamond_search")
     collated_hits, collated_tables = _run_eggnog_search_pipeline(
-        ctx, sequences, diamond_db, num_cpus, db_in_memory, num_partitions,
-        _eggnog_search
+        ctx, sequences, [diamond_db], num_cpus, db_in_memory, num_partitions,
+        "_eggnog_diamond_search"
     )
     return collated_hits, collated_tables
 
@@ -45,15 +44,11 @@ def eggnog_hmmer_search(
     ctx, sequences, pressed_hmm_db, idmap, fastas,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
-    _eggnog_search = ctx.get_action("moshpit", "_eggnog_hmmer_search")
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp_subdir = f"{tmp}/hmmer/hmmer_db"
-        os.makedirs(tmp_subdir)
-        _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, tmp_subdir)
-        collated_hits, collated_tables = _run_eggnog_search_pipeline(
-            ctx, sequences, tmp, num_cpus, db_in_memory, num_partitions,
-            _eggnog_search
-        )
+    collated_hits, collated_tables = _run_eggnog_search_pipeline(
+        ctx, sequences, [pressed_hmm_db, idmap, fastas],
+        num_cpus, db_in_memory, num_partitions,
+        "_eggnog_hmmer_search"
+    )
     return collated_hits, collated_tables
 
 
@@ -70,7 +65,7 @@ def _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, target_dir):
 
 
 def _run_eggnog_search_pipeline(
-    ctx, sequences, db, num_cpus, db_in_memory, num_partitions, _eggnog_search
+    ctx, sequences, db, num_cpus, db_in_memory, num_partitions, search_action
 ):
     if sequences.type <= FeatureData[MAG]:
         plugin, action_name = "moshpit", "partition_feature_data_mags"
@@ -82,18 +77,18 @@ def _run_eggnog_search_pipeline(
         raise NotImplementedError()
 
     partition_method = ctx.get_action(plugin, action_name)
+    _eggnog_search = ctx.get_action("moshpit", search_action)
     collate_hits = ctx.get_action("moshpit", "collate_orthologs")
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
 
     hits = []
     for seq in partitioned_sequences.values():
-        (hit, _) = _eggnog_search(seq, db, num_cpus, db_in_memory)
+        (hit, _) = _eggnog_search(seq, *db, num_cpus, db_in_memory)
         hits.append(hit)
 
     (collated_hits,) = collate_hits(hits)
     (collated_tables,) = _eggnog_feature_table(collated_hits)
-
     return collated_hits, collated_tables
 
 
@@ -109,8 +104,9 @@ def _eggnog_diamond_search(
     with tempfile.TemporaryDirectory() as output_loc:
         db_fp = os.path.join(str(diamond_db), 'ref_db.dmnd')
         search_runner = partial(
-            _diamond_search_runner, diamond_db=db_fp, output_loc=output_loc,
-            num_cpus=num_cpus, db_in_memory=db_in_memory
+            _search_runner, output_loc=output_loc,
+            num_cpus=num_cpus, db_in_memory=db_in_memory,
+            runner_args=['diamond', '--dmnd_db', str(db_fp)]
         )
         result, ft = _eggnog_search(sequences, search_runner, output_loc)
     return result, ft
@@ -122,13 +118,20 @@ def _eggnog_hmmer_search(
         MultiMAGSequencesDirFmt,
         MAGSequencesDirFmt
     ],
-    hmm_db: str, num_cpus: int = 1, db_in_memory: bool = False
+    idmap: EggnogHmmerIdmapDirectoryFmt,
+    pressed_hmm_db: PressedProfileHmmsDirectoryFmt,
+    fastas: ProteinsDirectoryFormat,
+    num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
     with tempfile.TemporaryDirectory() as output_loc:
+        tmp_subdir = f"{output_loc}/hmmer/hmmer_db"
+        os.makedirs(tmp_subdir)
+        _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, tmp_subdir)
         search_runner = partial(
-                _hmmer_search_runner, hmm_db=hmm_db, output_loc=output_loc,
-                num_cpus=num_cpus, db_in_memory=db_in_memory
-            )
+            _search_runner, output_loc=output_loc,
+            num_cpus=num_cpus, db_in_memory=db_in_memory,
+            runner_args=['hmmer', '--data_dir', output_loc, '-d', 'hmmer_db']
+        )
         result, ft = _eggnog_search(sequences, search_runner, output_loc)
     return result, ft
 
@@ -181,28 +184,13 @@ def _eggnog_feature_table(seed_orthologs: SeedOrthologDirFmt) -> pd.DataFrame:
     return df
 
 
-def _diamond_search_runner(
-    input_path, diamond_db, sample_label, output_loc, num_cpus, db_in_memory
-):
-
-    cmds = [
-        'emapper.py', '-i', str(input_path), '-o', sample_label,
-        '-m', 'diamond', '--dmnd_db', str(diamond_db),
-        '--itype', 'metagenome', '--output_dir', output_loc,
-        '--cpu', str(num_cpus), '--no_annot'
-    ]
-    if db_in_memory:
-        cmds.append('--dbmem')
-
-    subprocess.run(cmds, check=True)
-
-
-def _hmmer_search_runner(
-    input_path, hmm_db, sample_label, output_loc, num_cpus, db_in_memory
+def _search_runner(
+    input_path, sample_label, output_loc, num_cpus, db_in_memory,
+    runner_args
 ):
     cmds = [
         'emapper.py', '-i', str(input_path), '-o', sample_label,
-        '-m', 'hmmer', '--data_dir', hmm_db, '-d', 'hmmer_db',
+        '-m', *runner_args,
         '--itype', 'metagenome', '--output_dir', output_loc,
         '--cpu', str(num_cpus), '--no_annot'
     ]

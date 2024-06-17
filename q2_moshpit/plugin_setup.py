@@ -1476,10 +1476,10 @@ plugin.methods.register_function(
         "taxon_id": "Taxon ID number."
     },
     outputs=[
-        ("idmap", EggnogHmmerIdmap),
-        ("hmm_db", ProfileHMM[MultipleProtein]),
-        ("pressed_hmm_db", ProfileHMM[PressedProtein]),
-        ("fastas", GenomeData[Proteins])
+        ("idmap", EggnogHmmerIdmap % Properties("eggnog")),
+        ("hmm_db", ProfileHMM[MultipleProtein] % Properties("eggnog")),
+        ("pressed_hmm_db", ProfileHMM[PressedProtein] % Properties("eggnog")),
+        ("fastas", GenomeData[Proteins] % Properties("eggnog"))
     ],
     output_descriptions={
         "idmap": "List of protein families in `hmm_db`.",

@@ -154,4 +154,5 @@ def multiply_tables(ctx, table1, table2):
         multiply = ctx.get_action("moshpit", "_multiply_tables_relative")
     else:
         multiply = ctx.get_action("moshpit", "_multiply_tables")
-    return multiply(table1, table2)
+    result, = multiply(table1, table2)
+    return result

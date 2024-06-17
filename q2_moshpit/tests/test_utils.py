@@ -10,7 +10,7 @@ from qiime2.plugin.testing import TestPluginBase
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 from .._utils import (
     _construct_param, _process_common_input_params,
-    _calculate_md5_from_file, get_feature_lengths
+    _calculate_md5_from_file, get_feature_lengths, _multiply_tables, _multiply_tables_relative, _multiply_tables_pa
 )
 
 
@@ -35,6 +35,28 @@ def fake_processing_func_no_falsy_filtering(key, val):
 
 class TestUtils(TestPluginBase):
     package = 'q2_moshpit.tests'
+
+    @classmethod
+    def setUpClass(cls):
+        cls.table1 = pd.DataFrame({
+            'm1': [1, 4],
+            'm2': [2, 5],
+            'm3': [3, 6]
+        }, index=['s1', 's2'])
+        cls.table1_pa = pd.DataFrame({
+            'm1': [0, 1],
+            'm2': [0, 1],
+            'm3': [0, 0]
+        }, index=['s1', 's2'])
+
+        cls.table2 = pd.DataFrame({
+            'a1': [7, 9, 11],
+            'a2': [8, 10, 12]
+        }, index=['m1', 'm2', 'm3'])
+        cls.table2_pa = pd.DataFrame({
+            'a1': [0, 1, 0],
+            'a2': [1, 0, 1]
+        }, index=['m1', 'm2', 'm3'])
 
     def test_construct_param_simple(self):
         obs = _construct_param('test')
@@ -135,3 +157,25 @@ class TestUtils(TestPluginBase):
         })
         exp.set_index('id', inplace=True)
         pd.testing.assert_frame_equal(obs, exp)
+
+    def test_multiply_tables(self):
+        obs = _multiply_tables(self.table1, self.table2)
+        exp = pd.DataFrame({
+            'a1': [58, 139],
+            'a2': [64, 154]
+        }, index=['s1', 's2'])
+        pd.testing.assert_frame_equal(obs, exp)
+
+    def test_multiply_tables_pa(self):
+        obs = _multiply_tables_pa(self.table1_pa, self.table2)
+        exp = pd.DataFrame({
+            'a1': [0, 1],
+            'a2': [0, 1]
+        }, index=['s1', 's2'])
+        pd.testing.assert_frame_equal(obs, exp)
+
+    def test_multiply_tables_relative(self):
+        result = _multiply_tables_relative(self.table1, self.table2)
+        expected_relative = self.expected_result.div(self.expected_result.sum(axis=1), axis=0)
+        pd.testing.assert_frame_equal(result, expected_relative)
+

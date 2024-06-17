@@ -112,6 +112,7 @@ def _multiply(
             f"Tables do not have compatible dimensions for dot product: "
             f"{table1.shape[1]} != {table2.shape[0]}."
         )
+    # TODO: add a check to compare index and columns to avoid misaligned matrices error
     return table1.dot(table2)
 
 

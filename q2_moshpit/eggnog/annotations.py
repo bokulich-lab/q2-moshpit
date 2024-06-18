@@ -12,7 +12,7 @@ from q2_types.feature_data_mag import OrthologAnnotationDirFmt
 
 def _extract_generic(
         data: pd.DataFrame, column: str, transform_func: callable
-) -> pd.DataFrame:
+) -> pd.Series:
     data = data.set_index("seed_ortholog", inplace=False)[column]
     data = data.apply(transform_func if data.notna().any() else lambda x: x)
     data = data.stack().reset_index(level=1, drop=True)
@@ -23,19 +23,19 @@ def _extract_generic(
     return data
 
 
-def _extract_cog(data: pd.DataFrame) -> pd.DataFrame:
+def _extract_cog(data: pd.DataFrame) -> pd.Series:
     return _extract_generic(
         data, "COG_category", lambda x: pd.Series(list(x))
     )
 
 
-def _extract_kegg_ko(data: pd.DataFrame) -> pd.DataFrame:
+def _extract_kegg_ko(data: pd.DataFrame) -> pd.Series:
     return _extract_generic(
         data, "KEGG_ko", lambda x: pd.Series([i[3:] for i in x.split(",")])
     )
 
 
-def _extract_kegg_pathway(data: pd.DataFrame) -> pd.DataFrame:
+def _extract_kegg_pathway(data: pd.DataFrame) -> pd.Series:
     return _extract_generic(
         data, "KEGG_Pathway", lambda x: pd.Series(
             [i for i in x.split(",") if i.startswith("map")]
@@ -43,25 +43,25 @@ def _extract_kegg_pathway(data: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def _extract_kegg_module(data: pd.DataFrame) -> pd.DataFrame:
+def _extract_kegg_module(data: pd.DataFrame) -> pd.Series:
     return _extract_generic(
         data, "KEGG_Module", lambda x: pd.Series(x.split(","))
     )
 
 
-def _extract_kegg_reaction(data: pd.DataFrame) -> pd.DataFrame:
+def _extract_kegg_reaction(data: pd.DataFrame) -> pd.Series:
     return _extract_generic(
         data, "KEGG_Reaction", lambda x: pd.Series(x.split(","))
     )
 
 
-def _extract_brite(data: pd.DataFrame) -> pd.DataFrame:
+def _extract_brite(data: pd.DataFrame) -> pd.Series:
     return _extract_generic(
         data, "BRITE", lambda x: pd.Series(x.split(","))
     )
 
 
-def _extract_caz(data: pd.DataFrame) -> pd.DataFrame:
+def _extract_caz(data: pd.DataFrame) -> pd.Series:
     return _extract_generic(
         data, "CAZy", lambda x: pd.Series(x.split(","))
     )

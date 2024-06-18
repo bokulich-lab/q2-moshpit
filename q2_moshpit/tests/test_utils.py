@@ -6,11 +6,17 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import pandas as pd
+import qiime2 as q2
 from qiime2.plugin.testing import TestPluginBase
+
 from q2_types.feature_data_mag import MAGSequencesDirFmt
+from q2_types.feature_table import (
+    PresenceAbsence, FeatureTable, RelativeFrequency, Frequency
+)
 from .._utils import (
-    _construct_param, _process_common_input_params,
-    _calculate_md5_from_file, get_feature_lengths, _multiply_tables, _multiply_tables_relative, _multiply_tables_pa
+    _construct_param, _process_common_input_params, _calculate_md5_from_file,
+    get_feature_lengths, _multiply_tables, _multiply_tables_relative,
+    _multiply_tables_pa
 )
 
 
@@ -48,6 +54,11 @@ class TestUtils(TestPluginBase):
             'm2': [0, 1],
             'm3': [0, 0]
         }, index=['s1', 's2'])
+        cls.table1_rel = pd.DataFrame({
+            'm1': [0.1667, 0.2667],
+            'm2': [0.3333, 0.3333],
+            'm3': [0.5, 0.4]
+        }, index=['s1', 's2'])
 
         cls.table2 = pd.DataFrame({
             'a1': [7, 9, 11],
@@ -57,6 +68,14 @@ class TestUtils(TestPluginBase):
             'a1': [0, 1, 0],
             'a2': [1, 0, 1]
         }, index=['m1', 'm2', 'm3'])
+        cls.table2_rel = pd.DataFrame({
+            'a1': [0.4667, 0.4737, 0.4783],
+            'a2': [0.5333, 0.5263, 0.5217]
+        }, index=['m1', 'm2', 'm3'])
+
+    def setUp(self):
+        super().setUp()
+        self.multiply = self.plugin.pipelines["multiply_tables"]
 
     def test_construct_param_simple(self):
         obs = _construct_param('test')
@@ -174,8 +193,102 @@ class TestUtils(TestPluginBase):
         }, index=['s1', 's2'])
         pd.testing.assert_frame_equal(obs, exp)
 
-    def test_multiply_tables_relative(self):
-        result = _multiply_tables_relative(self.table1, self.table2)
-        expected_relative = self.expected_result.div(self.expected_result.sum(axis=1), axis=0)
-        pd.testing.assert_frame_equal(result, expected_relative)
+    def test_multiply_tables_pa_both(self):
+        obs = _multiply_tables_pa(self.table1_pa, self.table2_pa)
+        exp = pd.DataFrame({
+            'a1': [0, 1],
+            'a2': [0, 1]
+        }, index=['s1', 's2'])
+        pd.testing.assert_frame_equal(obs, exp)
 
+    def test_multiply_tables_relative(self):
+        obs = _multiply_tables_relative(self.table1_rel, self.table2)
+        exp = pd.DataFrame({
+            'a1': [0.4754, 0.4744],
+            'a2': [0.5246, 0.5256]
+        }, index=['s1', 's2'])
+        pd.testing.assert_frame_equal(obs, exp, atol=1e-4, check_exact=False)
+
+    def test_multiply_tables_relative_both(self):
+        obs = _multiply_tables_relative(self.table1_rel, self.table2_rel)
+        exp = pd.DataFrame({
+            'a1': [0.4748, 0.4737],
+            'a2': [0.5252, 0.5263]
+        }, index=['s1', 's2'])
+        pd.testing.assert_frame_equal(obs, exp, atol=1e-4, check_exact=False)
+
+    def test_multiply_tables_name_mismatch(self):
+        table1 = self.table1.copy(deep=True)
+        table1.rename(columns={'m1': 'm4'}, inplace=True)
+        with self.assertRaisesRegex(
+            ValueError, "do not match the index"
+        ):
+            _multiply_tables(table1, self.table2)
+
+    def test_multiply_tables_shape_mismatch(self):
+        table1 = self.table1.copy(deep=True)
+        table1.drop('m3', axis=1, inplace=True)
+        with self.assertRaisesRegex(
+            ValueError, "do not match the index"
+        ):
+            _multiply_tables(table1, self.table2)
+
+    def test_multiply_tables_pipeline_freq_freq(self):
+        table1 = q2.Artifact.import_data(
+            'FeatureTable[Frequency]', self.table1
+        )
+        table2 = q2.Artifact.import_data(
+            'FeatureTable[Frequency]', self.table2
+        )
+        obs, = self.multiply(table1, table2)
+        self.assertEqual(obs.type, FeatureTable[Frequency])
+
+    def test_multiply_tables_pipeline_pa_freq(self):
+        table1 = q2.Artifact.import_data(
+            'FeatureTable[PresenceAbsence]', self.table1_pa
+        )
+        table2 = q2.Artifact.import_data(
+            'FeatureTable[Frequency]', self.table2
+        )
+        obs, = self.multiply(table1, table2)
+        self.assertEqual(obs.type, FeatureTable[PresenceAbsence])
+
+    def test_multiply_tables_pipeline_pa_rel(self):
+        table1 = q2.Artifact.import_data(
+            'FeatureTable[PresenceAbsence]', self.table1_pa
+        )
+        table2 = q2.Artifact.import_data(
+            'FeatureTable[RelativeFrequency]', self.table2_rel
+        )
+        obs, = self.multiply(table1, table2)
+        self.assertEqual(obs.type, FeatureTable[PresenceAbsence])
+
+    def test_multiply_tables_pipeline_pa_pa(self):
+        table1 = q2.Artifact.import_data(
+            'FeatureTable[PresenceAbsence]', self.table1_pa
+        )
+        table2 = q2.Artifact.import_data(
+            'FeatureTable[PresenceAbsence]', self.table2_pa
+        )
+        obs, = self.multiply(table1, table2)
+        self.assertEqual(obs.type, FeatureTable[PresenceAbsence])
+
+    def test_multiply_tables_pipeline_freq_rel(self):
+        table1 = q2.Artifact.import_data(
+            'FeatureTable[Frequency]', self.table1
+        )
+        table2 = q2.Artifact.import_data(
+            'FeatureTable[RelativeFrequency]', self.table2_rel
+        )
+        obs, = self.multiply(table1, table2)
+        self.assertEqual(obs.type, FeatureTable[RelativeFrequency])
+
+    def test_multiply_tables_pipeline_rel_rel(self):
+        table1 = q2.Artifact.import_data(
+            'FeatureTable[RelativeFrequency]', self.table1_rel
+        )
+        table2 = q2.Artifact.import_data(
+            'FeatureTable[RelativeFrequency]', self.table2_rel
+        )
+        obs, = self.multiply(table1, table2)
+        self.assertEqual(obs.type, FeatureTable[RelativeFrequency])

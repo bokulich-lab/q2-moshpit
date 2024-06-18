@@ -1590,6 +1590,8 @@ I_multiply_table1, I_multiply_table2, O_multiply = TypeMap({
         FeatureTable[RelativeFrequency],
     (FeatureTable[RelativeFrequency], FeatureTable[Frequency]):
         FeatureTable[RelativeFrequency],
+    (FeatureTable[RelativeFrequency], FeatureTable[RelativeFrequency]):
+        FeatureTable[RelativeFrequency],
 })
 
 plugin.pipelines.register_function(

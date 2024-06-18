@@ -13,7 +13,9 @@ import pandas as pd
 import skbio
 
 from q2_types.feature_data_mag import MAGSequencesDirFmt
-from q2_types.feature_table import FeatureTable, PresenceAbsence, RelativeFrequency
+from q2_types.feature_table import (
+    FeatureTable, PresenceAbsence, RelativeFrequency
+)
 
 
 def run_command(cmd, env=None, verbose=True, pipe=False, **kwargs):
@@ -107,12 +109,15 @@ def _multiply(
         table1: pd.DataFrame, table2: pd.DataFrame
 ) -> pd.DataFrame:
     """Calculate dot product of two tables."""
-    if table1.shape[1] != table2.shape[0]:
+    # if table1.shape[1] != table2.shape[0]:
+    #     raise ValueError(
+    #         f"Tables do not have compatible dimensions for dot product: "
+    #         f"{table1.shape[1]} != {table2.shape[0]}."
+    #     )
+    if not table1.columns.equals(table2.index):
         raise ValueError(
-            f"Tables do not have compatible dimensions for dot product: "
-            f"{table1.shape[1]} != {table2.shape[0]}."
+            "Columns of the first table do not match the index of the second."
         )
-    # TODO: add a check to compare index and columns to avoid misaligned matrices error
     return table1.dot(table2)
 
 

@@ -57,13 +57,13 @@ def fetch_eggnog_db() -> EggnogRefDirFmt:
 
 
 def build_custom_diamond_db(
-        seqs: ProteinSequencesDirectoryFormat,
+        seqs: ProteinSequencesDirectoryFormat,  # type: ignore
         taxonomy: NCBITaxonomyDirFmt = None,
         threads: int = 1,
         file_buffer_size: int = 67108864,
         ignore_warnings: bool = False,
         no_parse_seqids: bool = False
-        ) -> DiamondDatabaseDirFmt:
+        ) -> DiamondDatabaseDirFmt:  # type: ignore
     '''
     Builds diamond database from protein reference database file in FASTA
     format.
@@ -104,7 +104,7 @@ def build_custom_diamond_db(
     return diamond_db
 
 
-def fetch_diamond_db() -> DiamondDatabaseDirFmt:
+def fetch_diamond_db() -> DiamondDatabaseDirFmt:  # type: ignore
     """
     Downloads diamond reference database using the
     `download_eggnog_data.py` script from eggNOG. Here, this

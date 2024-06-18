@@ -697,9 +697,9 @@ plugin.pipelines.register_function(
     function=q2_moshpit.eggnog.eggnog_hmmer_search,
     inputs={
         'sequences': SampleData[Contigs | MAGs] | FeatureData[MAG],
-        'pressed_hmm_db': ProfileHMM[PressedProtein % Properties("eggnog")],
-        'idmap': EggnogHmmerIdmap % Properties("eggnog"),
-        'fastas': GenomeData[Proteins % Properties("eggnog")]
+        'pressed_hmm_db': ProfileHMM[PressedProtein],
+        'idmap': EggnogHmmerIdmap,
+        'fastas': GenomeData[Proteins]
     },
     parameters={
         'num_cpus': Int,
@@ -715,7 +715,7 @@ plugin.pipelines.register_function(
         "fastas": "Seed alignments for the protein families in `hmm_db`."
     },
     parameter_descriptions={
-        'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+        'num_cpus': 'Number of CPUs to utilize per partition. \'0\' will '
                     'use all available.',
         'db_in_memory': 'Read database into memory. The '
                         'database can be very large, so this '
@@ -786,9 +786,9 @@ plugin.methods.register_function(
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
-        'idmap': EggnogHmmerIdmap % Properties("eggnog"),
-        'pressed_hmm_db': ProfileHMM[PressedProtein] % Properties("eggnog"),
-        'fastas': GenomeData[Proteins] % Properties("eggnog")
+        'idmap': EggnogHmmerIdmap,
+        'pressed_hmm_db': ProfileHMM[PressedProtein],
+        'fastas': GenomeData[Proteins]
     },
     parameters={
         'num_cpus': Int,
@@ -803,7 +803,7 @@ plugin.methods.register_function(
         'fastas': 'Seed alignments for the protein families in `hmm_db`.'
     },
     parameter_descriptions={
-        'num_cpus': 'Number of CPUs to utilize. \'0\' will '
+        'num_cpus': 'Number of CPUs to utilize per partition. \'0\' will '
                     'use all available.',
         'db_in_memory': 'Read database into memory. The '
                         'database can be very large, so this '

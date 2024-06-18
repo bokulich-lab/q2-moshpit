@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 import glob
 import os
+# import shutil
 import subprocess
 import tempfile
 from typing import Union
@@ -45,7 +46,7 @@ def eggnog_hmmer_search(
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
     collated_hits, collated_tables = _run_eggnog_search_pipeline(
-        ctx, sequences, [pressed_hmm_db, idmap, fastas],
+        ctx, sequences, [idmap, pressed_hmm_db, fastas],
         num_cpus, db_in_memory, num_partitions,
         "_eggnog_hmmer_search"
     )
@@ -53,11 +54,7 @@ def eggnog_hmmer_search(
 
 
 def _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, target_dir):
-    for source_dir in [
-        str(pressed_hmm_db.view(PressedProfileHmmsDirectoryFmt)),
-        str(idmap.view(EggnogHmmerIdmapDirectoryFmt)),
-        str(fastas.view(ProteinsDirectoryFormat))
-    ]:
+    for source_dir in [str(pressed_hmm_db), str(idmap), str(fastas)]:
         for filename in os.listdir(source_dir):
             source_file = os.path.join(source_dir, filename)
             target_file = os.path.join(target_dir, filename)
@@ -124,13 +121,17 @@ def _eggnog_hmmer_search(
     num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
     with tempfile.TemporaryDirectory() as output_loc:
-        tmp_subdir = f"{output_loc}/hmmer/hmmer_db"
+        taxon_id = os.listdir(idmap.path)[0].split(".")[0]
+        tmp_subdir = f"{output_loc}/hmmer/{taxon_id}"
         os.makedirs(tmp_subdir)
         _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, tmp_subdir)
         search_runner = partial(
             _search_runner, output_loc=output_loc,
             num_cpus=num_cpus, db_in_memory=db_in_memory,
-            runner_args=['hmmer', '--data_dir', output_loc, '-d', 'hmmer_db']
+            runner_args=[
+                'hmmer', '--data_dir', output_loc, '-d', taxon_id,
+                '--genepred', 'prodigal'  # default incompatible with HMMER
+            ]
         )
         result, ft = _eggnog_search(sequences, search_runner, output_loc)
     return result, ft

@@ -75,28 +75,16 @@ def _download_and_build_hmm_db(taxon_id):
                 for i, file in tqdm(
                     enumerate(files, start=1), total=len(files)
                 ):
-                    if file.endswith(".hmm"):
-
-                        # process hmm files
+                    if file.endswith(".hmm"):  # process hmm files
                         with open(f"{root}/{file}", "r") as hmm_file:
-                            lines = hmm_file.readlines()
-
-                            # Find "NAME" line
-                            for j, line in enumerate(lines):
+                            for line in hmm_file:
                                 if line.startswith("NAME "):
-                                    modified_line = re.sub(
+                                    line = re.sub(
                                         r"\.faa\.final_tree(\.fa)?", "", line
                                     )
-
-                                    # write modified content to hmms_merged
-                                    lines[j] = modified_line
-                                    hmms.writelines(lines)
-
-                                    # get name and write to idmap
-                                    id = modified_line.replace("NAME  ", "", 1)
+                                    id = line.replace("NAME  ", "", 1)
                                     idmap.write(f"{i} {id}")
-
-                                    break
+                                hmms.write(line)
 
     # prepare an HMM database for faster hmmscan searches
     print(colorify("Preparing HMM database..."))

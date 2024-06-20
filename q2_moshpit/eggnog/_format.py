@@ -14,7 +14,7 @@ class EggnogHmmerIdmapFileFmt(model.TextFileFormat):
     def _validate_(self, level):
         with open(str(self), 'r') as file:
             # Set the number of rows to be parsed
-            max_lines = {"min": 100, "max": 10000000}[level]
+            max_lines = {"min": 100, "max": float('inf')}[level]
             lines = file.readlines()
             for i, line in enumerate(lines, 1):
                 # Check number of lines parsed so far

@@ -9,6 +9,7 @@ import re
 import os
 import gzip
 import shutil
+import glob
 from tqdm import tqdm
 import tempfile
 import subprocess
@@ -122,11 +123,7 @@ def _download_fastas_into_hmmer_db(taxon_id: int):
             cwd=tmp
         )
 
-        files = [
-            f"{tmp}/{taxon_id}/{f}"
-            for f in os.listdir(f"{tmp}/{taxon_id}")
-            if f.endswith(".gz")
-        ]
+        files = glob.glob(f"{tmp}/{taxon_id}/*.gz")
 
         # Extract, remove '-' and save to hmmer_db location
         print(colorify("Processing FASTA files (this can take a while)... "))

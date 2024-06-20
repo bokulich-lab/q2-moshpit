@@ -340,7 +340,7 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> (
     ProteinMultipleProfileHmmDirectoryFmt,
     PressedProfileHmmsDirectoryFmt,
     ProteinsDirectoryFormat
-):
+):  # type: ignore
     # Validate taxon ID
     with tempfile.TemporaryDirectory() as tmp:
         print(colorify(

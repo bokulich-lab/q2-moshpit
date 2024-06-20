@@ -48,6 +48,7 @@ setup(
             "data/*/*/*",
             "data/*/*/*/*",
             "data/*/*/*/*/*",
+            "data/*/*/*/*/*/*",
         ],
         "q2_moshpit.busco.types.tests": [
             "data/*",

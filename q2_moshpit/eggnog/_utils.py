@@ -66,25 +66,7 @@ def _download_and_build_hmm_db(taxon_id):
         print(colorify("Merging hmm files..."))
         hmms_merged_p = f"{str(pressed_hmm_db_obj)}/{taxon_id}.hmm"
         idmap_p = f"{str(idmap_obj)}/{taxon_id}.hmm.idmap"
-
-        # Open output files
-        with open(hmms_merged_p, "a") as hmms, open(idmap_p, "a") as idmap:
-
-            # Iterate through all decompressed files
-            for root, dirnames, files in os.walk(f"{tmp}/{taxon_id}"):
-                for i, file in tqdm(
-                    enumerate(files, start=1), total=len(files)
-                ):
-                    if file.endswith(".hmm"):  # process hmm files
-                        with open(f"{root}/{file}", "r") as hmm_file:
-                            for line in hmm_file:
-                                if line.startswith("NAME "):
-                                    line = re.sub(
-                                        r"\.faa\.final_tree(\.fa)?", "", line
-                                    )
-                                    id = line.replace("NAME  ", "", 1)
-                                    idmap.write(f"{i} {id}")
-                                hmms.write(line)
+        _merge_hmms_and_write_idmap(hmms_merged_p, idmap_p, taxon_id, tmp)
 
     # prepare an HMM database for faster hmmscan searches
     print(colorify("Preparing HMM database..."))
@@ -133,3 +115,22 @@ def _try_wget(output_file: str, url: str, exception_msg: str):
         raise Exception(
             f"{exception_msg}: {e.returncode}"
         )
+
+
+def _merge_hmms_and_write_idmap(hmms_merged_p, idmap_p, taxon_id, tmp):
+    # Open output files
+    with open(hmms_merged_p, "a") as hmms, open(idmap_p, "a") as idmap:
+
+        # Iterate through all decompressed files
+        for root, dirnames, files in os.walk(f"{tmp}/{taxon_id}"):
+            for i, file in tqdm(enumerate(files, start=1), total=len(files)):
+                if file.endswith(".hmm"):  # process hmm files
+                    with open(f"{root}/{file}", "r") as hmm_file:
+                        for line in hmm_file:
+                            if line.startswith("NAME "):
+                                line = re.sub(
+                                    r"\.faa\.final_tree(\.fa)?", "", line
+                                )
+                                id = line.replace("NAME  ", "", 1)
+                                idmap.write(f"{i} {id}")
+                            hmms.write(line)

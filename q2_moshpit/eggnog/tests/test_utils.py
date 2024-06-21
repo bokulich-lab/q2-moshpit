@@ -10,6 +10,7 @@ from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from .._utils import (
     _try_wget, _download_and_build_hmm_db, _download_fastas_into_hmmer_db,
+    _merge_hmms_and_write_idmap
 )
 from q2_moshpit.eggnog._format import EggnogHmmerIdmapDirectoryFmt
 from q2_types.genome_data import ProteinsDirectoryFormat
@@ -90,3 +91,18 @@ class TestEggnogUtils(TestPluginBase):
             check=True,
             cwd=tmp
         )
+
+    def test_merge_hmms_and_write_idmap(self):
+        hmms = self.get_data_path("hmmer/hmms")
+        taxon_id = 1
+
+        merged_hmms_obj = ProteinMultipleProfileHmmDirectoryFmt()
+        idmap_obj = EggnogHmmerIdmapDirectoryFmt()
+
+        hmms_merged_p = f"{str(merged_hmms_obj)}/{taxon_id}.hmm"
+        idmap_p = f"{str(idmap_obj)}/{taxon_id}.hmm.idmap"
+
+        _merge_hmms_and_write_idmap(hmms_merged_p, idmap_p, taxon_id, hmms)
+
+        merged_hmms_obj.validate()
+        idmap_obj.validate()

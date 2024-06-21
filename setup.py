@@ -42,13 +42,18 @@ setup(
             'data/depth/*', 'data/maps/*', 'data/bins-small/*/*',
             'data/bins-no-uuid/*/*'
         ],
-        "q2_moshpit.busco.tests": [
-            "data/*",
-            "data/*/*",
-            "data/*/*/*",
-            "data/*/*/*/*",
-            "data/*/*/*/*/*",
-            "data/*/*/*/*/*/*",
+        "q2_moshpit.busco.tests.data": [
+            "*",
+            "summaries/*",
+            "mags/*",
+            "mags/sample1/*",
+            "mags/sample2/*",
+            "busco_db/busco_downloads/*",
+            "busco_db/busco_downloads/placement_files/*",
+            "busco_db/busco_downloads/lineages/lineage_1/*",
+            "busco_db/busco_downloads/lineages/lineage_1/hmms/*",
+            "busco_db/busco_downloads/lineages/lineage_1/info/*",
+            "busco_db/busco_downloads/lineages/lineage_1/prfl/*"
         ],
         "q2_moshpit.busco.types.tests": [
             "data/*",

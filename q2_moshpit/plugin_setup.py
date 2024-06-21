@@ -1479,14 +1479,15 @@ plugin.methods.register_function(
         ("idmap", EggnogHmmerIdmap % Properties("eggnog")),
         ("hmm_db", ProfileHMM[MultipleProtein] % Properties("eggnog")),
         ("pressed_hmm_db", ProfileHMM[PressedProtein] % Properties("eggnog")),
-        ("fastas", GenomeData[Proteins] % Properties("eggnog"))
+        ("seed-alignments", GenomeData[Proteins] % Properties("eggnog"))
     ],
     output_descriptions={
         "idmap": "List of protein families in `hmm_db`.",
         "hmm_db": "Collection of Profile HMMs.",
         "pressed_hmm_db": "Collection of Profile HMMs in binary format "
                           "and indexed.",
-        "fastas": "Seed alignments for the protein families in `hmm_db`."
+        "seed-alignments": "Seed alignments for the protein families in "
+                           "`hmm_db`."
     },
     name="Fetch the taxon specific database necessary to run the "
          "eggnog-hmmer-search action.",

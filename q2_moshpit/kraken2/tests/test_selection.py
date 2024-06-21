@@ -77,6 +77,9 @@ class TestKrakenSelect(TestPluginBase):
         self.taxa_mag4 = pd.read_csv(
             self.get_data_path('mag-taxa-4.csv'), index_col=0
         )
+        self.taxa_mag5 = pd.read_csv(
+            self.get_data_path('mag-taxa-5.csv'), index_col=0
+        )
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
@@ -155,6 +158,24 @@ class TestKrakenSelect(TestPluginBase):
                 'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium;'
                 's__Mycobacterium florentinum'
             ]
+        }, orient='index')
+        exp.columns = ['Taxon']
+        exp.index.name = 'Feature ID'
+        pandas.testing.assert_frame_equal(obs, exp)
+
+    def test_find_lcas_mode_lca_unclassified(self):
+        taxa = [self.taxa_mag1, self.taxa_mag2, self.taxa_mag5]
+        obs = _find_lcas(taxa, mode='lca')
+        exp = pd.DataFrame.from_dict({
+            '0e514d88-16c4-4273-a1df-1a360eb2c823': [
+                'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+                'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium'
+            ],
+            '3acec411-b0d0-4441-b936-5b8b571fa328': [
+                'd__Bacteria;k__Bacteria;p__Actinomycetota;c__Actinomycetes;'
+                'o__Mycobacteriales;f__Mycobacteriaceae;g__Mycobacterium'
+            ],
+            'fed92059-3222-4573-b0ec-726c49fbfabb': ['d__Unclassified']
         }, orient='index')
         exp.columns = ['Taxon']
         exp.index.name = 'Feature ID'

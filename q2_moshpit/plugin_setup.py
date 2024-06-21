@@ -1470,7 +1470,7 @@ plugin.methods.register_function(
     function=q2_moshpit.eggnog.fetch_eggnog_hmmer_db,
     inputs={},
     parameters={
-        "taxon_id": Int % Range(1, None)
+        "taxon_id": Int % Range(2, None)
     },
     parameter_descriptions={
         "taxon_id": "Taxon ID number."

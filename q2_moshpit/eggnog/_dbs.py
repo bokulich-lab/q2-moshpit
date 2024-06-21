@@ -25,10 +25,10 @@ from q2_moshpit._utils import (
 )
 from q2_moshpit.eggnog._utils import (
     _parse_build_diamond_db_params, _download_and_build_hmm_db,
-    _download_fastas_into_hmmer_db, _try_wget
+    _download_fastas_into_hmmer_db,
+    _validate_eggnog_hmmer_taxon_id
 )
 from q2_moshpit.eggnog._format import EggnogHmmerIdmapDirectoryFmt
-import tempfile
 
 
 def fetch_eggnog_db() -> EggnogRefDirFmt:
@@ -341,18 +341,7 @@ def fetch_eggnog_hmmer_db(taxon_id: int) -> (
     PressedProfileHmmsDirectoryFmt,
     ProteinsDirectoryFormat
 ):  # type: ignore
-    # Validate taxon ID
-    with tempfile.TemporaryDirectory() as tmp:
-        print(colorify(
-                "Validating taxon ID: \n"
-                "Downloading taxonomy file..."
-        ))
-        _try_wget(
-            f"{tmp}/e5.taxid_info.tsv",
-            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv",
-            "Error during taxon-info-file download"
-        )
-        _validate_taxon_id(tmp, taxon_id)
+    _validate_eggnog_hmmer_taxon_id(taxon_id)
 
     # Download HMMER database
     print(colorify(

@@ -39,10 +39,9 @@ class TestFetchDB(TestPluginBase):
     @patch('tempfile.TemporaryDirectory')
     @patch("q2_moshpit.eggnog._dbs._download_and_build_hmm_db")
     @patch("q2_moshpit.eggnog._dbs._download_fastas_into_hmmer_db")
-    @patch("q2_moshpit.eggnog._dbs._validate_taxon_id")
-    @patch("q2_moshpit.eggnog._dbs._try_wget")
+    @patch("q2_moshpit.eggnog._dbs._validate_eggnog_hmmer_taxon_id")
     def test_fetch_eggnog_hmmer_db(
-        self, mock_wget, mock_validate, mock_fastas, mock_build, tmpdir
+        self, mock_validate, mock_fastas, mock_build, tmpdir
     ):
         tmpdir.return_value.__enter__.return_value = "tmp"
         taxon_id = 1
@@ -50,12 +49,7 @@ class TestFetchDB(TestPluginBase):
 
         _, _, _, _ = fetch_eggnog_hmmer_db(taxon_id)
 
-        mock_wget.assert_called_once_with(
-            "tmp/e5.taxid_info.tsv",
-            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv",
-            "Error during taxon-info-file download"
-        )
-        mock_validate.assert_called_once_with("tmp", taxon_id)
+        mock_validate.assert_called_once_with(taxon_id)
         mock_build.assert_called_once_with(taxon_id)
         mock_fastas.assert_called_once_with(taxon_id)
 

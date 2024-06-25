@@ -5,16 +5,19 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import shutil
 import filecmp
 import qiime2
-from unittest.mock import MagicMock
+import tempfile
+from filecmp import dircmp
+from unittest.mock import MagicMock, patch, ANY
 import pandas as pd
 import pandas.testing as pdt
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.sdk.parallel_config import ParallelConfig
 from q2_moshpit.eggnog import (
     _eggnog_diamond_search, _eggnog_annotate, EggnogHmmerIdmapDirectoryFmt,
-    eggnog_hmmer_search
+    eggnog_hmmer_search, _symlink_files_to_target_dir, _eggnog_hmmer_search
 )
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 from q2_types.reference_db import (
@@ -52,6 +55,12 @@ class TestHMMER(TestPluginBase):
         )
         self.fastas = self.fastas_artifact.view(ProteinsDirectoryFormat)
 
+        self.mags_artifact = qiime2.Artifact.import_data(
+            'SampleData[MAGs]',
+            self.get_data_path('mag-sequences-per-sample')
+        )
+        self.mags = self.mags_artifact.view(MultiMAGSequencesDirFmt)
+
         self.eggnog_hmmer_search = \
             self.plugin.pipelines["eggnog_hmmer_search"]
         self._eggnog_hmmer_search = \
@@ -67,19 +76,58 @@ class TestHMMER(TestPluginBase):
             lambda collated_hits: ("collated_tables", ),
         ])
         mock_ctx = MagicMock(get_action=mock_action)
-        mags = qiime2.Artifact.import_data(
-            'SampleData[MAGs]',
-            self.get_data_path('mag-sequences-per-sample')
-        )
         obs = eggnog_hmmer_search(
             ctx=mock_ctx,
-            sequences=mags,
+            sequences=self.mags_artifact,
             pressed_hmm_db=self.pressed_hmm_artifact,
             idmap=self.idmap_artifact,
             seed_alignment=self.fastas_artifact
         )
         exp = ("collated_hits", "collated_tables")
         self.assertTupleEqual(obs, exp)
+
+    def test_symlink_files_to_target_dir(self):
+        with tempfile.TemporaryDirectory() as tmp1:
+            for dir in ['idmap', 'fastas', 'pressed_hmm']:
+                shutil.copytree(
+                    self.get_data_path(dir), tmp1, dirs_exist_ok=True
+                )
+            with tempfile.TemporaryDirectory() as tmp2:
+                _symlink_files_to_target_dir(
+                    self.get_data_path('pressed_hmm'),
+                    self.get_data_path('idmap'),
+                    self.get_data_path('fastas'),
+                    tmp2
+                )
+                comp = dircmp(tmp1, tmp2)
+                self.assertFalse(
+                    comp.diff_files or comp.left_only or comp.right_only
+                )
+
+    @patch("os.makedirs")
+    @patch("tempfile.TemporaryDirectory")
+    @patch("q2_moshpit.eggnog._method._symlink_files_to_target_dir")
+    @patch("q2_moshpit.eggnog._method._eggnog_search")
+    def test__eggnog_hmmer_search(
+        self, mock_eggnog_search, mock_symlink, mock_tmpdir, mock_makedirs
+    ):
+        mock_tmpdir.return_value.__enter__.return_value = "tmp"
+        mock_eggnog_search.return_value = (0, 1)
+        result, ft = _eggnog_hmmer_search(
+            sequences=self.mags,
+            idmap=self.idmap,
+            pressed_hmm_db=self.pressed_hmm,
+            seed_alignment=self.fastas
+        )
+        mock_symlink.assert_called_once_with(
+            self.pressed_hmm, self.idmap, self.fastas, "tmp/hmmer/1100069"
+        )
+        mock_eggnog_search.assert_called_once_with(
+            self.mags,
+            ANY,  # partial() method not patchable or comparable
+            "tmp"
+        )
+        self.assertTupleEqual((result, ft), (0, 1))
 
 
 class TestDiamond(TestPluginBase):

@@ -117,14 +117,16 @@ def _eggnog_hmmer_search(
     ],
     idmap: EggnogHmmerIdmapDirectoryFmt,
     pressed_hmm_db: PressedProfileHmmsDirectoryFmt,
-    fastas: ProteinsDirectoryFormat,
+    seed_alignment: ProteinsDirectoryFormat,
     num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
     with tempfile.TemporaryDirectory() as output_loc:
         taxon_id = os.listdir(idmap.path)[0].split(".")[0]
         tmp_subdir = f"{output_loc}/hmmer/{taxon_id}"
         os.makedirs(tmp_subdir)
-        _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, tmp_subdir)
+        _symlink_files_to_target_dir(
+            pressed_hmm_db, idmap, seed_alignment, tmp_subdir
+        )
         search_runner = partial(
             _search_runner, output_loc=output_loc,
             num_cpus=num_cpus, db_in_memory=db_in_memory,

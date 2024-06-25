@@ -152,11 +152,15 @@ class _EggnogHTMLParser(HTMLParser):
                     if match:
                         self.links.append(match.group(1))
 
+    def get_taxon_ids(self):
+        taxon_ids = [int(element) for element in self.links]
+        taxon_ids.remove(1)
+        return taxon_ids
+
 
 def _validate_eggnog_hmmer_taxon_id(taxon_id):
     try:
         with urllib.request.urlopen(COMMON_URL) as response:
-            print(response)
             html_content = response.read().decode('utf-8')
     except urllib.error.HTTPError as e:
         print(f"HTTP Error: {e.code} {e.reason}")
@@ -166,17 +170,10 @@ def _validate_eggnog_hmmer_taxon_id(taxon_id):
         print(f"General Error: {e}")
 
     # Parse the HTML content
-    print(html_content)
-    print(type(html_content))
     parser = _EggnogHTMLParser()
     parser.feed(html_content)
 
-    # Print the list of elements
-    print(parser.links)
-    taxon_ids = [int(element) for element in parser.links]
-    print(taxon_ids)
-    taxon_ids.remove(1)
-    if taxon_id not in taxon_ids:
+    if taxon_id not in parser.get_taxon_ids():
         raise ValidationError(
             f"{taxon_id} is not a valid taxon ID. \n"
             f"Check out {COMMON_URL} for the valid IDs."

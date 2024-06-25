@@ -42,23 +42,15 @@ def eggnog_diamond_search(
 
 
 def eggnog_hmmer_search(
-    ctx, sequences, pressed_hmm_db, idmap, fastas,
+    ctx, sequences, pressed_hmm_db, idmap, seed_alignment,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
     collated_hits, collated_tables = _run_eggnog_search_pipeline(
-        ctx, sequences, [idmap, pressed_hmm_db, fastas],
+        ctx, sequences, [idmap, pressed_hmm_db, seed_alignment],
         num_cpus, db_in_memory, num_partitions,
         "_eggnog_hmmer_search"
     )
     return collated_hits, collated_tables
-
-
-def _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, target_dir):
-    for source_dir in [str(pressed_hmm_db), str(idmap), str(fastas)]:
-        for filename in os.listdir(source_dir):
-            source_file = os.path.join(source_dir, filename)
-            target_file = os.path.join(target_dir, filename)
-            os.symlink(source_file, target_file)
 
 
 def _run_eggnog_search_pipeline(
@@ -107,6 +99,14 @@ def _eggnog_diamond_search(
         )
         result, ft = _eggnog_search(sequences, search_runner, output_loc)
     return result, ft
+
+
+def _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, target_dir):
+    for source_dir in [str(pressed_hmm_db), str(idmap), str(fastas)]:
+        for filename in os.listdir(source_dir):
+            source_file = os.path.join(source_dir, filename)
+            target_file = os.path.join(target_dir, filename)
+            os.symlink(source_file, target_file)
 
 
 def _eggnog_hmmer_search(

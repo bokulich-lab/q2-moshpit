@@ -699,7 +699,7 @@ plugin.pipelines.register_function(
         'sequences': SampleData[Contigs | MAGs] | FeatureData[MAG],
         'pressed_hmm_db': ProfileHMM[PressedProtein],
         'idmap': EggnogHmmerIdmap,
-        'fastas': GenomeData[Proteins]
+        'seed_alignment': GenomeData[Proteins]
     },
     parameters={
         'num_cpus': Int,
@@ -712,7 +712,8 @@ plugin.pipelines.register_function(
         "pressed_hmm_db": "Collection of Profile HMMs in binary format "
                           "and indexed.",
         "idmap": "List of protein families in `hmm_db`.",
-        "fastas": "Seed alignments for the protein families in `hmm_db`."
+        "seed_alignment": "Seed alignments for the protein families in "
+                          "`hmm_db`."
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize per partition. \'0\' will '

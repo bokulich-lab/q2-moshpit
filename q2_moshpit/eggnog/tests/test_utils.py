@@ -68,12 +68,16 @@ class TestEggnogUtils(TestPluginBase):
         tmp = self.get_data_path('hmmer/hmms')
         taxon_id = 1
         tmpdir.return_value.__enter__.return_value = tmp
-
         idmap, hmm_db, pressed_hmm_db = _download_and_build_hmm_db(taxon_id)
 
         self.assertIsInstance(idmap, EggnogHmmerIdmapDirectoryFmt)
+        idmap.validate()
+
         self.assertIsInstance(hmm_db, ProteinMultipleProfileHmmDirectoryFmt)
+        hmm_db.validate()
+
         self.assertIsInstance(pressed_hmm_db, PressedProfileHmmsDirectoryFmt)
+        # No validation because files where not created because of patch
 
         mock_run.assert_has_calls([
             call(

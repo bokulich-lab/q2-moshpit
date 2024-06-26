@@ -699,7 +699,7 @@ plugin.pipelines.register_function(
         'sequences': SampleData[Contigs | MAGs] | FeatureData[MAG],
         'pressed_hmm_db': ProfileHMM[PressedProtein],
         'idmap': EggnogHmmerIdmap,
-        'seed_alignment': GenomeData[Proteins]
+        'seed_alignments': GenomeData[Proteins]
     },
     parameters={
         'num_cpus': Int,
@@ -712,7 +712,7 @@ plugin.pipelines.register_function(
         "pressed_hmm_db": "Collection of Profile HMMs in binary format "
                           "and indexed.",
         "idmap": "List of protein families in `hmm_db`.",
-        "seed_alignment": "Seed alignments for the protein families in "
+        "seed_alignments": "Seed alignments for the protein families in "
                           "`hmm_db`."
     },
     parameter_descriptions={
@@ -789,7 +789,7 @@ plugin.methods.register_function(
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
         'idmap': EggnogHmmerIdmap,
         'pressed_hmm_db': ProfileHMM[PressedProtein],
-        'seed_alignment': GenomeData[Proteins]
+        'seed_alignments': GenomeData[Proteins]
     },
     parameters={
         'num_cpus': Int,
@@ -801,7 +801,7 @@ plugin.methods.register_function(
         'idmap': 'List of protein families in `hmm_db`.',
         'pressed_hmm_db': 'Collection of Profile HMMs in binary format '
                           'and indexed.',
-        'seed_alignment': 'Seed alignments for the protein families in '
+        'seed_alignments': 'Seed alignments for the protein families in '
                           '`hmm_db`.'
     },
     parameter_descriptions={

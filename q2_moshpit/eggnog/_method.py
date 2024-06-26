@@ -42,11 +42,11 @@ def eggnog_diamond_search(
 
 
 def eggnog_hmmer_search(
-    ctx, sequences, pressed_hmm_db, idmap, seed_alignment,
+    ctx, sequences, pressed_hmm_db, idmap, seed_alignments,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
     collated_hits, collated_tables = _run_eggnog_search_pipeline(
-        ctx, sequences, [idmap, pressed_hmm_db, seed_alignment],
+        ctx, sequences, [idmap, pressed_hmm_db, seed_alignments],
         num_cpus, db_in_memory, num_partitions,
         "_eggnog_hmmer_search"
     )
@@ -101,8 +101,10 @@ def _eggnog_diamond_search(
     return result, ft
 
 
-def _symlink_files_to_target_dir(pressed_hmm_db, idmap, fastas, target_dir):
-    for source_dir in [str(pressed_hmm_db), str(idmap), str(fastas)]:
+def _symlink_files_to_target_dir(
+    pressed_hmm_db, idmap, seed_alignments, target_dir
+):
+    for source_dir in [str(pressed_hmm_db), str(idmap), str(seed_alignments)]:
         for filename in os.listdir(source_dir):
             source_file = os.path.join(source_dir, filename)
             target_file = os.path.join(target_dir, filename)
@@ -117,7 +119,7 @@ def _eggnog_hmmer_search(
     ],
     idmap: EggnogHmmerIdmapDirectoryFmt,
     pressed_hmm_db: PressedProfileHmmsDirectoryFmt,
-    seed_alignment: ProteinsDirectoryFormat,
+    seed_alignments: ProteinsDirectoryFormat,
     num_cpus: int = 1, db_in_memory: bool = False
 ) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
     with tempfile.TemporaryDirectory() as output_loc:
@@ -125,7 +127,7 @@ def _eggnog_hmmer_search(
         tmp_subdir = f"{output_loc}/hmmer/{taxon_id}"
         os.makedirs(tmp_subdir)
         _symlink_files_to_target_dir(
-            pressed_hmm_db, idmap, seed_alignment, tmp_subdir
+            pressed_hmm_db, idmap, seed_alignments, tmp_subdir
         )
         search_runner = partial(
             _search_runner, output_loc=output_loc,

@@ -82,7 +82,7 @@ class TestHMMER(TestPluginBase):
             sequences=self.mags_artifact,
             pressed_hmm_db=self.pressed_hmm_artifact,
             idmap=self.idmap_artifact,
-            seed_alignment=self.fastas_artifact
+            seed_alignments=self.fastas_artifact
         )
         exp = ("collated_hits", "collated_tables")
         self.assertTupleEqual(obs, exp)
@@ -118,7 +118,7 @@ class TestHMMER(TestPluginBase):
             sequences=self.mags,
             idmap=self.idmap,
             pressed_hmm_db=self.pressed_hmm,
-            seed_alignment=self.fastas
+            seed_alignments=self.fastas
         )
         mock_symlink.assert_called_once_with(
             self.pressed_hmm, self.idmap, self.fastas, "tmp/hmmer/1100069"

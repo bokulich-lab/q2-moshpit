@@ -47,7 +47,7 @@ class TestFetchDB(TestPluginBase):
         taxon_id = 1
         mock_build.return_value = (1, 2, 3)
 
-        _, _, _, _ = fetch_eggnog_hmmer_db(taxon_id)
+        fetch_eggnog_hmmer_db(taxon_id)
 
         mock_validate.assert_called_once_with(taxon_id)
         mock_build.assert_called_once_with(taxon_id)

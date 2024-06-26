@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import os
 from unittest.mock import patch, call, MagicMock
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.core.exceptions import ValidationError
@@ -93,15 +94,21 @@ class TestEggnogUtils(TestPluginBase):
             )
         ])
 
+    @patch("glob.glob")
     @patch("subprocess.run")
     @patch("tempfile.TemporaryDirectory")
-    def test_download_fastas_into_hmmer_db(self, tmpdir, mock_run):
-        tmp = self.get_data_path("hmmer/fastas")
+    def test_download_fastas_into_hmmer_db(self, tmpdir, mock_run, mock_glob):
+        tmp = "tmp"
         taxon_id = 1
+        directory_path = self.get_data_path("hmmer/fastas/1")
         tmpdir.return_value.__enter__.return_value = tmp
-        fastas = _download_fastas_into_hmmer_db(1)
+        mock_glob.return_value = [
+            os.path.join(directory_path, f) for f in os.listdir(directory_path)
+        ]
 
+        fastas = _download_fastas_into_hmmer_db(1)
         self.assertIsInstance(fastas, ProteinsDirectoryFormat)
+        fastas.validate()
 
         mock_run.assert_has_calls([
             call(

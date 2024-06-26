@@ -12,7 +12,7 @@ from qiime2.core.exceptions import ValidationError
 from .._dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
     fetch_diamond_db, build_eggnog_diamond_db, fetch_ncbi_taxonomy,
-    _validate_taxon_id, _collect_and_compare_md5
+    _collect_and_compare_md5, fetch_eggnog_hmmer_db, _validate_taxon_id
 )
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
 from q2_types.reference_db import (
@@ -35,6 +35,23 @@ class TestFetchDB(TestPluginBase):
             "--data_dir", str(eggnog_db)
         ]
         subp_run.assert_called_once_with(cmd, check=True)
+
+    @patch('tempfile.TemporaryDirectory')
+    @patch("q2_moshpit.eggnog._dbs._download_and_build_hmm_db")
+    @patch("q2_moshpit.eggnog._dbs._download_fastas_into_hmmer_db")
+    @patch("q2_moshpit.eggnog._dbs._validate_eggnog_hmmer_taxon_id")
+    def test_fetch_eggnog_hmmer_db(
+        self, mock_validate, mock_fastas, mock_build, tmpdir
+    ):
+        tmpdir.return_value.__enter__.return_value = "tmp"
+        taxon_id = 1
+        mock_build.return_value = (1, 2, 3)
+
+        fetch_eggnog_hmmer_db(taxon_id)
+
+        mock_validate.assert_called_once_with(taxon_id)
+        mock_build.assert_called_once_with(taxon_id)
+        mock_fastas.assert_called_once_with(taxon_id)
 
 
 class TestBuildDiamondDB(TestPluginBase):
@@ -269,19 +286,10 @@ class TestBuildDiamondDB(TestPluginBase):
         shut_mv.assert_called_once_with(source_path, destination_path)
 
     def test_validate_taxon_id_invalid(self):
-        # Init input data
         path_to_data = self.get_data_path('build_eggnog_diamond_db/')
-        eggnog_proteins = EggnogProteinSequencesDirFmt(path_to_data, 'r')
-
-        # Call function exception error since taxon 0 is invalid
-        with self.assertRaisesRegex(
-            ValueError,
-            "'0' is not valid taxon ID. "
-        ):
-            _validate_taxon_id(eggnog_proteins, 0)
+        with self.assertRaisesRegex(ValueError, "'0' is not valid taxon ID. "):
+            _validate_taxon_id(path_to_data, 0)
 
     def test_validate_taxon_id_valid(self):
-        # Init input data
         path_to_data = self.get_data_path('build_eggnog_diamond_db/')
-        eggnog_proteins = EggnogProteinSequencesDirFmt(path_to_data, 'r')
-        _validate_taxon_id(eggnog_proteins, 2)
+        _validate_taxon_id(path_to_data, 2)

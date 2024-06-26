@@ -9,7 +9,7 @@ from ._method import (
     eggnog_diamond_search, _eggnog_diamond_search,
     eggnog_hmmer_search, _eggnog_hmmer_search,
     eggnog_annotate, _eggnog_annotate, _eggnog_feature_table,
-    _symlink_files_to_target_dir, _search_runner
+    _symlink_files_to_target_dir, _search_runner, _eggnog_search
 )
 from ._dbs import (
     fetch_eggnog_db, fetch_diamond_db, build_custom_diamond_db,
@@ -29,5 +29,6 @@ __all__ = [
     'build_eggnog_diamond_db', 'fetch_ncbi_taxonomy', '_eggnog_annotate',
     'fetch_eggnog_hmmer_db', 'EggnogHmmerIdmapFileFmt', 'EggnogHmmerIdmap',
     'EggnogHmmerIdmapDirectoryFmt', 'eggnog_hmmer_search',
-    '_eggnog_hmmer_search', '_symlink_files_to_target_dir', '_search_runner'
+    '_eggnog_hmmer_search', '_symlink_files_to_target_dir', '_search_runner',
+    '_eggnog_search'
 ]

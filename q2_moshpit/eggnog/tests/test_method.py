@@ -10,14 +10,15 @@ import filecmp
 import qiime2
 import tempfile
 from filecmp import dircmp
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import MagicMock, patch, ANY, call
 import pandas as pd
 import pandas.testing as pdt
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.sdk.parallel_config import ParallelConfig
 from q2_moshpit.eggnog import (
     _eggnog_diamond_search, _eggnog_annotate, EggnogHmmerIdmapDirectoryFmt,
-    eggnog_hmmer_search, _symlink_files_to_target_dir, _eggnog_hmmer_search
+    eggnog_hmmer_search, _symlink_files_to_target_dir, _eggnog_hmmer_search,
+    _eggnog_search, _search_runner
 )
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 from q2_types.reference_db import (
@@ -128,6 +129,68 @@ class TestHMMER(TestPluginBase):
             "tmp"
         )
         self.assertTupleEqual((result, ft), (0, 1))
+
+    def test_eggnog_search_SampleData_MAGs(self):
+        sequences = MultiMAGSequencesDirFmt(
+            self.get_data_path('mag-sequences-per-sample'), 'r'
+        )
+        output_loc = self.get_data_path('hits')
+        search_runner = MagicMock()
+
+        result, ft = _eggnog_search(sequences, search_runner, output_loc)
+        result.validate()
+        self.assertIsInstance(ft, pd.DataFrame)
+
+        search_runner.assert_has_calls([
+            call(input_path=mag_fp, sample_label=mag_id)
+            for sample_id, mags in sequences.sample_dict().items()
+            for mag_id, mag_fp in mags.items()
+        ])
+
+    def test_eggnog_search_SampleData_Contig(self):
+        sequences = ContigSequencesDirFmt(
+            self.get_data_path('contig-sequences-1'), 'r'
+        )
+        output_loc = self.get_data_path('hits')
+        search_runner = MagicMock()
+
+        result, ft = _eggnog_search(sequences, search_runner, output_loc)
+        result.validate()
+        self.assertIsInstance(ft, pd.DataFrame)
+
+        search_runner.assert_has_calls([
+            call(input_path=contigs_fp, sample_label=sample_id)
+            for sample_id, contigs_fp in sequences.sample_dict().items()
+        ])
+
+    def test_eggnog_search_FeatureData_MAG(self):
+        sequences = MAGSequencesDirFmt(
+            self.get_data_path('mag-sequences'), 'r'
+        )
+        output_loc = self.get_data_path('hits')
+        search_runner = MagicMock()
+
+        result, ft = _eggnog_search(sequences, search_runner, output_loc)
+        result.validate()
+        self.assertIsInstance(ft, pd.DataFrame)
+
+        search_runner.assert_has_calls([
+            call(input_path=mag_fp, sample_label=mag_id)
+            for mag_id, mag_fp in sequences.feature_dict().items()
+        ])
+
+    @patch("subprocess.run")
+    def test_search_runner(self, mock_run):
+        _search_runner('a', 'b', 'c', 'd', True, ["f", "g"])
+        mock_run.called_once_with(
+            [
+                'emapper.py', '-i', 'a', '-o', 'b',
+                '-m', "f", "g",
+                '--itype', 'metagenome', '--output_dir', 'c',
+                '--cpu', 'd', '--no_annot', '--dbmem'
+            ],
+            check=True
+        )
 
 
 class TestDiamond(TestPluginBase):

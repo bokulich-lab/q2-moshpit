@@ -1,0 +1,11 @@
+## Mon Jun 17 14:52:19 2024
+## emapper-2.1.12
+## /Users/santiago/mambaforge/envs/qiime2-tiny-2024.2/bin/emapper.py -i /var/folders/6p/vfbtsnkn1x738nqkqzcprf5w0000gn/T/qiime2/santiago/data/63fd4fdb-d618-47a4-ab8e-8272d7fb1145/data/sample2/3fd18b95-de4a-49c0-a807-73af3029fd73.fasta -o 3fd18b95-de4a-49c0-a807-73af3029fd73 -m diamond --dmnd_db /var/folders/6p/vfbtsnkn1x738nqkqzcprf5w0000gn/T/qiime2/santiago/data/1d29952d-2cc5-4b45-a23f-ab821b8d3826/data/ref_db.dmnd --itype metagenome --output_dir /var/folders/6p/vfbtsnkn1x738nqkqzcprf5w0000gn/T/tmpp0vqp779 --cpu 7 --no_annot --dbmem
+##
+##/Users/santiago/mambaforge/envs/qiime2-tiny-2024.2/bin/diamond blastx -d '/var/folders/6p/vfbtsnkn1x738nqkqzcprf5w0000gn/T/qiime2/santiago/data/1d29952d-2cc5-4b45-a23f-ab821b8d3826/data/ref_db.dmnd' -q '/private/var/folders/6p/vfbtsnkn1x738nqkqzcprf5w0000gn/T/qiime2/santiago/data/63fd4fdb-d618-47a4-ab8e-8272d7fb1145/data/sample2/3fd18b95-de4a-49c0-a807-73af3029fd73.fasta' --threads 7 -o '/private/var/folders/6p/vfbtsnkn1x738nqkqzcprf5w0000gn/T/tmpp0vqp779/3fd18b95-de4a-49c0-a807-73af3029fd73.emapper.hits' --tmpdir '/Users/santiago/eth/23-2/HIWI/data/eggnog/eggnog-diamond-search/emappertmp_dmdn_hd_pgyg6' --sensitive --iterate -e 0.001 --max-target-seqs 0 --max-hsps 0  --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp scovhsp
+#qseqid	sseqid	evalue	bitscore	qstart	qend	sstart	send	pident	qcov	scov
+k141_1177_0	tr|A0A8K0ZTU6|A0A8K0ZTU6_9NEOP	4.63e-62	204.0	753	1	10	257	41.8	1.0	95.4
+k141_16893_0	tr|A0A7M3VES8|A0A7M3VES8_9NEOP	8.89e-60	197.0	771	1	1	252	40.7	1.2	98.8
+## 2 queries scanned
+## Total time (seconds): 0.04830002784729004
+## Rate: 41.41 q/s

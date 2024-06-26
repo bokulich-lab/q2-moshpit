@@ -5,14 +5,21 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import shutil
 import filecmp
 import qiime2
+import tempfile
+from filecmp import dircmp
+from unittest.mock import MagicMock, patch, ANY, call
 import pandas as pd
 import pandas.testing as pdt
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.sdk.parallel_config import ParallelConfig
-
-from q2_moshpit.eggnog import _eggnog_diamond_search, _eggnog_annotate
+from q2_moshpit.eggnog import (
+    _eggnog_diamond_search, _eggnog_annotate, EggnogHmmerIdmapDirectoryFmt,
+    eggnog_hmmer_search, _symlink_files_to_target_dir, _eggnog_hmmer_search,
+    _eggnog_search, _search_runner
+)
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 from q2_types.reference_db import (
     DiamondDatabaseDirFmt, EggnogRefDirFmt
@@ -20,8 +27,170 @@ from q2_types.reference_db import (
 from q2_types.per_sample_sequences import (
     ContigSequencesDirFmt, MultiMAGSequencesDirFmt
 )
-from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.genome_data import (
+    SeedOrthologDirFmt, OrthologFileFmt, ProteinsDirectoryFormat
+)
 from q2_types.feature_data_mag import OrthologAnnotationDirFmt
+from q2_types.profile_hmms import PressedProfileHmmsDirectoryFmt
+
+
+class TestHMMER(TestPluginBase):
+    package = 'q2_moshpit.eggnog.tests'
+
+    def setUp(self):
+        super().setUp()
+        self.idmap_artifact = qiime2.Artifact.import_data(
+            'EggnogHmmerIdmap', self.get_data_path('idmap')
+        )
+        self.idmap = self.idmap_artifact.view(EggnogHmmerIdmapDirectoryFmt)
+
+        self.pressed_hmm_artifact = qiime2.Artifact.import_data(
+            'ProfileHMM[PressedProtein]', self.get_data_path('pressed_hmm')
+        )
+        self.pressed_hmm = self.pressed_hmm_artifact.view(
+            PressedProfileHmmsDirectoryFmt
+        )
+
+        self.fastas_artifact = qiime2.Artifact.import_data(
+            'GenomeData[Proteins]', self.get_data_path('fastas')
+        )
+        self.fastas = self.fastas_artifact.view(ProteinsDirectoryFormat)
+
+        self.mags_artifact = qiime2.Artifact.import_data(
+            'SampleData[MAGs]',
+            self.get_data_path('mag-sequences-per-sample')
+        )
+        self.mags = self.mags_artifact.view(MultiMAGSequencesDirFmt)
+
+        self.eggnog_hmmer_search = \
+            self.plugin.pipelines["eggnog_hmmer_search"]
+        self._eggnog_hmmer_search = \
+            self.plugin.methods["_eggnog_hmmer_search"]
+        self._eggnog_annotate = \
+            self.plugin.methods["_eggnog_annotate"]
+
+    def test_eggnog_hmmer_search(self):
+        mock_action = MagicMock(side_effect=[
+            lambda sequences, num_partitions: ({"mag1": {}, "mag2": {}}, ),
+            lambda seq, pressed, idmap, fastas, num_cpus, db_in_memory: (0, 0),
+            lambda hits: ("collated_hits", ),
+            lambda collated_hits: ("collated_tables", ),
+        ])
+        mock_ctx = MagicMock(get_action=mock_action)
+        obs = eggnog_hmmer_search(
+            ctx=mock_ctx,
+            sequences=self.mags_artifact,
+            pressed_hmm_db=self.pressed_hmm_artifact,
+            idmap=self.idmap_artifact,
+            seed_alignments=self.fastas_artifact
+        )
+        exp = ("collated_hits", "collated_tables")
+        self.assertTupleEqual(obs, exp)
+
+    def test_symlink_files_to_target_dir(self):
+        with tempfile.TemporaryDirectory() as tmp1:
+            for dir in ['idmap', 'fastas', 'pressed_hmm']:
+                shutil.copytree(
+                    self.get_data_path(dir), tmp1, dirs_exist_ok=True
+                )
+            with tempfile.TemporaryDirectory() as tmp2:
+                _symlink_files_to_target_dir(
+                    self.get_data_path('pressed_hmm'),
+                    self.get_data_path('idmap'),
+                    self.get_data_path('fastas'),
+                    tmp2
+                )
+                comp = dircmp(tmp1, tmp2)
+                self.assertFalse(
+                    comp.diff_files or comp.left_only or comp.right_only
+                )
+
+    @patch("os.makedirs")
+    @patch("tempfile.TemporaryDirectory")
+    @patch("q2_moshpit.eggnog._method._symlink_files_to_target_dir")
+    @patch("q2_moshpit.eggnog._method._eggnog_search")
+    def test__eggnog_hmmer_search(
+        self, mock_eggnog_search, mock_symlink, mock_tmpdir, mock_makedirs
+    ):
+        mock_tmpdir.return_value.__enter__.return_value = "tmp"
+        mock_eggnog_search.return_value = (0, 1)
+        result, ft = _eggnog_hmmer_search(
+            sequences=self.mags,
+            idmap=self.idmap,
+            pressed_hmm_db=self.pressed_hmm,
+            seed_alignments=self.fastas
+        )
+        mock_symlink.assert_called_once_with(
+            self.pressed_hmm, self.idmap, self.fastas, "tmp/hmmer/1100069"
+        )
+        mock_eggnog_search.assert_called_once_with(
+            self.mags,
+            ANY,  # partial() method not patchable or comparable
+            "tmp"
+        )
+        self.assertTupleEqual((result, ft), (0, 1))
+
+    def test_eggnog_search_SampleData_MAGs(self):
+        sequences = MultiMAGSequencesDirFmt(
+            self.get_data_path('mag-sequences-per-sample'), 'r'
+        )
+        output_loc = self.get_data_path('hits')
+        search_runner = MagicMock()
+
+        result, ft = _eggnog_search(sequences, search_runner, output_loc)
+        result.validate()
+        self.assertIsInstance(ft, pd.DataFrame)
+
+        search_runner.assert_has_calls([
+            call(input_path=mag_fp, sample_label=mag_id)
+            for sample_id, mags in sequences.sample_dict().items()
+            for mag_id, mag_fp in mags.items()
+        ])
+
+    def test_eggnog_search_SampleData_Contig(self):
+        sequences = ContigSequencesDirFmt(
+            self.get_data_path('contig-sequences-1'), 'r'
+        )
+        output_loc = self.get_data_path('hits')
+        search_runner = MagicMock()
+
+        result, ft = _eggnog_search(sequences, search_runner, output_loc)
+        result.validate()
+        self.assertIsInstance(ft, pd.DataFrame)
+
+        search_runner.assert_has_calls([
+            call(input_path=contigs_fp, sample_label=sample_id)
+            for sample_id, contigs_fp in sequences.sample_dict().items()
+        ])
+
+    def test_eggnog_search_FeatureData_MAG(self):
+        sequences = MAGSequencesDirFmt(
+            self.get_data_path('mag-sequences'), 'r'
+        )
+        output_loc = self.get_data_path('hits')
+        search_runner = MagicMock()
+
+        result, ft = _eggnog_search(sequences, search_runner, output_loc)
+        result.validate()
+        self.assertIsInstance(ft, pd.DataFrame)
+
+        search_runner.assert_has_calls([
+            call(input_path=mag_fp, sample_label=mag_id)
+            for mag_id, mag_fp in sequences.feature_dict().items()
+        ])
+
+    @patch("subprocess.run")
+    def test_search_runner(self, mock_run):
+        _search_runner('a', 'b', 'c', 'd', True, ["f", "g"])
+        mock_run.called_once_with(
+            [
+                'emapper.py', '-i', 'a', '-o', 'b',
+                '-m', "f", "g",
+                '--itype', 'metagenome', '--output_dir', 'c',
+                '--cpu', 'd', '--no_annot', '--dbmem'
+            ],
+            check=True
+        )
 
 
 class TestDiamond(TestPluginBase):

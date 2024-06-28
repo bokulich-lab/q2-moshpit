@@ -23,6 +23,12 @@ import skbio
 RANKS = 'dkpcofgs'
 
 
+def _fill_unclassified(row):
+    if row.isnull().all():
+        row[0] = 'Unclassified'
+    return row
+
+
 def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
     """Find the least common ancestor in every DataFrame of taxa.
 
@@ -54,6 +60,7 @@ def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
         results[mag_id] = result
 
     results = pd.DataFrame.from_dict(results, orient='index')
+    results = results.apply(_fill_unclassified, axis=1)
     results = results.apply(lambda x: x.tolist(), axis=1).to_frame()
     results.columns = ['Taxon']
 

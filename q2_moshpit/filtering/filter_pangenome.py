@@ -93,10 +93,10 @@ def filter_reads_pangenome(
     with tempfile.TemporaryDirectory() as tmp:
         if index is None:
             print("Reference index was not provided - it will be generated.")
-            print("Fetching human pangenome GFA file...")
+            print("Fetching the human pangenome GFA file...")
             _fetch_and_extract_pangenome(EBI_SERVER_URL, tmp)
 
-            print("Fetching human GRCh38 reference genome...")
+            print("Fetching the human GRCh38 reference genome...")
             _fetch_and_extract_grch38(get_ncbi_genomes, tmp)
 
             print("Converting pangenome GFA to FASTA...")

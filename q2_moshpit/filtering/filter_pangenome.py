@@ -10,10 +10,8 @@ import os
 import shutil
 import subprocess
 import tempfile
-from ftplib import FTP
 
 import skbio
-from tqdm import tqdm
 
 from q2_moshpit._utils import run_command
 
@@ -35,50 +33,12 @@ def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
                     ftp://host/path/to/file.
         dest_dir (str): The directory where the data will be saved.
     """
-    if not uri.startswith('ftp://'):
-        raise ValueError("URI must start with 'ftp://'")
-
-    uri = uri[6:]  # remove 'ftp://'
-    parts = uri.split('/', 1)
-    host, path = parts[0], parts[1]
-
-    filename = os.path.basename(path)
+    filename = os.path.basename(uri)
     dest_fp = os.path.join(dest_dir, filename)
 
     try:
-        proxy = os.environ.get('HTTP_PROXY')
-        print("Proxy:", proxy)
-        if proxy:
-            proxy_parts = proxy.replace('http://', '').split(':')
-            proxy_host = proxy_parts[0]
-            proxy_port = int(proxy_parts[1])
-
-            ftp = FTP(f"{proxy_host}:{proxy_port}", uri)
-            # ftp.connect(proxy_host, proxy_port)
-        ftp.login()
-        total_size = ftp.size(path)
-
-        if total_size > 0:
-            progress_bar = tqdm(
-                desc=f'Downloading the "{filename}" genome',
-                total=total_size,
-                unit="B",
-                unit_scale=True,
-                unit_divisor=1024,
-            )
-
-        with open(dest_fp, "wb") as file:
-            def callback(chunk):
-                file.write(chunk)
-                if total_size > 0:
-                    progress_bar.update(len(chunk))
-
-            ftp.retrbinary(f"RETR {path}", callback, CHUNK_SIZE)
-
-        ftp.quit()
-        if total_size > 0:
-            progress_bar.close()
-
+        print("Fetching the GFA file...")
+        run_command(["wget", uri, "-q", "-O", dest_fp])
     except Exception as e:
         raise Exception(ERR_MSG.format(e))
 

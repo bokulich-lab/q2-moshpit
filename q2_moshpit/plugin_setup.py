@@ -1471,7 +1471,7 @@ plugin.pipelines.register_function(
     },
     outputs=[
         ("filtered_reads", O_reads),
-        ("index", Bowtie2Index)
+        ("reference_index", Bowtie2Index)
     ],
     input_descriptions={
         "reads": "Reads to be filtered against the human genome.",
@@ -1487,8 +1487,9 @@ plugin.pipelines.register_function(
     output_descriptions={
         "filtered_reads": "Original reads without the contaminating "
                           "human reads.",
-        "index": "Generated combined human reference index. If an index was "
-                 "provided as an input, it will be returned here instead."
+        "reference_index": "Generated combined human reference index. If an "
+                           "index was provided as an input, it will be "
+                           "returned here instead."
     },
     name="Remove contaminating human reads.",
     description="This method generates a Bowtie2 index fo the combined human "

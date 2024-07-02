@@ -76,12 +76,16 @@ def _fetch_and_extract_grch38(get_ncbi_genomes: callable, dest_dir: str):
 
 
 def _combine_fasta_files(*fasta_in_fp, fasta_out_fp):
-    with open(fasta_out_fp, 'w') as f_out:
+    with open(fasta_out_fp, 'a') as f_out:
         for f_in in fasta_in_fp:
-            data = DNAIterator(
-                skbio.io.read(f_in, format="fasta", lowercase=True)
-            )
-            skbio.io.write(iter(data), format='fasta', into=f_out)
+            try:
+                subprocess.run(["seqtk", "seq", "-U", f_in], stdout=f_out)
+            except Exception as e:
+                raise Exception(
+                    f"Failed to add the {f_in} to the reference FASTA file. "
+                    f"The error was: {e}"
+                )
+            os.remove(f_in)
 
 
 def filter_reads_pangenome(

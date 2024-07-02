@@ -11,6 +11,7 @@ from q2_moshpit.busco.types import (
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
     BUSCOResults, BuscoDB
 )
+from q2_types.bowtie2 import Bowtie2Index
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
     FeatureData, Sequence, Taxonomy, ProteinSequence, SequenceCharacteristics
@@ -1447,6 +1448,54 @@ plugin.methods.register_function(
     },
     name="Filter MAGs.",
     description="Filter MAGs based on metadata.",
+)
+
+I_reads, O_reads = TypeMap({
+    SampleData[SequencesWithQuality]:
+        SampleData[SequencesWithQuality],
+    SampleData[PairedEndSequencesWithQuality]:
+        SampleData[PairedEndSequencesWithQuality],
+})
+
+plugin.pipelines.register_function(
+    function=q2_moshpit.filtering.filter_reads_pangenome,
+    inputs={
+        "reads": I_reads,
+        "index": Bowtie2Index
+    },
+    parameters={
+        "n_threads": Int % Range(1, None),
+        "sensitivity": Str % Choices(
+            ['very-fast', 'fast', 'sensitive', 'very-sensitive']
+        )
+    },
+    outputs={
+        "filtered_reads": O_reads,
+        "index": Bowtie2Index
+    },
+    input_descriptions={
+        "reads": "Reads to be filtered against the human genome.",
+        "index": "Bowtie2 index of the reference human genome. If not "
+                 "provided, an index combined from the reference GRCh38 "
+                 "human genome and human pangenome will be generated."
+    },
+    parameter_descriptions={
+        "n_threads": "Number of threads to use for indexing and filtering",
+        "sensitivity": "Bowtie2's sensitivity - please consult Bowtie2 "
+                       "documentation for details."
+    },
+    output_descriptions={
+        "filtered_reads": "Original reads without the contaminating "
+                          "human reads.",
+        "index": "Generated combined human reference index. If an index was "
+                 "provided as an input, it will be returned here instead."
+    },
+    name="Remove contaminating human reads.",
+    description="This method generates a Bowtie2 index fo the combined human "
+                "GRCh38 reference genome and the draft human pangenome, and"
+                "uses that index to remove the contaminating human reads form "
+                "the reads provided as input.",
+    citations=[],
 )
 
 plugin.register_semantic_types(BUSCOResults, BuscoDB)

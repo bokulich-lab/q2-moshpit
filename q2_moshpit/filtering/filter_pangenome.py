@@ -14,6 +14,7 @@ import tempfile
 import skbio
 
 from q2_moshpit._utils import run_command
+from q2_types.feature_data import DNAIterator
 
 CHUNK_SIZE = 8192
 EBI_SERVER_URL = ("ftp://ftp.sra.ebi.ac.uk/vol1/analysis/ERZ127/"
@@ -76,9 +77,10 @@ def _fetch_and_extract_grch38(get_ncbi_genomes: callable, dest_dir: str):
 def _combine_fasta_files(*fasta_in_fp, fasta_out_fp):
     with open(fasta_out_fp, 'w') as f_out:
         for f_in in fasta_in_fp:
-            for seq in skbio.io.read(f_in, format="fasta"):
-                seq.sequence = seq.sequence.upper()
-                skbio.io.write(seq, format="fasta", into=f_out)
+            data = DNAIterator(
+                skbio.io.read(f_in, format="fasta", lowercase=True)
+            )
+            skbio.io.write(iter(data), format='fasta', into=f_out)
 
 
 def filter_reads_pangenome(

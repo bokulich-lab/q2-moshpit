@@ -57,6 +57,7 @@ def _extract_fasta_from_gfa(gfa_fp: str, fasta_fp: str):
                 f"Failed to extract the fasta file from the GFA. "
                 f"The error was: {e}"
             )
+    os.remove(gfa_fp)
 
 
 def _fetch_and_extract_grch38(get_ncbi_genomes: callable, dest_dir: str):

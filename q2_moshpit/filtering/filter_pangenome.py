@@ -48,7 +48,8 @@ def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
     try:
         ftp = FTP(host)
 
-        proxy = os.environ.get('HTTPS_PROXY') or os.environ.get('HTTP_PROXY')
+        proxy = os.environ.get('HTTP_PROXY')
+        print("Proxy:", proxy)
         if proxy:
             proxy_parts = proxy.replace('http://', '').split(':')
             proxy_host = proxy_parts[0]

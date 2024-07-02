@@ -1469,10 +1469,10 @@ plugin.pipelines.register_function(
             ['very-fast', 'fast', 'sensitive', 'very-sensitive']
         )
     },
-    outputs={
-        "filtered_reads": O_reads,
-        "index": Bowtie2Index
-    },
+    outputs=[
+        ("filtered_reads", O_reads),
+        ("index", Bowtie2Index)
+    ],
     input_descriptions={
         "reads": "Reads to be filtered against the human genome.",
         "index": "Bowtie2 index of the reference human genome. If not "

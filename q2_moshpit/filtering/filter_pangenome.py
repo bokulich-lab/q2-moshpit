@@ -44,7 +44,6 @@ def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
 
     print("Download finished. Extracting files...")
     run_command(["gunzip", dest_fp])
-    os.remove(dest_fp)
 
 
 def _extract_fasta_from_gfa(gfa_fp: str, fasta_fp: str):

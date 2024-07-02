@@ -46,15 +46,15 @@ def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
     dest_fp = os.path.join(dest_dir, filename)
 
     try:
-        ftp = FTP(host)
-
         proxy = os.environ.get('HTTP_PROXY')
         print("Proxy:", proxy)
         if proxy:
             proxy_parts = proxy.replace('http://', '').split(':')
             proxy_host = proxy_parts[0]
             proxy_port = int(proxy_parts[1])
-            ftp.connect(proxy_host, proxy_port)
+
+            ftp = FTP(f"{proxy_host}:{proxy_port}", uri)
+            # ftp.connect(proxy_host, proxy_port)
         ftp.login()
         total_size = ftp.size(path)
 

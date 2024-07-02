@@ -10,9 +10,7 @@ import os
 import shutil
 import subprocess
 import tempfile
-import urllib
-import urllib.error
-import urllib.request
+from ftplib import FTP
 
 import skbio
 from tqdm import tqdm
@@ -20,7 +18,8 @@ from tqdm import tqdm
 from q2_moshpit._utils import run_command
 
 CHUNK_SIZE = 8192
-EBI_SERVER_URL = "ftp://ftp.sra.ebi.ac.uk/vol1/analysis/ERZ127/ERZ12792464/hprc-v1.0-pggb.gfa.gz"
+EBI_SERVER_URL = ("ftp://ftp.sra.ebi.ac.uk/vol1/analysis/ERZ127/"
+                  "ERZ12792464/hprc-v1.0-pggb.gfa.gz")
 ERR_MSG = (
     "Unable to connect to the EBI server. Please try again later. "
     "The error was: {}"
@@ -32,27 +31,28 @@ def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
     Fetches and extracts the human pangenome GFA file.
 
     Args:
-        uri (str): The URI of the genome to fetch.
+        uri (str): The URI of the genome to fetch. Should be in the form
+                    ftp://host/path/to/file.
         dest_dir (str): The directory where the data will be saved.
-
     """
-    latest_db = os.path.basename(uri)
-    dest_fp = os.path.join(dest_dir, latest_db)
-    try:
-        proxy = os.environ.get('HTTPS_PROXY')
-        if proxy:
-            opener = urllib.request.build_opener(
-                urllib.request.ProxyHandler({
-                    'http': proxy, 'https': proxy
-                })
-            )
-            urllib.request.install_opener(opener)
+    if not uri.startswith('ftp://'):
+        raise ValueError("URI must start with 'ftp://'")
 
-        response = urllib.request.urlopen(uri)
-        total_size = int(response.info().get("Content-Length").strip())
+    uri = uri[6:]  # remove 'ftp://'
+    parts = uri.split('/', 1)
+    host, path = parts[0], parts[1]
+
+    filename = os.path.basename(path)
+    dest_fp = os.path.join(dest_dir, filename)
+
+    try:
+        ftp = FTP(host)
+        ftp.login()
+        total_size = ftp.size(path)
+
         if total_size > 0:
             progress_bar = tqdm(
-                desc=f'Downloading the "{latest_db}" database',
+                desc=f'Downloading the "{filename}" genome',
                 total=total_size,
                 unit="B",
                 unit_scale=True,
@@ -60,18 +60,21 @@ def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
             )
 
         with open(dest_fp, "wb") as file:
-            while True:
-                chunk = response.read(CHUNK_SIZE)
-                if not chunk:
-                    break
+            def callback(chunk):
                 file.write(chunk)
                 if total_size > 0:
                     progress_bar.update(len(chunk))
-            progress_bar.close() if total_size > 0 else False
-    except urllib.error.URLError as e:
+
+            ftp.retrbinary(f"RETR {path}", callback, CHUNK_SIZE)
+
+        ftp.quit()
+        if total_size > 0:
+            progress_bar.close()
+
+    except Exception as e:
         raise Exception(ERR_MSG.format(e))
 
-    print("Download finished. Extracting database files...")
+    print("Download finished. Extracting files...")
     run_command(["gunzip", dest_fp])
     os.remove(dest_fp)
 

@@ -9,7 +9,6 @@ import glob
 import os
 import shutil
 import subprocess
-import tarfile
 import tempfile
 import urllib
 import urllib.error
@@ -40,6 +39,15 @@ def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
     latest_db = os.path.basename(uri)
     dest_fp = os.path.join(dest_dir, latest_db)
     try:
+        proxy = os.environ.get('HTTPS_PROXY')
+        if proxy:
+            opener = urllib.request.build_opener(
+                urllib.request.ProxyHandler({
+                    'http': proxy, 'https': proxy
+                })
+            )
+            urllib.request.install_opener(opener)
+
         response = urllib.request.urlopen(uri)
         total_size = int(response.info().get("Content-Length").strip())
         if total_size > 0:

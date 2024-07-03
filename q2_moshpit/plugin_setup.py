@@ -7,10 +7,15 @@
 # ----------------------------------------------------------------------------
 import importlib
 from qiime2.plugin import Metadata
+from q2_moshpit.eggnog._type import EggnogHmmerIdmap
+from q2_moshpit.eggnog._format import (
+    EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt
+)
 from q2_moshpit.busco.types import (
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
     BUSCOResults, BuscoDB
 )
+from q2_types.profile_hmms import ProfileHMM, MultipleProtein, PressedProtein
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
     FeatureData, Sequence, Taxonomy, ProteinSequence, SequenceCharacteristics
@@ -1460,3 +1465,41 @@ plugin.register_semantic_type_to_format(
     ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
 )
 importlib.import_module('q2_moshpit.busco.types._transformer')
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_eggnog_hmmer_db,
+    inputs={},
+    parameters={
+        "taxon_id": Int % Range(2, None)
+    },
+    parameter_descriptions={
+        "taxon_id": "Taxon ID number."
+    },
+    outputs=[
+        ("idmap", EggnogHmmerIdmap % Properties("eggnog")),
+        ("hmm_db", ProfileHMM[MultipleProtein] % Properties("eggnog")),
+        ("pressed_hmm_db", ProfileHMM[PressedProtein] % Properties("eggnog")),
+        ("seed_alignments", GenomeData[Proteins] % Properties("eggnog"))
+    ],
+    output_descriptions={
+        "idmap": "List of protein families in `hmm_db`.",
+        "hmm_db": "Collection of Profile HMMs.",
+        "pressed_hmm_db": "Collection of Profile HMMs in binary format "
+                          "and indexed.",
+        "seed_alignments": "Seed alignments for the protein families in "
+                           "`hmm_db`."
+    },
+    name="Fetch the taxon specific database necessary to run the "
+         "eggnog-hmmer-search action.",
+    description="Downloads Profile HMM database for the specified taxon.",
+    citations=[
+        citations["huerta_cepas_eggnog_2019"],
+        citations["noauthor_hmmer_nodate"]
+    ]
+)
+
+plugin.register_formats(EggnogHmmerIdmapFileFmt, EggnogHmmerIdmapDirectoryFmt)
+plugin.register_semantic_types(EggnogHmmerIdmap)
+plugin.register_semantic_type_to_format(
+    EggnogHmmerIdmap, EggnogHmmerIdmapDirectoryFmt
+)

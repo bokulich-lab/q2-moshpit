@@ -11,18 +11,10 @@ import shutil
 import subprocess
 import tempfile
 
-import skbio
-
 from q2_moshpit._utils import run_command
-from q2_types.feature_data import DNAIterator
 
-CHUNK_SIZE = 8192
 EBI_SERVER_URL = ("ftp://ftp.sra.ebi.ac.uk/vol1/analysis/ERZ127/"
                   "ERZ12792464/hprc-v1.0-pggb.gfa.gz")
-ERR_MSG = (
-    "Unable to connect to the EBI server. Please try again later. "
-    "The error was: {}"
-)
 
 
 def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
@@ -41,13 +33,27 @@ def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
         print("Fetching the GFA file...")
         run_command(["wget", uri, "-q", "-O", dest_fp])
     except Exception as e:
-        raise Exception(ERR_MSG.format(e))
+        raise Exception(
+            "Unable to connect to the EBI server. Please try again later. "
+            f"The error was: {e}"
+        )
 
     print("Download finished. Extracting files...")
     run_command(["gunzip", dest_fp])
 
 
 def _extract_fasta_from_gfa(gfa_fp: str, fasta_fp: str):
+    """
+    Extracts a FASTA file from a GFA file using gfatools.
+
+    This function runs a subprocess calling 'gfatools' to convert a GFA file
+    into a FASTA file. If the conversion is successful, the original GFA
+    file is removed. Otherwise, an exception is raised.
+
+    Args:
+        gfa_fp (str): The file path to the input GFA file.
+        fasta_fp (str): The file path where the output FASTA will be saved.
+    """
     cmd = ["gfatools", "gfa2fa", gfa_fp]
     with open(fasta_fp, 'w') as f_out:
         try:
@@ -61,6 +67,17 @@ def _extract_fasta_from_gfa(gfa_fp: str, fasta_fp: str):
 
 
 def _fetch_and_extract_grch38(get_ncbi_genomes: callable, dest_dir: str):
+    """
+    Fetches and extracts the GRCh38 human reference genome.
+
+    This function uses the RESCRIPt method provided through the callable
+    `get_ncbi_genomes` to fetch the GRCh38 human reference genome.
+    The fetched 'dna-sequences.fasta' file is renamed to 'grch38.fasta'.
+
+    Args:
+        get_ncbi_genomes (callable): A function to fetch genomes from NCBI.
+        dest_dir (str): The directory where the genome data will be saved.
+    """
     results = get_ncbi_genomes(
         taxon='Homo sapiens',
         only_reference=True,
@@ -76,6 +93,19 @@ def _fetch_and_extract_grch38(get_ncbi_genomes: callable, dest_dir: str):
 
 
 def _combine_fasta_files(*fasta_in_fp, fasta_out_fp):
+    """
+    Combines multiple FASTA files into a single FASTA file.
+
+    This function uses 'seqtk' to format and combine multiple FASTA files
+    into a single file. Each input FASTA file is appended to the output file.
+    After processing, the input files are removed.
+
+    Args:
+        *fasta_in_fp: Variable length argument list of paths to input
+            FASTA files.
+        fasta_out_fp (str): The file path where the combined output FASTA
+            file should be saved.
+    """
     with open(fasta_out_fp, 'a') as f_out:
         for f_in in fasta_in_fp:
             try:
@@ -89,8 +119,19 @@ def _combine_fasta_files(*fasta_in_fp, fasta_out_fp):
 
 
 def filter_reads_pangenome(
-        ctx, reads, index=None, n_threads=1, sensitivity='sensitive'
+        ctx, reads, index=None, n_threads=1, mode='local',
+        sensitivity='sensitive', ref_gap_open_penalty=5,
+        ref_gap_ext_penalty=3,
 ):
+    """
+    Filters reads against a pangenome index, optionally generating the index
+    if not provided.
+
+    This function fetches and processes the human pangenome and GRCh38
+    reference genome, combines them into a single FASTA file, and then
+    generates a Bowtie 2 index if not already provided. It then filters
+    reads against this index according to the specified sensitivity.
+    """
     get_ncbi_genomes = ctx.get_action("rescript", "get_ncbi_genomes")
     build_index = ctx.get_action("quality_control", "bowtie2_build")
     filter_reads = ctx.get_action("quality_control", "filter_reads")
@@ -123,14 +164,16 @@ def filter_reads_pangenome(
             )
 
         print("Filtering reads against the index...")
+        filter_params = {
+            k: v for k, v in locals().items() if k in
+            ['n_threads', 'mode', 'ref_gap_open_penalty',
+             'ref_gap_ext_penalty']
+        }
         filtered_reads, = filter_reads(
             demultiplexed_sequences=reads,
             database=index,
-            n_threads=n_threads,
             exclude_seqs=True,
-            sensitivity=sensitivity
+            **filter_params
         )
 
     return filtered_reads, index
-
-

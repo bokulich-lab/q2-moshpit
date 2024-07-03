@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import importlib
+
+from q2_quality_control.plugin_setup import filter_parameters, filter_parameter_descriptions
 from qiime2.plugin import Metadata
 from q2_moshpit.busco.types import (
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
@@ -1464,10 +1466,7 @@ plugin.pipelines.register_function(
         "index": Bowtie2Index
     },
     parameters={
-        "n_threads": Int % Range(1, None),
-        "sensitivity": Str % Choices(
-            ['very-fast', 'fast', 'sensitive', 'very-sensitive']
-        )
+        k: v for (k, v) in filter_parameters.items() if k != "exclude_seqs"
     },
     outputs=[
         ("filtered_reads", O_reads),
@@ -1480,9 +1479,8 @@ plugin.pipelines.register_function(
                  "human genome and human pangenome will be generated."
     },
     parameter_descriptions={
-        "n_threads": "Number of threads to use for indexing and filtering",
-        "sensitivity": "Bowtie2's sensitivity - please consult Bowtie2 "
-                       "documentation for details."
+        k: v for (k, v) in filter_parameter_descriptions.items()
+        if k != "exclude_seqs"
     },
     output_descriptions={
         "filtered_reads": "Original reads without the contaminating "

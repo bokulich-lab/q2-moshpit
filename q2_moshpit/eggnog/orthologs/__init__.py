@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 from .common import (
     _run_eggnog_search_pipeline, _eggnog_search, _search_runner,
-    _eggnog_feature_table
+    _eggnog_feature_table, _symlink_files_to_target_dir
 )
 from .diamond import (
     _eggnog_diamond_search, eggnog_diamond_search
@@ -20,5 +20,6 @@ from .hmmer import (
 __all__ = [
     '_run_eggnog_search_pipeline', '_eggnog_search', '_search_runner',
     '_eggnog_diamond_search', 'eggnog_diamond_search',
-    '_eggnog_hmmer_search', 'eggnog_hmmer_search', '_eggnog_feature_table'
+    '_eggnog_hmmer_search', 'eggnog_hmmer_search', '_eggnog_feature_table',
+    '_symlink_files_to_target_dir'
 ]

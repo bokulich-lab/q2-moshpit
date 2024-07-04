@@ -9,11 +9,11 @@ import os
 from unittest.mock import patch, call, MagicMock
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.core.exceptions import ValidationError
-from .._utils import (
+from ..utils import (
     _download_and_build_hmm_db, _download_fastas_into_hmmer_db,
     _merge_hmms_and_write_idmap, COMMON_URL, _validate_eggnog_hmmer_taxon_id
 )
-from q2_moshpit.eggnog._format import EggnogHmmerIdmapDirectoryFmt
+from q2_moshpit.eggnog.types import EggnogHmmerIdmapDirectoryFmt
 from q2_types.genome_data import ProteinsDirectoryFormat
 from q2_types.profile_hmms import (
     PressedProfileHmmsDirectoryFmt, ProteinMultipleProfileHmmDirectoryFmt

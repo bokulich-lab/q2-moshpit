@@ -8,7 +8,7 @@
 from .orthologs import (
     eggnog_diamond_search, _eggnog_diamond_search, eggnog_hmmer_search,
     _eggnog_hmmer_search, _eggnog_feature_table, _search_runner,
-    _eggnog_search
+    _eggnog_search, _symlink_files_to_target_dir
 )
 from .annotation import eggnog_annotate, _eggnog_annotate
 from .dbs import (
@@ -24,5 +24,5 @@ __all__ = [
     'build_custom_diamond_db', 'fetch_eggnog_proteins',
     'build_eggnog_diamond_db', 'fetch_ncbi_taxonomy', '_eggnog_annotate',
     'fetch_eggnog_hmmer_db', 'eggnog_hmmer_search', '_eggnog_hmmer_search',
-    '_search_runner', '_eggnog_search'
+    '_search_runner', '_eggnog_search', '_symlink_files_to_target_dir'
 ]

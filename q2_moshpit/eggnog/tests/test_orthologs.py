@@ -6,32 +6,33 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import shutil
-import filecmp
-import qiime2
 import tempfile
 from filecmp import dircmp
 from unittest.mock import MagicMock, patch, ANY, call
+
 import pandas as pd
 import pandas.testing as pdt
+import qiime2
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.sdk.parallel_config import ParallelConfig
+
 from q2_moshpit.eggnog import (
-    _eggnog_diamond_search, _eggnog_annotate, EggnogHmmerIdmapDirectoryFmt,
-    eggnog_hmmer_search, _symlink_files_to_target_dir, _eggnog_hmmer_search,
-    _eggnog_search, _search_runner
+    _eggnog_diamond_search, eggnog_hmmer_search,
+    _eggnog_hmmer_search, _eggnog_search, _search_runner
 )
+from q2_moshpit.eggnog.orthologs.common import _symlink_files_to_target_dir
+from q2_moshpit.eggnog.types import EggnogHmmerIdmapDirectoryFmt
 from q2_types.feature_data_mag import MAGSequencesDirFmt
-from q2_types.reference_db import (
-    DiamondDatabaseDirFmt, EggnogRefDirFmt
+from q2_types.genome_data import (
+    ProteinsDirectoryFormat
 )
 from q2_types.per_sample_sequences import (
     ContigSequencesDirFmt, MultiMAGSequencesDirFmt
 )
-from q2_types.genome_data import (
-    SeedOrthologDirFmt, OrthologFileFmt, ProteinsDirectoryFormat
-)
-from q2_types.feature_data_mag import OrthologAnnotationDirFmt
 from q2_types.profile_hmms import PressedProfileHmmsDirectoryFmt
+from q2_types.reference_db import (
+    DiamondDatabaseDirFmt
+)
 
 
 class TestHMMER(TestPluginBase):
@@ -69,7 +70,7 @@ class TestHMMER(TestPluginBase):
         self._eggnog_annotate = \
             self.plugin.methods["_eggnog_annotate"]
 
-    def test_eggnog_hmmer_search(self):
+    def test_eggnog_hmmer_search_pipeline(self):
         mock_action = MagicMock(side_effect=[
             lambda sequences, num_partitions: ({"mag1": {}, "mag2": {}}, ),
             lambda seq, pressed, idmap, fastas, num_cpus, db_in_memory: (0, 0),
@@ -107,9 +108,9 @@ class TestHMMER(TestPluginBase):
 
     @patch("os.makedirs")
     @patch("tempfile.TemporaryDirectory")
-    @patch("q2_moshpit.eggnog._method._symlink_files_to_target_dir")
-    @patch("q2_moshpit.eggnog._method._eggnog_search")
-    def test__eggnog_hmmer_search(
+    @patch("q2_moshpit.eggnog.orthologs.hmmer._symlink_files_to_target_dir")
+    @patch("q2_moshpit.eggnog.orthologs.hmmer._eggnog_search")
+    def test_eggnog_hmmer_search(
         self, mock_eggnog_search, mock_symlink, mock_tmpdir, mock_makedirs
     ):
         mock_tmpdir.return_value.__enter__.return_value = "tmp"
@@ -130,7 +131,7 @@ class TestHMMER(TestPluginBase):
         )
         self.assertTupleEqual((result, ft), (0, 1))
 
-    def test_eggnog_search_SampleData_MAGs(self):
+    def test_eggnog_search_mags(self):
         sequences = MultiMAGSequencesDirFmt(
             self.get_data_path('mag-sequences-per-sample'), 'r'
         )
@@ -147,7 +148,7 @@ class TestHMMER(TestPluginBase):
             for mag_id, mag_fp in mags.items()
         ])
 
-    def test_eggnog_search_SampleData_Contig(self):
+    def test_eggnog_search_contigs(self):
         sequences = ContigSequencesDirFmt(
             self.get_data_path('contig-sequences-1'), 'r'
         )
@@ -163,7 +164,7 @@ class TestHMMER(TestPluginBase):
             for sample_id, contigs_fp in sequences.sample_dict().items()
         ])
 
-    def test_eggnog_search_FeatureData_MAG(self):
+    def test_eggnog_search_mags_derep(self):
         sequences = MAGSequencesDirFmt(
             self.get_data_path('mag-sequences'), 'r'
         )
@@ -336,65 +337,3 @@ class TestDiamond(TestPluginBase):
         single = single.view(pd.DataFrame)
 
         pdt.assert_frame_equal(parallel, single)
-
-
-class TestAnnotate(TestPluginBase):
-    package = 'q2_moshpit.eggnog.tests'
-
-    def setUp(self):
-        super().setUp()
-        self.eggnog_db = EggnogRefDirFmt(
-            self.get_data_path('eggnog_db/'), mode='r'
-        )
-        self.eggnog_db_artifact = qiime2.Artifact.import_data(
-            'ReferenceDB[Eggnog]',
-            self.get_data_path('eggnog_db/')
-        )
-        self.eggnog_annotate = \
-            self.plugin.pipelines["eggnog_annotate"]
-        self._eggnog_annotate = \
-            self.plugin.methods["_eggnog_annotate"]
-
-    def test_small_good_hits(self):
-        seed_orthologs = SeedOrthologDirFmt(
-            self.get_data_path('good_hits/'), mode='r'
-        )
-
-        obs_obj = _eggnog_annotate(
-            eggnog_hits=seed_orthologs, eggnog_db=self.eggnog_db
-        )
-
-        exp_fp = self.get_data_path(
-            'expected/test_output.emapper.annotations'
-        )
-        exp = OrthologFileFmt(exp_fp, mode='r').view(pd.DataFrame)
-
-        objs = list(obs_obj.annotations.iter_views(OrthologFileFmt))
-        self.assertEqual(len(objs), 1)
-        df = objs[0][1].view(pd.DataFrame)
-        pdt.assert_frame_equal(df, exp)
-
-    def test_eggnog_annotate_parallel(self):
-        orthologs = qiime2.Artifact.import_data(
-            'SampleData[BLAST6]',
-            self.get_data_path('good_hits/')
-        )
-
-        with ParallelConfig():
-            parallel, = self.eggnog_annotate.parallel(
-                    orthologs,
-                    self.eggnog_db_artifact
-                )._result()
-
-        single, = self._eggnog_annotate(
-            eggnog_hits=orthologs,
-            eggnog_db=self.eggnog_db_artifact
-        )
-
-        parallel = parallel.view(OrthologAnnotationDirFmt)
-        single = single.view(OrthologAnnotationDirFmt)
-
-        compare_dir = filecmp.dircmp(parallel.path, single.path)
-        self.assertEqual(len(compare_dir.common), 1)
-
-        # TODO: add exact file comparison

@@ -6,8 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 from qiime2.plugin.testing import TestPluginBase
-from q2_moshpit.eggnog._format import EggnogHmmerIdmapFileFmt
 from qiime2.plugin import ValidationError
+
+from q2_moshpit.eggnog.types import EggnogHmmerIdmapFileFmt
 
 
 class TestEggnogHmmerIdmap(TestPluginBase):

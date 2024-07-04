@@ -7,9 +7,8 @@
 # ----------------------------------------------------------------------------
 import importlib
 from qiime2.plugin import Metadata
-from q2_moshpit.eggnog._type import EggnogHmmerIdmap
-from q2_moshpit.eggnog._format import (
-    EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt
+from q2_moshpit.eggnog.types import (
+    EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt, EggnogHmmerIdmap
 )
 from q2_moshpit.busco.types import (
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
@@ -707,9 +706,8 @@ plugin.pipelines.register_function(
         **partition_params
     },
     input_descriptions={
-        'sequences': 'Sequence data of the contigs we want to '
-                     'search for hits using the Diamond Database',
-        "pressed_hmm_db": "Collection of Profile HMMs in binary format "
+        'sequences': 'Sequences to be searched for hits.',
+        "pressed_hmm_db": "Collection of profile HMMs in binary format "
                           "and indexed.",
         "idmap": "List of protein families in `hmm_db`.",
         "seed_alignments": "Seed alignments for the protein families in "
@@ -729,9 +727,8 @@ plugin.pipelines.register_function(
         ('table', FeatureTable[Frequency])
     ],
     name='Run eggNOG search using HMMER aligner',
-    description="This method performs the steps by which we find our "
-                "possible target sequences to annotate using the HMMER "
-                "search functionality from the eggnog `emapper.py` script.",
+    description="This method uses HMMER to find possible target sequences "
+                "to annotate with eggNOG-mapper.",
     citations=[
         citations["noauthor_hmmer_nodate"],
         citations["huerta_cepas_eggnog_2019"]
@@ -750,8 +747,7 @@ plugin.methods.register_function(
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'sequences': 'Sequence data of the contigs we want to '
-                     'search for hits.',
+        'sequences': 'Sequences to be searched for hits.',
         'diamond_db': 'Diamond database.',
     },
     parameter_descriptions={
@@ -1549,18 +1545,6 @@ plugin.methods.register_function(
     description="Filter MAGs based on metadata.",
 )
 
-plugin.register_semantic_types(BUSCOResults, BuscoDB)
-plugin.register_formats(
-    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt
-)
-plugin.register_semantic_type_to_format(
-    BUSCOResults,
-    artifact_format=BUSCOResultsDirectoryFormat)
-plugin.register_semantic_type_to_format(
-    ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
-)
-importlib.import_module('q2_moshpit.busco.types._transformer')
-
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.fetch_eggnog_hmmer_db,
     inputs={},
@@ -1592,6 +1576,18 @@ plugin.methods.register_function(
         citations["noauthor_hmmer_nodate"]
     ]
 )
+
+plugin.register_semantic_types(BUSCOResults, BuscoDB)
+plugin.register_formats(
+    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt
+)
+plugin.register_semantic_type_to_format(
+    BUSCOResults,
+    artifact_format=BUSCOResultsDirectoryFormat)
+plugin.register_semantic_type_to_format(
+    ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
+)
+importlib.import_module('q2_moshpit.busco.types._transformer')
 
 plugin.register_formats(EggnogHmmerIdmapFileFmt, EggnogHmmerIdmapDirectoryFmt)
 plugin.register_semantic_types(EggnogHmmerIdmap)

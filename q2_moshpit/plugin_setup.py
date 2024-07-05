@@ -7,9 +7,8 @@
 # ----------------------------------------------------------------------------
 import importlib
 from qiime2.plugin import Metadata
-from q2_moshpit.eggnog._type import EggnogHmmerIdmap
-from q2_moshpit.eggnog._format import (
-    EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt
+from q2_moshpit.eggnog.types import (
+    EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt, EggnogHmmerIdmap
 )
 from q2_moshpit.busco.types import (
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
@@ -693,22 +692,63 @@ plugin.pipelines.register_function(
     ]
 )
 
+plugin.pipelines.register_function(
+    function=q2_moshpit.eggnog.eggnog_hmmer_search,
+    inputs={
+        'sequences': SampleData[Contigs | MAGs] | FeatureData[MAG],
+        'pressed_hmm_db': ProfileHMM[PressedProtein],
+        'idmap': EggnogHmmerIdmap,
+        'seed_alignments': GenomeData[Proteins]
+    },
+    parameters={
+        'num_cpus': Int,
+        'db_in_memory': Bool,
+        **partition_params
+    },
+    input_descriptions={
+        'sequences': 'Sequences to be searched for hits.',
+        "pressed_hmm_db": "Collection of profile HMMs in binary format "
+                          "and indexed.",
+        "idmap": "List of protein families in `hmm_db`.",
+        "seed_alignments": "Seed alignments for the protein families in "
+                          "`hmm_db`."
+    },
+    parameter_descriptions={
+        'num_cpus': 'Number of CPUs to utilize per partition. \'0\' will '
+                    'use all available.',
+        'db_in_memory': 'Read database into memory. The '
+                        'database can be very large, so this '
+                        'option should only be used on clusters or other '
+                        'machines with enough memory.',
+        **partition_param_descriptions
+    },
+    outputs=[
+        ('eggnog_hits', SampleData[BLAST6]),
+        ('table', FeatureTable[Frequency])
+    ],
+    name='Run eggNOG search using HMMER aligner',
+    description="This method uses HMMER to find possible target sequences "
+                "to annotate with eggNOG-mapper.",
+    citations=[
+        citations["noauthor_hmmer_nodate"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
+)
+
 plugin.methods.register_function(
     function=q2_moshpit.eggnog._eggnog_diamond_search,
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
-        'diamond_db': ReferenceDB[Diamond],
+        'diamond_db': ReferenceDB[Diamond]
     },
     parameters={
         'num_cpus': Int,
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'sequences': 'Sequence data of the contigs we want to '
-                     'search for hits using the Diamond Database',
-        'diamond_db': 'The filepath to an artifact containing the '
-                      'Diamond database',
+        'sequences': 'Sequences to be searched for hits.',
+        'diamond_db': 'Diamond database.',
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
@@ -727,13 +767,64 @@ plugin.methods.register_function(
                        'orthologs. One table per sample or MAG in the input.',
         'table': 'Feature table with counts of orthologs per sample/MAG.'
     },
-    name='Run eggNOG search using diamond aligner',
+    name='Run eggNOG search using Diamond aligner',
     description="This method performs the steps by which we find our "
-                "possible target sequences to annotate using the diamond "
-                "search functionality from the eggnog `emapper.py` script",
+                "possible target sequences to annotate using the Diamond "
+                "search functionality from the eggnog `emapper.py` "
+                "script.",
     citations=[
         citations["buchfink_sensitive_2021"],
         citations["huerta_cepas_eggnog_2019"]
+    ]
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog._eggnog_hmmer_search,
+    inputs={
+        'sequences':
+            SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
+        'idmap': EggnogHmmerIdmap,
+        'pressed_hmm_db': ProfileHMM[PressedProtein],
+        'seed_alignments': GenomeData[Proteins]
+    },
+    parameters={
+        'num_cpus': Int,
+        'db_in_memory': Bool,
+    },
+    input_descriptions={
+        'sequences': 'Sequence data of the contigs we want to '
+                     'search for hits.',
+        'idmap': 'List of protein families in `hmm_db`.',
+        'pressed_hmm_db': 'Collection of Profile HMMs in binary format '
+                          'and indexed.',
+        'seed_alignments': 'Seed alignments for the protein families in '
+                          '`hmm_db`.'
+    },
+    parameter_descriptions={
+        'num_cpus': 'Number of CPUs to utilize per partition. \'0\' will '
+                    'use all available.',
+        'db_in_memory': 'Read database into memory. The '
+                        'database can be very large, so this '
+                        'option should only be used on clusters or other '
+                        'machines with enough memory.',
+    },
+    outputs=[
+        ('eggnog_hits', SampleData[BLAST6]),
+        ('table', FeatureTable[Frequency])
+    ],
+    output_descriptions={
+        'eggnog_hits': 'BLAST6-like table(s) describing the identified '
+                       'orthologs. One table per sample or MAG in the input.',
+        'table': 'Feature table with counts of orthologs per sample/MAG.'
+    },
+    name='Run eggNOG search using HMMER aligner',
+    description='This method performs the steps by which we find our '
+                'possible target sequences to annotate using the '
+                'HMMER search functionality from the eggnog `emapper.py` '
+                'script.',
+    citations=[
+        citations['buchfink_sensitive_2021'],
+        citations['huerta_cepas_eggnog_2019']
     ]
 )
 
@@ -764,7 +855,7 @@ plugin.pipelines.register_function(
     input_descriptions={
         'eggnog_hits': 'BLAST6-like table(s) describing the '
                        'identified orthologs. ',
-        "eggnog_db": "eggNOG annotation database."
+        'eggnog_db': 'eggNOG annotation database.'
     },
     parameters={
         'db_in_memory': Bool,
@@ -1454,18 +1545,6 @@ plugin.methods.register_function(
     description="Filter MAGs based on metadata.",
 )
 
-plugin.register_semantic_types(BUSCOResults, BuscoDB)
-plugin.register_formats(
-    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt
-)
-plugin.register_semantic_type_to_format(
-    BUSCOResults,
-    artifact_format=BUSCOResultsDirectoryFormat)
-plugin.register_semantic_type_to_format(
-    ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
-)
-importlib.import_module('q2_moshpit.busco.types._transformer')
-
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.fetch_eggnog_hmmer_db,
     inputs={},
@@ -1497,6 +1576,18 @@ plugin.methods.register_function(
         citations["noauthor_hmmer_nodate"]
     ]
 )
+
+plugin.register_semantic_types(BUSCOResults, BuscoDB)
+plugin.register_formats(
+    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt
+)
+plugin.register_semantic_type_to_format(
+    BUSCOResults,
+    artifact_format=BUSCOResultsDirectoryFormat)
+plugin.register_semantic_type_to_format(
+    ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
+)
+importlib.import_module('q2_moshpit.busco.types._transformer')
 
 plugin.register_formats(EggnogHmmerIdmapFileFmt, EggnogHmmerIdmapDirectoryFmt)
 plugin.register_semantic_types(EggnogHmmerIdmap)

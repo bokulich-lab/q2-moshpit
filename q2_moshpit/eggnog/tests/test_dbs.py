@@ -9,7 +9,7 @@ import os
 from unittest.mock import patch, call
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.core.exceptions import ValidationError
-from .._dbs import (
+from ..dbs import (
     fetch_eggnog_db, build_custom_diamond_db, fetch_eggnog_proteins,
     fetch_diamond_db, build_eggnog_diamond_db, fetch_ncbi_taxonomy,
     _collect_and_compare_md5, fetch_eggnog_hmmer_db, _validate_taxon_id
@@ -37,9 +37,9 @@ class TestFetchDB(TestPluginBase):
         subp_run.assert_called_once_with(cmd, check=True)
 
     @patch('tempfile.TemporaryDirectory')
-    @patch("q2_moshpit.eggnog._dbs._download_and_build_hmm_db")
-    @patch("q2_moshpit.eggnog._dbs._download_fastas_into_hmmer_db")
-    @patch("q2_moshpit.eggnog._dbs._validate_eggnog_hmmer_taxon_id")
+    @patch("q2_moshpit.eggnog.dbs._download_and_build_hmm_db")
+    @patch("q2_moshpit.eggnog.dbs._download_fastas_into_hmmer_db")
+    @patch("q2_moshpit.eggnog.dbs._validate_eggnog_hmmer_taxon_id")
     def test_fetch_eggnog_hmmer_db(
         self, mock_validate, mock_fastas, mock_build, tmpdir
     ):
@@ -169,7 +169,7 @@ class TestBuildDiamondDB(TestPluginBase):
         # Check that commands are ran as expected
         subp_run.assert_has_calls([first_call, second_call], any_order=False)
 
-    @patch("q2_moshpit.eggnog._dbs._collect_and_compare_md5")
+    @patch("q2_moshpit.eggnog.dbs._collect_and_compare_md5")
     @patch("subprocess.run")
     @patch("os.remove")
     def test_fetch_ncbi_taxonomy(self, mock_os_rm, mock_run, mock_md5):
@@ -258,7 +258,7 @@ class TestBuildDiamondDB(TestPluginBase):
         # check that rm is not called
         mock_os_rm.assert_not_called()
 
-    @patch("q2_moshpit.eggnog._dbs._validate_taxon_id")
+    @patch("q2_moshpit.eggnog.dbs._validate_taxon_id")
     @patch("subprocess.run")
     @patch("shutil.move")
     def test_build_eggnog_diamond_db(self, shut_mv, subp_run, _val):

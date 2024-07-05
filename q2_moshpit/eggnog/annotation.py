@@ -28,7 +28,7 @@ def _annotate_seed_orthologs_runner(
     if db_in_memory:
         cmds.append('--dbmem')
 
-    subprocess.run(cmds, check=True, cwd=output_loc)
+    subprocess.run(cmds, check=True, cwd=str(output_loc))
 
 
 def _eggnog_annotate(

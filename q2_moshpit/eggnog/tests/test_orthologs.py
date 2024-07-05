@@ -17,10 +17,11 @@ from qiime2.plugin.testing import TestPluginBase
 from qiime2.sdk.parallel_config import ParallelConfig
 
 from q2_moshpit.eggnog import (
-    _eggnog_diamond_search, eggnog_hmmer_search,
-    _eggnog_hmmer_search, _eggnog_search, _search_runner
+    _eggnog_diamond_search, eggnog_hmmer_search, _eggnog_hmmer_search
 )
-from q2_moshpit.eggnog.orthologs.common import _symlink_files_to_target_dir
+from q2_moshpit.eggnog.orthologs.common import (
+    _eggnog_search, _search_runner, _symlink_files_to_target_dir
+)
 from q2_moshpit.eggnog.types import EggnogHmmerIdmapDirectoryFmt
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 from q2_types.genome_data import (

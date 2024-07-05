@@ -21,6 +21,18 @@ def rpkm(
         length_col: str = "length",
         read_counts_col: str = "numreads",
 ) -> pd.Series:
+    """
+    Calculate Reads Per Kilobase (of MAG), per Million mapped reads (RPKM).
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the read counts and lengths
+            for each sample and MAG.
+        length_col (str): Name of the column containing the MAG lengths.
+        read_counts_col (str): Name of the column containing the read counts.
+
+    Returns:
+        A pandas Series containing the RPKM values for each sample and MAG.
+    """
     df['rpk'] = df[read_counts_col] / (df[length_col] / 10**3)
     reads_per_sample = df.groupby("sample_id")[read_counts_col].sum()
     return df['rpk'] * 10**6 / df["sample_id"].map(reads_per_sample)
@@ -31,6 +43,18 @@ def tpm(
         length_col: str = "length",
         read_counts_col: str = "numreads",
 ) -> pd.Series:
+    """
+    Calculate Transcripts Per Million (TPM).
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the read counts and lengths
+            for each sample and MAG.
+        length_col (str): Name of the column containing the MAG lengths.
+        read_counts_col (str): Name of the column containing the read counts.
+
+    Returns:
+        A pandas Series containing the TPM values for each sample and MAG.
+    """
     df['rpk'] = df[read_counts_col] / df[length_col] / 10**3
     rpk_per_sample = df.groupby("sample_id")['rpk'].sum()
     return df['rpk'] / df["sample_id"].map(rpk_per_sample) * 10**6
@@ -39,6 +63,18 @@ def tpm(
 def _merge_frames(
         coverage_df: pd.DataFrame, lengths_df: pd.DataFrame
 ) -> pd.DataFrame:
+    """
+    Merge coverage data with lengths data on MAG IDs.
+
+    Args:
+        coverage_df (pd.DataFrame): DataFrame containing coverage data
+            for each sample and MAG.
+        lengths_df (pd.DataFrame): DataFrame containing lengths for each MAG.
+
+    Returns:
+        A merged DataFrame with summed coverage data and lengths
+        for each MAG per sample.
+    """
     coverage_summed = coverage_df.groupby(
         ["sample_id", "mag_id"]
     ).sum().reset_index(drop=False)
@@ -63,6 +99,10 @@ def _calculate_coverage(
         sample_fp (str): The file path of the sample.
         sample_id (str): The ID of the sample.
         temp_dir (str): The directory to store temporary files.
+        min_mapq (int): The minimum mapping quality.
+        min_query_len (int): The minimum query length.
+        min_base_quality (int): The minimum base quality.
+        min_read_len (int): The minimum read length.
         threads (int): The number of threads to use.
 
     Returns:
@@ -87,12 +127,6 @@ def _calculate_coverage(
         ],
         verbose=True
     )
-
-    # run_command(
-    #     ["samtools", "sort", "-o", output_fp,
-    #      "--threads", str(threads), sample_fp],
-    #     verbose=True
-    # )
 
     # calculate the coverage
     run_command(

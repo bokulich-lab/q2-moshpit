@@ -73,10 +73,10 @@ class TestHMMER(TestPluginBase):
 
     def test_eggnog_hmmer_search_pipeline(self):
         mock_action = MagicMock(side_effect=[
-            lambda sequences, num_partitions: ({"mag1": {}, "mag2": {}}, ),
+            lambda sequences, num_partitions: ({"mag1": {}, "mag2": {}},),
             lambda seq, pressed, idmap, fastas, num_cpus, db_in_memory: (0, 0),
-            lambda hits: ("collated_hits", ),
-            lambda collated_hits: ("collated_tables", ),
+            lambda hits: ("collated_hits",),
+            lambda collated_hits: ("collated_tables",),
         ])
         mock_ctx = MagicMock(get_action=mock_action)
         obs = eggnog_hmmer_search(
@@ -100,7 +100,7 @@ class TestHMMER(TestPluginBase):
                     [self.get_data_path('pressed_hmm'),
                      self.get_data_path('idmap'),
                      self.get_data_path('fastas')],
-                     tmp2
+                    tmp2
                 )
                 comp = dircmp(tmp1, tmp2)
                 self.assertFalse(
@@ -112,7 +112,7 @@ class TestHMMER(TestPluginBase):
     @patch("q2_moshpit.eggnog.orthologs.hmmer._create_symlinks")
     @patch("q2_moshpit.eggnog.orthologs.hmmer._eggnog_search")
     def test_eggnog_hmmer_search(
-        self, mock_eggnog_search, mock_symlink, mock_tmpdir, mock_makedirs
+            self, mock_eggnog_search, mock_symlink, mock_tmpdir, mock_makedirs
     ):
         mock_tmpdir.return_value.__enter__.return_value = "tmp"
         mock_eggnog_search.return_value = (0, 1)
@@ -281,9 +281,9 @@ class TestDiamond(TestPluginBase):
 
         with ParallelConfig():
             _, parallel = self.eggnog_diamond_search.parallel(
-                    contigs,
-                    self.diamond_db_artifact
-                )._result()
+                contigs,
+                self.diamond_db_artifact
+            )._result()
 
         _, single = self._eggnog_diamond_search(
             sequences=contigs,
@@ -303,9 +303,9 @@ class TestDiamond(TestPluginBase):
 
         with ParallelConfig():
             _, parallel = self.eggnog_diamond_search.parallel(
-                    mags,
-                    self.diamond_db_artifact
-                )._result()
+                mags,
+                self.diamond_db_artifact
+            )._result()
 
         _, single = self._eggnog_diamond_search(
             sequences=mags,
@@ -325,9 +325,9 @@ class TestDiamond(TestPluginBase):
 
         with ParallelConfig():
             _, parallel = self.eggnog_diamond_search.parallel(
-                    mags,
-                    self.diamond_db_artifact
-                )._result()
+                mags,
+                self.diamond_db_artifact
+            )._result()
 
         _, single = self._eggnog_diamond_search(
             sequences=mags,

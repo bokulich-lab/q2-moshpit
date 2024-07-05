@@ -21,7 +21,7 @@ from q2_types.feature_data import (
 )
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
-    SequencesWithQuality, PairedEndSequencesWithQuality, MAGs, Contigs, SingleBowtie2Index
+    SequencesWithQuality, PairedEndSequencesWithQuality, MAGs, Contigs
 )
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
@@ -1577,6 +1577,11 @@ plugin.methods.register_function(
     ]
 )
 
+M_abundance_in, P_abundance_out = TypeMap({
+    Str % Choices(['rpkm']): Properties('rpkm'),
+    Str % Choices(['tpm']): Properties('tpm'),
+})
+
 plugin.methods.register_function(
     function=q2_moshpit.abundance.estimate_mag_abundance,
     inputs={
@@ -1585,7 +1590,7 @@ plugin.methods.register_function(
             FeatureData[SequenceCharacteristics % Properties("length")],
     },
     parameters={
-        "metric": Str % Choices(["rpkm", "tpm"]),
+        "metric": M_abundance_in,
         "min_mapq": Int % Range(0, 255),
         "min_query_len": Int % Range(0, None),
         "min_base_quality": Int % Range(0, None),
@@ -1593,7 +1598,7 @@ plugin.methods.register_function(
         "threads": Int % Range(1, None),
     },
     outputs=[
-        ("abundances", FeatureTable[Frequency]),
+        ("abundances", FeatureTable[Frequency % P_abundance_out]),
     ],
     input_descriptions={
         "maps": "Bowtie2 alignment maps between reads and MAGs for which "

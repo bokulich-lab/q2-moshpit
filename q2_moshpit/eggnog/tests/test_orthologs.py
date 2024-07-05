@@ -20,7 +20,7 @@ from q2_moshpit.eggnog import (
     _eggnog_diamond_search, eggnog_hmmer_search, _eggnog_hmmer_search
 )
 from q2_moshpit.eggnog.orthologs.common import (
-    _eggnog_search, _search_runner, _symlink_files_to_target_dir
+    _eggnog_search, _search_runner, _create_symlinks
 )
 from q2_moshpit.eggnog.types import EggnogHmmerIdmapDirectoryFmt
 from q2_types.feature_data_mag import MAGSequencesDirFmt
@@ -96,11 +96,11 @@ class TestHMMER(TestPluginBase):
                     self.get_data_path(dir), tmp1, dirs_exist_ok=True
                 )
             with tempfile.TemporaryDirectory() as tmp2:
-                _symlink_files_to_target_dir(
-                    self.get_data_path('pressed_hmm'),
-                    self.get_data_path('idmap'),
-                    self.get_data_path('fastas'),
-                    tmp2
+                _create_symlinks(
+                    [self.get_data_path('pressed_hmm'),
+                     self.get_data_path('idmap'),
+                     self.get_data_path('fastas')],
+                     tmp2
                 )
                 comp = dircmp(tmp1, tmp2)
                 self.assertFalse(
@@ -109,7 +109,7 @@ class TestHMMER(TestPluginBase):
 
     @patch("os.makedirs")
     @patch("tempfile.TemporaryDirectory")
-    @patch("q2_moshpit.eggnog.orthologs.hmmer._symlink_files_to_target_dir")
+    @patch("q2_moshpit.eggnog.orthologs.hmmer._create_symlinks")
     @patch("q2_moshpit.eggnog.orthologs.hmmer._eggnog_search")
     def test_eggnog_hmmer_search(
         self, mock_eggnog_search, mock_symlink, mock_tmpdir, mock_makedirs
@@ -123,7 +123,7 @@ class TestHMMER(TestPluginBase):
             seed_alignments=self.fastas
         )
         mock_symlink.assert_called_once_with(
-            self.pressed_hmm, self.idmap, self.fastas, "tmp/hmmer/1100069"
+            [self.pressed_hmm, self.idmap, self.fastas], "tmp/hmmer/1100069"
         )
         mock_eggnog_search.assert_called_once_with(
             self.mags,

@@ -13,7 +13,7 @@ from typing import Union
 import pandas as pd
 
 from q2_moshpit.eggnog.orthologs.common import (
-    _run_eggnog_search_pipeline, _symlink_files_to_target_dir,
+    _run_eggnog_search_pipeline, _create_symlinks,
     _eggnog_search, _search_runner
 )
 from q2_moshpit.eggnog.types import EggnogHmmerIdmapDirectoryFmt
@@ -43,8 +43,8 @@ def _eggnog_hmmer_search(
         taxon_id = os.listdir(idmap.path)[0].split(".")[0]
         tmp_subdir = f"{output_loc}/hmmer/{taxon_id}"
         os.makedirs(tmp_subdir)
-        _symlink_files_to_target_dir(
-            pressed_hmm_db, idmap, seed_alignments, tmp_subdir
+        _create_symlinks(
+            [pressed_hmm_db, idmap, seed_alignments], tmp_subdir
         )
         search_runner = partial(
             _search_runner, output_loc=output_loc,

@@ -40,11 +40,11 @@ def _eggnog_diamond_search(
     with tempfile.TemporaryDirectory() as output_loc:
         db_fp = os.path.join(str(diamond_db), 'ref_db.dmnd')
         search_runner = partial(
-            _search_runner, output_loc=output_loc,
+            _search_runner, output_loc=str(output_loc),
             num_cpus=num_cpus, db_in_memory=db_in_memory,
             runner_args=['diamond', '--dmnd_db', str(db_fp)]
         )
-        result, ft = _eggnog_search(sequences, search_runner, output_loc)
+        result, ft = _eggnog_search(sequences, search_runner, str(output_loc))
     return result, ft
 
 

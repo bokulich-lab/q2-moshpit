@@ -8,9 +8,11 @@
 import glob
 import os
 import subprocess
+from typing import List
 
 import pandas as pd
 import qiime2.util
+from qiime2.sdk import Context
 
 from q2_types.feature_data import FeatureData
 from q2_types.feature_data_mag import MAG, MAGSequencesDirFmt
@@ -21,20 +23,56 @@ from q2_types.per_sample_sequences import (
 from q2_types.sample_data import SampleData
 
 
-def _symlink_files_to_target_dir(
-    pressed_hmm_db, idmap, seed_alignments, target_dir
+def _create_symlinks(
+    source_dirs: list, target_dir: str
 ):
-    for source_dir in [str(pressed_hmm_db), str(idmap), str(seed_alignments)]:
-        for filename in os.listdir(source_dir):
+    """
+    Create symbolic links for files from source_dirs in the target directory.
+
+    Parameters:
+    - source_dirs: A list of source directories containing files to be linked.
+    - target_dir: The target directory where symbolic links will be created.
+    """
+    for src in source_dirs:
+        for filename in os.listdir(str(src)):
             os.symlink(
-                os.path.join(source_dir, filename),
+                os.path.join(str(src), filename),
                 os.path.join(target_dir, filename)
             )
 
 
 def _run_eggnog_search_pipeline(
-    ctx, sequences, db, num_cpus, db_in_memory, num_partitions, search_action
+        ctx: Context,
+        sequences: qiime2.Artifact,
+        db: list,
+        num_cpus: int,
+        db_in_memory: bool,
+        num_partitions: int,
+        search_action: str
 ):
+    """
+    Run the eggNOG search pipeline on the given sequences.
+
+    This function determines the appropriate partitioning method based on
+    the type of input sequences, partitions the sequences, runs the
+    specified search action on each partition, and then collates the results.
+
+    Parameters:
+    - ctx: The QIIME 2 context object.
+    - sequences: The input sequences to be analyzed.
+    - db: A list containing database-related inputs
+        (e.g.: pressed_hmm_db, idmap, seed_alignments).
+    - num_cpus: Number of CPUs to use for the search.
+    - db_in_memory: Boolean indicating whether the database should
+        be loaded into memory.
+    - num_partitions: Number of partitions to divide the input sequences into.
+    - search_action: The specific search action (function name as
+        a string) to be executed.
+
+    Returns:
+    - collated_hits: The collated ortholog hits.
+    - collated_tables: The collated feature tables.
+    """
     if sequences.type <= FeatureData[MAG]:
         plugin, action_name = "moshpit", "partition_feature_data_mags"
     elif sequences.type <= SampleData[Contigs]:
@@ -61,9 +99,25 @@ def _run_eggnog_search_pipeline(
 
 
 def _search_runner(
-    input_path, sample_label, output_loc, num_cpus, db_in_memory,
-    runner_args
+        input_path,
+        sample_label: str,
+        output_loc: str,
+        num_cpus: int,
+        db_in_memory: bool,
+        runner_args: List[str]
 ):
+    """
+    Execute the eggNOG-mapper command with specified arguments for
+    a single sample.
+
+    Parameters:
+    - input_path: Path to the input file containing sequences for the sample.
+    - sample_label: Label for the sample, used in naming output files.
+    - output_loc: Directory where the output files will be stored.
+    - num_cpus: Number of CPUs to use for the search.
+    - db_in_memory: Boolean indicating whether the database should be loaded into memory.
+    - runner_args: Additional arguments to pass to the eggNOG-mapper command.
+    """
     cmd = [
         'emapper.py', '-i', str(input_path), '-o', sample_label,
         '-m', *runner_args,

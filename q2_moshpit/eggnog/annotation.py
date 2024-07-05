@@ -18,7 +18,6 @@ def _annotate_seed_orthologs_runner(
         seed_ortholog, eggnog_db, sample_label, output_loc,
         db_in_memory, num_cpus
 ):
-
     # at this point instead of being able to specify the type of target
     # orthologs, we want to annotate _all_.
 
@@ -29,7 +28,7 @@ def _annotate_seed_orthologs_runner(
     if db_in_memory:
         cmds.append('--dbmem')
 
-    subprocess.run(cmds, check=True)
+    subprocess.run(cmds, check=True, cwd=output_loc)
 
 
 def _eggnog_annotate(

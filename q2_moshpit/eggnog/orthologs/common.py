@@ -84,7 +84,7 @@ def _search_runner(
 
 def _eggnog_search(
     sequences, search_runner, output_loc
-) -> (SeedOrthologDirFmt, pd.DataFrame):  # type: ignore
+) -> (SeedOrthologDirFmt, pd.DataFrame):
     # run analysis
     if isinstance(sequences, ContigSequencesDirFmt):
         for sample_id, contigs_fp in sequences.sample_dict().items():

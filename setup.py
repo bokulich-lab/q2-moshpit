@@ -69,11 +69,11 @@ setup(
             'data/*/*/*/*/*',
             'data/*/*/*/*/*/*',
         ],
-        'q2_moshpit.eggnog': [
-            'tests/data/*',
-            'tests/data/*/*'
-            'tests/data/*/*/*',
-            'tests/data/*/*/*/*',
+        'q2_moshpit.eggnog.tests': [
+            'data/*',
+            'data/*/*'
+            'data/*/*/*',
+            'data/*/*/*/*',
             'citations.bib',
         ],
         'q2_moshpit.kraken2.tests': [

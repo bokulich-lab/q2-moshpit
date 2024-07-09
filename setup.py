@@ -71,9 +71,21 @@ setup(
         ],
         'q2_moshpit.eggnog.tests': [
             'data/*',
-            'data/*/*'
-            'data/*/*/*',
-            'data/*/*/*/*',
+            'data/build_eggnog_diamond_db/*',
+            'data/contig-sequences-1/*',
+            'data/eggnog_db/*',
+            'data/expected/*',
+            'data/good_hits/*',
+            'data/hmmer/fastas/1/*',
+            'data/hmmer/hmms/1/*',
+            'data/invalid_idmaps/*',
+            'data/mag-sequences/*',
+            'data/mag-sequences-per-sample/*'
+            'data/mag-sequences-per-sample/sample1/*',
+            'data/mag-sequences-per-sample/sample2/*',
+            'data/md5/*',
+            'data/random-db-1/*',
+            'data/valid_idmaps/*',
             'citations.bib',
         ],
         'q2_moshpit.kraken2.tests': [

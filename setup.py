@@ -80,7 +80,7 @@ setup(
             'data/hmmer/hmms/1/*',
             'data/invalid_idmaps/*',
             'data/mag-sequences/*',
-            'data/mag-sequences-per-sample/*'
+            'data/mag-sequences-per-sample/*',
             'data/mag-sequences-per-sample/sample1/*',
             'data/mag-sequences-per-sample/sample2/*',
             'data/md5/*',

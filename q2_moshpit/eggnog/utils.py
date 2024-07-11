@@ -5,24 +5,27 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-import re
-import os
-import gzip
-import shutil
 import glob
-import tempfile
+import gzip
+import os
+import re
+import shutil
 import subprocess
+import tempfile
 import urllib
 from html.parser import HTMLParser
-from tqdm import tqdm
-from qiime2.core.exceptions import ValidationError
 from typing import List
-from .._utils import run_command, colorify
+
+from qiime2.core.exceptions import ValidationError
+from tqdm import tqdm
+
+from q2_moshpit.eggnog.types import EggnogHmmerIdmapDirectoryFmt
+from q2_types.genome_data import ProteinsDirectoryFormat
 from q2_types.profile_hmms import (
     ProteinMultipleProfileHmmDirectoryFmt, PressedProfileHmmsDirectoryFmt
 )
-from q2_types.genome_data import ProteinsDirectoryFormat
-from q2_moshpit.eggnog._format import EggnogHmmerIdmapDirectoryFmt
+from .._utils import run_command, colorify
+
 COMMON_URL = "http://eggnog5.embl.de/download/eggnog_5.0/per_tax_level"
 
 

@@ -34,6 +34,7 @@ requirements:
     - samtools
     - tqdm
     - xmltodict
+    - pyhmmer
 
 test:
   requires:

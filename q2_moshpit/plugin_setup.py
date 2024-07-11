@@ -1239,7 +1239,7 @@ plugin.methods.register_function(
     },
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "(Benchmarking Universal Single-Copy Orthologs assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
                 "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
@@ -1272,7 +1272,7 @@ plugin.pipelines.register_function(
     },
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "(Benchmarking Universal Single-Copy Orthologs assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
                 "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],

@@ -99,8 +99,7 @@ class TestHMMER(TestPluginBase):
                 _create_symlinks(
                     [self.get_data_path('pressed_hmm'),
                      self.get_data_path('idmap'),
-                     self.get_data_path('fastas')],
-                     tmp2
+                     self.get_data_path('fastas')], tmp2
                 )
                 comp = dircmp(tmp1, tmp2)
                 self.assertFalse(

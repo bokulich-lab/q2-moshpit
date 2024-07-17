@@ -115,7 +115,8 @@ def _search_runner(
     - sample_label: Label for the sample, used in naming output files.
     - output_loc: Directory where the output files will be stored.
     - num_cpus: Number of CPUs to use for the search.
-    - db_in_memory: Boolean indicating whether the database should be loaded into memory.
+    - db_in_memory: Boolean indicating whether the database should be loaded
+    into memory.
     - runner_args: Additional arguments to pass to the eggNOG-mapper command.
     """
     cmd = [

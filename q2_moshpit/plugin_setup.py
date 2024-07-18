@@ -7,6 +7,8 @@
 # ----------------------------------------------------------------------------
 import importlib
 from qiime2.plugin import Metadata
+
+import q2_moshpit.eggnog.annotation
 from q2_moshpit.eggnog.types import (
     EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt, EggnogHmmerIdmap
 )
@@ -1580,7 +1582,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_moshpit.eggnog.extract_annotations,
+    function=q2_moshpit.eggnog.annotation.extract_annotations,
     inputs={"ortholog_annotations": FeatureData[NOG],},
     parameters={
         "annotation": Str % Choices([

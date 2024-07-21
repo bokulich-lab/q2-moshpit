@@ -111,10 +111,12 @@ def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
 
     rows = []
     trees = []
+    unclassified = {}
     for relpath, df in reports.reports.iter_views(pd.DataFrame):
         sample_id = os.path.basename(relpath).replace(".report.txt", "")
 
         filtered = df[df['perc_frags_covered'] >= coverage_threshold]
+        unclassified[sample_id] = filtered[filtered['name'] == 'unclassified']
         tree = _kraken_to_ncbi_tree(filtered)
         tips = _ncbi_tree_to_tips(tree)
         if tips:

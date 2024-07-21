@@ -111,6 +111,27 @@ def _assert_read_lens_available(
         )
 
 
+def _add_unclassified(
+        table: pd.DataFrame,
+        taxonomy: pd.Series,
+        reports: Kraken2ReportDirectoryFormat
+) -> (pd.DataFrame, pd.Series):
+    samples = table.index.tolist()
+    for sample in samples:
+        report_fp = os.path.join(reports.path, f"{sample}.report.txt")
+        with open(report_fp, "r") as f:
+            line = f.readline()
+            if "unclassified" in line:
+                unclassified = int(line.split("\t")[1])
+                if '0' not in taxonomy.index:
+                    taxonomy.loc['0'] = "d__Unclassified"
+                table.loc[sample, '0'] = unclassified
+            else:
+                if '0' in taxonomy.index:
+                    table.loc[sample, '0'] = 0
+    return table, taxonomy
+
+
 def estimate_bracken(
     kraken_reports: Kraken2ReportDirectoryFormat,
     bracken_db: BrackenDBDirectoryFormat,
@@ -128,5 +149,9 @@ def estimate_bracken(
     _, taxonomy = kraken2_to_features(
         reports=reports, coverage_threshold=0.0
     )
+
+    # Bracken does not report unclassified reads in its output table,
+    # so we need to re-add them
+    table, taxonomy = _add_unclassified(table, taxonomy, kraken_reports)
 
     return reports, taxonomy, table

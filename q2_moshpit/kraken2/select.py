@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
+import glob
 import os
 from collections import deque
 from typing import List
@@ -74,6 +74,39 @@ def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
     return results
 
 
+def _add_unclassified_mags(
+        table: pd.DataFrame,
+        taxonomy: pd.DataFrame,
+        reports: Kraken2ReportDirectoryFormat
+) -> (pd.DataFrame, pd.Series):
+    # identify which MAGs are entirely unclassified - they will be missing
+    # from the table
+    samples = [
+        os.path.basename(f).replace(".report.txt", "")
+        for f in glob.glob(os.path.join(reports.path, "*.report.txt"))
+    ]
+    unclassified = set(samples) - set(table.index)
+
+    for mag in unclassified:
+        report_fp = os.path.join(reports.path, f"{mag}.report.txt")
+        with open(report_fp, "r") as f:
+            line = f.readline()
+            if "unclassified" in line:
+                fraction = float(line.split("\t")[0])
+                if fraction != 100.0:
+                    raise ValueError(
+                        f"Unclassified fraction for MAG '{mag}' is not "
+                        f"100.0%: {fraction:.2f}%."
+                    )
+                taxonomy.loc[mag, "Taxon"] = "d__Unclassified"
+            else:
+                raise ValueError(
+                    f"Unclassified line for MAG '{mag}' is missing from "
+                    f"the Kraken 2 report."
+                )
+    return taxonomy
+
+
 def kraken2_to_mag_features(
         reports: Kraken2ReportDirectoryFormat,
         hits: Kraken2OutputDirectoryFormat,
@@ -102,7 +135,8 @@ def kraken2_to_mag_features(
         new_taxa['mag_id'] = mag_id
         taxa_list.append(new_taxa)
 
-    return _find_lcas(taxa_list, mode='lca')
+    taxonomy = _find_lcas(taxa_list, mode='lca')
+    return _add_unclassified_mags(table, taxonomy, reports)
 
 
 def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,

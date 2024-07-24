@@ -150,7 +150,7 @@ class TestBUSCOUtils(TestPluginBase):
         partitions = _partition_dataframe(self.df1, 15, True)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
-        exp_shapes = [(15, 3),]
+        exp_shapes = [(15, 3), ]
         self.assertListEqual(obs_shapes, exp_shapes)
 
         partitions = _partition_dataframe(self.df2, 15, True)

@@ -29,9 +29,6 @@ from q2_moshpit.kraken2.classification import (
 )
 
 from qiime2 import Artifact
-from qiime2.sdk.parallel_config import (
-    NON_QIIMETEST_TEST_CONFIG, ParallelConfig, load_config_from_dict
-)
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
@@ -531,7 +528,6 @@ class TestClassifyKraken2HasCorrectCalls(TestPluginBase):
 
 class TestClassifyKraken2Reads(TestPluginBase):
     package = "q2_moshpit.kraken2.tests"
-    parallel_config, mapping = load_config_from_dict(NON_QIIMETEST_TEST_CONFIG)
 
     def setUp(self):
         super().setUp()
@@ -620,8 +616,7 @@ class TestClassifyKraken2Reads(TestPluginBase):
         samples = Artifact.import_data(
             'SampleData[PairedEndSequencesWithQuality]', samples)
 
-        with ParallelConfig(parallel_config=self.parallel_config,
-                            action_executor_mapping=self.mapping):
+        with self.test_config:
             reports, outputs = \
                 self.classify_kraken2.parallel(samples, db)._result()
 
@@ -710,7 +705,6 @@ class TestClassifyKraken2Reads(TestPluginBase):
 
 class TestClassifyKraken2Contigs(TestPluginBase):
     package = "q2_moshpit.kraken2.tests"
-    parallel_config, mapping = load_config_from_dict(NON_QIIMETEST_TEST_CONFIG)
 
     def setUp(self):
         super().setUp()
@@ -794,8 +788,7 @@ class TestClassifyKraken2Contigs(TestPluginBase):
         db = Artifact.import_data('Kraken2DB', self.db)
         samples = Artifact.import_data('SampleData[Contigs]', self.samples)
 
-        with ParallelConfig(parallel_config=self.parallel_config,
-                            action_executor_mapping=self.mapping):
+        with self.test_config:
             reports, outputs = \
                 self.classify_kraken2.parallel(samples, db)._result()
 
@@ -921,7 +914,6 @@ class TestClassifyKraken2MAGsDerep(unittest.TestCase):
 
 class TestClassifyKraken2MAGs(TestPluginBase):
     package = "q2_moshpit.kraken2.tests"
-    parallel_config, mapping = load_config_from_dict(NON_QIIMETEST_TEST_CONFIG)
 
     def setUp(self):
         super().setUp()
@@ -1001,8 +993,7 @@ class TestClassifyKraken2MAGs(TestPluginBase):
         db = Artifact.import_data('Kraken2DB', self.db)
         samples = Artifact.import_data('SampleData[MAGs]', self.samples)
 
-        with ParallelConfig(parallel_config=self.parallel_config,
-                            action_executor_mapping=self.mapping):
+        with self.test_config:
             reports, outputs = \
                 self.classify_kraken2.parallel(samples, db)._result()
 

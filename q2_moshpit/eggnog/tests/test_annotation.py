@@ -11,9 +11,6 @@ import pandas as pd
 import pandas.testing as pdt
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
-from qiime2.sdk.parallel_config import (
-    NON_QIIMETEST_TEST_CONFIG, ParallelConfig, load_config_from_dict
-)
 
 from q2_moshpit.eggnog import (
     _eggnog_annotate
@@ -27,7 +24,6 @@ from q2_types.reference_db import (
 
 class TestAnnotate(TestPluginBase):
     package = 'q2_moshpit.eggnog.tests'
-    parallel_config, mapping = load_config_from_dict(NON_QIIMETEST_TEST_CONFIG)
 
     def setUp(self):
         super().setUp()
@@ -68,8 +64,7 @@ class TestAnnotate(TestPluginBase):
             self.get_data_path('good_hits/')
         )
 
-        with ParallelConfig(parallel_config=self.parallel_config,
-                            action_executor_mapping=self.mapping):
+        with self.test_config:
             parallel, = self.eggnog_annotate.parallel(
                     orthologs,
                     self.eggnog_db_artifact

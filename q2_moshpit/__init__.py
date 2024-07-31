@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+from . import abundance
 from . import busco
 from . import eggnog
 from . import partition
@@ -28,5 +29,6 @@ __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
     'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog',
     'busco', 'prodigal', 'kraken_helpers', 'partition',
-    'filter_derep_mags', 'filter_mags', 'get_feature_lengths'
+    'filter_derep_mags', 'filter_mags', 'get_feature_lengths',
+    'abundance'
 ]

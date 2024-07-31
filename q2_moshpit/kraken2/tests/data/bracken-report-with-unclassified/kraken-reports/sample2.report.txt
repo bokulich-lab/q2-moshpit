@@ -1,0 +1,67 @@
+100.00	145	0	R	1	root
+100.00	145	0	D	10239	  Viruses
+99.32	144	0	D1	2731341	    Duplodnaviria
+99.32	144	0	K	2731360	      Heunggongvirae
+99.32	144	0	P	2731618	        Uroviricota
+99.32	144	0	C	2731619	          Caudoviricetes
+22.59	32	0	C1	2788787	            unclassified Caudoviricetes
+12.32	17	17	S	2591121	              Gordonia phage Trax
+8.22	12	12	S	1392231	              Streptococcus phage 20617
+1.37	2	2	S	2603260	              Arthrobacter phage Qui
+0.68	1	1	S	889953	              Cyanophage KBS-S-2A
+14.38	21	0	C1	2946628	            Ceeclamvirinae
+14.38	21	0	G	2948833	              Myrnavirus
+10.96	16	16	S	2956211	                Myranavirus phabba
+3.42	5	5	S	2956212	                Myrnavirus myrna
+8.95	13	0	G	2169653	            Doucettevirus
+8.95	13	13	S	2169870	              Doucettevirus B22
+8.71	12	0	F	2946173	            Vilmaviridae
+5.49	8	0	F1	1982877	              Mclasvirinae
+5.49	8	0	G	1983744	                Bongovirus
+3.44	5	5	S	2955514	                  Bongovirus reindeer
+2.05	3	3	S	1983750	                  Bongovirus bongo
+3.22	4	0	G	2948790	              Kumaovirus
+3.22	4	4	S	2956095	                Kumaovirus kumao
+7.53	11	0	G	2560178	            Minunavirus
+7.53	11	11	S	2560595	              Minunavirus Min1
+7.53	11	0	G	2560209	            Poushouvirus
+7.53	11	11	S	2560396	              Poushouvirus Poushou
+4.79	7	0	G	2733178	            Godonkavirus
+2.74	4	0	G1	2753147	              unclassified Godonkavirus
+2.74	4	4	S	2593335	                Gordonia phage Phendrix
+2.05	3	3	S	2734237	              Godonkavirus godonK
+4.18	6	0	G	2843386	            Gilsonvirus
+4.18	6	6	S	2846398	              Gilsonvirus gilson
+4.11	6	0	G	1982150	            Gilesvirus
+4.11	6	6	S	1982151	              Gilesvirus giles
+4.11	6	0	F	2946167	            Peduoviridae
+4.11	6	0	G	2732986	              Phitrevirus
+4.11	6	6	S	2734069	                Phitrevirus phi3
+3.42	5	0	F	2946170	            Straboviridae
+3.42	5	0	G	2948639	              Bragavirus
+3.42	5	5	S	2955534	                Bragavirus pm2
+2.83	4	0	G	186764	            Fromanvirus
+2.83	4	4	S	1089111	              Fromanvirus alma
+2.05	3	0	G	2560109	            Busanvirus
+2.05	3	3	S	2560261	              Busanvirus ACP17
+1.37	2	0	G	2843361	            Borockvirus
+1.37	2	2	S	2846393	              Borockvirus brock
+0.69	1	0	G	2948914	            Stormageddonvirus
+0.69	1	1	S	2956470	              Stormageddonvirus Stormageddon
+0.68	1	0	G	2560134	            Galaxyvirus
+0.68	1	1	S	2560303	              Galaxyvirus galaxy
+0.68	1	0	G	2560207	            Polybotosvirus
+0.68	1	1	S	2560286	              Polybotosvirus Atuph07
+0.68	1	0	G	2843468	            Triplejayvirus
+0.68	1	1	S	2843732	              Triplejayvirus tripleJ
+0.00	0	0	G	2733140	            Wellingtonvirus
+0.00	0	0	S	2734153	              Wellingtonvirus wellington
+0.68	1	0	D1	2731342	    Monodnaviria
+0.68	1	0	K	2732092	      Shotokuvirae
+0.68	1	0	P	2732415	        Cossaviricota
+0.68	1	0	C	2732421	          Papovaviricetes
+0.68	1	0	O	2732533	            Zurhausenvirales
+0.68	1	0	F	151340	              Papillomaviridae
+0.68	1	0	F1	2169595	                Firstpapillomavirinae
+0.68	1	0	G	934800	                  Chipapillomavirus
+0.68	1	1	S	1177758	                    Chipapillomavirus 1

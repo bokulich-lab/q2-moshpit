@@ -11,7 +11,6 @@ import pandas as pd
 import pandas.testing as pdt
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
-from qiime2.sdk.parallel_config import ParallelConfig
 
 from q2_moshpit.eggnog import (
     _eggnog_annotate
@@ -65,7 +64,7 @@ class TestAnnotate(TestPluginBase):
             self.get_data_path('good_hits/')
         )
 
-        with ParallelConfig():
+        with self.test_config:
             parallel, = self.eggnog_annotate.parallel(
                     orthologs,
                     self.eggnog_db_artifact

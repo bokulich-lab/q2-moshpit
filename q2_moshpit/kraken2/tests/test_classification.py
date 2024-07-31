@@ -29,7 +29,6 @@ from q2_moshpit.kraken2.classification import (
 )
 
 from qiime2 import Artifact
-from qiime2.sdk.parallel_config import ParallelConfig
 from qiime2.plugin.testing import TestPluginBase
 from qiime2.plugins import moshpit
 
@@ -617,7 +616,7 @@ class TestClassifyKraken2Reads(TestPluginBase):
         samples = Artifact.import_data(
             'SampleData[PairedEndSequencesWithQuality]', samples)
 
-        with ParallelConfig():
+        with self.test_config:
             reports, outputs = \
                 self.classify_kraken2.parallel(samples, db)._result()
 
@@ -789,7 +788,7 @@ class TestClassifyKraken2Contigs(TestPluginBase):
         db = Artifact.import_data('Kraken2DB', self.db)
         samples = Artifact.import_data('SampleData[Contigs]', self.samples)
 
-        with ParallelConfig():
+        with self.test_config:
             reports, outputs = \
                 self.classify_kraken2.parallel(samples, db)._result()
 
@@ -994,7 +993,7 @@ class TestClassifyKraken2MAGs(TestPluginBase):
         db = Artifact.import_data('Kraken2DB', self.db)
         samples = Artifact.import_data('SampleData[MAGs]', self.samples)
 
-        with ParallelConfig():
+        with self.test_config:
             reports, outputs = \
                 self.classify_kraken2.parallel(samples, db)._result()
 

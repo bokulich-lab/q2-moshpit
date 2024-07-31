@@ -12,10 +12,10 @@ from q2_moshpit.partition.mags import (
     collate_feature_data_mags, collate_sample_data_mags
 )
 from qiime2.plugin.testing import TestPluginBase
-from q2_types.per_sample_sequences._format import (
+from q2_types.per_sample_sequences import (
     MultiMAGSequencesDirFmt,
 )
-from q2_types.feature_data_mag._format import (
+from q2_types.feature_data_mag import (
     MAGSequencesDirFmt
 )
 

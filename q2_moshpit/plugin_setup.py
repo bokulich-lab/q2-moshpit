@@ -41,8 +41,8 @@ from q2_types.kaiju import KaijuDB
 from q2_types.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB, Kraken2DBReport
 )
-from q2_types.kraken2._type import BrackenDB
-from q2_types.per_sample_sequences._type import AlignmentMap
+from q2_types.kraken2 import BrackenDB
+from q2_types.per_sample_sequences import AlignmentMap
 from q2_types.reference_db import (
     ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
 )

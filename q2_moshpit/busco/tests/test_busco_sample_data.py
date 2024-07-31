@@ -16,7 +16,7 @@ from q2_moshpit.busco.busco import (
 )
 from unittest.mock import patch, ANY, call, MagicMock
 from qiime2.plugin.testing import TestPluginBase
-from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
 from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 
 

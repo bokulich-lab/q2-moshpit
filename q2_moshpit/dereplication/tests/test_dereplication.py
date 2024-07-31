@@ -19,7 +19,7 @@ from q2_moshpit.dereplication.derep import (
     dereplicate_mags
 )
 from q2_types.feature_data_mag import MAGSequencesDirFmt
-from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
 
 from qiime2.plugin.testing import TestPluginBase
 

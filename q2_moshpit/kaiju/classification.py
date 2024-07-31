@@ -16,11 +16,12 @@ from typing import Union
 import pandas as pd
 from q2_types.per_sample_sequences import (
     SingleLanePerSamplePairedEndFastqDirFmt,
-    SingleLanePerSampleSingleEndFastqDirFmt,
+    SingleLanePerSampleSingleEndFastqDirFmt, SequencesWithQuality, PairedEndSequencesWithQuality,
 )
 
 from q2_moshpit._utils import run_command
 from q2_types.kaiju import KaijuDBDirectoryFormat
+from q2_types.sample_data import SampleData
 
 DEFAULT_PREFIXES = ["d__", "p__", "c__", "o__", "f__", "g__", "s__", "ssp__"]
 
@@ -195,7 +196,7 @@ def _process_kaiju_reports(tmpdir, all_args):
     return _construct_feature_table(table_fp)
 
 
-def _classify_kaiju(
+def _classify_kaiju_helper(
         manifest: pd.DataFrame, all_args: dict
 ) -> (pd.DataFrame, pd.DataFrame):
     """
@@ -255,7 +256,7 @@ def _classify_kaiju(
     return table, taxonomy
 
 
-def classify_kaiju(
+def _classify_kaiju(
     seqs: Union[
         SingleLanePerSamplePairedEndFastqDirFmt,
         SingleLanePerSampleSingleEndFastqDirFmt,
@@ -274,4 +275,50 @@ def classify_kaiju(
     u: bool = False,
 ) -> (pd.DataFrame, pd.DataFrame):
     manifest: pd.DataFrame = seqs.manifest.view(pd.DataFrame)
-    return _classify_kaiju(manifest, dict(locals().items()))
+    return _classify_kaiju_helper(manifest, dict(locals().items()))
+
+
+def classify_kaiju(
+        ctx,
+        seqs,
+        db,
+        z=1,
+        a="greedy",
+        e=3,
+        m=11,
+        s=65,
+        evalue=0.01,
+        x=True,
+        r="species",
+        c=0.0,
+        exp=False,
+        u=False,
+        num_partitions=None
+):
+    kwargs = {k: v for k, v in locals().items()
+              if k not in ["seqs", "db", "ctx", "num_partitions"]}
+
+    _classify_kaiju = ctx.get_action("moshpit", "_classify_kaiju")
+    collate_feature_tables = ctx.get_action("feature_table", "merge")
+    collate_taxonomies = ctx.get_action("feature_table", "merge_taxa")
+
+    if seqs.type <= SampleData[SequencesWithQuality]:
+        partition_method = ctx.get_action("demux", "partition_samples_single")
+    elif seqs.type <= SampleData[PairedEndSequencesWithQuality]:
+        partition_method = ctx.get_action("demux", "partition_samples_paired")
+    else:
+        raise NotImplementedError()
+
+    (partitioned_seqs,) = partition_method(seqs, num_partitions)
+
+    tables = []
+    taxonomies = []
+    for seq in partitioned_seqs.values():
+        (table, taxonomy) = _classify_kaiju(seq, db, **kwargs)
+        tables.append(table)
+        taxonomies.append(taxonomy)
+
+    (combined_table,) = collate_feature_tables(tables)
+    (collated_taxonomy,) = collate_taxonomies(taxonomies)
+
+    return combined_table, collated_taxonomy

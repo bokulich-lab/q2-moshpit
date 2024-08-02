@@ -6,12 +6,15 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import importlib
-
 from qiime2.plugin import Metadata
-
-from q2_moshpit.busco.types import (
-    BUSCOResults, BUSCOResultsDirectoryFormat, BUSCOResultsFormat
+from q2_moshpit.eggnog.types import (
+    EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt, EggnogHmmerIdmap
 )
+from q2_moshpit.busco.types import (
+    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
+    BUSCOResults, BuscoDB
+)
+from q2_types.profile_hmms import ProfileHMM, MultipleProtein, PressedProtein
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
     FeatureData, Sequence, Taxonomy, ProteinSequence, SequenceCharacteristics
@@ -29,9 +32,10 @@ from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
 import q2_moshpit._examples as ex
 import q2_moshpit
-from q2_types.feature_data_mag import NOG, MAG
+from q2_types.feature_data_mag import MAG
 from q2_types.genome_data import (
-    BLAST6, GenomeData, Loci, Genes, Proteins
+    NOG, Orthologs,
+    GenomeData, Loci, Genes, Proteins
 )
 from q2_types.kaiju import KaijuDB
 from q2_types.kraken2 import (
@@ -40,7 +44,7 @@ from q2_types.kraken2 import (
 from q2_types.kraken2._type import BrackenDB
 from q2_types.per_sample_sequences._type import AlignmentMap
 from q2_types.reference_db import (
-    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences
+    ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
 )
 
 citations = Citations.load('citations.bib', package='q2_moshpit')
@@ -676,7 +680,7 @@ plugin.pipelines.register_function(
         **partition_param_descriptions
     },
     outputs=[
-        ('eggnog_hits', SampleData[BLAST6]),
+        ('eggnog_hits', SampleData[Orthologs]),
         ('table', FeatureTable[Frequency])
     ],
     name='Run eggNOG search using diamond aligner',
@@ -689,22 +693,63 @@ plugin.pipelines.register_function(
     ]
 )
 
+plugin.pipelines.register_function(
+    function=q2_moshpit.eggnog.eggnog_hmmer_search,
+    inputs={
+        'sequences': SampleData[Contigs | MAGs] | FeatureData[MAG],
+        'pressed_hmm_db': ProfileHMM[PressedProtein],
+        'idmap': EggnogHmmerIdmap,
+        'seed_alignments': GenomeData[Proteins]
+    },
+    parameters={
+        'num_cpus': Int,
+        'db_in_memory': Bool,
+        **partition_params
+    },
+    input_descriptions={
+        'sequences': 'Sequences to be searched for hits.',
+        "pressed_hmm_db": "Collection of profile HMMs in binary format "
+                          "and indexed.",
+        "idmap": "List of protein families in `hmm_db`.",
+        "seed_alignments": "Seed alignments for the protein families in "
+                          "`hmm_db`."
+    },
+    parameter_descriptions={
+        'num_cpus': 'Number of CPUs to utilize per partition. \'0\' will '
+                    'use all available.',
+        'db_in_memory': 'Read database into memory. The '
+                        'database can be very large, so this '
+                        'option should only be used on clusters or other '
+                        'machines with enough memory.',
+        **partition_param_descriptions
+    },
+    outputs=[
+        ('eggnog_hits', SampleData[Orthologs]),
+        ('table', FeatureTable[Frequency])
+    ],
+    name='Run eggNOG search using HMMER aligner',
+    description="This method uses HMMER to find possible target sequences "
+                "to annotate with eggNOG-mapper.",
+    citations=[
+        citations["noauthor_hmmer_nodate"],
+        citations["huerta_cepas_eggnog_2019"]
+    ]
+)
+
 plugin.methods.register_function(
     function=q2_moshpit.eggnog._eggnog_diamond_search,
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
-        'diamond_db': ReferenceDB[Diamond],
+        'diamond_db': ReferenceDB[Diamond]
     },
     parameters={
         'num_cpus': Int,
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'sequences': 'Sequence data of the contigs we want to '
-                     'search for hits using the Diamond Database',
-        'diamond_db': 'The filepath to an artifact containing the '
-                      'Diamond database',
+        'sequences': 'Sequences to be searched for hits.',
+        'diamond_db': 'Diamond database.',
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
@@ -715,7 +760,7 @@ plugin.methods.register_function(
                         'machines with enough memory.',
     },
     outputs=[
-        ('eggnog_hits', SampleData[BLAST6]),
+        ('eggnog_hits', SampleData[Orthologs]),
         ('table', FeatureTable[Frequency])
     ],
     output_descriptions={
@@ -723,10 +768,11 @@ plugin.methods.register_function(
                        'orthologs. One table per sample or MAG in the input.',
         'table': 'Feature table with counts of orthologs per sample/MAG.'
     },
-    name='Run eggNOG search using diamond aligner',
+    name='Run eggNOG search using Diamond aligner',
     description="This method performs the steps by which we find our "
-                "possible target sequences to annotate using the diamond "
-                "search functionality from the eggnog `emapper.py` script",
+                "possible target sequences to annotate using the Diamond "
+                "search functionality from the eggnog `emapper.py` "
+                "script.",
     citations=[
         citations["buchfink_sensitive_2021"],
         citations["huerta_cepas_eggnog_2019"]
@@ -734,9 +780,59 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
+    function=q2_moshpit.eggnog._eggnog_hmmer_search,
+    inputs={
+        'sequences':
+            SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
+        'idmap': EggnogHmmerIdmap,
+        'pressed_hmm_db': ProfileHMM[PressedProtein],
+        'seed_alignments': GenomeData[Proteins]
+    },
+    parameters={
+        'num_cpus': Int,
+        'db_in_memory': Bool,
+    },
+    input_descriptions={
+        'sequences': 'Sequence data of the contigs we want to '
+                     'search for hits.',
+        'idmap': 'List of protein families in `hmm_db`.',
+        'pressed_hmm_db': 'Collection of Profile HMMs in binary format '
+                          'and indexed.',
+        'seed_alignments': 'Seed alignments for the protein families in '
+                          '`hmm_db`.'
+    },
+    parameter_descriptions={
+        'num_cpus': 'Number of CPUs to utilize per partition. \'0\' will '
+                    'use all available.',
+        'db_in_memory': 'Read database into memory. The '
+                        'database can be very large, so this '
+                        'option should only be used on clusters or other '
+                        'machines with enough memory.',
+    },
+    outputs=[
+        ('eggnog_hits', SampleData[Orthologs]),
+        ('table', FeatureTable[Frequency])
+    ],
+    output_descriptions={
+        'eggnog_hits': 'BLAST6-like table(s) describing the identified '
+                       'orthologs. One table per sample or MAG in the input.',
+        'table': 'Feature table with counts of orthologs per sample/MAG.'
+    },
+    name='Run eggNOG search using HMMER aligner',
+    description='This method performs the steps by which we find our '
+                'possible target sequences to annotate using the '
+                'HMMER search functionality from the eggnog `emapper.py` '
+                'script.',
+    citations=[
+        citations['buchfink_sensitive_2021'],
+        citations['huerta_cepas_eggnog_2019']
+    ]
+)
+
+plugin.methods.register_function(
     function=q2_moshpit.eggnog._eggnog_feature_table,
     inputs={
-        'seed_orthologs': SampleData[BLAST6]
+        'seed_orthologs': SampleData[Orthologs]
     },
     parameters={},
     input_descriptions={
@@ -754,13 +850,13 @@ plugin.methods.register_function(
 plugin.pipelines.register_function(
     function=q2_moshpit.eggnog.eggnog_annotate,
     inputs={
-        'eggnog_hits': SampleData[BLAST6],
+        'eggnog_hits': SampleData[Orthologs],
         'eggnog_db': ReferenceDB[Eggnog],
     },
     input_descriptions={
         'eggnog_hits': 'BLAST6-like table(s) describing the '
                        'identified orthologs. ',
-        "eggnog_db": "eggNOG annotation database."
+        'eggnog_db': 'eggNOG annotation database.'
     },
     parameters={
         'db_in_memory': Bool,
@@ -776,7 +872,7 @@ plugin.pipelines.register_function(
                     'use all available.',
         **partition_param_descriptions
     },
-    outputs=[('ortholog_annotations', FeatureData[NOG])],
+    outputs=[('ortholog_annotations', GenomeData[NOG])],
     output_descriptions={
         'ortholog_annotations': 'Annotated hits.'
     },
@@ -788,7 +884,7 @@ plugin.pipelines.register_function(
 plugin.methods.register_function(
     function=q2_moshpit.eggnog._eggnog_annotate,
     inputs={
-        'eggnog_hits': SampleData[BLAST6],
+        'eggnog_hits': SampleData[Orthologs],
         'eggnog_db': ReferenceDB[Eggnog],
     },
     parameters={
@@ -803,11 +899,126 @@ plugin.methods.register_function(
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
                     'use all available.',
     },
-    outputs=[('ortholog_annotations', FeatureData[NOG])],
+    outputs=[('ortholog_annotations', GenomeData[NOG])],
     name='Annotate orthologs against eggNOG database',
     description="Apply eggnog mapper to annotate seed orthologs.",
     citations=[citations["huerta_cepas_eggnog_2019"]]
 )
+
+# First bool flag only allowed to be True when the DB contains all lineages
+# Second bool flag only allowed to be True when the DB has property "eukaryota"
+# Third bool flag only allowed to be True when the DB has property "prokaryota"
+# Triple false option = setting where user specifies the lineage dataset
+(
+    i_busco_db,
+    p_auto_lineage, p_auto_lineage_euk, p_auto_lineage_prok,
+    _
+) = TypeMap({
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,  # Placeholder type because visualizations have no output
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[
+            BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])
+        ],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('prokaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('prokaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('eukaryota')],
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('eukaryota')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+    (
+        ReferenceDB[BuscoDB % Properties('virus')],
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(False),
+    ): Int,
+})
 
 busco_params = {
     "mode": Str % Choices(["genome"]),
@@ -815,9 +1026,9 @@ busco_params = {
     "augustus": Bool,
     "augustus_parameters": Str,
     "augustus_species": Str,
-    "auto_lineage": Bool,
-    "auto_lineage_euk": Bool,
-    "auto_lineage_prok": Bool,
+    "auto_lineage": p_auto_lineage,
+    "auto_lineage_euk": p_auto_lineage_euk,
+    "auto_lineage_prok": p_auto_lineage_prok,
     "cpu": Int % Range(1, None),
     "config": Str,
     "contig_break": Int % Range(0, None),
@@ -892,31 +1103,6 @@ plugin.methods.register_function(
     description="Collates BUSCO results."
 )
 
-
-plugin.methods.register_function(
-    function=q2_moshpit.busco._evaluate_busco,
-    inputs={
-        "bins": SampleData[MAGs] | FeatureData[MAG],
-    },
-    parameters=busco_params,
-    outputs={
-        "results": BUSCOResults
-    },
-    input_descriptions={
-        "bins": "MAGs to be analyzed.",
-    },
-    parameter_descriptions=busco_param_descriptions,
-    output_descriptions={
-        "results": "BUSCO result table."
-    },
-    name="Evaluate quality of the generated MAGs using BUSCO.",
-    description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
-                "tool) to assess the quality of assembled MAGs and generates "
-                "a table summarizing the results.",
-    citations=[citations["manni_busco_2021"]],
-)
-
 plugin.visualizers.register_function(
     function=q2_moshpit.busco._visualize_busco,
     inputs={
@@ -933,10 +1119,40 @@ plugin.visualizers.register_function(
     citations=[citations["manni_busco_2021"]],
 )
 
+plugin.methods.register_function(
+    function=q2_moshpit.busco._evaluate_busco,
+    inputs={
+        "bins": SampleData[MAGs] | FeatureData[MAG],
+        "busco_db": i_busco_db
+    },
+    parameters=busco_params,
+    outputs={
+        "results": BUSCOResults
+    },
+    input_descriptions={
+        "bins": "MAGs to be analyzed.",
+        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
+                    "mode. If not provided a BUSCO database "
+                    "will be downloaded to a temporary location and then "
+                    "deleted."
+    },
+    parameter_descriptions=busco_param_descriptions,
+    output_descriptions={
+        "results": "BUSCO result table."
+    },
+    name="Evaluate quality of the generated MAGs using BUSCO.",
+    description="This method uses BUSCO "
+                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "tool) to assess the quality of assembled MAGs and generates "
+                "a table summarizing the results.",
+    citations=[citations["manni_busco_2021"]],
+)
+
 plugin.pipelines.register_function(
     function=q2_moshpit.busco.evaluate_busco,
     inputs={
         "bins": SampleData[MAGs] | FeatureData[MAG],
+        "busco_db": i_busco_db
     },
     parameters={**busco_params, **partition_params},
     outputs={
@@ -945,6 +1161,10 @@ plugin.pipelines.register_function(
     },
     input_descriptions={
         "bins": "MAGs to be analyzed.",
+        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
+                    "mode. If not provided a BUSCO database "
+                    "will be downloaded to a temporary location and then "
+                    "deleted."
     },
     parameter_descriptions={
         **busco_param_descriptions, **partition_param_descriptions
@@ -957,7 +1177,7 @@ plugin.pipelines.register_function(
     description="This method uses BUSCO "
                 "(Benchmarking Universal Single-Copy Ortholog assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
-                "visualizations summarizing the results.",
+                "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
 )
 
@@ -1098,6 +1318,68 @@ plugin.methods.register_function(
     citations=[citations["menzel2016"]],
 )
 
+p_virus, p_prok, p_euk, o_busco_db = TypeMap({
+    (
+        Bool % Choices(True),
+        Bool % Choices(True),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota', 'eukaryota'])],
+    (
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties(['prokaryota', 'eukaryota'])],
+    (
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties(['virus', 'eukaryota'])],
+    (
+        Bool % Choices(True),
+        Bool % Choices(True),
+        Bool % Choices(False)
+    ): ReferenceDB[BuscoDB % Properties(['virus', 'prokaryota'])],
+    (
+        Bool % Choices(True),
+        Bool % Choices(False),
+        Bool % Choices(False)
+    ): ReferenceDB[BuscoDB % Properties('virus')],
+    (
+        Bool % Choices(False),
+        Bool % Choices(True),
+        Bool % Choices(False)
+    ): ReferenceDB[BuscoDB % Properties('prokaryota')],
+    (
+        Bool % Choices(False),
+        Bool % Choices(False),
+        Bool % Choices(True)
+    ): ReferenceDB[BuscoDB % Properties('eukaryota')],
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.busco.fetch_busco_db,
+    inputs={},
+    outputs=[('busco_db', o_busco_db)],
+    output_descriptions={
+        'busco_db': "BUSCO database for the specified lineages."
+    },
+    parameters={
+        "virus": p_virus,
+        "prok": p_prok,
+        "euk": p_euk,
+    },
+    parameter_descriptions={
+        "virus": "Download the virus dataset.",
+        "prok": "Download the prokaryote dataset.",
+        "euk": "Download the eukaryote dataset.",
+    },
+    name="Download BUSCO database.",
+    description="Downloads BUSCO database for the specified lineage. "
+                "Output can be used to run BUSCO with the 'evaluate-busco' "
+                "action.",
+    citations=[citations["manni_busco_2021"]],
+)
+
 plugin.methods.register_function(
     function=q2_moshpit._utils.get_feature_lengths,
     inputs={
@@ -1166,9 +1448,52 @@ plugin.methods.register_function(
     description="Filter MAGs based on metadata.",
 )
 
-plugin.register_semantic_types(BUSCOResults)
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.fetch_eggnog_hmmer_db,
+    inputs={},
+    parameters={
+        "taxon_id": Int % Range(2, None)
+    },
+    parameter_descriptions={
+        "taxon_id": "Taxon ID number."
+    },
+    outputs=[
+        ("idmap", EggnogHmmerIdmap % Properties("eggnog")),
+        ("hmm_db", ProfileHMM[MultipleProtein] % Properties("eggnog")),
+        ("pressed_hmm_db", ProfileHMM[PressedProtein] % Properties("eggnog")),
+        ("seed_alignments", GenomeData[Proteins] % Properties("eggnog"))
+    ],
+    output_descriptions={
+        "idmap": "List of protein families in `hmm_db`.",
+        "hmm_db": "Collection of Profile HMMs.",
+        "pressed_hmm_db": "Collection of Profile HMMs in binary format "
+                          "and indexed.",
+        "seed_alignments": "Seed alignments for the protein families in "
+                           "`hmm_db`."
+    },
+    name="Fetch the taxon specific database necessary to run the "
+         "eggnog-hmmer-search action.",
+    description="Downloads Profile HMM database for the specified taxon.",
+    citations=[
+        citations["huerta_cepas_eggnog_2019"],
+        citations["noauthor_hmmer_nodate"]
+    ]
+)
+
+plugin.register_semantic_types(BUSCOResults, BuscoDB)
+plugin.register_formats(
+    BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt
+)
 plugin.register_semantic_type_to_format(
     BUSCOResults,
     artifact_format=BUSCOResultsDirectoryFormat)
-plugin.register_formats(BUSCOResultsFormat, BUSCOResultsDirectoryFormat)
+plugin.register_semantic_type_to_format(
+    ReferenceDB[BuscoDB], BuscoDatabaseDirFmt
+)
 importlib.import_module('q2_moshpit.busco.types._transformer')
+
+plugin.register_formats(EggnogHmmerIdmapFileFmt, EggnogHmmerIdmapDirectoryFmt)
+plugin.register_semantic_types(EggnogHmmerIdmap)
+plugin.register_semantic_type_to_format(
+    EggnogHmmerIdmap, EggnogHmmerIdmapDirectoryFmt
+)

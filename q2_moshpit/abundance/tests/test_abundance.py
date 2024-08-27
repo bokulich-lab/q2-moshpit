@@ -19,8 +19,8 @@ class TestAbundance(TestPluginBase):
     def setUp(self):
         super().setUp()
         self.df = pd.DataFrame({
-            'sample_id': [*['s1']*4, *['s2']*4, *['s3']*4],
-            'mag_id': ['m1', 'm2', 'm3', 'm4']*3,
+            'sample-id': [*['s1']*4, *['s2']*4, *['s3']*4],
+            'mag-id': ['m1', 'm2', 'm3', 'm4']*3,
             'length': [2000, 4000, 1000, 10000]*3,
             'numreads': [10, 20, 5, 0, 12, 25, 8, 0, 30, 60, 15, 1],
         })

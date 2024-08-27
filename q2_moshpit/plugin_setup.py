@@ -1582,7 +1582,7 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
     function=q2_moshpit.eggnog.annotation.extract_annotations,
-    inputs={"ortholog_annotations": FeatureData[NOG],},
+    inputs={"ortholog_annotations": FeatureData[NOG], },
     parameters={
         "annotation": Str % Choices([
             "cog", "caz", "kegg_ko", "kegg_pathway", "kegg_reaction",

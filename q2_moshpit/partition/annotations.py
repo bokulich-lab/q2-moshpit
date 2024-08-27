@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-from q2_types.feature_data_mag import OrthologAnnotationDirFmt
+from q2_types.genome_data import OrthologAnnotationDirFmt
 from qiime2.util import duplicate
 
 

@@ -14,7 +14,7 @@ from q2_moshpit.busco.utils import (
     _partition_dataframe, _get_feature_table, _calculate_summary_stats,
     _get_mag_lengths, _validate_lineage_dataset_input
 )
-from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 from q2_moshpit.busco.types import BuscoDatabaseDirFmt
 
@@ -150,7 +150,7 @@ class TestBUSCOUtils(TestPluginBase):
         partitions = _partition_dataframe(self.df1, 15, True)
         self.assertEqual(len(partitions), 1)
         obs_shapes = [p.shape for p in partitions]
-        exp_shapes = [(15, 3),]
+        exp_shapes = [(15, 3), ]
         self.assertListEqual(obs_shapes, exp_shapes)
 
         partitions = _partition_dataframe(self.df2, 15, True)

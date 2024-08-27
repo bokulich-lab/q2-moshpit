@@ -7,18 +7,30 @@
 # ----------------------------------------------------------------------------
 import os
 import shutil
+
 import pandas as pd
 from qiime2.core.exceptions import ValidationError
+
+from q2_moshpit._utils import (
+    run_command, _process_common_input_params, colorify,
+    _calculate_md5_from_file
+)
+from q2_moshpit.eggnog.types import EggnogHmmerIdmapDirectoryFmt
+from q2_moshpit.eggnog.utils import (
+    _parse_build_diamond_db_params, _download_and_build_hmm_db,
+    _download_fastas_into_hmmer_db,
+    _validate_eggnog_hmmer_taxon_id
+)
 from q2_types.feature_data import ProteinSequencesDirectoryFormat
+from q2_types.genome_data import ProteinsDirectoryFormat
+from q2_types.profile_hmms import (
+    ProteinMultipleProfileHmmDirectoryFmt,
+    PressedProfileHmmsDirectoryFmt
+)
 from q2_types.reference_db import (
     EggnogRefDirFmt, DiamondDatabaseDirFmt, NCBITaxonomyDirFmt,
     EggnogProteinSequencesDirFmt
 )
-from .._utils import (
-    run_command, _process_common_input_params, colorify,
-    _calculate_md5_from_file
-)
-from ._utils import _parse_build_diamond_db_params
 
 
 def fetch_eggnog_db() -> EggnogRefDirFmt:
@@ -47,13 +59,13 @@ def fetch_eggnog_db() -> EggnogRefDirFmt:
 
 
 def build_custom_diamond_db(
-        seqs: ProteinSequencesDirectoryFormat,
+        seqs: ProteinSequencesDirectoryFormat,  # type: ignore
         taxonomy: NCBITaxonomyDirFmt = None,
         threads: int = 1,
         file_buffer_size: int = 67108864,
         ignore_warnings: bool = False,
         no_parse_seqids: bool = False
-        ) -> DiamondDatabaseDirFmt:
+        ) -> DiamondDatabaseDirFmt:  # type: ignore
     '''
     Builds diamond database from protein reference database file in FASTA
     format.
@@ -94,7 +106,7 @@ def build_custom_diamond_db(
     return diamond_db
 
 
-def fetch_diamond_db() -> DiamondDatabaseDirFmt:
+def fetch_diamond_db() -> DiamondDatabaseDirFmt:  # type: ignore
     """
     Downloads diamond reference database using the
     `download_eggnog_data.py` script from eggNOG. Here, this
@@ -233,12 +245,14 @@ def _validate_taxon_id(eggnog_proteins, taxon):
         )
 
     # Check for overlap with provided taxon id
-        if not str(taxon) in tax_ids:
-            raise ValueError(
-                f"'{taxon}' is not valid taxon ID. "
-                "To view all valid taxon IDs inspect e5.taxid_info.tsv "
-                "file in the eggnog_proteins input."
-            )
+    if not str(taxon) in tax_ids:
+        raise ValueError(
+            f"'{taxon}' is not valid taxon ID. "
+            "To view all valid taxon IDs inspect e5.taxid_info.tsv. "
+            "You can download it with this command: "
+            "wget "
+            "http://eggnog5.embl.de/download/eggnog_5.0/e5.taxid_info.tsv"
+        )
 
 
 def fetch_ncbi_taxonomy() -> NCBITaxonomyDirFmt:
@@ -321,3 +335,32 @@ def _collect_and_compare_md5(path_to_md5: str, path_to_file: str):
 
     # If no exception is raised, remove md5 file
     os.remove(path_to_md5)
+
+
+def fetch_eggnog_hmmer_db(taxon_id: int) -> (
+    EggnogHmmerIdmapDirectoryFmt,
+    ProteinMultipleProfileHmmDirectoryFmt,
+    PressedProfileHmmsDirectoryFmt,
+    ProteinsDirectoryFormat
+):  # type: ignore
+    _validate_eggnog_hmmer_taxon_id(taxon_id)
+
+    # Download HMMER database
+    print(colorify(
+        "Valid taxon ID. \n"
+        "Proceeding with HMMER database download and build..."
+    ))
+    idmap, hmmer_db, pressed_hmmer_db = _download_and_build_hmm_db(taxon_id)
+    print(colorify(
+        "HMM database built successfully. \n"
+        "Proceeding with FASTA files download and processing..."
+    ))
+
+    # Download fasta sequences
+    fastas = _download_fastas_into_hmmer_db(taxon_id)
+    print(colorify(
+        "FASTA files processed successfully. \n"
+        "Moving data from temporary to final location..."
+    ))
+
+    return idmap, hmmer_db, pressed_hmmer_db, fastas

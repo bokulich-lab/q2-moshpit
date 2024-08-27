@@ -137,7 +137,8 @@ def estimate_bracken(
     bracken_db: BrackenDBDirectoryFormat,
     threshold: int = 0,
     read_len: int = 100,
-    level: str = 'S'
+    level: str = 'S',
+    include_unclassified: bool = True
 ) -> (Kraken2ReportDirectoryFormat, pd.DataFrame, pd.DataFrame):
     _assert_read_lens_available(bracken_db, read_len)
 
@@ -150,8 +151,9 @@ def estimate_bracken(
         reports=reports, coverage_threshold=0.0
     )
 
-    # Bracken does not report unclassified reads in its output table,
-    # so we need to re-add them
-    table, taxonomy = _add_unclassified(table, taxonomy, kraken_reports)
+    if include_unclassified:
+        # Bracken does not report unclassified reads in its output table,
+        # so we need to re-add them
+        table, taxonomy = _add_unclassified(table, taxonomy, kraken_reports)
 
     return reports, taxonomy, table

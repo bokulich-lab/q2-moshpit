@@ -38,6 +38,7 @@ class TestBracken(TestPluginBase):
             'threshold': 5,
             'read_len': 150,
             'level': 'S',
+            'include_unclassified': True
         }
 
         self.temp_dir = tempfile.mkdtemp()
@@ -185,6 +186,7 @@ class TestBracken(TestPluginBase):
             threshold=self.kwargs['threshold'],
             read_len=self.kwargs['read_len'],
             level=self.kwargs['level'],
+            include_unclassified=self.kwargs['include_unclassified']
         )
         exp_table = pd.read_csv(
             self.get_data_path('bracken-report-with-unclassified/'

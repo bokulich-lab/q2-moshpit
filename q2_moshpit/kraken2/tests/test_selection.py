@@ -13,12 +13,14 @@ import pandas as pd
 import pandas.testing
 from pandas._testing import assert_frame_equal
 import skbio
-from q2_moshpit.kraken2 import kraken2_to_features  # , kraken2_to_mag_features
-from q2_moshpit.kraken2.select import _kraken_to_ncbi_tree, _find_lcas, kraken2_to_mag_features
+from q2_moshpit.kraken2 import kraken2_to_features
+from q2_moshpit.kraken2.select import (
+    _kraken_to_ncbi_tree, _find_lcas, kraken2_to_mag_features
+)
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_types.kraken2 import (
-    Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat,  # Kraken2OutputDirectoryFormat,
+    Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat,
 )
 
 

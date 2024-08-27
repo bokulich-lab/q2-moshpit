@@ -13,7 +13,7 @@ from subprocess import CalledProcessError
 from unittest.mock import patch
 
 import pandas as pd
-from pandas._testing import assert_frame_equal, assert_series_equal
+from pandas._testing import assert_frame_equal
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_moshpit.kraken2.bracken import (

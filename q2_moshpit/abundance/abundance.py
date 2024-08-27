@@ -34,8 +34,8 @@ def rpkm(
         A pandas Series containing the RPKM values for each sample and MAG.
     """
     df['rpk'] = df[read_counts_col] / (df[length_col] / 10**3)
-    reads_per_sample = df.groupby("sample_id")[read_counts_col].sum()
-    return df['rpk'] * 10**6 / df["sample_id"].map(reads_per_sample)
+    reads_per_sample = df.groupby("sample-id")[read_counts_col].sum()
+    return df['rpk'] * 10**6 / df["sample-id"].map(reads_per_sample)
 
 
 def tpm(
@@ -56,8 +56,8 @@ def tpm(
         A pandas Series containing the TPM values for each sample and MAG.
     """
     df['rpk'] = df[read_counts_col] / df[length_col] / 10**3
-    rpk_per_sample = df.groupby("sample_id")['rpk'].sum()
-    return df['rpk'] / df["sample_id"].map(rpk_per_sample) * 10**6
+    rpk_per_sample = df.groupby("sample-id")['rpk'].sum()
+    return df['rpk'] / df["sample-id"].map(rpk_per_sample) * 10**6
 
 
 def _merge_frames(
@@ -76,10 +76,10 @@ def _merge_frames(
         for each MAG per sample.
     """
     coverage_summed = coverage_df.groupby(
-        ["sample_id", "mag_id"]
+        ["sample-id", "mag-id"]
     ).sum().reset_index(drop=False)
     coverage_summed = coverage_summed.merge(
-        lengths_df, left_on="mag_id", right_index=True
+        lengths_df, left_on="mag-id", right_index=True
     )
     return coverage_summed
 
@@ -139,8 +139,8 @@ def _calculate_coverage(
     )
 
     df = pd.read_csv(coverage_fp, sep="\t", index_col=0)
-    df["sample_id"] = sample_id
-    df["mag_id"] = df.index.map(lambda x: x.split("_", maxsplit=1)[0])
+    df["sample-id"] = sample_id
+    df["mag-id"] = df.index.map(lambda x: x.split("_", maxsplit=1)[0])
 
     return df
 
@@ -179,7 +179,7 @@ def estimate_mag_abundance(
 
     # transform into a feature table
     feature_table = coverage_summed.pivot(
-        index='sample_id', columns='mag_id', values='abundance'
+        index='sample-id', columns='mag-id', values='abundance'
     )
     feature_table.index.name = "sample-id"
 

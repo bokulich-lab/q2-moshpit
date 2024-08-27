@@ -62,3 +62,41 @@ class TestAbundance(TestPluginBase):
             mag_lengths=self.mag_length_df,
             metric='rpkm'
         )
+        exp = pd.DataFrame({
+            "2317a4bd-778d-46fa-901c-88428b2b863e":
+                [0.0, 285.7, 142.9, 271.4, 14.3],
+            "890676ee-1310-477d-b713-457ef661b8f3":
+                [274.0, 0.0, 137.0, 13.7, 260.3]
+            },
+            index=pd.Index(
+                [f"sample{i}" for i in range(1, 6)],
+                name="sample-id"
+            )
+        )
+        exp.columns.name = "mag-id"
+        pd.testing.assert_frame_equal(obs, exp, check_exact=False, rtol=0.1)
+
+        # just double-check that we have what we expect:
+        # 2317: E. coli, 8906: M. tuberculosis
+        #           |     2317    |   8906
+        # sample1   |   0 reads   | 100 reads
+        # sample2   |   100 reads | 0 reads
+        # sample3   |   50 reads  | 50 reads
+        # sample4   |   95 reads  | 5 reads
+        # sample5   |   5 reads   | 95 reads
+        obs_rel = obs.div(obs.sum(axis=1), axis=0)
+        exp_rel = pd.DataFrame({
+            "2317a4bd-778d-46fa-901c-88428b2b863e":
+                [0.0, 1.0, 0.5, 0.95, 0.05],
+            "890676ee-1310-477d-b713-457ef661b8f3":
+                [1.0, 0.0, 0.5, 0.05, 0.95]
+            },
+            index=pd.Index(
+                [f"sample{i}" for i in range(1, 6)],
+                name="sample-id"
+            )
+        )
+        exp_rel.columns.name = "mag-id"
+        pd.testing.assert_frame_equal(
+            obs_rel, exp_rel, check_exact=False, rtol=0.1
+        )

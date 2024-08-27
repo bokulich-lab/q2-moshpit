@@ -9,9 +9,9 @@ import subprocess
 
 import pandas as pd
 
-from q2_types.feature_data import BLAST6
-from q2_types.feature_data_mag import OrthologAnnotationDirFmt
-from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.genome_data import (
+    OrthologAnnotationDirFmt, Orthologs, SeedOrthologDirFmt, OrthologFileFmt
+)
 from q2_types.reference_db import EggnogRefDirFmt
 from q2_types.sample_data import SampleData
 
@@ -70,7 +70,7 @@ def eggnog_annotate(
     _eggnog_annotate = ctx.get_action("moshpit", "_eggnog_annotate")
     collate_annotations = ctx.get_action("moshpit", "collate_annotations")
 
-    if eggnog_hits.type <= SampleData[BLAST6]:
+    if eggnog_hits.type <= SampleData[Orthologs]:
         partition_method = ctx.get_action("moshpit", "partition_orthologs")
     else:
         raise NotImplementedError()

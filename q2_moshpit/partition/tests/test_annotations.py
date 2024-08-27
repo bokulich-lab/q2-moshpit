@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 import filecmp
 from qiime2.plugin.testing import TestPluginBase
-from q2_types.feature_data_mag import OrthologAnnotationDirFmt
+from q2_types.genome_data import OrthologAnnotationDirFmt
 from ..annotations import collate_annotations
 
 

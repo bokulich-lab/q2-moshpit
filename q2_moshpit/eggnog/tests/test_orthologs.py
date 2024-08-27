@@ -14,7 +14,6 @@ import pandas as pd
 import pandas.testing as pdt
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
-from qiime2.sdk.parallel_config import ParallelConfig
 
 from q2_moshpit.eggnog import (
     _eggnog_diamond_search, eggnog_hmmer_search, _eggnog_hmmer_search
@@ -278,7 +277,7 @@ class TestDiamond(TestPluginBase):
             self.get_data_path('contig-sequences-1')
         )
 
-        with ParallelConfig():
+        with self.test_config:
             _, parallel = self.eggnog_diamond_search.parallel(
                     contigs,
                     self.diamond_db_artifact
@@ -300,7 +299,7 @@ class TestDiamond(TestPluginBase):
             self.get_data_path('mag-sequences')
         )
 
-        with ParallelConfig():
+        with self.test_config:
             _, parallel = self.eggnog_diamond_search.parallel(
                     mags,
                     self.diamond_db_artifact
@@ -322,7 +321,7 @@ class TestDiamond(TestPluginBase):
             self.get_data_path('mag-sequences-per-sample')
         )
 
-        with ParallelConfig():
+        with self.test_config:
             _, parallel = self.eggnog_diamond_search.parallel(
                     mags,
                     self.diamond_db_artifact

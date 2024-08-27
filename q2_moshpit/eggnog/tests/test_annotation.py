@@ -11,13 +11,12 @@ import pandas as pd
 import pandas.testing as pdt
 import qiime2
 from qiime2.plugin.testing import TestPluginBase
-from qiime2.sdk.parallel_config import ParallelConfig
 
 from q2_moshpit.eggnog import (
     _eggnog_annotate
 )
-from q2_types.feature_data_mag import OrthologAnnotationDirFmt
-from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.genome_data import (OrthologAnnotationDirFmt,
+                                  SeedOrthologDirFmt, OrthologFileFmt)
 from q2_types.reference_db import (
     EggnogRefDirFmt
 )
@@ -61,11 +60,11 @@ class TestAnnotate(TestPluginBase):
 
     def test_eggnog_annotate_parallel(self):
         orthologs = qiime2.Artifact.import_data(
-            'SampleData[BLAST6]',
+            'SampleData[Orthologs]',
             self.get_data_path('good_hits/')
         )
 
-        with ParallelConfig():
+        with self.test_config:
             parallel, = self.eggnog_annotate.parallel(
                     orthologs,
                     self.eggnog_db_artifact

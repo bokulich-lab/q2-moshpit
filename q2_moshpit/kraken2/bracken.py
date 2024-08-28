@@ -116,19 +116,46 @@ def _add_unclassified(
         taxonomy: pd.Series,
         reports: Kraken2ReportDirectoryFormat
 ) -> (pd.DataFrame, pd.Series):
-    samples = table.index.tolist()
-    for sample in samples:
+    """
+    Adds unclassified read counts from Kraken2 reports to
+    the given feature table and taxonomy.
+
+    This function reads the Kraken2 report files for each sample and extracts
+    the number of unclassified reads. It adds these counts to the table under
+    the taxonomy ID '0'. If the '0' taxonomy ID does not exist in the
+    taxonomy series, it is added with the description 'd__Unclassified'.
+    Samples without unclassified reads will have a count of 0 added to the
+    table for taxonomy ID '0'.
+
+    Args:
+        table (pd.DataFrame): DataFrame with sample read counts.
+        taxonomy (pd.Series): Series mapping taxonomy IDs to names.
+        reports (Kraken2ReportDirectoryFormat): Directory containing
+            Kraken2 report files.
+
+    Returns:
+        pd.DataFrame: Updated table with unclassified read counts.
+        pd.Series: Updated taxonomy with '0' as 'd__Unclassified'
+            if not already present.
+    """
+    unclassified_counts = {}
+    found_unclassified = False
+
+    for sample in table.index:
         report_fp = os.path.join(reports.path, f"{sample}.report.txt")
         with open(report_fp, "r") as f:
             line = f.readline()
             if "unclassified" in line:
-                unclassified = int(line.split("\t")[1])
-                if '0' not in taxonomy.index:
-                    taxonomy.loc['0'] = "d__Unclassified"
-                table.loc[sample, '0'] = unclassified
+                unclassified_counts[sample] = int(line.split("\t")[1])
+                found_unclassified = True
             else:
-                if '0' in taxonomy.index:
-                    table.loc[sample, '0'] = 0
+                unclassified_counts[sample] = 0
+
+    if found_unclassified and '0' not in taxonomy:
+        taxonomy.loc['0'] = "d__Unclassified"
+
+    table['0'] = table.index.map(unclassified_counts).fillna(0)
+
     return table, taxonomy
 
 

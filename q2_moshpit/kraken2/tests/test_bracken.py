@@ -194,6 +194,7 @@ class TestBracken(TestPluginBase):
             index_col=0
         )
         exp_table.index = pd.Index(exp_table.index, name='sample_id')
+        exp_table['0'] = exp_table['0'].astype(int)
         exp_taxonomy = pd.read_csv(
             self.get_data_path('bracken-report-with-unclassified/'
                                'taxonomy.csv'),

@@ -34,7 +34,7 @@ def _fetch_and_extract_pangenome(uri: str, dest_dir: str):
         run_command(["wget", uri, "-q", "-O", dest_fp])
     except Exception as e:
         raise Exception(
-            "Unable to connect to the EBI server. Please try again later. "
+            "Unable to connect to the server. Please try again later. "
             f"The error was: {e}"
         )
 

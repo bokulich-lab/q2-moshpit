@@ -138,6 +138,7 @@ setup(
             'data/*',
             'data/mags/*',
             'data/mags/*/*',
+            'data/pangenome/*'
         ],
     },
     zip_safe=False,

@@ -8,16 +8,16 @@
 import filecmp
 import os
 import shutil
-import tempfile
 import unittest
 from unittest.mock import Mock, patch, ANY, call, MagicMock
 
 import pandas as pd
 import qiime2
-from jupyter_server.pytest_plugin import some_resource
 
-from q2_moshpit.filtering.filter_pangenome import _fetch_and_extract_grch38, _extract_fasta_from_gfa, \
+from q2_moshpit.filtering.filter_pangenome import (
+    _fetch_and_extract_grch38, _extract_fasta_from_gfa,
     _fetch_and_extract_pangenome, filter_reads_pangenome, EBI_SERVER_URL
+)
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_moshpit.busco.types import BUSCOResultsFormat

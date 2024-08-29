@@ -12,8 +12,7 @@ test: all
 	py.test
 
 test-cov: all
-	coverage run -m pytest
-	coverage xml
+	pytest --cov q2_moshpit --cov-report xml:coverage.xml --pyargs q2_moshpit
 
 install: all
 	$(PYTHON) setup.py install

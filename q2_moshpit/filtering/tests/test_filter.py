@@ -17,7 +17,8 @@ import qiime2
 
 from q2_moshpit.filtering.filter_pangenome import (
     _fetch_and_extract_grch38, _extract_fasta_from_gfa,
-    _fetch_and_extract_pangenome, filter_reads_pangenome, EBI_SERVER_URL, _combine_fasta_files
+    _fetch_and_extract_pangenome, filter_reads_pangenome,
+    _combine_fasta_files, EBI_SERVER_URL
 )
 from qiime2.plugin.testing import TestPluginBase
 

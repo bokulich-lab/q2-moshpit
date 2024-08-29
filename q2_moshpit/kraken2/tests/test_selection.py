@@ -13,12 +13,14 @@ import pandas as pd
 import pandas.testing
 from pandas._testing import assert_frame_equal
 import skbio
-from q2_moshpit.kraken2 import kraken2_to_features  # , kraken2_to_mag_features
-from q2_moshpit.kraken2.select import _kraken_to_ncbi_tree, _find_lcas
+from q2_moshpit.kraken2 import kraken2_to_features
+from q2_moshpit.kraken2.select import (
+    _kraken_to_ncbi_tree, _find_lcas, kraken2_to_mag_features
+)
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_types.kraken2 import (
-    Kraken2ReportDirectoryFormat,  # Kraken2OutputDirectoryFormat,
+    Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat,
 )
 
 
@@ -120,22 +122,51 @@ class TestKrakenSelect(TestPluginBase):
         # skbio changes its iteration order, this should be stable enough)
         self.assertEqual(str(obs_tree), str(exp_tree))
 
-    # The following test is currently failing b/c the format is looking
-    # for file names that don't exist in the `outputs-mags` directory. It's
-    # looking for `outputs-mags/sample1/sample1.output.txt`, but the file
-    # that is present is `outputs-mags/sample1/bin1.output.txt`. This
-    # will be addressed as part of the changes discussed under
-    # https://github.com/bokulich-lab/q2-moshpit/discussions/45
-    # def test_kraken2_to_mag_features_default(self):
-    #     reports = Kraken2ReportDirectoryFormat(
-    #         self.get_data_path("reports-mags"), "r"
-    #     )
-    #     hits = Kraken2OutputDirectoryFormat(
-    #         self.get_data_path("outputs-mags"), "r"
-    #     )
-    #     obs_table, obs_taxonomy = kraken2_to_mag_features(
-    #         reports, hits, 0.0
-    #     )
+    def test_kraken2_to_mag_features(self):
+        reports = Kraken2ReportDirectoryFormat(
+            self.get_data_path("reports-mags"), "r"
+        )
+        hits = Kraken2OutputDirectoryFormat(
+            self.get_data_path("outputs-mags"), "r"
+        )
+        obs = kraken2_to_mag_features(reports, hits, 0.0)
+        exp = pd.DataFrame.from_dict({
+            '3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa': [
+                'd__Bacteria;k__Bacteria;p__Firmicutes;c__Bacilli'
+            ],
+            '8894435a-c836-4c18-b475-8b38a9ab6c6b': ['d__Unclassified'],
+        }, orient='index')
+        exp.columns = ['Taxon']
+        exp.index.name = 'Feature ID'
+        pandas.testing.assert_frame_equal(obs, exp)
+
+    def test_kraken2_to_mag_features_incorrect_fraction_unclassified(self):
+        reports = Kraken2ReportDirectoryFormat(
+            self.get_data_path("reports-mags-unclassified-wrong-frac"), "r"
+        )
+        hits = Kraken2OutputDirectoryFormat(
+            self.get_data_path("outputs-mags"), "r"
+        )
+        with self.assertRaisesRegex(
+                ValueError,
+                "fraction for MAG '8894435a-c836-4c18-b475-8b38a9ab6c6b' "
+                "is not .* 99.01%"
+        ):
+            kraken2_to_mag_features(reports, hits, 0.0)
+
+    def test_kraken2_to_mag_features_missing_fraction_unclassified(self):
+        reports = Kraken2ReportDirectoryFormat(
+            self.get_data_path("reports-mags-unclassified-missing-frac"), "r"
+        )
+        hits = Kraken2OutputDirectoryFormat(
+            self.get_data_path("outputs-mags"), "r"
+        )
+        with self.assertRaisesRegex(
+                ValueError,
+                "line for MAG '8894435a-c836-4c18-b475-8b38a9ab6c6b' "
+                "is missing"
+        ):
+            kraken2_to_mag_features(reports, hits, 0.0)
 
     def test_find_lcas_mode_lca(self):
         taxa = [self.taxa_mag1, self.taxa_mag2, self.taxa_mag3, self.taxa_mag4]

@@ -17,7 +17,7 @@ import qiime2
 
 from q2_moshpit.filtering.filter_pangenome import (
     _fetch_and_extract_grch38, _extract_fasta_from_gfa,
-    _fetch_and_extract_pangenome, filter_reads_pangenome, EBI_SERVER_URL
+    _fetch_and_extract_pangenome, filter_reads_pangenome, EBI_SERVER_URL, _combine_fasta_files
 )
 from qiime2.plugin.testing import TestPluginBase
 
@@ -232,6 +232,45 @@ class TestMAGFiltering(TestPluginBase):
     def test_fetch_and_extract_pangenome_error(self, p1):
         with self.assertRaisesRegex(Exception, "Unable to connect"):
             _fetch_and_extract_pangenome("http://hello.org", "/some/where")
+
+    def test_combine_fasta_files_single(self):
+        fname1 = "grch38"
+        file1 = os.path.join(self.temp_dir.name, f"{fname1}.fasta")
+        shutil.copy(
+            self.get_data_path(f"pangenome/{fname1}.fasta"),
+            file1
+        )
+        obs = os.path.join(self.temp_dir.name, "out.fasta")
+
+        _combine_fasta_files(file1, fasta_out_fp=obs)
+
+        self.assertTrue(
+            filecmp.cmp(
+                self.get_data_path(f"pangenome/{fname1}.fasta"), obs
+            ), "Files are not identical"
+        )
+
+    def test_combine_fasta_files_multi(self):
+        fname1, fname2 = "pangenome", "grch38"
+        file1 = os.path.join(self.temp_dir.name, f"{fname1}.fasta")
+        file2 = os.path.join(self.temp_dir.name, f"{fname2}.fasta")
+        shutil.copy(
+            self.get_data_path(f"pangenome/{fname1}.fasta"),
+            file1
+        )
+        shutil.copy(
+            self.get_data_path(f"pangenome/{fname2}.fasta"),
+            file2
+        )
+        obs = os.path.join(self.temp_dir.name, "out.fasta")
+
+        _combine_fasta_files(file1, file2, fasta_out_fp=obs)
+
+        self.assertTrue(
+            filecmp.cmp(
+                self.get_data_path("pangenome/combined.fasta"), obs
+            ), "Files are not identical"
+        )
 
     @patch(
         'q2_moshpit.filtering.filter_pangenome._fetch_and_extract_pangenome'

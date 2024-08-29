@@ -71,6 +71,7 @@ setup(
         ],
         'q2_moshpit.eggnog.tests': [
             'data/*',
+            'data/annotations/*',
             'data/build_eggnog_diamond_db/*',
             'data/contig-sequences-1/*',
             'data/eggnog_db/*',

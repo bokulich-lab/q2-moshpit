@@ -152,6 +152,15 @@ class TestAnnotationExtraction(TestPluginBase):
         )
         pd.testing.assert_frame_equal(obs_ft, exp_ft)
 
+    def test_extract_annotations_not_implemented(self):
+        with self.assertRaisesRegex(
+                NotImplementedError, "Annotation 'hello' not supported."
+        ):
+            extract_annotations(
+                ortholog_annotations=self.annotations,
+                annotation="hello"
+            )
+
     def test_extract_generic(self):
         obs = _extract_generic(
             self.annotation_df, "EC", lambda x: pd.Series(x.split("."))

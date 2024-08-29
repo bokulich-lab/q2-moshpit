@@ -166,7 +166,7 @@ def extract_annotations(
     extract_method = globals().get(f"_extract_{annotation}")
     if not extract_method:
         raise NotImplementedError(
-            f"Annotation method {annotation} not supported"
+            f"Annotation '{annotation}' not supported."
         )
 
     annotations = []

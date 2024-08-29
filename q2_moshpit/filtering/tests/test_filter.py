@@ -5,9 +5,11 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import difflib
 import filecmp
 import os
 import shutil
+import tempfile
 import unittest
 from unittest.mock import Mock, patch, ANY, call, MagicMock
 
@@ -240,9 +242,16 @@ class TestMAGFiltering(TestPluginBase):
     def test_filter_reads_pangenome(
             self, mock_extract_fasta, mock_fetch_grch38, mock_fetch_pangenome
     ):
+        # we don't use the temp_dir from the test class as its content
+        # would get deleted within the context that is being tested -
+        # we need to be able to read files from that directory after
+        # the function being tested exits
+        temp_dir = tempfile.mkdtemp()
+
+        # we construct our own context so that we can control each "action"
+        # being retrieved from it
         ctx = MagicMock()
         ctx.get_action.return_value = MagicMock()
-
         mock_build_index_result = MagicMock()
         ctx.get_action(
             "quality_control", "bowtie2_build"
@@ -255,27 +264,27 @@ class TestMAGFiltering(TestPluginBase):
         ctx.make_artifact.return_value = MagicMock()
 
         reads = MagicMock()
-        index = None
-        n_threads = 1
 
-        open(os.path.join(self.temp_dir.name, "pangenome.gfa"), 'w').close()
+        # prepare some files which will be used by _combined_fasta_files
+        open(os.path.join(temp_dir, "pangenome.gfa"), 'w').close()
         shutil.copy(
             self.get_data_path("pangenome/grch38.fasta"),
-            os.path.join(self.temp_dir.name, "grch38.fasta")
+            os.path.join(temp_dir, "grch38.fasta")
         )
         shutil.copy(
             self.get_data_path("pangenome/pangenome.fasta"),
-            os.path.join(self.temp_dir.name, "pangenome.fasta")
+            os.path.join(temp_dir, "pangenome.fasta")
         )
-        with patch(
-                'tempfile.TemporaryDirectory',
-                return_value=self.temp_dir
-        ) as mock_tempdir:
+
+        with patch('tempfile.TemporaryDirectory',
+                   return_value=MagicMock(name='TemporaryDirectory',
+                                          __enter__=lambda x: temp_dir,
+                                          __exit__=lambda x, y, z, w: None)):
             filtered_reads, generated_index = filter_reads_pangenome(
                 ctx=ctx,
                 reads=reads,
-                index=index,
-                n_threads=n_threads
+                index=None,
+                n_threads=1
             )
 
             # Assertions
@@ -284,37 +293,48 @@ class TestMAGFiltering(TestPluginBase):
             ctx.get_action.assert_any_call("quality_control", "filter_reads")
 
             mock_fetch_pangenome.assert_called_once_with(
-                EBI_SERVER_URL, self.temp_dir.name
+                EBI_SERVER_URL, temp_dir
             )
             mock_fetch_grch38.assert_called_once_with(
-                ctx.get_action("rescript", "get_ncbi_genomes"),
-                self.temp_dir.name
+                ctx.get_action("rescript", "get_ncbi_genomes"), temp_dir
             )
             mock_extract_fasta.assert_called_once_with(
-                os.path.join(self.temp_dir.name, "pangenome.gfa"),
-                os.path.join(self.temp_dir.name, "pangenome.fasta")
-            )
-            assert filecmp.cmp(
-                self.get_data_path("pangenome/combined.fasta"),
-                os.path.join(self.temp_dir.name, "combined.fasta")
+                os.path.join(temp_dir, "pangenome.gfa"),
+                os.path.join(temp_dir, "pangenome.fasta")
             )
 
-            ctx.make_artifact.assert_called_once(
+            self.assertTrue(
+                filecmp.cmp(
+                    self.get_data_path('pangenome/combined.fasta'),
+                    os.path.join(temp_dir, 'combined.fasta')
+                ),
+                "Files are not identical"
+            )
+
+            ctx.make_artifact.assert_called_once_with(
                 "FeatureData[Sequence]",
-                os.path.join(self.temp_dir.name, "combined.fasta")
+                os.path.join(temp_dir, "combined.fasta")
             )
             ctx.get_action(
-                "quality_control", "bowtie2_build"
-            ).assert_called_once()
-            ctx.get_action(
-                "quality_control", "filter_reads"
-            ).assert_called_once_with(
-                demultiplexed_sequences=reads,
-                database=index,
-                exclude_seqs=True,
-                n_threads=n_threads
+                'quality_control', 'bowtie2_build'
+            ).assert_has_calls(
+                [call(sequences=ANY, n_threads=1)], any_order=True
             )
+            ctx.get_action(
+                'quality_control', 'filter_reads'
+            ).assert_has_calls([call(
+                    demultiplexed_sequences=reads,
+                    database=generated_index,
+                    exclude_seqs=True,
+                    n_threads=1,
+                    mode='local',
+                    ref_gap_open_penalty=5,
+                    ref_gap_ext_penalty=3
+                )], any_order=True)
             self.assertIsNotNone(generated_index)
+
+        # clean up
+        shutil.rmtree(temp_dir)
 
 
 if __name__ == "__main__":

@@ -287,7 +287,8 @@ plugin.methods.register_function(
     parameters={
         'threshold': Int % Range(0, None),
         'read_len': Int % Range(0, None),
-        'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S'])
+        'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S']),
+        'include_unclassified': Bool
     },
     outputs=[
         ('reports', SampleData[Kraken2Reports % Properties('bracken')]),
@@ -304,7 +305,10 @@ plugin.methods.register_function(
         'read_len': ('Bracken: read length to get all classifications for. '
                      'For paired end data (e.g., 2x150) this should be set '
                      'to the length of the single-end reads (e.g., 150).'),
-        'level': 'Bracken: taxonomic level to estimate abundance at.'
+        'level': 'Bracken: taxonomic level to estimate abundance at.',
+        'include_unclassified': 'Bracken does not include the unclassified '
+                                'read counts in the feature table. Set this '
+                                'to True to include those regardless.'
     },
     output_descriptions={
         'reports': 'Reports modified by Bracken.',

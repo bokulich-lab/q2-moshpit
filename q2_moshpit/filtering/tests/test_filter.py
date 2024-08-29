@@ -273,6 +273,15 @@ class TestMAGFiltering(TestPluginBase):
             ), "Files are not identical"
         )
 
+    @patch("subprocess.run", side_effect=OSError)
+    def test_combine_fasta_files_error(self, p1):
+        obs = os.path.join(self.temp_dir.name, "out.fasta")
+
+        with self.assertRaisesRegex(
+                Exception, "Failed to add the /fake/file"
+        ):
+            _combine_fasta_files("/fake/file", fasta_out_fp=obs)
+
     @patch(
         'q2_moshpit.filtering.filter_pangenome._fetch_and_extract_pangenome'
     )

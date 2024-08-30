@@ -15,11 +15,7 @@ from qiime2.plugin.testing import TestPluginBase
 from q2_moshpit.eggnog import (
     _eggnog_annotate, extract_annotations
 )
-from q2_moshpit.eggnog.annotation import (
-    _extract_generic, _extract_cog, _extract_kegg_ko, _extract_kegg_pathway,
-    _extract_kegg_module, _extract_kegg_reaction, _extract_brite,
-    _extract_caz, _filter
-)
+from q2_moshpit.eggnog.annotation import _extract_generic, _filter, extraction_methods
 from q2_types.genome_data import (
     OrthologAnnotationDirFmt, SeedOrthologDirFmt, OrthologFileFmt
 )
@@ -171,12 +167,14 @@ class TestAnnotationExtraction(TestPluginBase):
         pd.testing.assert_series_equal(obs, exp)
 
     def test_extract_cog(self):
-        obs = _extract_cog(self.annotation_df)
+        col, func = extraction_methods["cog"]
+        obs = _extract_generic(self.annotation_df, col, func)
         exp = pd.Series([2, 1, 1], ["L", "F", "A"], name="count")
         pd.testing.assert_series_equal(obs, exp)
 
     def test_extract_kegg_ko(self):
-        obs = _extract_kegg_ko(self.annotation_df)
+        col, func = extraction_methods["kegg_ko"]
+        obs = _extract_generic(self.annotation_df, col, func)
         exp = pd.Series(
             [1, 1, 1, 1], ["K01955", "K02621", "K16898", "K03722"],
             name="count"
@@ -184,7 +182,8 @@ class TestAnnotationExtraction(TestPluginBase):
         pd.testing.assert_series_equal(obs, exp)
 
     def test_extract_kegg_pathway(self):
-        obs = _extract_kegg_pathway(self.annotation_df)
+        col, func = extraction_methods["kegg_pathway"]
+        obs = _extract_generic(self.annotation_df, col, func)
         exp = pd.Series(
             [1, 1, 1], ["map00240", "map00250", "map01100"],
             name="count"
@@ -192,12 +191,14 @@ class TestAnnotationExtraction(TestPluginBase):
         pd.testing.assert_series_equal(obs, exp)
 
     def test_extract_kegg_module(self):
-        obs = _extract_kegg_module(self.annotation_df)
+        col, func = extraction_methods["kegg_module"]
+        obs = _extract_generic(self.annotation_df, col, func)
         exp = pd.Series([1], ["M00051"], name="count")
         pd.testing.assert_series_equal(obs, exp)
 
     def test_extract_kegg_reaction(self):
-        obs = _extract_kegg_reaction(self.annotation_df)
+        col, func = extraction_methods["kegg_reaction"]
+        obs = _extract_generic(self.annotation_df, col, func)
         exp = pd.Series(
             [1, 1, 1, 1, 1],
             ["R00256", "R00575", "R01395", "R10948", "R10949"],
@@ -206,17 +207,19 @@ class TestAnnotationExtraction(TestPluginBase):
         pd.testing.assert_series_equal(obs, exp)
 
     def test_extract_brite(self):
-        obs = _extract_brite(self.annotation_df)
+        col, func = extraction_methods["brite"]
+        obs = _extract_generic(self.annotation_df, col, func)
         exp = pd.Series(
             [4, 4, 2, 1, 1, 1, 1, 1],
             ["ko00000", "ko01000", "ko03400", "ko00001",
-                "ko00002", "ko02048", "ko03032", "ko03036"],
+             "ko00002", "ko02048", "ko03032", "ko03036"],
             name="count"
         )
         pd.testing.assert_series_equal(obs, exp)
 
     def test_extract_caz(self):
-        obs = _extract_caz(self.annotation_df)
+        col, func = extraction_methods["caz"]
+        obs = _extract_generic(self.annotation_df, col, func)
         exp = pd.Series(name="count")
         pd.testing.assert_series_equal(
             obs, exp, check_index=False, check_dtype=False

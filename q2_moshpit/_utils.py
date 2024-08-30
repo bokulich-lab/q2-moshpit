@@ -109,11 +109,6 @@ def _multiply(
         table1: pd.DataFrame, table2: pd.DataFrame
 ) -> pd.DataFrame:
     """Calculate dot product of two tables."""
-    # if table1.shape[1] != table2.shape[0]:
-    #     raise ValueError(
-    #         f"Tables do not have compatible dimensions for dot product: "
-    #         f"{table1.shape[1]} != {table2.shape[0]}."
-    #     )
     if not table1.columns.equals(table2.index):
         raise ValueError(
             "Columns of the first table do not match the index of the second."

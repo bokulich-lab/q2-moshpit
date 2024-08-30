@@ -100,49 +100,26 @@ def _extract_generic(
             data = data.drop(char, axis=0, inplace=False)
     return data
 
-
-def _extract_cog(data: pd.DataFrame) -> pd.Series:
-    return _extract_generic(
-        data, "COG_category", lambda x: pd.Series(list(x))
-    )
-
-
-def _extract_kegg_ko(data: pd.DataFrame) -> pd.Series:
-    return _extract_generic(
-        data, "KEGG_ko", lambda x: pd.Series([i[3:] for i in x.split(",")])
-    )
-
-
-def _extract_kegg_pathway(data: pd.DataFrame) -> pd.Series:
-    return _extract_generic(
-        data, "KEGG_Pathway", lambda x: pd.Series(
-            [i for i in x.split(",") if i.startswith("map")]
-        )
-    )
-
-
-def _extract_kegg_module(data: pd.DataFrame) -> pd.Series:
-    return _extract_generic(
-        data, "KEGG_Module", lambda x: pd.Series(x.split(","))
-    )
-
-
-def _extract_kegg_reaction(data: pd.DataFrame) -> pd.Series:
-    return _extract_generic(
-        data, "KEGG_Reaction", lambda x: pd.Series(x.split(","))
-    )
-
-
-def _extract_brite(data: pd.DataFrame) -> pd.Series:
-    return _extract_generic(
-        data, "BRITE", lambda x: pd.Series(x.split(","))
-    )
-
-
-def _extract_caz(data: pd.DataFrame) -> pd.Series:
-    return _extract_generic(
-        data, "CAZy", lambda x: pd.Series(x.split(","))
-    )
+# this dictionary contains all the supported annotation types
+# each value represents a tuple of:
+# 1. original annotation column name (as it appears in the annotation table)
+# 2. lambda function which will process values of that column and expand them
+#   into a new series of values
+extraction_methods = {
+    "cog": ("COG_category", lambda x: pd.Series(list(x))),
+    "kegg_ko": (
+        "KEGG_ko",
+        lambda x: pd.Series([i[3:] for i in x.split(",")])
+    ),
+    "kegg_pathway": (
+        "KEGG_Pathway",
+        lambda x: pd.Series([i for i in x.split(",") if i.startswith("map")])
+    ),
+    "kegg_module": ("KEGG_Module", lambda x: pd.Series(x.split(","))),
+    "kegg_reaction": ("KEGG_Reaction", lambda x: pd.Series(x.split(","))),
+    "brite": ("BRITE", lambda x: pd.Series(x.split(","))),
+    "caz": ("CAZy", lambda x: pd.Series(x.split(",")))
+}
 
 
 def _filter(
@@ -163,11 +140,13 @@ def extract_annotations(
         max_evalue: float = 1.0,
         min_score: float = 0.0
 ) -> pd.DataFrame:
-    extract_method = globals().get(f"_extract_{annotation}")
+    extract_method = extraction_methods.get(annotation)
     if not extract_method:
         raise NotImplementedError(
             f"Annotation '{annotation}' not supported."
         )
+    else:
+        col, func = extract_method
 
     annotations = []
     for _id, fp in ortholog_annotations.annotation_dict().items():
@@ -176,7 +155,7 @@ def extract_annotations(
         )  # skip the first 4 rows as they contain comments
         annot_df = annot_df.iloc[:-3, :]  # remove the last 3 comment rows
         annot_df = _filter(annot_df, max_evalue, min_score)
-        annot_df = extract_method(annot_df)
+        annot_df = _extract_generic(annot_df, col, func)
         annot_df.name = _id
         annotations.append(annot_df)
 

@@ -15,7 +15,9 @@ from qiime2.plugin.testing import TestPluginBase
 from q2_moshpit.eggnog import (
     _eggnog_annotate, extract_annotations
 )
-from q2_moshpit.eggnog.annotation import _extract_generic, _filter, extraction_methods
+from q2_moshpit.eggnog.annotation import (
+    _extract_generic, _filter, extraction_methods
+)
 from q2_types.genome_data import (
     OrthologAnnotationDirFmt, SeedOrthologDirFmt, OrthologFileFmt
 )

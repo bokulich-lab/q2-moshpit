@@ -100,6 +100,7 @@ def _extract_generic(
             data = data.drop(char, axis=0, inplace=False)
     return data
 
+
 # this dictionary contains all the supported annotation types
 # each value represents a tuple of:
 # 1. original annotation column name (as it appears in the annotation table)

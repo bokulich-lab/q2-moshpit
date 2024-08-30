@@ -756,10 +756,8 @@ plugin.methods.register_function(
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'sequences': 'Sequence data of the contigs we want to '
-                     'search for hits using the Diamond Database.',
-        'diamond_db': 'The filepath to an artifact containing the '
-                      'Diamond database.',
+        'sequences': 'Sequences to be searched for ortholog hits.',
+        'diamond_db': 'Diamond database.',
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
@@ -1250,7 +1248,7 @@ plugin.methods.register_function(
     },
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "(Benchmarking Universal Single-Copy Orthologs assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
                 "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
@@ -1283,7 +1281,7 @@ plugin.pipelines.register_function(
     },
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "(Benchmarking Universal Single-Copy Orthologs assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
                 "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
@@ -1630,6 +1628,52 @@ plugin.pipelines.register_function(
                 "GRCh38 reference genome and the draft human pangenome, and"
                 "uses that index to remove the contaminating human reads from "
                 "the reads provided as input.",
+    citations=[],
+)
+
+M_abundance_in, P_abundance_out = TypeMap({
+    Str % Choices(['rpkm']): Properties('rpkm'),
+    Str % Choices(['tpm']): Properties('tpm'),
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.abundance.estimate_mag_abundance,
+    inputs={
+        "maps": FeatureData[AlignmentMap],
+        "mag_lengths":
+            FeatureData[SequenceCharacteristics % Properties("length")],
+    },
+    parameters={
+        "metric": M_abundance_in,
+        "min_mapq": Int % Range(0, 255),
+        "min_query_len": Int % Range(0, None),
+        "min_base_quality": Int % Range(0, None),
+        "min_read_len": Int % Range(0, None),
+        "threads": Int % Range(1, None),
+    },
+    outputs=[
+        ("abundances", FeatureTable[Frequency % P_abundance_out]),
+    ],
+    input_descriptions={
+        "maps": "Bowtie2 alignment maps between reads and MAGs for which "
+                "the abundance should be estimated.",
+        "mag_lengths": "Table containing length of every MAG.",
+    },
+    parameter_descriptions={
+        "metric": "Metric to be used as a proxy of MAG abundance.",
+        "min_mapq": "Minimum mapping quality.",
+        "min_query_len": "Minimum query length.",
+        "min_base_quality": "Minimum base quality.",
+        "min_read_len": "Minimum read length.",
+        "threads": "Number of threads to pass to samtools."
+    },
+    output_descriptions={
+        "abundances": "MAG abundances.",
+    },
+    name="Estimate MAG abundance.",
+    description="This method estimates MAG abundances by mapping the "
+                "reads to MAGs and calculating respective metric values"
+                "which are then used as a proxy for the frequency.",
     citations=[],
 )
 

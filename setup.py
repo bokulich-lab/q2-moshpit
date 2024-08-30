@@ -143,7 +143,15 @@ setup(
             'data/*',
             'data/mags/*',
             'data/mags/*/*',
+            'data/pangenome/*'
         ],
+        'q2_moshpit.abundance.tests': [
+            'data/*',
+            'data/mag-index/*',
+            'data/mag-sequences/*',
+            'data/reads/*',
+            'data/reads-mapped/*'
+        ]
     },
     zip_safe=False,
 )

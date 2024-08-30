@@ -6,8 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import importlib
-from qiime2.plugin import Metadata
 
+from q2_quality_control.plugin_setup import (
+    filter_parameters, filter_parameter_descriptions
+)
+from qiime2.plugin import Metadata
 from q2_moshpit.eggnog.types import (
     EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt, EggnogHmmerIdmap
 )
@@ -15,6 +18,7 @@ from q2_moshpit.busco.types import (
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
     BUSCOResults, BuscoDB
 )
+from q2_types.bowtie2 import Bowtie2Index
 from q2_types.profile_hmms import ProfileHMM, MultipleProtein, PressedProtein
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
@@ -754,7 +758,7 @@ plugin.methods.register_function(
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'sequences': 'Sequences to be searched for hits.',
+        'sequences': 'Sequences to be searched for ortholog hits.',
         'diamond_db': 'Diamond database.',
     },
     parameter_descriptions={
@@ -1246,7 +1250,7 @@ plugin.methods.register_function(
     },
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "(Benchmarking Universal Single-Copy Orthologs assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
                 "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
@@ -1279,7 +1283,7 @@ plugin.pipelines.register_function(
     },
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "(Benchmarking Universal Single-Copy Orthologs assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
                 "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
@@ -1582,6 +1586,97 @@ plugin.methods.register_function(
         citations["huerta_cepas_eggnog_2019"],
         citations["noauthor_hmmer_nodate"]
     ]
+)
+
+I_reads, O_reads = TypeMap({
+    SampleData[SequencesWithQuality]:
+        SampleData[SequencesWithQuality],
+    SampleData[PairedEndSequencesWithQuality]:
+        SampleData[PairedEndSequencesWithQuality],
+})
+
+plugin.pipelines.register_function(
+    function=q2_moshpit.filtering.filter_reads_pangenome,
+    inputs={
+        "reads": I_reads,
+        "index": Bowtie2Index
+    },
+    parameters={
+        k: v for (k, v) in filter_parameters.items() if k != "exclude_seqs"
+    },
+    outputs=[
+        ("filtered_reads", O_reads),
+        ("reference_index", Bowtie2Index)
+    ],
+    input_descriptions={
+        "reads": "Reads to be filtered against the human genome.",
+        "index": "Bowtie2 index of the reference human genome. If not "
+                 "provided, an index combined from the reference GRCh38 "
+                 "human genome and the human pangenome will be generated."
+    },
+    parameter_descriptions={
+        k: v for (k, v) in filter_parameter_descriptions.items()
+        if k != "exclude_seqs"
+    },
+    output_descriptions={
+        "filtered_reads": "Original reads without the contaminating "
+                          "human reads.",
+        "reference_index": "Generated combined human reference index. If an "
+                           "index was provided as an input, it will be "
+                           "returned here instead."
+    },
+    name="Remove contaminating human reads.",
+    description="This method generates a Bowtie2 index fo the combined human "
+                "GRCh38 reference genome and the draft human pangenome, and"
+                "uses that index to remove the contaminating human reads from "
+                "the reads provided as input.",
+    citations=[],
+)
+
+M_abundance_in, P_abundance_out = TypeMap({
+    Str % Choices(['rpkm']): Properties('rpkm'),
+    Str % Choices(['tpm']): Properties('tpm'),
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.abundance.estimate_mag_abundance,
+    inputs={
+        "maps": FeatureData[AlignmentMap],
+        "mag_lengths":
+            FeatureData[SequenceCharacteristics % Properties("length")],
+    },
+    parameters={
+        "metric": M_abundance_in,
+        "min_mapq": Int % Range(0, 255),
+        "min_query_len": Int % Range(0, None),
+        "min_base_quality": Int % Range(0, None),
+        "min_read_len": Int % Range(0, None),
+        "threads": Int % Range(1, None),
+    },
+    outputs=[
+        ("abundances", FeatureTable[Frequency % P_abundance_out]),
+    ],
+    input_descriptions={
+        "maps": "Bowtie2 alignment maps between reads and MAGs for which "
+                "the abundance should be estimated.",
+        "mag_lengths": "Table containing length of every MAG.",
+    },
+    parameter_descriptions={
+        "metric": "Metric to be used as a proxy of MAG abundance.",
+        "min_mapq": "Minimum mapping quality.",
+        "min_query_len": "Minimum query length.",
+        "min_base_quality": "Minimum base quality.",
+        "min_read_len": "Minimum read length.",
+        "threads": "Number of threads to pass to samtools."
+    },
+    output_descriptions={
+        "abundances": "MAG abundances.",
+    },
+    name="Estimate MAG abundance.",
+    description="This method estimates MAG abundances by mapping the "
+                "reads to MAGs and calculating respective metric values"
+                "which are then used as a proxy for the frequency.",
+    citations=[],
 )
 
 plugin.methods.register_function(

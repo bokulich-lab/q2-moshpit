@@ -1345,6 +1345,8 @@ plugin.methods.register_function(
                 "nr",
                 "nr_euk",
                 "refseq",
+                "refseq_ref",
+                "refseq_nr",
                 "fungi",
                 "viruses",
                 "plasmids",

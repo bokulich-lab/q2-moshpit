@@ -21,9 +21,10 @@ from q2_types.per_sample_sequences import (
 
 from q2_moshpit.kaiju.classification import (
     _construct_feature_table, _rename_taxon, _encode_unclassified_ids,
-    _fix_id_types, _process_kaiju_reports, classify_kaiju
+    _fix_id_types, _process_kaiju_reports, _classify_kaiju
 )
 from qiime2.plugin.testing import TestPluginBase
+from qiime2.plugins import moshpit
 
 
 class TestKaijuClassification(TestPluginBase):
@@ -31,6 +32,7 @@ class TestKaijuClassification(TestPluginBase):
 
     def setUp(self):
         super().setUp()
+        self.classify_kaiju = moshpit.pipelines.classify_kaiju
         with open(self.get_data_path('taxa-map.json')) as f:
             self.taxa_map = json.load(f)
 
@@ -186,7 +188,7 @@ class TestKaijuClassification(TestPluginBase):
         p1.return_value = [pd.DataFrame(), pd.DataFrame()]
 
         with patch("tempfile.TemporaryDirectory"):
-            classify_kaiju(
+            _classify_kaiju(
                 seqs=seqs, db=Mock(path=self.temp_dir.name),
                 z=3, a="greedy", e=2, m=10, s=66, evalue=0, x=False,
                 r="class", c=0.1, exp=True, u=True
@@ -220,7 +222,7 @@ class TestKaijuClassification(TestPluginBase):
         p1.return_value = [pd.DataFrame(), pd.DataFrame()]
 
         with patch("tempfile.TemporaryDirectory"):
-            classify_kaiju(
+            _classify_kaiju(
                 seqs=seqs, db=Mock(path=self.temp_dir.name),
                 z=3, a="greedy", e=2, m=10, s=66, evalue=0, x=True,
                 r="class", c=0.1, exp=False, u=False
@@ -256,7 +258,7 @@ class TestKaijuClassification(TestPluginBase):
         with self.assertRaisesRegex(
                 Exception, r"\(return code 1\), please inspect"
         ):
-            classify_kaiju(
+            _classify_kaiju(
                 seqs=seqs, db=Mock(path=self.temp_dir.name),
                 z=3, a="greedy", e=2, m=10, s=66, evalue=0, x=False,
                 r="class", c=0.1, exp=True, u=True

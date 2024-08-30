@@ -91,6 +91,19 @@ def eggnog_annotate(
 def _extract_generic(
         data: pd.DataFrame, column: str, transform_func: callable
 ) -> pd.Series:
+    """
+    Extracts a series from the annotation DataFrame and applies a
+    transformation function to the specified column (annotation).
+
+    Args:
+        data (pd.DataFrame): The input DataFrame.
+        column (str): The annotation column in the DataFrame to extract.
+        transform_func (callable): The transformation function to apply
+            to the extracted column.
+
+    Returns:
+        pd.Series: The extracted series with the transformation applied.
+    """
     data = data.set_index("seed_ortholog", inplace=False)[column]
     data = data.apply(transform_func if data.notna().any() else lambda x: x)
     data = data.stack().reset_index(level=1, drop=True)

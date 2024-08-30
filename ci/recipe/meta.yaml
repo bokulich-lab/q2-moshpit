@@ -23,6 +23,7 @@ requirements:
     - busco ==5.5.0
     - diamond
     - eggnog-mapper >=2.1.10
+    - gfatools
     - kaiju
     - kraken2
     - metabat2
@@ -32,7 +33,9 @@ requirements:
     - q2-types {{ qiime2_epoch }}.*
     - q2templates {{ qiime2_epoch }}.*
     - q2-assembly {{ qiime2_epoch }}.*
+    - q2-quality-control {{ qiime2_epoch }}.*
     - samtools
+    - seqtk
     - tqdm
     - xmltodict
     - pyhmmer

@@ -142,6 +142,7 @@ setup(
             'data/*',
             'data/mags/*',
             'data/mags/*/*',
+            'data/pangenome/*'
         ],
         'q2_moshpit.abundance.tests': [
             'data/*',

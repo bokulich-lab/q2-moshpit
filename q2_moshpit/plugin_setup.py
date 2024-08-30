@@ -6,6 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import importlib
+
+from q2_quality_control.plugin_setup import (
+    filter_parameters, filter_parameter_descriptions
+)
 from qiime2.plugin import Metadata
 from q2_moshpit.eggnog.types import (
     EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt, EggnogHmmerIdmap
@@ -14,6 +18,7 @@ from q2_moshpit.busco.types import (
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
     BUSCOResults, BuscoDB
 )
+from q2_types.bowtie2 import Bowtie2Index
 from q2_types.profile_hmms import ProfileHMM, MultipleProtein, PressedProtein
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
@@ -34,8 +39,7 @@ import q2_moshpit._examples as ex
 import q2_moshpit
 from q2_types.feature_data_mag import MAG
 from q2_types.genome_data import (
-    NOG, Orthologs,
-    GenomeData, Loci, Genes, Proteins
+    NOG, Orthologs, GenomeData, Loci, Genes, Proteins
 )
 from q2_types.kaiju import KaijuDB
 from q2_types.kraken2 import (
@@ -752,8 +756,10 @@ plugin.methods.register_function(
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'sequences': 'Sequences to be searched for hits.',
-        'diamond_db': 'Diamond database.',
+        'sequences': 'Sequence data of the contigs we want to '
+                     'search for hits using the Diamond Database.',
+        'diamond_db': 'The filepath to an artifact containing the '
+                      'Diamond database.',
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
@@ -1580,6 +1586,51 @@ plugin.methods.register_function(
         citations["huerta_cepas_eggnog_2019"],
         citations["noauthor_hmmer_nodate"]
     ]
+)
+
+I_reads, O_reads = TypeMap({
+    SampleData[SequencesWithQuality]:
+        SampleData[SequencesWithQuality],
+    SampleData[PairedEndSequencesWithQuality]:
+        SampleData[PairedEndSequencesWithQuality],
+})
+
+plugin.pipelines.register_function(
+    function=q2_moshpit.filtering.filter_reads_pangenome,
+    inputs={
+        "reads": I_reads,
+        "index": Bowtie2Index
+    },
+    parameters={
+        k: v for (k, v) in filter_parameters.items() if k != "exclude_seqs"
+    },
+    outputs=[
+        ("filtered_reads", O_reads),
+        ("reference_index", Bowtie2Index)
+    ],
+    input_descriptions={
+        "reads": "Reads to be filtered against the human genome.",
+        "index": "Bowtie2 index of the reference human genome. If not "
+                 "provided, an index combined from the reference GRCh38 "
+                 "human genome and the human pangenome will be generated."
+    },
+    parameter_descriptions={
+        k: v for (k, v) in filter_parameter_descriptions.items()
+        if k != "exclude_seqs"
+    },
+    output_descriptions={
+        "filtered_reads": "Original reads without the contaminating "
+                          "human reads.",
+        "reference_index": "Generated combined human reference index. If an "
+                           "index was provided as an input, it will be "
+                           "returned here instead."
+    },
+    name="Remove contaminating human reads.",
+    description="This method generates a Bowtie2 index fo the combined human "
+                "GRCh38 reference genome and the draft human pangenome, and"
+                "uses that index to remove the contaminating human reads from "
+                "the reads provided as input.",
+    citations=[],
 )
 
 plugin.register_semantic_types(BUSCOResults, BuscoDB)

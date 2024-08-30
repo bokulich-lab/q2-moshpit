@@ -16,7 +16,9 @@ from typing import Union
 import pandas as pd
 from q2_types.per_sample_sequences import (
     SingleLanePerSamplePairedEndFastqDirFmt,
-    SingleLanePerSampleSingleEndFastqDirFmt, SequencesWithQuality, PairedEndSequencesWithQuality,
+    SingleLanePerSampleSingleEndFastqDirFmt,
+    SequencesWithQuality,
+    PairedEndSequencesWithQuality,
 )
 
 from q2_moshpit._utils import run_command

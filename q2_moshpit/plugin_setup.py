@@ -757,9 +757,9 @@ plugin.methods.register_function(
     },
     input_descriptions={
         'sequences': 'Sequence data of the contigs we want to '
-                     'search for hits using the Diamond Database',
+                     'search for hits using the Diamond Database.',
         'diamond_db': 'The filepath to an artifact containing the '
-                      'Diamond database',
+                      'Diamond database.',
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
@@ -1612,7 +1612,7 @@ plugin.pipelines.register_function(
         "reads": "Reads to be filtered against the human genome.",
         "index": "Bowtie2 index of the reference human genome. If not "
                  "provided, an index combined from the reference GRCh38 "
-                 "human genome and human pangenome will be generated."
+                 "human genome and the human pangenome will be generated."
     },
     parameter_descriptions={
         k: v for (k, v) in filter_parameter_descriptions.items()
@@ -1628,7 +1628,7 @@ plugin.pipelines.register_function(
     name="Remove contaminating human reads.",
     description="This method generates a Bowtie2 index fo the combined human "
                 "GRCh38 reference genome and the draft human pangenome, and"
-                "uses that index to remove the contaminating human reads form "
+                "uses that index to remove the contaminating human reads from "
                 "the reads provided as input.",
     citations=[],
 )

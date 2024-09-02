@@ -1345,6 +1345,8 @@ plugin.methods.register_function(
                 "nr",
                 "nr_euk",
                 "refseq",
+                "refseq_ref",
+                "refseq_nr",
                 "fungi",
                 "viruses",
                 "plasmids",
@@ -1359,13 +1361,13 @@ plugin.methods.register_function(
     input_descriptions={},
     parameter_descriptions={
         "database_type": "Type of database to be downloaded. For more "
-        "information on available types please see the list on "
-        "Kaiju's web server: https://kaiju.binf.ku.dk/server",
+        "information on available types please see the list on Kaiju's web "
+        "server: https://bioinformatics-centre.github.io/kaiju/downloads.html",
     },
     output_descriptions={"database": "Kaiju database."},
     name="Fetch Kaiju database.",
     description="This method fetches the latest Kaiju database from "
-                "https://kaiju.binf.ku.dk/server.",
+                "Kaiju's web server.",
     citations=[citations["menzel2016"]],
 )
 

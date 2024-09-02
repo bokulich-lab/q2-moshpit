@@ -7,19 +7,16 @@
 # ----------------------------------------------------------------------------
 import os
 import tarfile
-from urllib.parse import urljoin
 
+import requests
+from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from q2_types.kaiju import KaijuDBDirectoryFormat
 
-
-from bs4 import BeautifulSoup
-import requests
-import pandas as pd
-
 CHUNK_SIZE = 8192
-KAIJU_SERVER_URL = "https://kaiju.binf.ku.dk/server"
+KAIJU_SERVER_URL = ("https://bioinformatics-centre.github.io/"
+                    "kaiju/downloads.html")
 ERR_MSG = (
     "Unable to connect to the Kaiju server. Please try again later. "
     "The error was: {}"
@@ -32,8 +29,7 @@ def _fetch_and_extract_db(db_uri: str, db_dir: str):
 
     Args:
         db_uri (str): The URI of the database to fetch.
-        db_dir (str): The directory where the database will be saved.
-
+        db_dir (str): Path to the final DB directory.
     """
     latest_db = os.path.basename(db_uri)
     db_path = os.path.join(db_dir, latest_db)
@@ -68,56 +64,39 @@ def _fetch_and_extract_db(db_uri: str, db_dir: str):
     os.remove(db_path)
 
 
-def _find_latest_db_url(database_type, sidebox_element, url):
+def _find_latest_db_url(response: bytes, database_type: str) -> str:
     """
     Finds the latest database URL based on the database type.
 
     Args:
+        response (bytes): HTML response containing the table with DB URLs.
         database_type (str): The target database type to filter.
-        sidebox_element (object): The element containing the databases.
-        url (str): The base URL.
 
     Returns:
         str: The latest database URL.
     """
-    # Extract the databases and dates
-    df = _find_all_dbs(sidebox_element)
+    soup = BeautifulSoup(response, 'html.parser')
+    tables = soup.find_all('table')
 
-    # Filter databases based on target_database type
-    filtered_df = df[df.index.str.contains(database_type)]
+    for table in tables:
+        # Locate the table header
+        headers = table.find_all('th')
+        if headers and headers[0].get_text().strip() == "Database":
+            rows = table.find_all('tr')
+            for row in rows:
+                cells = row.find_all('td')
 
-    # Find the latest database
-    latest_database = filtered_df["Date"].idxmax()
-    # latest_database = filtered_df.loc[latest_index, "Database"]
-    download_link = sidebox_element.find("a", string=latest_database)["href"]
-    download_link = urljoin(url, download_link)
+                # Check if the first cell contains the required database_type
+                if cells and cells[0].get_text().strip() == database_type:
+                    # The next row contains the desired URLs
+                    next_row = row.find_next_sibling('tr')
+                    if next_row:
+                        url_cell = next_row.find_all('td')[-1]
+                        url = url_cell.find('a')
+                        if url:
+                            return url['href']
 
-    return download_link
-
-
-def _find_all_dbs(sidebox_element):
-    """
-    Args:
-        sidebox_element: A BeautifulSoup element containing the sidebox
-            element on the page.
-
-    Returns:
-        df: A pandas DataFrame with columns "Database" and "Date".
-         The "Database" column contains the names of the databases
-         found in the sidebox_element, while the "Date" column contains
-         the corresponding dates.
-
-    """
-    databases, dates = [], []
-    for link in sidebox_element.find_all("a"):
-        database = link.get_text()
-        date = database.split()[-2]  # Last element is the date
-        databases.append(database)
-        dates.append(date)
-    df = pd.DataFrame({"Database": databases, "Date": dates})
-    df.set_index("Database", inplace=True)
-    df.loc[:, "Date"] = pd.to_datetime(df.loc[:, "Date"])
-    return df
+    raise ValueError(f"URL for database type '{database_type}' not found.")
 
 
 def fetch_kaiju_db(
@@ -128,12 +107,8 @@ def fetch_kaiju_db(
         response = requests.get(KAIJU_SERVER_URL)
     except requests.exceptions.RequestException as e:
         raise Exception(ERR_MSG.format(e))
-    soup = BeautifulSoup(response.content, "html.parser")
-    sidebox_db = soup.find("div", id="sidebox_db")
 
-    download_link = _find_latest_db_url(
-        database_type, sidebox_db, KAIJU_SERVER_URL
-    )
+    download_link = _find_latest_db_url(response.content, database_type)
 
     db = KaijuDBDirectoryFormat()
     _fetch_and_extract_db(download_link, str(db.path))

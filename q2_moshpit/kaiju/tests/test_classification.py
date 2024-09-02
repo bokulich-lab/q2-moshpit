@@ -431,5 +431,6 @@ class TestKaijuClassification(TestPluginBase):
         self.assertEqual("merged_table", out_table)
         self.assertEqual("merged_taxa", out_taxonomy)
 
+
 if __name__ == "__main__":
     unittest.main()

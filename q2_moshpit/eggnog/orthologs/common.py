@@ -74,17 +74,17 @@ def _run_eggnog_search_pipeline(
     - collated_tables: The collated feature tables.
     """
     if sequences.type <= FeatureData[MAG]:
-        plugin, action_name = "moshpit", "partition_feature_data_mags"
+        plugin, action_name = "types", "partition_feature_data_mags"
     elif sequences.type <= SampleData[Contigs]:
         plugin, action_name = "assembly", "partition_contigs"
     elif sequences.type <= SampleData[MAGs]:
-        plugin, action_name = "moshpit", "partition_sample_data_mags"
+        plugin, action_name = "types", "partition_sample_data_mags"
     else:
         raise NotImplementedError()
 
     partition_method = ctx.get_action(plugin, action_name)
     _eggnog_search = ctx.get_action("moshpit", search_action)
-    collate_hits = ctx.get_action("moshpit", "collate_orthologs")
+    collate_hits = ctx.get_action("types", "collate_orthologs")
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
 

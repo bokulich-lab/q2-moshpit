@@ -6,6 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import importlib
+
+from q2_quality_control.plugin_setup import (
+    filter_parameters, filter_parameter_descriptions
+)
 from qiime2.plugin import Metadata
 from q2_moshpit.eggnog.types import (
     EggnogHmmerIdmapDirectoryFmt, EggnogHmmerIdmapFileFmt, EggnogHmmerIdmap
@@ -14,12 +18,15 @@ from q2_moshpit.busco.types import (
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt,
     BUSCOResults, BuscoDB
 )
+from q2_types.bowtie2 import Bowtie2Index
 from q2_types.profile_hmms import ProfileHMM, MultipleProtein, PressedProtein
 from q2_types.distance_matrix import DistanceMatrix
 from q2_types.feature_data import (
     FeatureData, Sequence, Taxonomy, ProteinSequence, SequenceCharacteristics
 )
-from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
+from q2_types.feature_table import (
+    FeatureTable, Frequency, PresenceAbsence, RelativeFrequency
+)
 from q2_types.per_sample_sequences import (
     SequencesWithQuality, PairedEndSequencesWithQuality, MAGs, Contigs
 )
@@ -34,15 +41,14 @@ import q2_moshpit._examples as ex
 import q2_moshpit
 from q2_types.feature_data_mag import MAG
 from q2_types.genome_data import (
-    NOG, Orthologs,
-    GenomeData, Loci, Genes, Proteins
+    NOG, Orthologs, GenomeData, Loci, Genes, Proteins
 )
 from q2_types.kaiju import KaijuDB
 from q2_types.kraken2 import (
     Kraken2Reports, Kraken2Outputs, Kraken2DB, Kraken2DBReport
 )
-from q2_types.kraken2._type import BrackenDB
-from q2_types.per_sample_sequences._type import AlignmentMap
+from q2_types.kraken2 import BrackenDB
+from q2_types.per_sample_sequences import AlignmentMap
 from q2_types.reference_db import (
     ReferenceDB, Diamond, Eggnog, NCBITaxonomy, EggnogProteinSequences,
 )
@@ -287,7 +293,8 @@ plugin.methods.register_function(
     parameters={
         'threshold': Int % Range(0, None),
         'read_len': Int % Range(0, None),
-        'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S'])
+        'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S']),
+        'include_unclassified': Bool
     },
     outputs=[
         ('reports', SampleData[Kraken2Reports % Properties('bracken')]),
@@ -304,7 +311,10 @@ plugin.methods.register_function(
         'read_len': ('Bracken: read length to get all classifications for. '
                      'For paired end data (e.g., 2x150) this should be set '
                      'to the length of the single-end reads (e.g., 150).'),
-        'level': 'Bracken: taxonomic level to estimate abundance at.'
+        'level': 'Bracken: taxonomic level to estimate abundance at.',
+        'include_unclassified': 'Bracken does not include the unclassified '
+                                'read counts in the feature table. Set this '
+                                'to True to include those regardless.'
     },
     output_descriptions={
         'reports': 'Reports modified by Bracken.',
@@ -748,7 +758,7 @@ plugin.methods.register_function(
         'db_in_memory': Bool,
     },
     input_descriptions={
-        'sequences': 'Sequences to be searched for hits.',
+        'sequences': 'Sequences to be searched for ortholog hits.',
         'diamond_db': 'Diamond database.',
     },
     parameter_descriptions={
@@ -1142,7 +1152,7 @@ plugin.methods.register_function(
     },
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "(Benchmarking Universal Single-Copy Orthologs assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
                 "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
@@ -1175,7 +1185,7 @@ plugin.pipelines.register_function(
     },
     name="Evaluate quality of the generated MAGs using BUSCO.",
     description="This method uses BUSCO "
-                "(Benchmarking Universal Single-Copy Ortholog assessment "
+                "(Benchmarking Universal Single-Copy Orthologs assessment "
                 "tool) to assess the quality of assembled MAGs and generates "
                 "a table summarizing the results.",
     citations=[citations["manni_busco_2021"]],
@@ -1237,6 +1247,8 @@ plugin.methods.register_function(
                 "nr",
                 "nr_euk",
                 "refseq",
+                "refseq_ref",
+                "refseq_nr",
                 "fungi",
                 "viruses",
                 "plasmids",
@@ -1251,13 +1263,13 @@ plugin.methods.register_function(
     input_descriptions={},
     parameter_descriptions={
         "database_type": "Type of database to be downloaded. For more "
-        "information on available types please see the list on "
-        "Kaiju's web server: https://kaiju.binf.ku.dk/server",
+        "information on available types please see the list on Kaiju's web "
+        "server: https://bioinformatics-centre.github.io/kaiju/downloads.html",
     },
     output_descriptions={"database": "Kaiju database."},
     name="Fetch Kaiju database.",
     description="This method fetches the latest Kaiju database from "
-                "https://kaiju.binf.ku.dk/server.",
+                "Kaiju's web server.",
     citations=[citations["menzel2016"]],
 )
 
@@ -1478,6 +1490,272 @@ plugin.methods.register_function(
         citations["huerta_cepas_eggnog_2019"],
         citations["noauthor_hmmer_nodate"]
     ]
+)
+
+I_reads, O_reads = TypeMap({
+    SampleData[SequencesWithQuality]:
+        SampleData[SequencesWithQuality],
+    SampleData[PairedEndSequencesWithQuality]:
+        SampleData[PairedEndSequencesWithQuality],
+})
+
+plugin.pipelines.register_function(
+    function=q2_moshpit.filtering.filter_reads_pangenome,
+    inputs={
+        "reads": I_reads,
+        "index": Bowtie2Index
+    },
+    parameters={
+        k: v for (k, v) in filter_parameters.items() if k != "exclude_seqs"
+    },
+    outputs=[
+        ("filtered_reads", O_reads),
+        ("reference_index", Bowtie2Index)
+    ],
+    input_descriptions={
+        "reads": "Reads to be filtered against the human genome.",
+        "index": "Bowtie2 index of the reference human genome. If not "
+                 "provided, an index combined from the reference GRCh38 "
+                 "human genome and the human pangenome will be generated."
+    },
+    parameter_descriptions={
+        k: v for (k, v) in filter_parameter_descriptions.items()
+        if k != "exclude_seqs"
+    },
+    output_descriptions={
+        "filtered_reads": "Original reads without the contaminating "
+                          "human reads.",
+        "reference_index": "Generated combined human reference index. If an "
+                           "index was provided as an input, it will be "
+                           "returned here instead."
+    },
+    name="Remove contaminating human reads.",
+    description="This method generates a Bowtie2 index fo the combined human "
+                "GRCh38 reference genome and the draft human pangenome, and"
+                "uses that index to remove the contaminating human reads from "
+                "the reads provided as input.",
+    citations=[],
+)
+
+M_abundance_in, P_abundance_out = TypeMap({
+    Str % Choices(['rpkm']): Properties('rpkm'),
+    Str % Choices(['tpm']): Properties('tpm'),
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit.abundance.estimate_mag_abundance,
+    inputs={
+        "maps": FeatureData[AlignmentMap],
+        "mag_lengths":
+            FeatureData[SequenceCharacteristics % Properties("length")],
+    },
+    parameters={
+        "metric": M_abundance_in,
+        "min_mapq": Int % Range(0, 255),
+        "min_query_len": Int % Range(0, None),
+        "min_base_quality": Int % Range(0, None),
+        "min_read_len": Int % Range(0, None),
+        "threads": Int % Range(1, None),
+    },
+    outputs=[
+        ("abundances", FeatureTable[Frequency % P_abundance_out]),
+    ],
+    input_descriptions={
+        "maps": "Bowtie2 alignment maps between reads and MAGs for which "
+                "the abundance should be estimated.",
+        "mag_lengths": "Table containing length of every MAG.",
+    },
+    parameter_descriptions={
+        "metric": "Metric to be used as a proxy of MAG abundance.",
+        "min_mapq": "Minimum mapping quality.",
+        "min_query_len": "Minimum query length.",
+        "min_base_quality": "Minimum base quality.",
+        "min_read_len": "Minimum read length.",
+        "threads": "Number of threads to pass to samtools."
+    },
+    output_descriptions={
+        "abundances": "MAG abundances.",
+    },
+    name="Estimate MAG abundance.",
+    description="This method estimates MAG abundances by mapping the "
+                "reads to MAGs and calculating respective metric values"
+                "which are then used as a proxy for the frequency.",
+    citations=[],
+)
+
+plugin.methods.register_function(
+    function=q2_moshpit.eggnog.annotation.extract_annotations,
+    inputs={"ortholog_annotations": GenomeData[NOG], },
+    parameters={
+        "annotation": Str % Choices([
+            "cog", "caz", "kegg_ko", "kegg_pathway", "kegg_reaction",
+            "kegg_module", "brite"
+        ]),
+        "max_evalue": Float % Range(0, None),
+        "min_score": Float % Range(0, None),
+    },
+    outputs=[
+        ('annotation_frequency', FeatureTable[Frequency])
+    ],
+    input_descriptions={
+        "ortholog_annotations": "Ortholog annotations."
+    },
+    parameter_descriptions={
+        "annotation": "Annotation to extract."
+    },
+    output_descriptions={
+        'annotation_frequency': 'Feature table with frequency of '
+                                'each annotation.',
+    },
+    name='Extract annotation frequencies from all annotations.',
+    description='This method extract a specific annotation from the table '
+                'generated by EggNOG and calculates its frequencies across '
+                'all MAGs.',
+    citations=[]
+)
+
+multiply_input_descriptions = {
+    "table1": "First feature table.",
+    "table2": 'Second feature table with matching dimension.'
+}
+multiply_output_descriptions = {
+    'result_table': 'Feature table with the dot product of the two '
+                    'original tables. The table will have a shape of '
+                    '(M x N) where M is the number of rows from table1 '
+                    'and N is number of columns from table2.',
+}
+
+plugin.methods.register_function(
+    function=q2_moshpit._utils._multiply_tables,
+    inputs={
+        "table1": FeatureTable[Frequency],
+        "table2": FeatureTable[Frequency]
+    },
+    parameters={},
+    outputs=[('result_table', FeatureTable[Frequency]),],
+    input_descriptions=multiply_input_descriptions,
+    parameter_descriptions={},
+    output_descriptions=multiply_output_descriptions,
+    name='Multiply two feature tables.',
+    description='Calculates the dot product of two feature tables with '
+                'matching dimensions. If table 1 has shape (M x N) and table '
+                '2 has shape (N x P), the resulting table will have shape '
+                '(M x P). Note that the tables must be identical in the N '
+                'dimension.',
+    citations=[]
+)
+
+I_multiply_pa_table1, I_multiply_pa_table2, O_multiply_pa = TypeMap({
+    (FeatureTable[PresenceAbsence], FeatureTable[Frequency]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[PresenceAbsence], FeatureTable[RelativeFrequency]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[PresenceAbsence], FeatureTable[PresenceAbsence]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[Frequency], FeatureTable[PresenceAbsence]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[RelativeFrequency], FeatureTable[PresenceAbsence]):
+        FeatureTable[PresenceAbsence],
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit._utils._multiply_tables_pa,
+    inputs={
+        "table1": I_multiply_pa_table1,
+        "table2": I_multiply_pa_table2
+    },
+    parameters={},
+    outputs=[('result_table', O_multiply_pa),],
+    input_descriptions=multiply_input_descriptions,
+    parameter_descriptions={},
+    output_descriptions=multiply_output_descriptions,
+    name='Multiply two feature tables.',
+    description='Calculates the dot product of two feature tables with '
+                'matching dimensions. If table 1 has shape (M x N) and table '
+                '2 has shape (N x P), the resulting table will have shape '
+                '(M x P). Note that the tables must be identical in the N '
+                'dimension.',
+    citations=[]
+)
+
+I_multiply_rel_table1, I_multiply_rel_table2, O_multiply_rel = TypeMap({
+    (FeatureTable[RelativeFrequency], FeatureTable[Frequency]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[Frequency], FeatureTable[RelativeFrequency]):
+        FeatureTable[RelativeFrequency],
+    (FeatureTable[RelativeFrequency], FeatureTable[RelativeFrequency]):
+        FeatureTable[RelativeFrequency],
+})
+
+plugin.methods.register_function(
+    function=q2_moshpit._utils._multiply_tables_relative,
+    inputs={
+        "table1": I_multiply_rel_table1,
+        "table2": I_multiply_rel_table2
+    },
+    parameters={},
+    outputs=[('result_table', O_multiply_rel),],
+    input_descriptions=multiply_input_descriptions,
+    parameter_descriptions={},
+    output_descriptions=multiply_output_descriptions,
+    name='Multiply two feature tables.',
+    description='Calculates the dot product of two feature tables with '
+                'matching dimensions. If table 1 has shape (M x N) and table '
+                '2 has shape (N x P), the resulting table will have shape '
+                '(M x P). Note that the tables must be identical in the N '
+                'dimension.',
+    citations=[]
+)
+
+I_multiply_table1, I_multiply_table2, O_multiply = TypeMap({
+    (FeatureTable[Frequency], FeatureTable[Frequency]):
+        FeatureTable[Frequency],
+    (FeatureTable[PresenceAbsence], FeatureTable[Frequency]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[PresenceAbsence], FeatureTable[RelativeFrequency]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[PresenceAbsence], FeatureTable[PresenceAbsence]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[Frequency], FeatureTable[PresenceAbsence]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[RelativeFrequency], FeatureTable[PresenceAbsence]):
+        FeatureTable[PresenceAbsence],
+    (FeatureTable[Frequency], FeatureTable[RelativeFrequency]):
+        FeatureTable[RelativeFrequency],
+    (FeatureTable[RelativeFrequency], FeatureTable[Frequency]):
+        FeatureTable[RelativeFrequency],
+    (FeatureTable[RelativeFrequency], FeatureTable[RelativeFrequency]):
+        FeatureTable[RelativeFrequency],
+})
+
+plugin.pipelines.register_function(
+    function=q2_moshpit._utils.multiply_tables,
+    inputs={
+        "table1": I_multiply_table1,
+        "table2": I_multiply_table2,
+    },
+    parameters={},
+    outputs=[
+        ('result_table', O_multiply)
+    ],
+    input_descriptions={
+        "table1": "First feature table.",
+        "table2": 'Second feature table with matching dimension.'
+    },
+    parameter_descriptions={},
+    output_descriptions={
+        'result_table': 'Feature table with the dot product of the two '
+                        'original tables. The table will have the shape of '
+                        '(M x N) where M is the number of rows from table1 '
+                        'and N is number of columns from table2.',
+    },
+    name='Multiply two feature tables.',
+    description='Calculates the dot product of two feature tables with '
+                'matching dimensions. If table 1 has shape (M x N) and table '
+                '2 has shape (N x P), the resulting table will have shape '
+                '(M x P). Note that the tables must be identical in the N '
+                'dimension.',
+    citations=[]
 )
 
 plugin.register_semantic_types(BUSCOResults, BuscoDB)

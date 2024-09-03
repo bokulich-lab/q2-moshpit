@@ -27,9 +27,9 @@ from q2_moshpit.busco.utils import (
     _validate_lineage_dataset_input
 )
 from q2_moshpit._utils import _process_common_input_params, run_command
-from q2_types.per_sample_sequences._format import MultiMAGSequencesDirFmt
+from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
 from q2_moshpit.busco.types import BuscoDatabaseDirFmt
-from q2_types.feature_data_mag._format import MAGSequencesDirFmt
+from q2_types.feature_data_mag import MAGSequencesDirFmt
 
 
 def _run_busco(

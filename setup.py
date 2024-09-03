@@ -71,6 +71,7 @@ setup(
         ],
         'q2_moshpit.eggnog.tests': [
             'data/*',
+            'data/annotations/*',
             'data/build_eggnog_diamond_db/*',
             'data/contig-sequences-1/*',
             'data/eggnog_db/*',
@@ -101,12 +102,16 @@ setup(
             'data/db/*',
             'data/reports-mags/*',
             'data/reports-mags/*/*',
+            'data/reports-mags-unclassified-missing-frac/*',
+            'data/reports-mags-unclassified-wrong-frac/*',
             'data/outputs-mags/*',
             'data/outputs-mags/*/*',
             'data/seqs/*',
             'data/bracken-db/*',
             'data/bracken-report/*',
             'data/bracken-report/*/*',
+            'data/bracken-report-with-unclassified/*',
+            'data/bracken-report-with-unclassified/*/*',
             'data/kraken2-reports-select/*',
             'data/kraken2-reports-select/*/*',
             'data/kraken2-to-ncbi-tree/*',
@@ -138,7 +143,15 @@ setup(
             'data/*',
             'data/mags/*',
             'data/mags/*/*',
+            'data/pangenome/*'
         ],
+        'q2_moshpit.abundance.tests': [
+            'data/*',
+            'data/mag-index/*',
+            'data/mag-sequences/*',
+            'data/reads/*',
+            'data/reads-mapped/*'
+        ]
     },
     zip_safe=False,
 )

@@ -13,7 +13,8 @@ from q2_types.feature_data import (
 )
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 from q2_types.per_sample_sequences import (
-    SequencesWithQuality, PairedEndSequencesWithQuality, MAGs, Contigs
+    SequencesWithQuality, PairedEndSequencesWithQuality,
+    JoinedSequencesWithQuality, MAGs, Contigs
 )
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
@@ -151,7 +152,7 @@ plugin.methods.register_function(
 
 T_kraken_in, T_kraken_out_rep, T_kraken_out_hits = TypeMap({
     SampleData[SequencesWithQuality |
-               PairedEndSequencesWithQuality]: (
+               PairedEndSequencesWithQuality | JoinedSequencesWithQuality]: (
         SampleData[Kraken2Reports % Properties('reads')],
         SampleData[Kraken2Outputs % Properties('reads')]
     ),

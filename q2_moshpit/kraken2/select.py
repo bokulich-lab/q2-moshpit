@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
+import glob
 import os
 from collections import deque
 from typing import List
@@ -21,6 +21,12 @@ import pandas as pd
 import skbio
 
 RANKS = 'dkpcofgs'
+
+
+def _fill_unclassified(row):
+    if row.isnull().all():
+        row[0] = 'Unclassified'
+    return row
 
 
 def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
@@ -54,6 +60,7 @@ def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
         results[mag_id] = result
 
     results = pd.DataFrame.from_dict(results, orient='index')
+    results = results.apply(_fill_unclassified, axis=1)
     results = results.apply(lambda x: x.tolist(), axis=1).to_frame()
     results.columns = ['Taxon']
 
@@ -65,6 +72,39 @@ def _find_lcas(taxa_list: List[pd.DataFrame], mode: str):
 
     results.index.name = 'Feature ID'
     return results
+
+
+def _add_unclassified_mags(
+        table: pd.DataFrame,
+        taxonomy: pd.DataFrame,
+        reports: Kraken2ReportDirectoryFormat
+) -> (pd.DataFrame, pd.Series):
+    # identify which MAGs are entirely unclassified - they will be missing
+    # from the table
+    samples = [
+        os.path.basename(f).replace(".report.txt", "")
+        for f in glob.glob(os.path.join(reports.path, "*.report.txt"))
+    ]
+    unclassified = set(samples) - set(table.index)
+
+    for mag in unclassified:
+        report_fp = os.path.join(reports.path, f"{mag}.report.txt")
+        with open(report_fp, "r") as f:
+            line = f.readline()
+            if "unclassified" in line:
+                fraction = float(line.split("\t")[0])
+                if fraction != 100.0:
+                    raise ValueError(
+                        f"Unclassified fraction for MAG '{mag}' is not "
+                        f"100.0%: {fraction:.2f}%."
+                    )
+                taxonomy.loc[mag, "Taxon"] = "d__Unclassified"
+            else:
+                raise ValueError(
+                    f"Unclassified line for MAG '{mag}' is missing from "
+                    f"the Kraken 2 report."
+                )
+    return taxonomy
 
 
 def kraken2_to_mag_features(
@@ -95,7 +135,8 @@ def kraken2_to_mag_features(
         new_taxa['mag_id'] = mag_id
         taxa_list.append(new_taxa)
 
-    return _find_lcas(taxa_list, mode='lca')
+    taxonomy = _find_lcas(taxa_list, mode='lca')
+    return _add_unclassified_mags(table, taxonomy, reports)
 
 
 def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
@@ -104,10 +145,12 @@ def kraken2_to_features(reports: Kraken2ReportDirectoryFormat,
 
     rows = []
     trees = []
+    unclassified = {}
     for relpath, df in reports.reports.iter_views(pd.DataFrame):
         sample_id = os.path.basename(relpath).replace(".report.txt", "")
 
         filtered = df[df['perc_frags_covered'] >= coverage_threshold]
+        unclassified[sample_id] = filtered[filtered['name'] == 'unclassified']
         tree = _kraken_to_ncbi_tree(filtered)
         tips = _ncbi_tree_to_tips(tree)
         if tips:

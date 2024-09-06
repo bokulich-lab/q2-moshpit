@@ -5,25 +5,34 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
-
+from . import abundance
+from . import busco
+from . import eggnog
+from . import partition
+from . import prodigal
+from ._version import get_versions
 from .dereplication import dereplicate_mags
+from .filtering import filter_derep_mags, filter_mags, filter_reads_pangenome
 from .kaiju import classification as kaiju_class, database as kaiju_db
 from .kraken2 import (
-    classification as kraken_class, database as kraken_db, bracken, helpers
+    classification as kraken_class,
+    database as kraken_db, bracken,
+    helpers as kraken_helpers
 )
 from .metabat2 import metabat2
-from . import prodigal
-from . import eggnog
-from . import busco
-from . import partition
+from ._utils import (
+    get_feature_lengths, multiply_tables, _multiply_tables,
+    _multiply_tables_pa, _multiply_tables_relative
+)
 
-
-from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
 __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',
     'kaiju_class', 'kaiju_db', 'dereplicate_mags', 'eggnog',
-    'busco', 'prodigal', 'helpers', 'partition'
+    'busco', 'prodigal', 'kraken_helpers', 'partition',
+    'filter_derep_mags', 'filter_mags', 'get_feature_lengths',
+    'multiply_tables', '_multiply_tables', '_multiply_tables_pa',
+    '_multiply_tables_relative', 'abundance', 'filter_reads_pangenome'
 ]

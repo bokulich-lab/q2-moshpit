@@ -28,7 +28,6 @@ from q2_types.kraken2 import (
 
 from q2_moshpit.kraken2.utils import _process_kraken2_arg
 
-
 COLLECTIONS = {
     "standard": "standard",
     "viral": "viral",
@@ -42,7 +41,13 @@ COLLECTIONS = {
     "pluspfp8": "pluspfp_08gb",
     "pluspfp16": "pluspfp_16gb",
     "eupathdb": "eupathdb48",
+    "nt": "nt",
+    "greengenes": "Greengenes13.5",
+    "rdp": "RDP11.5",
+    "silva132": "Silva132",
+    "silva138": "Silva138"
 }
+S16_DBS = ["greengenes", "rdp", "silva132", "silva138"]
 S3_COLLECTIONS_URL = 'https://genome-idx.s3.amazonaws.com'
 CHUNK_SIZE = 8192
 
@@ -158,7 +163,11 @@ def _build_bracken_database(
 
 def _find_latest_db(collection: str, response: requests.Response) -> str:
     collection_id = COLLECTIONS[collection]
-    pattern = fr'kraken\/k2_{collection_id}_\d{{8}}.tar.gz'
+
+    if collection in S16_DBS:
+        pattern = fr'kraken\/16S_{collection_id}_\d{{8}}.tgz'
+    else:
+        pattern = fr'kraken\/k2_{collection_id}_\d{{8}}.tar.gz'
 
     s3_objects = xmltodict.parse(response.content)
     s3_objects = s3_objects.get('ListBucketResult')
@@ -172,8 +181,18 @@ def _find_latest_db(collection: str, response: requests.Response) -> str:
     s3_objects = sorted(
         s3_objects, key=lambda x: x['LastModified'], reverse=True
     )
+
     latest_db = s3_objects[0]['Key']
     return latest_db
+
+
+def _move_files_one_level_up(tmp_dir):
+    extr_db = [
+        x for x in os.listdir(tmp_dir) if not x.endswith(".tgz")
+    ][0]
+    src = os.path.join(tmp_dir, extr_db)
+    for file in os.listdir(src):
+        shutil.move(os.path.join(src, file), tmp_dir)
 
 
 def _fetch_db_collection(collection: str, tmp_dir: str):
@@ -220,6 +239,9 @@ def _fetch_db_collection(collection: str, tmp_dir: str):
         tar.extractall(path=tmp_dir)
     print(f"\r{msg} Done.", flush=True)
 
+    if collection in S16_DBS:
+        _move_files_one_level_up(tmp_dir)
+
 
 def _move_db_files(source: str, destination: str, extension: str = "k2d"):
     files = glob.glob(f"{source}/*.{extension}")
@@ -260,18 +282,18 @@ def _build_dbs_from_seqs(bracken_db, kraken2_db, seqs, tmp_dir, common_args):
 
 
 def build_kraken_db(
-    seqs: DNAFASTAFormat = None,
-    collection: str = None,
-    threads: int = 1,
-    kmer_len: int = 35,
-    minimizer_len: int = 31,
-    minimizer_spaces: int = 7,
-    no_masking: bool = False,
-    max_db_size: int = 0,
-    use_ftp: bool = False,
-    load_factor: float = 0.7,
-    fast_build: bool = False,
-    read_len: int = None,
+        seqs: DNAFASTAFormat = None,
+        collection: str = None,
+        threads: int = 1,
+        kmer_len: int = 35,
+        minimizer_len: int = 31,
+        minimizer_spaces: int = 7,
+        no_masking: bool = False,
+        max_db_size: int = 0,
+        use_ftp: bool = False,
+        load_factor: float = 0.7,
+        fast_build: bool = False,
+        read_len: int = None,
 ) -> (Kraken2DBDirectoryFormat, BrackenDBDirectoryFormat):
     kraken2_db = Kraken2DBDirectoryFormat()
     bracken_db = BrackenDBDirectoryFormat()
@@ -303,8 +325,8 @@ def build_kraken_db(
 
 
 def inspect_kraken2_db(
-    db: Kraken2DBDirectoryFormat,
-    threads: int = 1
+        db: Kraken2DBDirectoryFormat,
+        threads: int = 1
 ) -> Kraken2DBReportDirectoryFormat:
     cmd = ['kraken2-inspect', '--db', str(db.path), '--threads', str(threads)]
     try:

@@ -8,6 +8,7 @@
 import os
 import shutil
 import numpy as np
+import pandas as pd
 from qiime2.util import duplicate
 from .utils import _validate_mag_ids, _validate_num_partitions
 from q2_types.per_sample_sequences import (
@@ -34,7 +35,7 @@ def partition_feature_data_mags(
 
     # Count number of mags and validate the num_partitions
     num_mags = len(mags_all)
-    num_partitions = _validate_num_partitions(num_mags, num_partitions)
+    num_partitions = _validate_num_partitions(num_mags, num_partitions, "MAG")
     _validate_mag_ids(num_partitions, num_mags, mags_all)
 
     # Split list MAGs into n arrays, where n = num_partitions
@@ -47,7 +48,7 @@ def partition_feature_data_mags(
             duplicate(mag_fp, result.path / os.path.basename(mag_fp))
 
         # If num_partitions == num_mags we will only have gone through one
-        # MAG in the above loop and will use its id as a key. Otherwise we
+        # MAG in the above loop and will use its id as a key. Otherwise, we
         # may have gone through multiple MAGs in the above loop and will be
         # using indices for keys
         if num_partitions == num_mags:
@@ -66,38 +67,36 @@ def partition_sample_data_mags(
     values are the new objects with the mags.
     """
     partitioned_mags = {}
-    mags_all = []
+    mags_all = [{k: v} for k, v in mags.sample_dict().items()]
 
-    # Get a list where every entry is a tuple representing one MAG
-    for sample_id, mag in mags.sample_dict().items():
-        for mag_id, mag_fp in mag.items():
-            mags_all.append((sample_id, mag_id, mag_fp))
+    num_partitions = _validate_num_partitions(
+        len(mags_all), num_partitions, "sample"
+    )
 
-    # Count number of mags and validate the num_partitions
-    num_mags = len(mags_all)
-    num_partitions = _validate_num_partitions(num_mags, num_partitions)
-    _validate_mag_ids(num_partitions, num_mags, mags_all)
-
-    # Split list MAGs into n arrays, where n = num_partitions
     arrays_of_mags = np.array_split(mags_all, num_partitions)
 
-    for i, _mag in enumerate(arrays_of_mags, 1):
+    for i, samples in enumerate(arrays_of_mags, 1):
         result = MultiMAGSequencesDirFmt()
-        duplicate(mags.path / "MANIFEST", result.path / "MANIFEST")
+        all_samples = set(k for d in samples for k in d.keys())
+        manifest = pd.read_csv(mags.path / "MANIFEST", index_col=None)
+        manifest = manifest[manifest["sample-id"].isin(all_samples)]
+        manifest.to_csv(result.path / "MANIFEST", index=False)
 
-        for sample_id, mag_id, mag_fp in _mag:
-            os.makedirs(result.path / sample_id, exist_ok=True)
-            duplicate(
-                mag_fp,
-                result.path / sample_id / os.path.basename(mag_fp)
-            )
+        for sample_dict in samples:
+            for sample_id, mag_dict in sample_dict.items():
+                for mag_id, mag_fp in mag_dict.items():
+                    os.makedirs(result.path / sample_id, exist_ok=True)
+                    duplicate(
+                        mag_fp,
+                        result.path / sample_id / os.path.basename(mag_fp)
+                    )
 
-        # If num_partitions == num_mags we will only have gone through one
-        # MAG in the above loop and will use its id as a key. Otherwise we
+        # If num_partitions == num_samples we will only have gone through one
+        # sample in the above loop and will use its id as a key. Otherwise we
         # may have gone through multiple MAGs in the above loop and will be
         # using indices for keys
-        if num_partitions == num_mags:
-            partitioned_mags[mag_id] = result
+        if num_partitions == len(mags_all):
+            partitioned_mags[sample_id] = result
         else:
             partitioned_mags[i] = result
 

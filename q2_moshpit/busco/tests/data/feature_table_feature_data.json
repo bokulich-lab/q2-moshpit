@@ -1,0 +1,36 @@
+{
+    "columns": [
+      "MAG",
+      "Dataset",
+      "% single",
+      "% duplicated",
+      "% fragmented",
+      "% missing",
+      "% complete",
+      "Total markers",
+      "N50 contigs",
+      "Percent gaps",
+      "Contigs",
+      "Length (bp)"
+    ],
+    "index": [
+      0
+    ],
+    "data": [
+      [
+        "mag1",
+        "dataset1",
+        1,
+        4,
+        7,
+        10,
+        13,
+        16,
+        19,
+        22,
+        25,
+        28
+      ]
+    ]
+  }
+  

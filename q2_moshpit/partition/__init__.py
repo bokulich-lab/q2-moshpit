@@ -8,12 +8,17 @@
 from .annotations import collate_annotations
 from .mags import (
     collate_feature_data_mags, collate_sample_data_mags,
-    partition_feature_data_mags, partition_sample_data_mags
+    partition_feature_data_mags, partition_sample_data_mags,
+
 )
-from .ortholog import collate_orthologs
+from .ortholog import (
+    collate_orthologs, partition_orthologs
+)
+from .busco import collate_busco_results
 
 __all__ = [
     "collate_feature_data_mags", "collate_sample_data_mags",
     "partition_feature_data_mags", "partition_sample_data_mags",
-    "collate_orthologs", "collate_annotations"
+    "collate_orthologs", "partition_orthologs", "collate_annotations",
+    "collate_busco_results"
 ]

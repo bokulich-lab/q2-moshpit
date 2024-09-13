@@ -60,9 +60,9 @@ setup(
             'data/busco_db/busco_downloads/lineages/lineage_1/hmms/*',
             'data/busco_db/busco_downloads/lineages/lineage_1/info/*',
             'data/busco_db/busco_downloads/lineages/lineage_1/prfl/*'
-            'data/busco_results/sample1/*',
-            'data/busco_results/sample2/*',
-            'data/busco_results/collated/*',
+            'data/busco_results/sample1/busco_results.tsv',
+            'data/busco_results/sample2/busco_results.tsv',
+            'data/busco_results/collated/busco_results.tsv',
 
         ],
         'q2_moshpit.busco.types.tests': [

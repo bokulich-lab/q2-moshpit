@@ -276,9 +276,8 @@ plugin.methods.register_function(
     },
     parameters={},
     outputs={
-        "collated_kraken2_outputs": List[
+        "collated_kraken2_outputs":
             SampleData[Kraken2Outputs % P_kraken_out]
-        ]
     },
     name="Collate kraken2 outputs",
     description="Collates kraken2 outputs"

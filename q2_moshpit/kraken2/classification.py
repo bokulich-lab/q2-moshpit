@@ -81,7 +81,7 @@ def classify_kraken2(
         partition_method = ctx.get_action("assembly", "partition_contigs")
     elif seqs.type <= SampleData[MAGs]:
         partition_method = ctx.get_action(
-            "moshpit", "partition_sample_data_mags"
+            "types", "partition_sample_data_mags"
         )
     # FeatureData[MAG] is not parallelized
     elif seqs.type <= FeatureData[MAG]:

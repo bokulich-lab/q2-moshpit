@@ -71,13 +71,11 @@ class TestBracken(TestPluginBase):
             os.path.join(self.temp_dir, 'sample1.bracken.output.txt')
         )
 
-        kraken2_report_fp = self.get_data_path(
-            'kraken2-report/sample1/sample1.report.txt'
-        )
+        kraken2_report_fp = tempfile.NamedTemporaryFile()
         bracken_report_dir = self.get_data_path('bracken-report')
         obs_table = _run_bracken_one_sample(
             bracken_db=self.bracken_db_dir,
-            kraken2_report_fp=kraken2_report_fp,
+            kraken2_report_fp=kraken2_report_fp.name,
             bracken_report_dir=bracken_report_dir,
             tmp_dir=self.temp_dir,
             threshold=self.kwargs['threshold'],
@@ -95,7 +93,7 @@ class TestBracken(TestPluginBase):
             cmd=[
                 "bracken", "-d", self.bracken_db_dir,
                 "-i",
-                kraken2_report_fp,
+                kraken2_report_fp.name,
                 "-o",
                 os.path.join(self.temp_dir, "sample1.bracken.output.txt"),
                 "-w",
@@ -113,15 +111,13 @@ class TestBracken(TestPluginBase):
         side_effect=CalledProcessError(returncode=123, cmd='bracken')
     )
     def test_run_bracken_one_sample_error(self, p1):
-        kraken2_report_fp = self.get_data_path(
-            'kraken2-report/sample1/sample1.report.txt'
-        )
+        kraken2_report_fp = tempfile.NamedTemporaryFile()
         bracken_report_dir = self.get_data_path('bracken-report')
 
         with self.assertRaisesRegex(Exception, 'return code 123'):
             _run_bracken_one_sample(
                 bracken_db=self.bracken_db_dir,
-                kraken2_report_fp=kraken2_report_fp,
+                kraken2_report_fp=kraken2_report_fp.name,
                 bracken_report_dir=bracken_report_dir,
                 tmp_dir=self.temp_dir,
                 threshold=self.kwargs['threshold'],

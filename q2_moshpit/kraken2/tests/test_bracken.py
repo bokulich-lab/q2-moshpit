@@ -71,11 +71,13 @@ class TestBracken(TestPluginBase):
             os.path.join(self.temp_dir, 'sample1.bracken.output.txt')
         )
 
-        kraken2_report_fp = tempfile.NamedTemporaryFile()
+        kraken2_report_fp = self.get_data_path(
+            'kraken2-reports-select/sample1/sample1.report.txt'
+        )
         bracken_report_dir = self.get_data_path('bracken-report')
         obs_table = _run_bracken_one_sample(
             bracken_db=self.bracken_db_dir,
-            kraken2_report_fp=kraken2_report_fp.name,
+            kraken2_report_fp=kraken2_report_fp,
             bracken_report_dir=bracken_report_dir,
             tmp_dir=self.temp_dir,
             threshold=self.kwargs['threshold'],
@@ -93,7 +95,7 @@ class TestBracken(TestPluginBase):
             cmd=[
                 "bracken", "-d", self.bracken_db_dir,
                 "-i",
-                kraken2_report_fp.name,
+                kraken2_report_fp,
                 "-o",
                 os.path.join(self.temp_dir, "sample1.bracken.output.txt"),
                 "-w",

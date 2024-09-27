@@ -203,7 +203,9 @@ class TestKraken2Database(TestPluginBase):
 
     @patch('q2_moshpit.kraken2.database.run_command')
     def test_add_seqs_to_library(self, p1):
-        seqs = DNAFASTAFormat(self.get_data_path('mags/samp1/bin1.fa'), 'r')
+        seqs = DNAFASTAFormat(self.get_data_path(
+            'mags/sample1/3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.fasta'), 'r'
+        )
 
         _add_seqs_to_library(self.kraken2_db_dir, seqs=seqs, no_masking=True)
 
@@ -218,7 +220,9 @@ class TestKraken2Database(TestPluginBase):
         side_effect=CalledProcessError(123, 'cmd')
     )
     def test_add_seqs_to_library_exception(self, p1):
-        seqs = DNAFASTAFormat(self.get_data_path('mags/samp1/bin1.fa'), 'r')
+        seqs = DNAFASTAFormat(self.get_data_path(
+            'mags/sample1/3b72d1a7-ddb0-4dc7-ac36-080ceda04aaa.fasta'), 'r'
+        )
 
         with self.assertRaisesRegex(
                 Exception,

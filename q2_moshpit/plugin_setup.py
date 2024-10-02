@@ -1297,7 +1297,7 @@ kaiju_param_descriptions = {
     "x": "Enable SEG low complexity filter.",
     "r": "Taxonomic rank.",
     "c": "Minimum required number or fraction of reads for "
-         "the taxon  (except viruses) to be reported.",
+         "the taxon (except viruses) to be reported.",
     "exp": "Expand viruses, which are always shown as full "
            "taxon path and read counts are not summarized in "
            "higher taxonomic levels.",

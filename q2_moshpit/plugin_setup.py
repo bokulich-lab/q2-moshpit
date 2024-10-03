@@ -1272,7 +1272,67 @@ plugin.methods.register_function(
     citations=[citations["menzel2016"]],
 )
 
+kaiju_params = {
+    "z": Int % Range(1, None),
+    "a": Str % Choices(["greedy", "mem"]),
+    "e": Int % Range(1, None),
+    "m": Int % Range(1, None),
+    "s": Int % Range(1, None),
+    "evalue": Float % Range(0, 1),
+    "x": Bool,
+    "r": Str % Choices(
+        ["phylum", "class", "order", "family", "genus", "species"]
+    ),
+    "c": Float % Range(0, 100, inclusive_start=True),
+    "exp": Bool,
+    "u": Bool,
+}
+kaiju_param_descriptions = {
+    "z": "Number of threads.",
+    "a": "Run mode.",
+    "e": "Number of mismatches allowed in Greedy mode.",
+    "m": "Minimum match length.",
+    "s": "Minimum match score in Greedy mode.",
+    "evalue": "Minimum E-value in Greedy mode.",
+    "x": "Enable SEG low complexity filter.",
+    "r": "Taxonomic rank.",
+    "c": "Minimum required number or fraction of reads for "
+         "the taxon (except viruses) to be reported.",
+    "exp": "Expand viruses, which are always shown as full "
+           "taxon path and read counts are not summarized in "
+           "higher taxonomic levels.",
+    "u": "Do not count unclassified reads for the total reads "
+         "when calculating percentages for classified reads."
+}
+
 plugin.methods.register_function(
+    function=q2_moshpit.kaiju._classify_kaiju,
+    inputs={
+        "seqs": SampleData[
+            SequencesWithQuality | PairedEndSequencesWithQuality
+            ],
+        "db": KaijuDB,
+    },
+    parameters=kaiju_params,
+    outputs=[
+        ("abundances", FeatureTable[Frequency]),
+        ("taxonomy", FeatureData[Taxonomy])
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified.",
+        "db": "Kaiju database.",
+    },
+    parameter_descriptions=kaiju_param_descriptions,
+    output_descriptions={
+        "abundances": "Read abundances.", "taxonomy": "Linked taxonomy."
+    },
+    name="Classify reads using Kaiju.",
+    description="This method uses Kaiju to perform taxonomic "
+                "classification of NGS reads.",
+    citations=[citations["menzel2016"]],
+)
+
+plugin.pipelines.register_function(
     function=q2_moshpit.kaiju.classify_kaiju,
     inputs={
         "seqs": SampleData[
@@ -1280,21 +1340,7 @@ plugin.methods.register_function(
             ],
         "db": KaijuDB,
     },
-    parameters={
-        "z": Int % Range(1, None),
-        "a": Str % Choices(["greedy", "mem"]),
-        "e": Int % Range(1, None),
-        "m": Int % Range(1, None),
-        "s": Int % Range(1, None),
-        "evalue": Float % Range(0, 1),
-        "x": Bool,
-        "r": Str % Choices(
-            ["phylum", "class", "order", "family", "genus", "species"]
-        ),
-        "c": Float % Range(0, 100, inclusive_start=True),
-        "exp": Bool,
-        "u": Bool,
-    },
+    parameters={**kaiju_params, **partition_params},
     outputs=[
         ("abundances", FeatureTable[Frequency]),
         ("taxonomy", FeatureData[Taxonomy])
@@ -1304,21 +1350,8 @@ plugin.methods.register_function(
         "db": "Kaiju database.",
     },
     parameter_descriptions={
-        "z": "Number of threads.",
-        "a": "Run mode.",
-        "e": "Number of mismatches allowed in Greedy mode.",
-        "m": "Minimum match length.",
-        "s": "Minimum match score in Greedy mode.",
-        "evalue": "Minimum E-value in Greedy mode.",
-        "x": "Enable SEG low complexity filter.",
-        "r": "Taxonomic rank.",
-        "c": "Minimum required number or fraction of reads for "
-             "the taxon  (except viruses) to be reported.",
-        "exp": "Expand viruses, which are always shown as full "
-               "taxon path and read counts are not summarized in "
-               "higher taxonomic levels.",
-        "u": "Do not count unclassified reads for the total reads "
-             "when calculating percentages for classified reads."
+        **kaiju_param_descriptions,
+        **partition_param_descriptions
     },
     output_descriptions={
         "abundances": "Read abundances.", "taxonomy": "Linked taxonomy."

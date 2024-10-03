@@ -72,7 +72,7 @@ class TestBracken(TestPluginBase):
         )
 
         kraken2_report_fp = self.get_data_path(
-            'kraken2-reports-select/sample1/sample1.report.txt'
+            'kraken2-reports-select/samples/sample1.report.txt'
         )
         bracken_report_dir = self.get_data_path('bracken-report')
         obs_table = _run_bracken_one_sample(

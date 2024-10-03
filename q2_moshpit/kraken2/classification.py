@@ -14,6 +14,7 @@ import pandas as pd
 from q2_types.per_sample_sequences import (
     SequencesWithQuality,
     PairedEndSequencesWithQuality,
+    JoinedSequencesWithQuality,
     SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt,
     ContigSequencesDirFmt, Contigs,
@@ -73,7 +74,8 @@ def classify_kraken2(
     collate_kraken2_outputs = ctx.get_action("moshpit",
                                              "collate_kraken2_outputs")
 
-    if seqs.type <= SampleData[SequencesWithQuality]:
+    if seqs.type <= SampleData[SequencesWithQuality |
+                               JoinedSequencesWithQuality]:
         partition_method = ctx.get_action("demux", "partition_samples_single")
     elif seqs.type <= SampleData[PairedEndSequencesWithQuality]:
         partition_method = ctx.get_action("demux", "partition_samples_paired")

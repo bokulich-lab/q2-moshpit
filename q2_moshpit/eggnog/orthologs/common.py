@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 import glob
 import os
+import shutil
 import subprocess
 from typing import List
 
@@ -16,7 +17,7 @@ from qiime2.sdk import Context
 
 from q2_types.feature_data import FeatureData
 from q2_types.feature_data_mag import MAG, MAGSequencesDirFmt
-from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt, LociDirectoryFormat
 from q2_types.per_sample_sequences import (
     Contigs, MAGs, ContigSequencesDirFmt, MultiMAGSequencesDirFmt
 )
@@ -88,14 +89,18 @@ def _run_eggnog_search_pipeline(
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
 
+    gff_dir = LociDirectoryFormat()
+    # empty file in the gff_dir to avoid an error when moving the gff files
+    open(os.path.join(str(gff_dir), 'empty.gff'), 'w').close()
+    gff_artifact = ctx.make_artifact("GenomeData[Loci]", gff_dir)
     hits = []
     for seq in partitioned_sequences.values():
-        (hit, _) = _eggnog_search(seq, *db, num_cpus, db_in_memory)
+        (hit, _) = _eggnog_search(seq, *db, gff_artifact, num_cpus, db_in_memory)
         hits.append(hit)
 
     (collated_hits,) = collate_hits(hits)
     (collated_tables,) = _eggnog_feature_table(collated_hits)
-    return collated_hits, collated_tables
+    return collated_hits, collated_tables, gff_artifact
 
 
 def _search_runner(
@@ -121,8 +126,8 @@ def _search_runner(
     """
     cmd = [
         'emapper.py', '-i', str(input_path), '-o', sample_label,
-        '-m', *runner_args,
-        '--itype', 'metagenome', '--output_dir', output_loc,
+        '-m', *runner_args, '--genepred', 'prodigal',
+        '--itype', 'metagenome', '--decorate_gff', 'yes', '--output_dir', output_loc,
         '--cpu', str(num_cpus), '--no_annot'
     ]
     if db_in_memory:
@@ -138,7 +143,7 @@ def _search_runner(
 
 
 def _eggnog_search(
-    sequences, search_runner, output_loc
+    sequences, search_runner, output_loc, gff_loc
 ) -> (SeedOrthologDirFmt, pd.DataFrame):
     # run analysis
     if isinstance(sequences, ContigSequencesDirFmt):
@@ -151,6 +156,13 @@ def _eggnog_search(
         for sample_id, mags in sequences.sample_dict().items():
             for mag_id, mag_fp in mags.items():
                 search_runner(input_path=mag_fp, sample_label=mag_id)
+
+    # iterate over the gff files and move them to the correct location
+    for fn in os.listdir(output_loc):
+        if fn.endswith('.emapper.decorated.gff'):
+            new_fn = fn.replace('.emapper.decorated.gff', '.gff')
+            shutil.move(os.path.join(str(output_loc), fn),
+                        os.path.join(str(gff_loc), new_fn))
 
     result = SeedOrthologDirFmt()
     ortholog_fps = [

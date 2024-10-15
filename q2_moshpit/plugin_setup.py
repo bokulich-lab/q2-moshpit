@@ -692,7 +692,7 @@ plugin.pipelines.register_function(
     outputs=[
         ('eggnog_hits', SampleData[Orthologs]),
         ('table', FeatureTable[Frequency]),
-        ('gff_files', GenomeData[Loci])
+        ('loci', GenomeData[Loci])
     ],
     name='Run eggNOG search using diamond aligner',
     description="This method performs the steps by which we find our "
@@ -752,17 +752,16 @@ plugin.methods.register_function(
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
-        'diamond_db': ReferenceDB[Diamond],
-        'gff_dir': GenomeData[Loci],
+        'diamond_db': ReferenceDB[Diamond]
     },
     parameters={
         'num_cpus': Int,
         'db_in_memory': Bool,
+        'loci_dir': Str
     },
     input_descriptions={
         'sequences': 'Sequences to be searched for ortholog hits.',
-        'diamond_db': 'Diamond database.',
-        'gff_dir': 'Decorated hits files'
+        'diamond_db': 'Diamond database.'
     },
     parameter_descriptions={
         'num_cpus': 'Number of CPUs to utilize. \'0\' will '
@@ -771,6 +770,7 @@ plugin.methods.register_function(
                         'database can be very large, so this '
                         'option should only be used on clusters or other '
                         'machines with enough memory.',
+        'loci_dir': 'Decorated hits files directory path.'
     },
     outputs=[
         ('eggnog_hits', SampleData[Orthologs]),

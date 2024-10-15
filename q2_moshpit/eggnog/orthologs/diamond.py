@@ -34,7 +34,7 @@ def _eggnog_diamond_search(
         MAGSequencesDirFmt
     ],
     diamond_db: DiamondDatabaseDirFmt,
-    gff_dir:LociDirectoryFormat,
+    loci_dir:str,
     num_cpus: int = 1,
     db_in_memory: bool = False,
 ) -> (SeedOrthologDirFmt, pd.DataFrame):
@@ -46,7 +46,7 @@ def _eggnog_diamond_search(
             runner_args=['diamond', '--dmnd_db', str(db_fp)]
         )
         result, ft = _eggnog_search(sequences, search_runner,
-                                    str(output_loc), str(gff_dir))
+                                    str(output_loc), loci_dir)
     return result, ft
 
 
@@ -54,8 +54,8 @@ def eggnog_diamond_search(
     ctx, sequences, diamond_db,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):
-    collated_hits, collated_tables, gff_artifact = _run_eggnog_search_pipeline(
+    collated_hits, collated_tables, loci = _run_eggnog_search_pipeline(
         ctx, sequences, [diamond_db], num_cpus, db_in_memory, num_partitions,
         "_eggnog_diamond_search"
     )
-    return collated_hits, collated_tables, gff_artifact
+    return collated_hits, collated_tables, loci

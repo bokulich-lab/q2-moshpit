@@ -89,18 +89,16 @@ def _run_eggnog_search_pipeline(
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
 
-    gff_dir = LociDirectoryFormat()
-    # empty file in the gff_dir to avoid an error when moving the gff files
-    open(os.path.join(str(gff_dir), 'empty.gff'), 'w').close()
-    gff_artifact = ctx.make_artifact("GenomeData[Loci]", gff_dir)
+    loci_dir = LociDirectoryFormat()
     hits = []
     for seq in partitioned_sequences.values():
-        (hit, _) = _eggnog_search(seq, *db, gff_artifact, num_cpus, db_in_memory)
+        (hit, _) = _eggnog_search(seq, *db, str(loci_dir), num_cpus, db_in_memory)
         hits.append(hit)
 
     (collated_hits,) = collate_hits(hits)
     (collated_tables,) = _eggnog_feature_table(collated_hits)
-    return collated_hits, collated_tables, gff_artifact
+    loci = ctx.make_artifact("GenomeData[Loci]", loci_dir)
+    return collated_hits, collated_tables, loci
 
 
 def _search_runner(
@@ -143,7 +141,7 @@ def _search_runner(
 
 
 def _eggnog_search(
-    sequences, search_runner, output_loc, gff_loc
+    sequences, search_runner, output_loc, loci_dir
 ) -> (SeedOrthologDirFmt, pd.DataFrame):
     # run analysis
     if isinstance(sequences, ContigSequencesDirFmt):
@@ -162,7 +160,7 @@ def _eggnog_search(
         if fn.endswith('.emapper.decorated.gff'):
             new_fn = fn.replace('.emapper.decorated.gff', '.gff')
             shutil.move(os.path.join(str(output_loc), fn),
-                        os.path.join(str(gff_loc), new_fn))
+                        os.path.join(loci_dir, new_fn))
 
     result = SeedOrthologDirFmt()
     ortholog_fps = [

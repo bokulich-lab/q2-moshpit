@@ -33,7 +33,7 @@ from q2_types.per_sample_sequences import (
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
 from qiime2.core.type import (
-    Bool, Range, Int, Str, Float, List, Choices, Visualization
+    Bool, Range, Int, Str, Float, List, Choices, Visualization, TypeMatch
 )
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
@@ -1789,6 +1789,154 @@ plugin.pipelines.register_function(
                 'dimension.',
     citations=[]
 )
+
+T_filter_kraken_in, remove_empty, T_filter_kraken_out = TypeMap({
+    (SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
+     Bool % Choices(True, False)):
+        SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
+
+    (SampleData[Kraken2Reports % Properties('reads', 'contigs')],
+     Bool % Choices(True, False)):
+        SampleData[Kraken2Reports % Properties('reads', 'contigs')],
+
+    (SampleData[Kraken2Reports % Properties('reads', 'mags')],
+     Bool % Choices(True, False)):
+        SampleData[Kraken2Reports % Properties('reads', 'mags')],
+
+    (SampleData[Kraken2Reports % Properties('contigs', 'mags')],
+     Bool % Choices(True, False)):
+        SampleData[Kraken2Reports % Properties('contigs', 'mags')],
+
+    (SampleData[Kraken2Reports % Properties('reads')],
+     Bool % Choices(True, False)):
+        SampleData[Kraken2Reports % Properties('reads')],
+
+    (SampleData[Kraken2Reports % Properties('contigs')],
+     Bool % Choices(True, False)):
+        SampleData[Kraken2Reports % Properties('contigs')],
+
+    (SampleData[Kraken2Reports % Properties('mags')],
+     Bool % Choices(True, False)):
+        SampleData[Kraken2Reports % Properties('mags')],
+
+    (SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
+     Bool % Choices(False)):
+        SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
+
+    (SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
+     Bool % Choices(False)):
+        SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
+
+    (SampleData[Kraken2Outputs % Properties('reads', 'mags')],
+     Bool % Choices(False)):
+        SampleData[Kraken2Outputs % Properties('reads', 'mags')],
+
+    (SampleData[Kraken2Outputs % Properties('contigs', 'mags')],
+     Bool % Choices(False)):
+        SampleData[Kraken2Outputs % Properties('contigs', 'mags')],
+
+    (SampleData[Kraken2Outputs % Properties('reads')],
+     Bool % Choices(False)):
+        SampleData[Kraken2Outputs % Properties('reads')],
+
+    (SampleData[Kraken2Outputs % Properties('contigs')],
+     Bool % Choices(False)):
+        SampleData[Kraken2Outputs % Properties('contigs')],
+
+    (SampleData[Kraken2Outputs % Properties('mags')],
+     Bool % Choices(False)):
+        SampleData[Kraken2Outputs % Properties('mags')],
+
+    (FeatureData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
+     Bool % Choices(True, False)):
+        FeatureData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
+
+    (FeatureData[Kraken2Reports % Properties('reads', 'contigs')],
+     Bool % Choices(True, False)):
+        FeatureData[Kraken2Reports % Properties('reads', 'contigs')],
+
+    (FeatureData[Kraken2Reports % Properties('reads', 'mags')],
+     Bool % Choices(True, False)):
+        FeatureData[Kraken2Reports % Properties('reads', 'mags')],
+
+    (FeatureData[Kraken2Reports % Properties('contigs', 'mags')],
+     Bool % Choices(True, False)):
+        FeatureData[Kraken2Reports % Properties('contigs', 'mags')],
+
+    (FeatureData[Kraken2Reports % Properties('reads')],
+     Bool % Choices(True, False)):
+        FeatureData[Kraken2Reports % Properties('reads')],
+
+    (FeatureData[Kraken2Reports % Properties('contigs')],
+     Bool % Choices(True, False)):
+        FeatureData[Kraken2Reports % Properties('contigs')],
+
+    (FeatureData[Kraken2Reports % Properties('mags')],
+     Bool % Choices(True, False)):
+        FeatureData[Kraken2Reports % Properties('mags')],
+
+    (FeatureData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
+     Bool % Choices(False)):
+        FeatureData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
+
+    (FeatureData[Kraken2Outputs % Properties('reads', 'contigs')],
+     Bool % Choices(False)):
+        FeatureData[Kraken2Outputs % Properties('reads', 'contigs')],
+
+    (FeatureData[Kraken2Outputs % Properties('reads', 'mags')],
+     Bool % Choices(False)):
+        FeatureData[Kraken2Outputs % Properties('reads', 'mags')],
+
+    (FeatureData[Kraken2Outputs % Properties('contigs', 'mags')],
+     Bool % Choices(False)):
+        FeatureData[Kraken2Outputs % Properties('contigs', 'mags')],
+
+    (FeatureData[Kraken2Outputs % Properties('reads')],
+     Bool % Choices(False)):
+        FeatureData[Kraken2Outputs % Properties('reads')],
+
+    (FeatureData[Kraken2Outputs % Properties('contigs')],
+     Bool % Choices(False)):
+        FeatureData[Kraken2Outputs % Properties('contigs')],
+
+    (FeatureData[Kraken2Outputs % Properties('mags')],
+     Bool % Choices(False)):
+        FeatureData[Kraken2Outputs % Properties('mags')],
+})
+
+filter_contigs_param_descriptions = {
+    "metadata": "Sample metadata indicating which sample ids to filter. "
+                "The optional `where` parameter may be used to filter ids "
+                "based on specified conditions in the metadata. The "
+                "optional `exclude_ids` parameter may be used to exclude "
+                "the ids specified in the metadata from the filter.",
+    "where": "Optional SQLite WHERE clause specifying sample metadata "
+             "criteria that must be met to be included in the filtered "
+             "data. If not provided, all samples in `metadata` that are "
+             "also in the contig data will be retained.",
+    "exclude_ids": "Defaults to False. If True, the samples selected by "
+                   "the `metadata` and optional `where` parameter will be "
+                   "excluded from the filtered data.",
+    "remove_empty": "If True, samples with no contigs will be removed from "
+                    "the filtered data.",
+}
+
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.filter_kraken_reports_outputs,
+    inputs={"report_output": T_filter_kraken_in},
+    parameters={
+        "metadata": Metadata,
+        "where": Str,
+        "exclude_ids": Bool,
+        "remove_empty": remove_empty,
+    },
+    outputs={"filtered_report_output": T_filter_kraken_out},
+    input_descriptions={"report_output": "The contigs to filter."},
+    parameter_descriptions=filter_contigs_param_descriptions,
+    name="Filter contigs.",
+    description="Filter contigs based on metadata.",
+)
+
 
 plugin.register_semantic_types(BUSCOResults, BuscoDB)
 plugin.register_formats(

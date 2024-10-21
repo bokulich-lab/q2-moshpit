@@ -18,7 +18,7 @@ from q2_moshpit.kraken2.filter import _validate_parameters, \
     filter_kraken_reports_outputs
 
 
-class TestFindEmptyReports(TestPluginBase):
+class TestFilterKrakenReportsOutputs(TestPluginBase):
     package = "q2_moshpit.kraken2.tests"
 
     @classmethod
@@ -133,18 +133,30 @@ class TestFindEmptyReports(TestPluginBase):
                 ValueError, r'--m-metadata-file.*--p-remove-empty'
         ):
             _validate_parameters(metadata=None, remove_empty=False,
-                                 where=None, exclude_ids=None)
+                                 where=None, exclude_ids=False,
+                                 report_output=None)
 
     def test_where_without_metadata(self):
         with self.assertRaisesRegex(
                 ValueError, r'--p-where.*--m-metadata-file'
         ):
             _validate_parameters(metadata=None, remove_empty=True,
-                                 where=True, exclude_ids=None)
+                                 where=True, exclude_ids=False,
+                                 report_output=None)
 
     def test_exclude_ids_without_metadata(self):
         with self.assertRaisesRegex(
-                ValueError, r'--p-exclude_ids.*--m-metadata-file'
+                ValueError, r'--p-exclude-ids.*--m-metadata-file'
         ):
             _validate_parameters(metadata=None, remove_empty=True,
-                                 where=None, exclude_ids=True)
+                                 where=None, exclude_ids=True,
+                                 report_output=None)
+
+    def test_remove_empty_with_kraken2outputdirectoryformat(self):
+        fmt = Kraken2OutputDirectoryFormat()
+        with self.assertRaisesRegex(
+                ValueError, r'--p-remove-empty.*Kraken2Output'
+        ):
+            _validate_parameters(metadata=None, remove_empty=True,
+                                 where=None, exclude_ids=False,
+                                 report_output=fmt)

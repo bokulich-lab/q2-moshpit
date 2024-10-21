@@ -14,7 +14,8 @@ from qiime2 import Metadata
 from qiime2.util import duplicate
 
 
-def _validate_parameters(metadata, remove_empty, where, exclude_ids):
+def _validate_parameters(report_output, metadata, remove_empty,
+                         where, exclude_ids):
     if not metadata and not remove_empty:
         raise ValueError('Please specify parameters "--m-metadata-file" or '
                          '"--p-remove-empty"  to filter accordingly.')
@@ -25,9 +26,16 @@ def _validate_parameters(metadata, remove_empty, where, exclude_ids):
                          '"--m-metadata-file".')
 
     if exclude_ids and not metadata:
-        raise ValueError('The parameter "--p-exclude_ids" can only be '
+        raise ValueError('The parameter "--p-exclude-ids" can only be '
                          'specified in combination with the parameter '
                          '"--m-metadata-file".')
+    if (isinstance(report_output, Kraken2OutputDirectoryFormat)
+            and remove_empty):
+        raise ValueError('The parameter "--p-remove-empty" cannot be used '
+                         'with an input of type "Kraken2Output"')
+
+
+
 
 
 def _find_empty_reports(file_dict: dict) -> set:
@@ -85,7 +93,8 @@ def filter_kraken_reports_outputs(
         remove_empty: bool = False,
 ) -> Kraken2ReportDirectoryFormat:
     # Validate parameters
-    _validate_parameters(metadata, remove_empty, where, exclude_ids)
+    _validate_parameters(report_output, metadata, remove_empty,
+                         where, exclude_ids)
 
     # Create file_dict
     file_dict = report_output.file_dict(

@@ -1790,119 +1790,37 @@ plugin.pipelines.register_function(
     citations=[]
 )
 
-T_filter_kraken_in, remove_empty, T_filter_kraken_out = TypeMap({
-    (SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
-     Bool % Choices(True, False)):
-        SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
-
-    (SampleData[Kraken2Reports % Properties('reads', 'contigs')],
-     Bool % Choices(True, False)):
-        SampleData[Kraken2Reports % Properties('reads', 'contigs')],
-
-    (SampleData[Kraken2Reports % Properties('reads', 'mags')],
-     Bool % Choices(True, False)):
-        SampleData[Kraken2Reports % Properties('reads', 'mags')],
-
-    (SampleData[Kraken2Reports % Properties('contigs', 'mags')],
-     Bool % Choices(True, False)):
-        SampleData[Kraken2Reports % Properties('contigs', 'mags')],
-
-    (SampleData[Kraken2Reports % Properties('reads')],
-     Bool % Choices(True, False)):
-        SampleData[Kraken2Reports % Properties('reads')],
-
-    (SampleData[Kraken2Reports % Properties('contigs')],
-     Bool % Choices(True, False)):
-        SampleData[Kraken2Reports % Properties('contigs')],
-
-    (SampleData[Kraken2Reports % Properties('mags')],
-     Bool % Choices(True, False)):
-        SampleData[Kraken2Reports % Properties('mags')],
-
-    (SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
-     Bool % Choices(False)):
-        SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
-
-    (SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
-     Bool % Choices(False)):
-        SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
-
-    (SampleData[Kraken2Outputs % Properties('reads', 'mags')],
-     Bool % Choices(False)):
-        SampleData[Kraken2Outputs % Properties('reads', 'mags')],
-
-    (SampleData[Kraken2Outputs % Properties('contigs', 'mags')],
-     Bool % Choices(False)):
-        SampleData[Kraken2Outputs % Properties('contigs', 'mags')],
-
-    (SampleData[Kraken2Outputs % Properties('reads')],
-     Bool % Choices(False)):
-        SampleData[Kraken2Outputs % Properties('reads')],
-
-    (SampleData[Kraken2Outputs % Properties('contigs')],
-     Bool % Choices(False)):
-        SampleData[Kraken2Outputs % Properties('contigs')],
-
-    (SampleData[Kraken2Outputs % Properties('mags')],
-     Bool % Choices(False)):
-        SampleData[Kraken2Outputs % Properties('mags')],
-
-    (FeatureData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
-     Bool % Choices(True, False)):
-        FeatureData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
-
-    (FeatureData[Kraken2Reports % Properties('reads', 'contigs')],
-     Bool % Choices(True, False)):
-        FeatureData[Kraken2Reports % Properties('reads', 'contigs')],
-
-    (FeatureData[Kraken2Reports % Properties('reads', 'mags')],
-     Bool % Choices(True, False)):
-        FeatureData[Kraken2Reports % Properties('reads', 'mags')],
-
-    (FeatureData[Kraken2Reports % Properties('contigs', 'mags')],
-     Bool % Choices(True, False)):
-        FeatureData[Kraken2Reports % Properties('contigs', 'mags')],
-
-    (FeatureData[Kraken2Reports % Properties('reads')],
-     Bool % Choices(True, False)):
-        FeatureData[Kraken2Reports % Properties('reads')],
-
-    (FeatureData[Kraken2Reports % Properties('contigs')],
-     Bool % Choices(True, False)):
-        FeatureData[Kraken2Reports % Properties('contigs')],
-
-    (FeatureData[Kraken2Reports % Properties('mags')],
-     Bool % Choices(True, False)):
-        FeatureData[Kraken2Reports % Properties('mags')],
-
-    (FeatureData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
-     Bool % Choices(False)):
-        FeatureData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
-
-    (FeatureData[Kraken2Outputs % Properties('reads', 'contigs')],
-     Bool % Choices(False)):
-        FeatureData[Kraken2Outputs % Properties('reads', 'contigs')],
-
-    (FeatureData[Kraken2Outputs % Properties('reads', 'mags')],
-     Bool % Choices(False)):
-        FeatureData[Kraken2Outputs % Properties('reads', 'mags')],
-
-    (FeatureData[Kraken2Outputs % Properties('contigs', 'mags')],
-     Bool % Choices(False)):
-        FeatureData[Kraken2Outputs % Properties('contigs', 'mags')],
-
-    (FeatureData[Kraken2Outputs % Properties('reads')],
-     Bool % Choices(False)):
-        FeatureData[Kraken2Outputs % Properties('reads')],
-
-    (FeatureData[Kraken2Outputs % Properties('contigs')],
-     Bool % Choices(False)):
-        FeatureData[Kraken2Outputs % Properties('contigs')],
-
-    (FeatureData[Kraken2Outputs % Properties('mags')],
-     Bool % Choices(False)):
-        FeatureData[Kraken2Outputs % Properties('mags')],
-})
+T_kraken = TypeMatch([
+    SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
+    SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
+    SampleData[Kraken2Reports % Properties('reads', 'contigs')],
+    SampleData[Kraken2Reports % Properties('reads', 'mags')],
+    SampleData[Kraken2Reports % Properties('contigs', 'mags')],
+    SampleData[Kraken2Reports % Properties('reads')],
+    SampleData[Kraken2Reports % Properties('contigs')],
+    SampleData[Kraken2Reports % Properties('mags')],
+    SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
+    SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
+    SampleData[Kraken2Outputs % Properties('reads', 'mags')],
+    SampleData[Kraken2Outputs % Properties('contigs', 'mags')],
+    SampleData[Kraken2Outputs % Properties('reads')],
+    SampleData[Kraken2Outputs % Properties('contigs')],
+    SampleData[Kraken2Outputs % Properties('mags')],
+    FeatureData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
+    FeatureData[Kraken2Reports % Properties('reads', 'contigs')],
+    FeatureData[Kraken2Reports % Properties('reads', 'mags')],
+    FeatureData[Kraken2Reports % Properties('contigs', 'mags')],
+    FeatureData[Kraken2Reports % Properties('reads')],
+    FeatureData[Kraken2Reports % Properties('contigs')],
+    FeatureData[Kraken2Reports % Properties('mags')],
+    FeatureData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
+    FeatureData[Kraken2Outputs % Properties('reads', 'contigs')],
+    FeatureData[Kraken2Outputs % Properties('reads', 'mags')],
+    FeatureData[Kraken2Outputs % Properties('contigs', 'mags')],
+    FeatureData[Kraken2Outputs % Properties('reads')],
+    FeatureData[Kraken2Outputs % Properties('contigs')],
+    FeatureData[Kraken2Outputs % Properties('mags')],
+])
 
 filter_contigs_param_descriptions = {
     "metadata": "Sample metadata indicating which sample ids to filter. "
@@ -1923,14 +1841,14 @@ filter_contigs_param_descriptions = {
 
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.filter_kraken_reports_outputs,
-    inputs={"report_output": T_filter_kraken_in},
+    inputs={"report_output": T_kraken},
     parameters={
         "metadata": Metadata,
         "where": Str,
         "exclude_ids": Bool,
-        "remove_empty": remove_empty,
+        "remove_empty": Bool,
     },
-    outputs={"filtered_report_output": T_filter_kraken_out},
+    outputs={"filtered_report_output": T_kraken},
     input_descriptions={"report_output": "The contigs to filter."},
     parameter_descriptions=filter_contigs_param_descriptions,
     name="Filter contigs.",

@@ -35,9 +35,6 @@ def _validate_parameters(report_output, metadata, remove_empty,
                          'with an input of type "Kraken2Output"')
 
 
-
-
-
 def _find_empty_reports(file_dict: dict) -> set:
     empty_ids = set()
     for inner_dict in file_dict.values():
@@ -85,8 +82,9 @@ def _create_filtered_results(report_output, file_dict, ids_to_keep):
 
 
 def filter_kraken_reports_outputs(
-        report_output: Union[Kraken2ReportDirectoryFormat,
-        Kraken2OutputDirectoryFormat],
+        report_output: Union[
+            Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat
+        ],
         metadata: Metadata = None,
         where: str = None,
         exclude_ids: bool = False,

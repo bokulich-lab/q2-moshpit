@@ -30,18 +30,20 @@ class TestFilterKrakenReportsOutputs(TestPluginBase):
         cls.report_mags = Kraken2ReportDirectoryFormat(
             instance.get_data_path("reports-mags"), "r"
         )
-        cls.report_mags_unclassified_missing_frac = Kraken2ReportDirectoryFormat(
-            instance.get_data_path("reports-mags-unclassified-missing-frac"),
-            "r"
-        )
+        cls.report_mags_unclassified_missing_frac = (
+            Kraken2ReportDirectoryFormat(
+                instance.get_data_path(
+                    "reports-mags-unclassified-missing-frac"),
+                "r"))
         cls.outputs_mags = Kraken2OutputDirectoryFormat(
             instance.get_data_path("outputs-mags"), "r"
         )
 
         cls.file_dict_report_mags = cls.report_mags.file_dict(
             suffixes=[".report"])
-        cls.file_dict_report_unclassified = cls.report_mags_unclassified_missing_frac.file_dict(
-            suffixes=[".report"])
+        cls.file_dict_report_unclassified = (
+            cls.report_mags_unclassified_missing_frac.file_dict(
+                suffixes=[".report"]))
         cls.file_dict_output_mags = cls.outputs_mags.file_dict(
             suffixes=[".output"])
 

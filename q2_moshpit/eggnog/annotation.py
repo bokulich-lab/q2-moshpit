@@ -68,10 +68,12 @@ def eggnog_annotate(
         num_partitions=None
 ):
     _eggnog_annotate = ctx.get_action("moshpit", "_eggnog_annotate")
-    collate_annotations = ctx.get_action("moshpit", "collate_annotations")
+    collate_annotations = ctx.get_action(
+        "types", "collate_ortholog_annotations"
+    )
 
     if eggnog_hits.type <= SampleData[Orthologs]:
-        partition_method = ctx.get_action("moshpit", "partition_orthologs")
+        partition_method = ctx.get_action("types", "partition_orthologs")
     else:
         raise NotImplementedError()
 

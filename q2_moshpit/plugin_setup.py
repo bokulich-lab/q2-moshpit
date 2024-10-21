@@ -33,7 +33,7 @@ from q2_types.per_sample_sequences import (
 from q2_types.sample_data import SampleData
 from q2_types.feature_map import FeatureMap, MAGtoContigs
 from qiime2.core.type import (
-    Bool, Range, Int, Str, Float, List, Choices, Collection, Visualization
+    Bool, Range, Int, Str, Float, List, Choices, Visualization
 )
 from qiime2.core.type import (Properties, TypeMap)
 from qiime2.plugin import (Plugin, Citations)
@@ -276,9 +276,8 @@ plugin.methods.register_function(
     },
     parameters={},
     outputs={
-        "collated_kraken2_outputs": List[
+        "collated_kraken2_outputs":
             SampleData[Kraken2Outputs % P_kraken_out]
-        ]
     },
     name="Collate kraken2 outputs",
     description="Collates kraken2 outputs"
@@ -918,104 +917,6 @@ plugin.methods.register_function(
     citations=[citations["huerta_cepas_eggnog_2019"]]
 )
 
-plugin.methods.register_function(
-    function=q2_moshpit.partition.partition_sample_data_mags,
-    inputs={"mags": SampleData[MAGs]},
-    parameters={"num_partitions": Int % Range(1, None)},
-    outputs={"partitioned_mags": Collection[SampleData[MAGs]]},
-    input_descriptions={"mags": "The MAGs to partition."},
-    parameter_descriptions={
-        "num_partitions": "The number of partitions to split the MAGs"
-        " into. Defaults to partitioning into individual"
-        " MAGs."
-    },
-    name="Partition MAGs",
-    description="Partition a SampleData[MAGs] artifact into smaller "
-                "artifacts containing subsets of the MAGs",
-)
-
-plugin.methods.register_function(
-    function=q2_moshpit.partition.partition_orthologs,
-    inputs={"orthologs": SampleData[Orthologs]},
-    parameters={"num_partitions": Int % Range(1, None)},
-    outputs={"partitioned_orthologs": Collection[SampleData[Orthologs]]},
-    input_descriptions={"orthologs": "The orthologs to partition."},
-    parameter_descriptions={
-        "num_partitions": "The number of partitions to split the MAGs"
-        " into. Defaults to partitioning into individual"
-        " MAGs."
-    },
-    name="Partition orthologs",
-    description="Partition a SampleData[Orthologs] artifact into smaller "
-                "artifacts containing subsets of the BLAST6 reports.",
-)
-
-plugin.methods.register_function(
-    function=q2_moshpit.partition.collate_sample_data_mags,
-    inputs={"mags": List[SampleData[MAGs]]},
-    parameters={},
-    outputs={"collated_mags": SampleData[MAGs]},
-    input_descriptions={"mags": "A collection of MAGs to be collated."},
-    name="Collate mags",
-    description="Takes a collection of SampleData[MAGs]'s "
-                "and collates them into a single artifact.",
-)
-
-plugin.methods.register_function(
-    function=q2_moshpit.partition.partition_feature_data_mags,
-    inputs={"mags": FeatureData[MAG]},
-    parameters={"num_partitions": Int % Range(1, None)},
-    outputs={"partitioned_mags": Collection[FeatureData[MAG]]},
-    input_descriptions={"mags": "MAGs to partition."},
-    parameter_descriptions={
-        "num_partitions": "The number of partitions to split the MAGs"
-        " into. Defaults to partitioning into individual"
-        " MAGs."
-    },
-    name="Partition MAGs",
-    description="Partition a FeatureData[MAG] artifact into smaller "
-                "artifacts containing subsets of the MAGs",
-)
-
-plugin.methods.register_function(
-    function=q2_moshpit.partition.collate_feature_data_mags,
-    inputs={"mags": List[FeatureData[MAG]]},
-    parameters={},
-    outputs={"collated_mags": FeatureData[MAG]},
-    input_descriptions={"mags": "A collection of MAGs to be collated."},
-    name="Collate mags",
-    description="Takes a collection of FeatureData[MAG]'s "
-                "and collates them into a single artifact.",
-)
-
-plugin.methods.register_function(
-    function=q2_moshpit.partition.collate_orthologs,
-    inputs={"orthologs": List[SampleData[Orthologs]]},
-    parameters={},
-    outputs={"collated_orthologs": SampleData[Orthologs]},
-    input_descriptions={"orthologs": "Orthologs to collate"},
-    parameter_descriptions={},
-    name="Collate Orthologs",
-    description="Takes a collection SampleData[Orthologs] artifacts "
-                "and collates them into a single artifact.",
-)
-
-plugin.methods.register_function(
-    function=q2_moshpit.partition.collate_annotations,
-    inputs={'ortholog_annotations': List[GenomeData[NOG]]},
-    parameters={},
-    outputs=[('collated_annotations', GenomeData[NOG])],
-    input_descriptions={
-        'ortholog_annotations': "Collection of ortholog annotations."
-    },
-    output_descriptions={
-        'collated_annotations': "Collated ortholog annotations."
-    },
-    name='Collate ortholog annotations.',
-    description="Takes a collection of GenomeData[NOG]'s "
-                "and collates them into a single artifact.",
-)
-
 # First bool flag only allowed to be True when the DB contains all lineages
 # Second bool flag only allowed to be True when the DB has property "eukaryota"
 # Third bool flag only allowed to be True when the DB has property "prokaryota"
@@ -1206,7 +1107,7 @@ busco_param_descriptions = {
 
 
 plugin.methods.register_function(
-    function=q2_moshpit.partition.collate_busco_results,
+    function=q2_moshpit.busco.collate_busco_results,
     inputs={"busco_results": List[BUSCOResults]},
     parameters={},
     outputs={"collated_busco_results": BUSCOResults},
@@ -1374,7 +1275,67 @@ plugin.methods.register_function(
     citations=[citations["menzel2016"]],
 )
 
+kaiju_params = {
+    "z": Int % Range(1, None),
+    "a": Str % Choices(["greedy", "mem"]),
+    "e": Int % Range(1, None),
+    "m": Int % Range(1, None),
+    "s": Int % Range(1, None),
+    "evalue": Float % Range(0, 1),
+    "x": Bool,
+    "r": Str % Choices(
+        ["phylum", "class", "order", "family", "genus", "species"]
+    ),
+    "c": Float % Range(0, 100, inclusive_start=True),
+    "exp": Bool,
+    "u": Bool,
+}
+kaiju_param_descriptions = {
+    "z": "Number of threads.",
+    "a": "Run mode.",
+    "e": "Number of mismatches allowed in Greedy mode.",
+    "m": "Minimum match length.",
+    "s": "Minimum match score in Greedy mode.",
+    "evalue": "Minimum E-value in Greedy mode.",
+    "x": "Enable SEG low complexity filter.",
+    "r": "Taxonomic rank.",
+    "c": "Minimum required number or fraction of reads for "
+         "the taxon (except viruses) to be reported.",
+    "exp": "Expand viruses, which are always shown as full "
+           "taxon path and read counts are not summarized in "
+           "higher taxonomic levels.",
+    "u": "Do not count unclassified reads for the total reads "
+         "when calculating percentages for classified reads."
+}
+
 plugin.methods.register_function(
+    function=q2_moshpit.kaiju._classify_kaiju,
+    inputs={
+        "seqs": SampleData[
+            SequencesWithQuality | PairedEndSequencesWithQuality
+            ],
+        "db": KaijuDB,
+    },
+    parameters=kaiju_params,
+    outputs=[
+        ("abundances", FeatureTable[Frequency]),
+        ("taxonomy", FeatureData[Taxonomy])
+    ],
+    input_descriptions={
+        "seqs": "Sequences to be classified.",
+        "db": "Kaiju database.",
+    },
+    parameter_descriptions=kaiju_param_descriptions,
+    output_descriptions={
+        "abundances": "Read abundances.", "taxonomy": "Linked taxonomy."
+    },
+    name="Classify reads using Kaiju.",
+    description="This method uses Kaiju to perform taxonomic "
+                "classification of NGS reads.",
+    citations=[citations["menzel2016"]],
+)
+
+plugin.pipelines.register_function(
     function=q2_moshpit.kaiju.classify_kaiju,
     inputs={
         "seqs": SampleData[
@@ -1382,21 +1343,7 @@ plugin.methods.register_function(
             ],
         "db": KaijuDB,
     },
-    parameters={
-        "z": Int % Range(1, None),
-        "a": Str % Choices(["greedy", "mem"]),
-        "e": Int % Range(1, None),
-        "m": Int % Range(1, None),
-        "s": Int % Range(1, None),
-        "evalue": Float % Range(0, 1),
-        "x": Bool,
-        "r": Str % Choices(
-            ["phylum", "class", "order", "family", "genus", "species"]
-        ),
-        "c": Float % Range(0, 100, inclusive_start=True),
-        "exp": Bool,
-        "u": Bool,
-    },
+    parameters={**kaiju_params, **partition_params},
     outputs=[
         ("abundances", FeatureTable[Frequency]),
         ("taxonomy", FeatureData[Taxonomy])
@@ -1406,21 +1353,8 @@ plugin.methods.register_function(
         "db": "Kaiju database.",
     },
     parameter_descriptions={
-        "z": "Number of threads.",
-        "a": "Run mode.",
-        "e": "Number of mismatches allowed in Greedy mode.",
-        "m": "Minimum match length.",
-        "s": "Minimum match score in Greedy mode.",
-        "evalue": "Minimum E-value in Greedy mode.",
-        "x": "Enable SEG low complexity filter.",
-        "r": "Taxonomic rank.",
-        "c": "Minimum required number or fraction of reads for "
-             "the taxon  (except viruses) to be reported.",
-        "exp": "Expand viruses, which are always shown as full "
-               "taxon path and read counts are not summarized in "
-               "higher taxonomic levels.",
-        "u": "Do not count unclassified reads for the total reads "
-             "when calculating percentages for classified reads."
+        **kaiju_param_descriptions,
+        **partition_param_descriptions
     },
     output_descriptions={
         "abundances": "Read abundances.", "taxonomy": "Linked taxonomy."

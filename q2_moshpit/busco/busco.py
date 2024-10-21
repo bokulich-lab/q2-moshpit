@@ -296,7 +296,7 @@ def evaluate_busco(
         partition_action = "partition_sample_data_mags"
     else:
         partition_action = "partition_feature_data_mags"
-    partition_mags = ctx.get_action("moshpit", partition_action)
+    partition_mags = ctx.get_action("types", partition_action)
 
     (partitioned_mags, ) = partition_mags(bins, num_partitions)
     results = []

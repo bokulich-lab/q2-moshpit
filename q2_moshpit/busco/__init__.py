@@ -8,7 +8,9 @@
 
 from .busco import evaluate_busco, _evaluate_busco, _visualize_busco
 from .database import fetch_busco_db
+from .partition import collate_busco_results
 
 __all__ = [
-    "evaluate_busco", "_evaluate_busco", "_visualize_busco", "fetch_busco_db"
+    "evaluate_busco", "_evaluate_busco", "_visualize_busco", "fetch_busco_db",
+    "collate_busco_results"
 ]

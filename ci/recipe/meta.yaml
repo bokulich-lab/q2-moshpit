@@ -41,8 +41,6 @@ requirements:
     - pyhmmer
 
 test:
-  files:
-    - .coveragerc
   requires:
     - coverage
     - parameterized

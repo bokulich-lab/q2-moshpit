@@ -6,16 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
-from typing import Union
 
-from q2_types.kraken2 import Kraken2ReportDirectoryFormat, \
-    Kraken2OutputDirectoryFormat
+from q2_types.kraken2 import Kraken2ReportDirectoryFormat
 from qiime2 import Metadata
 from qiime2.util import duplicate
 
 
-def _validate_parameters(report_output, metadata, remove_empty,
-                         where, exclude_ids):
+def _validate_parameters(metadata, remove_empty, where, exclude_ids):
     if not metadata and not remove_empty:
         raise ValueError('Please specify parameters "--m-metadata-file" or '
                          '"--p-remove-empty"  to filter accordingly.')
@@ -29,10 +26,6 @@ def _validate_parameters(report_output, metadata, remove_empty,
         raise ValueError('The parameter "--p-exclude-ids" can only be '
                          'specified in combination with the parameter '
                          '"--m-metadata-file".')
-    if (isinstance(report_output, Kraken2OutputDirectoryFormat)
-            and remove_empty):
-        raise ValueError('The parameter "--p-remove-empty" cannot be used '
-                         'with an input of type "Kraken2Output"')
 
 
 def _find_empty_reports(file_dict: dict) -> set:
@@ -57,14 +50,10 @@ def _find_empty_reports(file_dict: dict) -> set:
     return empty_ids
 
 
-def _create_filtered_results(report_output, file_dict, ids_to_keep):
-    # Specify output formats and file name suffixes
-    if isinstance(report_output, Kraken2ReportDirectoryFormat):
-        results = Kraken2ReportDirectoryFormat()
-        suffix = ".report"
-    else:
-        results = Kraken2OutputDirectoryFormat()
-        suffix = ".output"
+def _create_filtered_results(file_dict, ids_to_keep):
+    # Specify output format and file name suffix
+    results = Kraken2ReportDirectoryFormat()
+    suffix = ".report"
 
     for outer_id, inner_dict in file_dict.items():
         for inner_id, file_fp in inner_dict.items():
@@ -81,22 +70,19 @@ def _create_filtered_results(report_output, file_dict, ids_to_keep):
     return results
 
 
-def filter_kraken_reports_outputs(
-        report_output: Union[
-            Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat
-        ],
+def filter_kraken_reports(
+        reports: Kraken2ReportDirectoryFormat,
         metadata: Metadata = None,
         where: str = None,
         exclude_ids: bool = False,
         remove_empty: bool = False,
 ) -> Kraken2ReportDirectoryFormat:
     # Validate parameters
-    _validate_parameters(report_output, metadata, remove_empty,
-                         where, exclude_ids)
+    _validate_parameters(metadata, remove_empty, where, exclude_ids)
 
     # Create file_dict
-    file_dict = report_output.file_dict(
-        suffixes=[".report", ".output"],
+    file_dict = reports.file_dict(
+        suffixes=[".report"],
     )
 
     # Create fake outer ID if there is none, to make it easier to iterate
@@ -130,4 +116,4 @@ def filter_kraken_reports_outputs(
     if len(ids_to_keep) == 0:
         raise ValueError("No IDs remain after filtering.")
 
-    return _create_filtered_results(report_output, file_dict, ids_to_keep)
+    return _create_filtered_results(file_dict, ids_to_keep)

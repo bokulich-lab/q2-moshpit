@@ -9,16 +9,15 @@ import os.path
 
 import pandas as pd
 import qiime2
-from q2_types.kraken2 import Kraken2ReportDirectoryFormat, \
-    Kraken2OutputDirectoryFormat
+from q2_types.kraken2 import Kraken2ReportDirectoryFormat
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_moshpit.kraken2.filter import _validate_parameters, \
     _find_empty_reports, _create_filtered_results, \
-    filter_kraken_reports_outputs
+    filter_kraken_reports
 
 
-class TestFilterKrakenReportsOutputs(TestPluginBase):
+class TestFilterKrakenReports(TestPluginBase):
     package = "q2_moshpit.kraken2.tests"
 
     @classmethod
@@ -35,17 +34,12 @@ class TestFilterKrakenReportsOutputs(TestPluginBase):
                 instance.get_data_path(
                     "reports-mags-unclassified-missing-frac"),
                 "r"))
-        cls.outputs_mags = Kraken2OutputDirectoryFormat(
-            instance.get_data_path("outputs-mags"), "r"
-        )
 
         cls.file_dict_report_mags = cls.report_mags.file_dict(
             suffixes=[".report"])
         cls.file_dict_report_unclassified = (
             cls.report_mags_unclassified_missing_frac.file_dict(
                 suffixes=[".report"]))
-        cls.file_dict_output_mags = cls.outputs_mags.file_dict(
-            suffixes=[".output"])
 
         cls.metadata_df = pd.read_csv(
             instance.get_data_path("metadata/metadata.tsv"),
@@ -77,7 +71,6 @@ class TestFilterKrakenReportsOutputs(TestPluginBase):
 
     def test_create_filter_results_reports(self):
         results = _create_filtered_results(
-            report_output=self.report_mags_unclassified_missing_frac,
             file_dict={"sample1": self.file_dict_report_unclassified},
             ids_to_keep={"8894435a-c836-4c18-b475-8b38a9ab6c6b"}
         )
@@ -91,34 +84,20 @@ class TestFilterKrakenReportsOutputs(TestPluginBase):
             )
         )
 
-    def test_create_filter_results_outputs(self):
-        results = _create_filtered_results(
-            report_output=self.outputs_mags,
-            file_dict={"": self.file_dict_output_mags},
-            ids_to_keep={"8894435a-c836-4c18-b475-8b38a9ab6c6b"}
-        )
-        self.assertTrue(
-            os.path.exists(
-                os.path.join(
-                    str(results),
-                    "8894435a-c836-4c18-b475-8b38a9ab6c6b.output.txt"
-                )
-            )
-        )
 
-    def test_filter_kraken_reports_outputs_error(self):
+    def test_filter_kraken_reports_error(self):
         with self.assertRaisesRegex(
                 ValueError, "No IDs remain after filtering."
         ):
-            filter_kraken_reports_outputs(
-                report_output=self.report_mags_unclassified_missing_frac,
+            filter_kraken_reports(
+                reports=self.report_mags_unclassified_missing_frac,
                 metadata=self.metadata1,
                 exclude_ids=True
             )
 
-    def test_filter_kraken_reports_outputs_metadata(self):
-        results = filter_kraken_reports_outputs(
-            report_output=self.report_mags_unclassified_missing_frac,
+    def test_filter_kraken_reports_metadata(self):
+        results = filter_kraken_reports(
+            reports=self.report_mags_unclassified_missing_frac,
             metadata=self.metadata2,
         )
         self.assertTrue(
@@ -135,30 +114,18 @@ class TestFilterKrakenReportsOutputs(TestPluginBase):
                 ValueError, r'--m-metadata-file.*--p-remove-empty'
         ):
             _validate_parameters(metadata=None, remove_empty=False,
-                                 where=None, exclude_ids=False,
-                                 report_output=None)
+                                 where=None, exclude_ids=False)
 
     def test_where_without_metadata(self):
         with self.assertRaisesRegex(
                 ValueError, r'--p-where.*--m-metadata-file'
         ):
             _validate_parameters(metadata=None, remove_empty=True,
-                                 where=True, exclude_ids=False,
-                                 report_output=None)
+                                 where=True, exclude_ids=False)
 
     def test_exclude_ids_without_metadata(self):
         with self.assertRaisesRegex(
                 ValueError, r'--p-exclude-ids.*--m-metadata-file'
         ):
             _validate_parameters(metadata=None, remove_empty=True,
-                                 where=None, exclude_ids=True,
-                                 report_output=None)
-
-    def test_remove_empty_with_kraken2outputdirectoryformat(self):
-        fmt = Kraken2OutputDirectoryFormat()
-        with self.assertRaisesRegex(
-                ValueError, r'--p-remove-empty.*Kraken2Output'
-        ):
-            _validate_parameters(metadata=None, remove_empty=True,
-                                 where=None, exclude_ids=False,
-                                 report_output=fmt)
+                                 where=None, exclude_ids=True)

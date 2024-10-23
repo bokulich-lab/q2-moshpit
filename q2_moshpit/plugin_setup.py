@@ -1790,7 +1790,7 @@ plugin.pipelines.register_function(
     citations=[]
 )
 
-T_kraken = TypeMatch([
+T_filter_kraken_reports = TypeMatch([
     SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
     SampleData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
     SampleData[Kraken2Reports % Properties('reads', 'contigs')],
@@ -1799,13 +1799,6 @@ T_kraken = TypeMatch([
     SampleData[Kraken2Reports % Properties('reads')],
     SampleData[Kraken2Reports % Properties('contigs')],
     SampleData[Kraken2Reports % Properties('mags')],
-    SampleData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
-    SampleData[Kraken2Outputs % Properties('reads', 'contigs')],
-    SampleData[Kraken2Outputs % Properties('reads', 'mags')],
-    SampleData[Kraken2Outputs % Properties('contigs', 'mags')],
-    SampleData[Kraken2Outputs % Properties('reads')],
-    SampleData[Kraken2Outputs % Properties('contigs')],
-    SampleData[Kraken2Outputs % Properties('mags')],
     FeatureData[Kraken2Reports % Properties('reads', 'contigs', 'mags')],
     FeatureData[Kraken2Reports % Properties('reads', 'contigs')],
     FeatureData[Kraken2Reports % Properties('reads', 'mags')],
@@ -1813,46 +1806,40 @@ T_kraken = TypeMatch([
     FeatureData[Kraken2Reports % Properties('reads')],
     FeatureData[Kraken2Reports % Properties('contigs')],
     FeatureData[Kraken2Reports % Properties('mags')],
-    FeatureData[Kraken2Outputs % Properties('reads', 'contigs', 'mags')],
-    FeatureData[Kraken2Outputs % Properties('reads', 'contigs')],
-    FeatureData[Kraken2Outputs % Properties('reads', 'mags')],
-    FeatureData[Kraken2Outputs % Properties('contigs', 'mags')],
-    FeatureData[Kraken2Outputs % Properties('reads')],
-    FeatureData[Kraken2Outputs % Properties('contigs')],
-    FeatureData[Kraken2Outputs % Properties('mags')],
 ])
 
-filter_contigs_param_descriptions = {
-    "metadata": "Sample metadata indicating which sample ids to filter. "
-                "The optional `where` parameter may be used to filter ids "
-                "based on specified conditions in the metadata. The "
-                "optional `exclude_ids` parameter may be used to exclude "
-                "the ids specified in the metadata from the filter.",
-    "where": "Optional SQLite WHERE clause specifying sample metadata "
-             "criteria that must be met to be included in the filtered "
-             "data. If not provided, all samples in `metadata` that are "
-             "also in the contig data will be retained.",
-    "exclude_ids": "Defaults to False. If True, the samples selected by "
-                   "the `metadata` and optional `where` parameter will be "
-                   "excluded from the filtered data.",
-    "remove_empty": "If True, samples with no contigs will be removed from "
-                    "the filtered data.",
+filter_reports_param_descriptions = {
+    "metadata": "Metadata indicating which IDs to filter. The optional "
+                "`where` parameter may be used to filter IDs based on "
+                "specified conditions in the metadata. The optional "
+                "`exclude_ids` parameter may be used to exclude the IDs "
+                "specified in the metadata from the filter.",
+    "where": "Optional SQLite WHERE clause specifying metadata criteria that "
+             "must be met to be included in the filtered data. If not "
+             "provided, all IDs in `metadata` that are also in the data will "
+             "be retained.",
+    "exclude_ids": "If True, the samples selected by the `metadata` and "
+                   "optional `where` parameter will be excluded from the "
+                   "filtered data.",
+    "remove_empty": "If True, reports with 100% unclassified reads will be "
+                    "removed from the filtered data.",
 }
 
 plugin.methods.register_function(
-    function=q2_moshpit.kraken2.filter_kraken_reports_outputs,
-    inputs={"report_output": T_kraken},
+    function=q2_moshpit.kraken2.filter_kraken_reports,
+    inputs={"reports": T_filter_kraken_reports},
     parameters={
         "metadata": Metadata,
         "where": Str,
         "exclude_ids": Bool,
         "remove_empty": Bool,
     },
-    outputs={"filtered_report_output": T_kraken},
-    input_descriptions={"report_output": "The contigs to filter."},
+    outputs={"filtered_reports": T_filter_kraken_reports},
+    input_descriptions={"reports": "The reports to filter."},
     parameter_descriptions=filter_contigs_param_descriptions,
-    name="Filter contigs.",
-    description="Filter contigs based on metadata.",
+    name="Filter Kraken reports.",
+    description="Filter Kraken reports based on metadata or remove reports "
+                "with 100% unclassified reads.",
 )
 
 

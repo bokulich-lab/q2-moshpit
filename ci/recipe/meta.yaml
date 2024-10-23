@@ -56,7 +56,7 @@ test:
     - ls -la ./repo
     - ls -la ./test-env
     - ls -la ./distro
-    - coverage run -m pytest --rcfile ./repo/.coveragerc && coverage xml -o coverage.xml
+    - coverage run --rcfile ./repo/.coveragerc -m pytest && coverage xml -o coverage.xml
 
 about:
   home: https://github.com/bokulich-lab/q2-moshpit

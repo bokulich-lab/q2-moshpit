@@ -1,0 +1,12 @@
+[run]
+source=q2_moshpit
+branch = True
+omit =
+    **/test_*.py
+    **/__init__.py
+    **/_version.py
+    versioneer.py
+    **/_examples.py
+
+[report]
+fail_under = 90

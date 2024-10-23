@@ -16,7 +16,7 @@ import skbio
 from q2_moshpit.dereplication.derep import (
     _find_similar_bins_fcluster, _get_bin_lengths, _remap_bins,
     _reassign_bins_to_samples, _write_unique_bins, _generate_pa_table,
-    dereplicate_mags
+    dereplicate_mags, _get_busco_completeness
 )
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
@@ -157,6 +157,24 @@ class TestDereplication(TestPluginBase):
         # assert correct PA table was generated
         pd.testing.assert_frame_equal(exp_pa, obs_pa)
 
+    def test_get_busco_completeness(self):
+        busco_results = pd.read_csv(self.get_data_path("busco_results.tsv"), sep='\t', header=0, index_col=0,
+                         dtype='str')
+        busco_results.index.name = 'id'
+        bin_lengths = pd.Series(
+            [1935, 3000, 2000, 3000, 2000, 3000], name='length',
+            index=[
+                '24dee6fe-9b84-45bb-8145-de7b092533a1',
+                'ca7012fc-ba65-40c3-84f5-05aa478a7585',
+                'fb0bc871-04f6-486b-a10e-8e0cb66f8de3',
+                'd65a71fa-4279-4588-b937-0747ed5d604d',
+                'db03f8b6-28e1-48c5-a47c-9c65f38f7357',
+                'fa4d7420-d0a4-455a-b4d7-4fa66e54c9bf',
+
+            ]
+        )
+        chosen_bins = _get_busco_completeness(busco_results, self.clusters_99, bin_lengths)
+        print(chosen_bins)
 
 if __name__ == '__main__':
     unittest.main()

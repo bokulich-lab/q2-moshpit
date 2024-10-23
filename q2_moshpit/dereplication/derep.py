@@ -257,19 +257,45 @@ def _generate_pa_table(
     return presence_absence
 
 
+def _get_busco_completeness(busco_results, bin_clusters, bin_lengths):
+    bin_completeness = busco_results['complete']
+
+    # Iterate through clusters and select the representative bin
+    representative_bins = []
+    for ids in bin_clusters:
+        # Get completeness and length for the current cluster
+        best_bins = (completeness_values := bin_completeness[ids])[
+            completeness_values == completeness_values.max()].index
+        # If there's a tie, resolve by selecting the longest bin
+        if len(best_bins) > 1:
+            lengths_of_best_bins = bin_lengths[best_bins]
+            representative_bins.append(lengths_of_best_bins.idxmax())
+        else:
+            representative_bins.append(best_bins[0])
+
+    return representative_bins
+
+
 def dereplicate_mags(
     mags: MultiMAGSequencesDirFmt,
     distance_matrix: skbio.DistanceMatrix,
     threshold: float = 0.99,
+    busco_results: pd.DataFrame = None
 ) -> (MAGSequencesDirFmt, pd.DataFrame):
     distances = distance_matrix.to_data_frame()
 
     # find similar bins, according to the threshold
     bin_clusters = _find_similar_bins_fcluster(distances, threshold)
 
-    # find the longest bin in each cluster
     bin_lengths = _get_bin_lengths(mags)
-    longest_bins = [bin_lengths[ids].idxmax() for ids in bin_clusters]
+
+    if busco_results is not None:
+        representative_bins = (
+            _get_busco_completeness(busco_results, bin_clusters, bin_lengths)
+        )
+    else:
+        representative_bins = \
+            [bin_lengths[ids].idxmax() for ids in bin_clusters]
 
     # generate a map between the original bins and the dereplicated bins
     final_bins = _remap_bins(bin_clusters, longest_bins, distances)

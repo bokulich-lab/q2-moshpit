@@ -418,7 +418,8 @@ plugin.methods.register_function(
     function=q2_moshpit.dereplication.dereplicate_mags,
     inputs={
         "mags": SampleData[MAGs],
-        "distance_matrix": DistanceMatrix
+        "distance_matrix": DistanceMatrix,
+        "busco_results": BUSCOResults
     },
     parameters={
         "threshold": Float % Range(0, 1, inclusive_end=True)
@@ -429,8 +430,10 @@ plugin.methods.register_function(
     ],
     input_descriptions={
         "mags": "MAGs to be dereplicated.",
-        "distance_matrix": "Matrix of distances between MAGs."
-    },
+        "distance_matrix": "Matrix of distances between MAGs.",
+        "busco_results": "BUSCO results.",
+
+},
     parameter_descriptions={
         "threshold": "Similarity threshold required to consider "
                      "two bins identical."

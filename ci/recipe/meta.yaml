@@ -50,6 +50,9 @@ test:
     - q2_moshpit
     - qiime2.plugins.moshpit
   commands:
+    - echo "Starting tests..."
+    - echo "Listing current directory contents..."
+    - ls -la
     - coverage run -m pytest && coverage xml -o coverage.xml
 
 about:

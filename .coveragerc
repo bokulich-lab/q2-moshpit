@@ -2,7 +2,7 @@
 source=q2_moshpit
 branch = True
 omit =
-    **/tests**
+    **/tests*
     **/__init__.py
     q2_moshpit/_version.py
     versioneer.py
@@ -10,7 +10,7 @@ omit =
 [report]
 fail_under = 90
 omit =
-    **/tests**
+    **/tests*
     **/__init__.py
     q2_moshpit/_version.py
     versioneer.py

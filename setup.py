@@ -25,7 +25,6 @@ setup(
         ['q2-moshpit=q2_moshpit.plugin_setup:plugin']
     },
     package_data={
-        '.': ['.coveragerc',],
         'q2_moshpit': [
             'citations.bib',
             'tests/data/*',

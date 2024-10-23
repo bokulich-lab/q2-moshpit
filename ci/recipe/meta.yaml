@@ -41,8 +41,6 @@ requirements:
     - pyhmmer
 
 test:
-  source_files:
-    - ../../.coveragerc
   requires:
     - coverage
     - pytest-cov
@@ -51,7 +49,7 @@ test:
     - q2_moshpit
     - qiime2.plugins.moshpit
   commands:
-    - pytest --cov q2_moshpit --cov-report xml:coverage.xml --cov-config=.coveragerc --pyargs q2_moshpit
+    - coverage run --omit "**/tests*,**/__init__.py,q2_moshpit/_version.py,versioneer.py" -m pytest && coverage xml -o coverage.xml
 
 about:
   home: https://github.com/bokulich-lab/q2-moshpit

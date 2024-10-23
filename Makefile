@@ -12,7 +12,7 @@ test: all
 	py.test
 
 test-cov: all
-	python -m coverage run --omit "**/tests*,**/__init__.py,q2_moshpit/_version.py,versioneer.py" -m pytest && coverage xml -o coverage.xml
+	python -m coverage run --omit "**/tests*,**/__init__.py,**/_version.py,versioneer.py" -m pytest && coverage xml -o coverage.xml
 
 install: all
 	$(PYTHON) setup.py install

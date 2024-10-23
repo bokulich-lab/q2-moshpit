@@ -84,7 +84,6 @@ class TestFilterKrakenReports(TestPluginBase):
             )
         )
 
-
     def test_filter_kraken_reports_error(self):
         with self.assertRaisesRegex(
                 ValueError, "No IDs remain after filtering."

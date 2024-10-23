@@ -41,6 +41,8 @@ requirements:
     - pyhmmer
 
 test:
+  source_files:
+    - .coveragerc
   requires:
     - coverage
     - pytest-cov

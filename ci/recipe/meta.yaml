@@ -53,6 +53,9 @@ test:
     - echo "Starting tests..."
     - echo "Listing current directory contents..."
     - ls -la
+    - ls -la ./repo
+    - ls -la ./test-env
+    - ls -la ./distro
     - coverage run -m pytest && coverage xml -o coverage.xml
 
 about:

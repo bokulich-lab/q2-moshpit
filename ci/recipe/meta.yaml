@@ -48,7 +48,7 @@ test:
     - q2_moshpit
     - qiime2.plugins.moshpit
   commands:
-    - coverage run --omit "**/tests*,**/__init__.py,**/_version.py,versioneer.py,**/_examples.py" -m pytest && coverage xml -o coverage.xml
+    - coverage run --omit "**/test_*.py,**/__init__.py,**/_version.py,versioneer.py,**/_examples.py" -m pytest && coverage xml -o coverage.xml
 
 about:
   home: https://github.com/bokulich-lab/q2-moshpit

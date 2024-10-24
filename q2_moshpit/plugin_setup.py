@@ -432,8 +432,7 @@ plugin.methods.register_function(
         "mags": "MAGs to be dereplicated.",
         "distance_matrix": "Matrix of distances between MAGs.",
         "busco_results": "BUSCO results.",
-
-},
+    },
     parameter_descriptions={
         "threshold": "Similarity threshold required to consider "
                      "two bins identical."

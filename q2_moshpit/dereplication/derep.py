@@ -119,7 +119,7 @@ def _get_bin_lengths(mags: MultiMAGSequencesDirFmt) -> pd.Series:
 
 def _remap_bins(
     bin_clusters: List[List[str]],
-    longest_bins: List[str],
+    representative_bins: List[str],
     distances: pd.DataFrame
 ) -> Dict[str, str]:
     """
@@ -129,7 +129,7 @@ def _remap_bins(
     Args:
         bin_clusters (list): A list of lists, where each inner list contains
                                 the IDs of similar bins.
-        longest_bins (str): A list of longest bin for each cluster.
+        representative_bins (str): A list of longest bin for each cluster.
         distances (pd.DataFrame): The original bin distance matrix.
 
     Returns:
@@ -153,7 +153,7 @@ def _remap_bins(
     final_bins = {}
     for i, similar_bins in enumerate(bin_clusters):
         for bin in similar_bins:
-            final_bins[bin] = longest_bins[i]
+            final_bins[bin] = representative_bins[i]
     for bin in distances.index:
         if bin not in final_bins:
             final_bins[bin] = bin
@@ -257,21 +257,45 @@ def _generate_pa_table(
     return presence_absence
 
 
-def _get_busco_completeness(busco_results, bin_clusters, bin_lengths):
-    bin_completeness = busco_results['complete']
+def _get_representatives(mags, busco_results, bin_clusters):
+    """
+    This function identifies the representative bin for each cluster of bins.
+    If `busco_results` is provided, the selection is first based on
+    completeness, and in case of a tie, the longest bin is chosen. If
+    `busco_results` is not available, the longest bin is selected by default.
 
-    # Iterate through clusters and select the representative bin
-    representative_bins = []
-    for ids in bin_clusters:
-        # Get completeness and length for the current cluster
-        best_bins = (completeness_values := bin_completeness[ids])[
-            completeness_values == completeness_values.max()].index
-        # If there's a tie, resolve by selecting the longest bin
-        if len(best_bins) > 1:
-            lengths_of_best_bins = bin_lengths[best_bins]
-            representative_bins.append(lengths_of_best_bins.idxmax())
-        else:
-            representative_bins.append(best_bins[0])
+    Args:
+        mags: A MultiMAGSequencesDirFmt object containing all bins.
+        busco_results: A DataFrame containing BUSCO results.
+        bin_clusters: A list of lists where each inner list contains the IDs
+                      of bins grouped by similarity.
+
+    Returns:
+        A list of representative bin IDs, one for each cluster.
+    """
+    bin_lengths = _get_bin_lengths(mags)
+
+    # Choose by BUSCO results
+    if busco_results is not None:
+        bin_completeness = busco_results['complete']
+
+        representative_bins = []
+        for bins in bin_clusters:
+            # Get bins with the highest completeness values in cluster
+            completest_bins = (completeness_values := bin_completeness[bins])[
+                completeness_values == completeness_values.max()].index
+
+            # If there's a tie, resolve by selecting the longest bin
+            if len(completest_bins) > 1:
+                lengths_of_best_bins = bin_lengths[completest_bins]
+                representative_bins.append(lengths_of_best_bins.idxmax())
+            else:
+                representative_bins.append(completest_bins[0])
+
+    # Choose by length
+    else:
+        representative_bins = \
+            [bin_lengths[ids].idxmax() for ids in bin_clusters]
 
     return representative_bins
 
@@ -287,18 +311,13 @@ def dereplicate_mags(
     # find similar bins, according to the threshold
     bin_clusters = _find_similar_bins_fcluster(distances, threshold)
 
-    bin_lengths = _get_bin_lengths(mags)
-
-    if busco_results is not None:
-        representative_bins = (
-            _get_busco_completeness(busco_results, bin_clusters, bin_lengths)
+    # select one representative bin per cluster by BUSCO results and length
+    representative_bins = (
+            _get_representatives(mags, busco_results, bin_clusters)
         )
-    else:
-        representative_bins = \
-            [bin_lengths[ids].idxmax() for ids in bin_clusters]
 
     # generate a map between the original bins and the dereplicated bins
-    final_bins = _remap_bins(bin_clusters, longest_bins, distances)
+    final_bins = _remap_bins(bin_clusters, representative_bins, distances)
 
     # generate dereplicated bin sequences
     unique_bin_seqs = _write_unique_bins(mags, final_bins)

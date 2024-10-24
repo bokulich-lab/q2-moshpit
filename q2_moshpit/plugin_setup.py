@@ -446,7 +446,10 @@ plugin.methods.register_function(
     description='This method dereplicates MAGs from multiple samples '
                 'using distances between them found in the provided '
                 'distance matrix. For each cluster of similar MAGs, '
-                'the longest one will be selected as the representative.',
+                'the longest one will be selected as the representative. If '
+                '"busco-results" are given as input, the MAG with the '
+                'highest completness value is chosen. If there are MAGs with '
+                'identical completeness, the longer one is chosen.',
     citations=[]
 )
 

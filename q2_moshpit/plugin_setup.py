@@ -1141,10 +1141,7 @@ plugin.methods.register_function(
     },
     input_descriptions={
         "bins": "MAGs to be analyzed.",
-        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
-                    "mode. If not provided a BUSCO database "
-                    "will be downloaded to a temporary location and then "
-                    "deleted."
+        "busco_db": "BUSCO database."
     },
     parameter_descriptions=busco_param_descriptions,
     output_descriptions={

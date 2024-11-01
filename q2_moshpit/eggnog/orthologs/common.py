@@ -121,7 +121,7 @@ def _search_runner(
     """
     cmd = [
         'emapper.py', '-i', str(input_path), '-o', sample_label,
-        '-m', *runner_args,
+        '-m', *runner_args, '--genepred', 'prodigal',
         '--itype', 'metagenome', '--output_dir', output_loc,
         '--cpu', str(num_cpus), '--no_annot'
     ]

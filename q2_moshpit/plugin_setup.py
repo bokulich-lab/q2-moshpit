@@ -419,10 +419,11 @@ plugin.methods.register_function(
     inputs={
         "mags": SampleData[MAGs],
         "distance_matrix": DistanceMatrix,
-        "busco_results": BUSCOResults
     },
     parameters={
-        "threshold": Float % Range(0, 1, inclusive_end=True)
+        "threshold": Float % Range(0, 1, inclusive_end=True),
+        "metadata": Metadata,
+        "metadata_column": Str
     },
     outputs=[
         ('dereplicated_mags', FeatureData[MAG]),
@@ -431,11 +432,13 @@ plugin.methods.register_function(
     input_descriptions={
         "mags": "MAGs to be dereplicated.",
         "distance_matrix": "Matrix of distances between MAGs.",
-        "busco_results": "BUSCO results.",
     },
     parameter_descriptions={
         "threshold": "Similarity threshold required to consider "
-                     "two bins identical."
+                     "two bins identical.",
+        "metadata": "Metadata table.",
+        "metadata_column": "Name of the metadata column used to choose the "
+                           "most representative bins."
     },
     output_descriptions={
         "dereplicated_mags": "Dereplicated MAGs.",
@@ -446,9 +449,12 @@ plugin.methods.register_function(
                 'using distances between them found in the provided '
                 'distance matrix. For each cluster of similar MAGs, '
                 'the longest one will be selected as the representative. If '
-                '"busco-results" are given as input, the MAG with the '
-                'highest completness value is chosen. If there are MAGs with '
-                'identical completeness, the longer one is chosen.',
+                'metadata is given as input, the MAG with the '
+                'highest value in the specified metadata column is chosen. '
+                'If there are MAGs with identical values, the longer one is '
+                'chosen. For example an artifact of type BUSCOResults can be '
+                'passed as metadata, and the dereplication can be done by '
+                'completness.',
     citations=[]
 )
 

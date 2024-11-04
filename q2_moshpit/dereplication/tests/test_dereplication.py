@@ -11,6 +11,7 @@ import os
 import unittest
 
 import pandas as pd
+import qiime2
 import skbio
 
 from q2_moshpit.dereplication.derep import (
@@ -72,6 +73,13 @@ class TestDereplication(TestPluginBase):
                 '24dee6fe-9b84-45bb-8145-de7b092533a1': 0
             }
         }
+        self.busco_results = pd.read_csv(
+            filepath_or_buffer=self.get_data_path("busco_results.tsv"),
+            sep='\t',
+            index_col=0,
+            dtype='str'
+        )
+        self.busco_results.index.name = 'id'
 
     def test_find_clusters_fcluster_similar(self):
         obs = _find_similar_bins_fcluster(self.dist_matrix_df, 0.99)
@@ -138,7 +146,8 @@ class TestDereplication(TestPluginBase):
     def test_dereplicate_mags(self):
         mags = MultiMAGSequencesDirFmt(self.get_data_path('mags'), mode='r')
 
-        obs_mags, obs_pa = dereplicate_mags(mags, self.dist_matrix, 0.99)
+        obs_mags, obs_pa = dereplicate_mags(mags, self.dist_matrix,
+                                            threshold=0.99)
         exp_mags = MAGSequencesDirFmt(
             self.get_data_path('mags-unique'), mode='r'
         )
@@ -158,16 +167,10 @@ class TestDereplication(TestPluginBase):
         pd.testing.assert_frame_equal(exp_pa, obs_pa)
 
     def test_get_representatives_busco(self):
-        busco_results = pd.read_csv(
-            filepath_or_buffer=self.get_data_path("busco_results.tsv"),
-            sep='\t',
-            index_col=0,
-            dtype='str'
-        )
-        busco_results.index.name = 'id'
         obs = _get_representatives(
             mags=self.bins,
-            busco_results=busco_results,
+            metadata=qiime2.Metadata(self.busco_results),
+            column_name="complete",
             bin_clusters=self.clusters_99,
         )
         exp = [
@@ -180,7 +183,8 @@ class TestDereplication(TestPluginBase):
     def test_get_representatives_length(self):
         obs = _get_representatives(
             mags=self.bins,
-            busco_results=None,
+            metadata=None,
+            column_name=None,
             bin_clusters=self.clusters_99,
         )
         exp = [
@@ -189,6 +193,24 @@ class TestDereplication(TestPluginBase):
             'd65a71fa-4279-4588-b937-0747ed5d604d'
         ]
         self.assertListEqual(exp, obs)
+
+    def test_get_representatives_key_error(self):
+        with self.assertRaisesRegex(KeyError, "version"):
+            _get_representatives(
+                mags=self.bins,
+                metadata=qiime2.Metadata(self.busco_results),
+                column_name="version",
+                bin_clusters=self.clusters_99,
+            )
+
+    def test_get_representatives_value_error(self):
+        with self.assertRaisesRegex(ValueError, "numerical"):
+            _get_representatives(
+                mags=self.bins,
+                metadata=qiime2.Metadata(self.busco_results),
+                column_name="dataset",
+                bin_clusters=self.clusters_99,
+            )
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ from typing import List, Dict
 import pandas as pd
 import skbio
 from q2_types.feature_data import DNAFASTAFormat
+from qiime2 import Metadata
 from scipy.cluster.hierarchy import ward, fcluster
 
 from q2_types.feature_data_mag import MAGSequencesDirFmt
@@ -257,16 +258,17 @@ def _generate_pa_table(
     return presence_absence
 
 
-def _get_representatives(mags, busco_results, bin_clusters):
+def _get_representatives(mags, metadata, column_name, bin_clusters):
     """
     This function identifies the representative bin for each cluster of bins.
-    If `busco_results` is provided, the selection is first based on
-    completeness, and in case of a tie, the longest bin is chosen. If
-    `busco_results` is not available, the longest bin is selected by default.
+    If metadata is provided, the selection is based on a numerical metadata
+    column. In case of a tie, the longest bin is chosen. If metadata is not
+    provided, the longest bin is selected by default.
 
     Args:
         mags: A MultiMAGSequencesDirFmt object containing all bins.
-        busco_results: A DataFrame containing BUSCO results.
+        metadata: Qiime metadata.
+        column_name: Name of a column in metadata.
         bin_clusters: A list of lists where each inner list contains the IDs
                       of bins grouped by similarity.
 
@@ -275,20 +277,37 @@ def _get_representatives(mags, busco_results, bin_clusters):
     """
     bin_lengths = _get_bin_lengths(mags)
 
-    # Choose by BUSCO results
-    if busco_results is not None:
-        bin_completeness = busco_results['complete']
+    # Choose by metadata
+    if metadata is not None:
+        try:
+            metadata_column = (
+                metadata.to_dataframe()[column_name].astype(float)
+            )
+        except KeyError:
+            raise KeyError(f'The column "{column_name}" does not exist '
+                           f'in the metadata.')
+        except ValueError:
+            raise ValueError('The specified metadata column has to be '
+                             'numerical.')
     
         representative_bins = []
         for bins in bin_clusters:
-            # Get bins with the highest completeness values in cluster
-            completest_bins = bin_completeness[bins].idxmax()
+            # Get bin IDs with the highest column values in cluster
+            try:
+                highest_value_bins = (
+                    values := metadata_column[bins]
+                )[values == values.max()].index
+            except TypeError:
+                raise TypeError(f'The column "{column_name}" has to be '
+                                f'numerical.')
     
             # If there's a tie, resolve by selecting the longest bin
-            if len(completest_bins) > 1:
-                representative_bins.append(bin_lengths[completest_bins].idxmax())
+            if len(highest_value_bins) > 1:
+                representative_bins.append(
+                    bin_lengths[highest_value_bins].idxmax()
+                )
             else:
-                representative_bins.append(completest_bins[0])
+                representative_bins.append(highest_value_bins[0])
 
     # Choose by length
     else:
@@ -301,8 +320,9 @@ def _get_representatives(mags, busco_results, bin_clusters):
 def dereplicate_mags(
     mags: MultiMAGSequencesDirFmt,
     distance_matrix: skbio.DistanceMatrix,
+    metadata: Metadata = None,
+    metadata_column: str = "complete",
     threshold: float = 0.99,
-    busco_results: pd.DataFrame = None
 ) -> (MAGSequencesDirFmt, pd.DataFrame):
     distances = distance_matrix.to_data_frame()
 
@@ -311,7 +331,7 @@ def dereplicate_mags(
 
     # select one representative bin per cluster by BUSCO results and length
     representative_bins = _get_representatives(
-        mags, busco_results, bin_clusters
+        mags, metadata, metadata_column, bin_clusters
     )
 
     # generate a map between the original bins and the dereplicated bins

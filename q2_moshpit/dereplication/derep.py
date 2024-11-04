@@ -312,9 +312,9 @@ def dereplicate_mags(
     bin_clusters = _find_similar_bins_fcluster(distances, threshold)
 
     # select one representative bin per cluster by BUSCO results and length
-    representative_bins = (
-            _get_representatives(mags, busco_results, bin_clusters)
-        )
+    representative_bins = _get_representatives(
+        mags, busco_results, bin_clusters
+    )
 
     # generate a map between the original bins and the dereplicated bins
     final_bins = _remap_bins(bin_clusters, representative_bins, distances)

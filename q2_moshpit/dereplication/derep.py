@@ -289,7 +289,7 @@ def _get_representatives(mags, metadata, column_name, bin_clusters):
         except ValueError:
             raise ValueError('The specified metadata column has to be '
                              'numerical.')
-    
+
         representative_bins = []
         for bins in bin_clusters:
             # Get bin IDs with the highest column values in cluster
@@ -300,7 +300,7 @@ def _get_representatives(mags, metadata, column_name, bin_clusters):
             except TypeError:
                 raise TypeError(f'The column "{column_name}" has to be '
                                 f'numerical.')
-    
+
             # If there's a tie, resolve by selecting the longest bin
             if len(highest_value_bins) > 1:
                 representative_bins.append(

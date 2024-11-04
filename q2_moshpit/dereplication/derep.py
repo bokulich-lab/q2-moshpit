@@ -278,17 +278,15 @@ def _get_representatives(mags, busco_results, bin_clusters):
     # Choose by BUSCO results
     if busco_results is not None:
         bin_completeness = busco_results['complete']
-
+    
         representative_bins = []
         for bins in bin_clusters:
             # Get bins with the highest completeness values in cluster
-            completest_bins = (completeness_values := bin_completeness[bins])[
-                completeness_values == completeness_values.max()].index
-
+            completest_bins = bin_completeness[bins].idxmax()
+    
             # If there's a tie, resolve by selecting the longest bin
             if len(completest_bins) > 1:
-                lengths_of_best_bins = bin_lengths[completest_bins]
-                representative_bins.append(lengths_of_best_bins.idxmax())
+                representative_bins.append(bin_lengths[completest_bins].idxmax())
             else:
                 representative_bins.append(completest_bins[0])
 

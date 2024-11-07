@@ -444,7 +444,7 @@ plugin.methods.register_function(
                     "the metadata column. Set to False to choose the bin "
                     "with the lowest value.",
 
-},
+    },
     output_descriptions={
         "dereplicated_mags": "Dereplicated MAGs.",
         "feature_table": "Mapping between MAGs and samples."

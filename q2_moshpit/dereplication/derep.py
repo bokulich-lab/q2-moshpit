@@ -258,7 +258,7 @@ def _generate_pa_table(
     return presence_absence
 
 
-def _get_representatives(mags, metadata, column_name, bin_clusters):
+def _get_representatives(mags, metadata, column_name, bin_clusters, find_max):
     """
     This function identifies the representative bin for each cluster of bins.
     If metadata is provided, the selection is based on a numerical metadata
@@ -271,6 +271,9 @@ def _get_representatives(mags, metadata, column_name, bin_clusters):
         column_name: Name of a column in metadata.
         bin_clusters: A list of lists where each inner list contains the IDs
                       of bins grouped by similarity.
+        find_max: Boolean, if true the bin with the highest value in the
+                  metadata column will be chosen, if false the lowest value
+                  is chosen.
 
     Returns:
         A list of representative bin IDs, one for each cluster.
@@ -292,18 +295,18 @@ def _get_representatives(mags, metadata, column_name, bin_clusters):
 
         representative_bins = []
         for bins in bin_clusters:
-            # Get bin IDs with the highest column values in cluster
-            highest_value_bins = (
+            # Get bin IDs with the max or min column values in cluster
+            max_min_value_bins = (
                 values := metadata_column[bins]
-            )[values == values.max()].index
+            )[values == (values.max() if find_max else values.min())].index
 
             # If there's a tie, resolve by selecting the longest bin
-            if len(highest_value_bins) > 1:
+            if len(max_min_value_bins) > 1:
                 representative_bins.append(
-                    bin_lengths[highest_value_bins].idxmax()
+                    bin_lengths[max_min_value_bins].idxmax()
                 )
             else:
-                representative_bins.append(highest_value_bins[0])
+                representative_bins.append(max_min_value_bins[0])
 
     # Choose by length
     else:
@@ -316,18 +319,19 @@ def _get_representatives(mags, metadata, column_name, bin_clusters):
 def dereplicate_mags(
     mags: MultiMAGSequencesDirFmt,
     distance_matrix: skbio.DistanceMatrix,
+    threshold: float = 0.99,
     metadata: Metadata = None,
     metadata_column: str = "complete",
-    threshold: float = 0.99,
+    find_max: bool = True,
 ) -> (MAGSequencesDirFmt, pd.DataFrame):
     distances = distance_matrix.to_data_frame()
 
     # find similar bins, according to the threshold
     bin_clusters = _find_similar_bins_fcluster(distances, threshold)
 
-    # select one representative bin per cluster by BUSCO results and length
+    # select one representative bin per cluster by metadata and length
     representative_bins = _get_representatives(
-        mags, metadata, metadata_column, bin_clusters
+        mags, metadata, metadata_column, bin_clusters, find_max
     )
 
     # generate a map between the original bins and the dereplicated bins

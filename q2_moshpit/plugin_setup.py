@@ -423,7 +423,8 @@ plugin.methods.register_function(
     parameters={
         "threshold": Float % Range(0, 1, inclusive_end=True),
         "metadata": Metadata,
-        "metadata_column": Str
+        "metadata_column": Str,
+        "find_max": Bool
     },
     outputs=[
         ('dereplicated_mags', FeatureData[MAG]),
@@ -438,8 +439,12 @@ plugin.methods.register_function(
                      "two bins identical.",
         "metadata": "Metadata table.",
         "metadata_column": "Name of the metadata column used to choose the "
-                           "most representative bins."
-    },
+                           "most representative bins.",
+        "find_max": "Set to True to choose the bin with the highest value in "
+                    "the metadata column. Set to False to choose the bin "
+                    "with the lowest value.",
+
+},
     output_descriptions={
         "dereplicated_mags": "Dereplicated MAGs.",
         "feature_table": "Mapping between MAGs and samples."
@@ -450,11 +455,12 @@ plugin.methods.register_function(
                 'distance matrix. For each cluster of similar MAGs, '
                 'the longest one will be selected as the representative. If '
                 'metadata is given as input, the MAG with the '
-                'highest value in the specified metadata column is chosen. '
+                'highest or lowest value in the specified metadata column '
+                'is chosen, depending on the parameter "find-max". '
                 'If there are MAGs with identical values, the longer one is '
                 'chosen. For example an artifact of type BUSCOResults can be '
                 'passed as metadata, and the dereplication can be done by '
-                'completness.',
+                'highest "completness".',
     citations=[]
 )
 

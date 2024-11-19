@@ -86,6 +86,25 @@ class TestKrakenSelect(TestPluginBase):
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
 
+    def test_kraken2_to_features_duplicated_genus(self):
+        reports = Kraken2ReportDirectoryFormat(
+            self.get_data_path("duplicated-genus/"), "r"
+        )
+        obs_table, obs_taxonomy = kraken2_to_features(
+            reports, coverage_threshold=0.0)
+        # 51977 is the taxon code for pilophorus which shares a genus name with
+        # taxon code 237084
+        assert '51977' in obs_taxonomy.index
+        assert '51977' in obs_table.columns
+        assert '237084' in obs_taxonomy.index
+        assert '237084' in obs_table.columns
+
+        # Taxon codes 51977 and 5199 are sister genera and 5199 needs to be in 
+        # the first evaluated tree and 51977 must be absent
+        # to induce this duplicated genus name issue in the second tree
+        assert '5199' in obs_taxonomy.index
+        assert '5199' in obs_table.columns
+
     def test_kraken2_to_features_coverage_threshold(self):
         reports = Kraken2ReportDirectoryFormat(
             self.get_data_path("kraken2-reports-select/samples"), "r"

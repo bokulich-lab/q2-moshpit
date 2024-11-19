@@ -99,7 +99,7 @@ class TestKrakenSelect(TestPluginBase):
         assert '237084' in obs_taxonomy.index
         assert '237084' in obs_table.columns
 
-        # Taxon codes 51977 and 5199 are sister genera and 5199 needs to be in 
+        # Taxon codes 51977 and 5199 are sister genera and 5199 needs to be in
         # the first evaluated tree and 51977 must be absent
         # to induce this duplicated genus name issue in the second tree
         assert '5199' in obs_taxonomy.index

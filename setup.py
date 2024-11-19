@@ -117,6 +117,7 @@ setup(
             'data/bracken-report/*/*',
             'data/bracken-report-with-unclassified/*',
             'data/bracken-report-with-unclassified/*/*',
+            'data/duplicated-genus/*',
             'data/kraken2-reports-select/*',
             'data/kraken2-reports-select/*/*',
             'data/kraken2-to-ncbi-tree/*',

@@ -223,21 +223,35 @@ def _kraken_to_ncbi_tree(df):
 def _combine_ncbi_trees(trees):
     full_tree = trees[0]
     for tree in trees[1:]:
+        tip_cache = {t.name: t for t in full_tree.tips()}
         for tip in list(tree.tips()):
-            try:
-                # check if taxid is already in this tree
-                full_tree.find(tip.name)
+            # check if taxid is already in this tree
+            if tip.name in tip_cache:
                 continue  # for clarity
-            except skbio.tree.MissingNodeError:
+            else:
                 parents = list(tip.ancestors())[:-1]  # ignore unnamed root
                 matching = full_tree
-                while parents:
+                subtree_inserted = False
+                while parents and not subtree_inserted:
                     node = parents.pop()
-                    try:
-                        matching = matching.find(node.name)
-                    except skbio.tree.MissingNodeError:
+                    ancestor_found = False
+
+                    for child in matching.children:
+                        if child.name == node.name:
+                            matching = child
+                            ancestor_found = True
+                            break
+                    if not ancestor_found:
                         matching.append(node)
-                        break
+                        for t in node.tips():
+                            tip_cache[t.name] = t
+                        assert tip.name in tip_cache
+                        subtree_inserted = True
+
+                if not subtree_inserted:
+                    # should be impossible. Implies ancestor_found was always
+                    # True but not in tip_cache
+                    raise AssertionError(f"{tip.name} could not be inserted")
     return full_tree
 
 

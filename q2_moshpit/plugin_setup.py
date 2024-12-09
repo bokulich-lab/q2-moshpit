@@ -756,8 +756,7 @@ plugin.methods.register_function(
     },
     parameters={
         'num_cpus': Int,
-        'db_in_memory': Bool,
-        'loci_dir': Str
+        'db_in_memory': Bool
     },
     input_descriptions={
         'sequences': 'Sequences to be searched for ortholog hits.',
@@ -770,16 +769,17 @@ plugin.methods.register_function(
                         'database can be very large, so this '
                         'option should only be used on clusters or other '
                         'machines with enough memory.',
-        'loci_dir': 'Decorated hits files directory path.'
     },
     outputs=[
         ('eggnog_hits', SampleData[Orthologs]),
-        ('table', FeatureTable[Frequency])
+        ('table', FeatureTable[Frequency]),
+        ('loci', GenomeData[Loci])
     ],
     output_descriptions={
         'eggnog_hits': 'BLAST6-like table(s) describing the identified '
                        'orthologs. One table per sample or MAG in the input.',
-        'table': 'Feature table with counts of orthologs per sample/MAG.'
+        'table': 'Feature table with counts of orthologs per sample/MAG.',
+        'loci': 'Loci of the identified orthologs.'
     },
     name='Run eggNOG search using Diamond aligner',
     description="This method performs the steps by which we find our "

@@ -218,7 +218,7 @@ class TestDiamond(TestPluginBase):
             self.get_data_path('contig-sequences-1')
         ).view(ContigSequencesDirFmt)
 
-        _, obs = _eggnog_diamond_search(
+        _, obs, _ = _eggnog_diamond_search(
             sequences=contigs,
             diamond_db=self.diamond_db
         )
@@ -234,7 +234,7 @@ class TestDiamond(TestPluginBase):
             self.get_data_path('mag-sequences')
         ).view(MAGSequencesDirFmt)
 
-        _, obs = _eggnog_diamond_search(
+        _, obs, _ = _eggnog_diamond_search(
             sequences=mags,
             diamond_db=self.diamond_db
         )
@@ -253,7 +253,7 @@ class TestDiamond(TestPluginBase):
             self.get_data_path('mag-sequences-per-sample')
         ).view(MultiMAGSequencesDirFmt)
 
-        _, obs = _eggnog_diamond_search(
+        _, obs, _ = _eggnog_diamond_search(
             sequences=mags,
             diamond_db=self.diamond_db
         )
@@ -279,12 +279,12 @@ class TestDiamond(TestPluginBase):
         )
 
         with self.test_config:
-            _, parallel = self.eggnog_diamond_search.parallel(
+            _, parallel, _ = self.eggnog_diamond_search.parallel(
                 contigs,
                 self.diamond_db_artifact
             )._result()
 
-        _, single = self._eggnog_diamond_search(
+        _, single, _ = self._eggnog_diamond_search(
             sequences=contigs,
             diamond_db=self.diamond_db_artifact
         )
@@ -301,12 +301,12 @@ class TestDiamond(TestPluginBase):
         )
 
         with self.test_config:
-            _, parallel = self.eggnog_diamond_search.parallel(
+            _, parallel, _ = self.eggnog_diamond_search.parallel(
                 mags,
                 self.diamond_db_artifact
             )._result()
 
-        _, single = self._eggnog_diamond_search(
+        _, single, _ = self._eggnog_diamond_search(
             sequences=mags,
             diamond_db=self.diamond_db_artifact
         )
@@ -323,12 +323,12 @@ class TestDiamond(TestPluginBase):
         )
 
         with self.test_config:
-            _, parallel = self.eggnog_diamond_search.parallel(
+            _, parallel, _ = self.eggnog_diamond_search.parallel(
                 mags,
                 self.diamond_db_artifact
             )._result()
 
-        _, single = self._eggnog_diamond_search(
+        _, single, _ = self._eggnog_diamond_search(
             sequences=mags,
             diamond_db=self.diamond_db_artifact
         )

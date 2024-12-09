@@ -41,7 +41,6 @@ def _create_symlinks(
                 os.path.join(target_dir, filename)
             )
 
-
 def _run_eggnog_search_pipeline(
         ctx: Context,
         sequences: qiime2.Artifact,
@@ -86,19 +85,21 @@ def _run_eggnog_search_pipeline(
     partition_method = ctx.get_action(plugin, action_name)
     _eggnog_search = ctx.get_action("moshpit", search_action)
     collate_hits = ctx.get_action("types", "collate_orthologs")
+    collate_loci = ctx.get_action("types", "collate_loci")
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
 
-    loci_dir = LociDirectoryFormat()
     hits = []
+    loci = []
     for seq in partitioned_sequences.values():
-        (hit, _) = _eggnog_search(seq, *db, str(loci_dir), num_cpus, db_in_memory)
+        (hit, _, loci_dir) = _eggnog_search(seq, *db, num_cpus, db_in_memory)
         hits.append(hit)
+        loci.append(loci_dir)
 
     (collated_hits,) = collate_hits(hits)
     (collated_tables,) = _eggnog_feature_table(collated_hits)
-    loci = ctx.make_artifact("GenomeData[Loci]", loci_dir)
-    return collated_hits, collated_tables, loci
+    (collated_loci,) = collate_loci(loci)
+    return collated_hits, collated_tables, collated_loci
 
 
 def _search_runner(
@@ -122,10 +123,11 @@ def _search_runner(
         into memory.
     - runner_args: Additional arguments to pass to the eggNOG-mapper command.
     """
+    #output_loc = os.path.join("/home","dgrabocka", "q2_moshpit_enh", "trial")
     cmd = [
         'emapper.py', '-i', str(input_path), '-o', sample_label,
         '-m', *runner_args, '--genepred', 'prodigal',
-        '--itype', 'metagenome', '--decorate_gff', 'yes', '--output_dir', output_loc,
+        '--itype', 'metagenome', '--output_dir', output_loc,
         '--cpu', str(num_cpus), '--no_annot'
     ]
     if db_in_memory:
@@ -141,7 +143,7 @@ def _search_runner(
 
 
 def _eggnog_search(
-    sequences, search_runner, output_loc, loci_dir
+    sequences, search_runner, output_loc
 ) -> (SeedOrthologDirFmt, pd.DataFrame):
     # run analysis
     if isinstance(sequences, ContigSequencesDirFmt):
@@ -156,11 +158,17 @@ def _eggnog_search(
                 search_runner(input_path=mag_fp, sample_label=mag_id)
 
     # iterate over the gff files and move them to the correct location
-    for fn in os.listdir(output_loc):
-        if fn.endswith('.emapper.decorated.gff'):
-            new_fn = fn.replace('.emapper.decorated.gff', '.gff')
-            shutil.move(os.path.join(str(output_loc), fn),
-                        os.path.join(loci_dir, new_fn))
+    loci_dir = LociDirectoryFormat()
+    gff_fp = [
+        os.path.basename(x) for x
+        in glob.glob(f'{output_loc}/*.emapper.genepred.gff')
+    ]
+    for fn in gff_fp:
+        new_fn = fn.replace('.emapper.genepred.gff', '.gff')
+        qiime2.util.duplicate(
+            os.path.join(output_loc, fn),
+            os.path.join(loci_dir.path, new_fn)
+        )
 
     result = SeedOrthologDirFmt()
     ortholog_fps = [
@@ -174,7 +182,7 @@ def _eggnog_search(
         )
 
     ft = _eggnog_feature_table(result)
-    return result, ft
+    return result, ft, loci_dir
 
 
 def _eggnog_feature_table(seed_orthologs: SeedOrthologDirFmt) -> pd.DataFrame:

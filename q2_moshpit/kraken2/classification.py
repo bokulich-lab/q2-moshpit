@@ -210,22 +210,25 @@ def classify_kraken2_helper(
             "stdout and stderr to learn more."
         )
 
-    _abundance_filter(kraken2_reports_dir=kraken2_reports_dir,
-                      kraken2_outputs_dir=kraken2_outputs_dir)
-
     return kraken2_reports_dir, kraken2_outputs_dir
 
 
-def _abundance_filter(kraken2_reports_dir, kraken2_outputs_dir,
-                      abundance_threshold=0):
+def filter_kraken2_classifications(
+    reports: Kraken2ReportDirectoryFormat,
+    outputs: Kraken2OutputDirectoryFormat,
+    abundance_threshold: float = 0
+) -> (Kraken2ReportDirectoryFormat, Kraken2OutputDirectoryFormat):
+
     def get_sample_id(fn, type):
         return str(fn).rsplit(f'.{type}', maxsplit=1)[0]
 
+    new_kraken2_reports_dir = Kraken2ReportDirectoryFormat()
+    new_kraken2_outputs_dir = Kraken2OutputDirectoryFormat()
     # Cacheing output file name and format for access later
-    output_views = list(kraken2_outputs_dir.reports.iter_views(
+    output_views = list(outputs.reports.iter_views(
         Kraken2OutputFormat))
 
-    for report_fn, report in kraken2_reports_dir.reports.iter_views(
+    for report_fn, report in reports.reports.iter_views(
         Kraken2ReportFormat
     ):
         report_df = report.view(pd.DataFrame)
@@ -234,8 +237,7 @@ def _abundance_filter(kraken2_reports_dir, kraken2_outputs_dir,
         ids_to_filter = report_df.index.difference(filtered_report_df.index)
         taxon_ids = report_df.loc[ids_to_filter, 'taxon_id']
         taxa_to_filter = taxon_ids.values
-        filtered_report_df.to_csv(kraken2_reports_dir.path / report_fn,
-                                  sep='\t', header=None, index=None)
+
         # Need to access the output file for the same sample
         sample_id = get_sample_id(report_fn, "report")
 
@@ -249,7 +251,7 @@ def _abundance_filter(kraken2_reports_dir, kraken2_outputs_dir,
                                  f" {sample_id} was found"
                                  f" {len(filtered_output_views)} times.")
         output_view = filtered_output_views[0]
-        output_fn, output = output_view
+        _, output = output_view
         output_df = output.view(pd.DataFrame)
 
         # Need to filter any reads (lines in an output file) that are
@@ -261,6 +263,16 @@ def _abundance_filter(kraken2_reports_dir, kraken2_outputs_dir,
             raise ValueError("All Taxonomic bins were filtered by the"
                              f" abundance threshold in {sample_id}. Consider"
                              " lowering the abundance threshold.")
+
         # Then write new output file to disk :)
-        filtered_output_df.to_csv(kraken2_outputs_dir.path / output_fn,
+        output_fp, report_fp = _construct_output_paths(
+                _sample=sample_id, kraken2_outputs_dir=new_kraken2_outputs_dir,
+                kraken2_reports_dir=new_kraken2_reports_dir
+            )
+        filtered_report_df.to_csv(report_fp,
                                   sep='\t', header=None, index=None)
+
+        filtered_output_df.to_csv(output_fp,
+                                  sep='\t', header=None, index=None)
+
+    return new_kraken2_reports_dir, new_kraken2_outputs_dir

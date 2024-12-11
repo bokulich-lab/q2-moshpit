@@ -1785,6 +1785,24 @@ plugin.pipelines.register_function(
     citations=[]
 )
 
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.classification.filter_kraken2_classifications,
+    inputs={
+        'reports': SampleData[Kraken2Reports],
+        'outputs': SampleData[Kraken2Outputs]
+    },
+    parameters={
+        'abundance_threshold': Float % Range(0, 100, inclusive_end=True)},
+    outputs=[('filtered_reports', SampleData[Kraken2Reports]),
+             ('filtered_outputs', SampleData[Kraken2Outputs])],
+    input_descriptions={},
+    parameter_descriptions={},
+    output_descriptions={},
+    name='Filter Kraken2 Classifications by Abundance',
+    description='...',
+    citations=[]
+)
+
 plugin.register_semantic_types(BUSCOResults, BuscoDB)
 plugin.register_formats(
     BUSCOResultsFormat, BUSCOResultsDirectoryFormat, BuscoDatabaseDirFmt

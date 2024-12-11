@@ -26,7 +26,7 @@ from q2_types.kraken2 import (
 )
 from q2_moshpit.kraken2.classification import (
     _get_seq_paths, _construct_output_paths, _classify_kraken2,
-    classify_kraken2_helper, _abundance_filter
+    classify_kraken2_helper, filter_kraken2_classifications
 )
 
 from qiime2 import Artifact
@@ -107,7 +107,7 @@ class TestClassifyKraken2Helpers(TestPluginBase):
 
         return reports_format, outputs_format
 
-    def test_abundance_filter_defaults(self):
+    def test_filter_kraken2_classifications_defaults(self):
         reports_format, outputs_format = self.get_abundance_filter_data()
 
         exp_reports = {}
@@ -121,8 +121,10 @@ class TestClassifyKraken2Helpers(TestPluginBase):
         ):
             exp_outputs[sample] = output.view(pd.DataFrame)
 
-        _abundance_filter(kraken2_reports_dir=reports_format,
-                          kraken2_outputs_dir=outputs_format)
+        reports_format, outputs_format = filter_kraken2_classifications(
+            reports=reports_format,
+            outputs=outputs_format
+        )
 
         obs_reports = {}
         obs_outputs = {}
@@ -143,12 +145,13 @@ class TestClassifyKraken2Helpers(TestPluginBase):
             pd.testing.assert_frame_equal(obs_outputs[sample],
                                           exp_outputs[sample])
 
-    def test_abundance_filter(self):
+    def test_filter_kraken2_classifications(self):
         reports_format, outputs_format = self.get_abundance_filter_data()
 
-        _abundance_filter(kraken2_reports_dir=reports_format,
-                          kraken2_outputs_dir=outputs_format,
-                          abundance_threshold=0.01)
+        reports_format, outputs_format = filter_kraken2_classifications(
+            reports=reports_format,
+            outputs=outputs_format,
+            abundance_threshold=0.01)
 
         obs_reports = {}
         obs_outputs = {}
@@ -160,6 +163,7 @@ class TestClassifyKraken2Helpers(TestPluginBase):
         for sample, output in outputs_format.reports.iter_views(
             Kraken2OutputFormat
         ):
+            print(sample_id)
             sample_id = str(sample).split('.output.')[0]
             obs_outputs[sample_id] = output.view(pd.DataFrame)
 
@@ -191,14 +195,14 @@ class TestClassifyKraken2Helpers(TestPluginBase):
         self.assertNotIn(2775496, list(obs_outputs['sample2']['taxon_id']))
         self.assertEqual(len(obs_outputs['sample2']), 15)
 
-    def test_abundance_filter_empty_results(self):
+    def test_filter_kraken2_classifications_empty_results(self):
         reports_format, outputs_format = self.get_abundance_filter_data()
 
         with self.assertRaisesRegex(ValueError, ".*sample1.*abundance"
                                     " threshold."):
-            _abundance_filter(kraken2_reports_dir=reports_format,
-                              kraken2_outputs_dir=outputs_format,
-                              abundance_threshold=101)
+            filter_kraken2_classifications(reports=reports_format,
+                                           outputs=outputs_format,
+                                           abundance_threshold=101)
 
 
 class TestClassifyKraken2HasCorrectCalls(TestPluginBase):

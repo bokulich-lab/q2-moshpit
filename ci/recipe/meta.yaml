@@ -17,21 +17,38 @@ requirements:
     - setuptools
 
   run:
+    - altair
+    - beautifulsoup4
+    - bracken
+    - busco >=5.5.0
+    - diamond
+    - eggnog-mapper >=2.1.10
+    - gfatools
+    - kaiju
     - kraken2
     - metabat2
-    - samtools
+    - pandas
+    - parameterized
     - qiime2 {{ qiime2_epoch }}.*
-    - q2-types-genomics {{ qiime2_epoch }}.*
+    - q2-types {{ qiime2_epoch }}.*
+    - q2templates {{ qiime2_epoch }}.*
+    - q2-assembly {{ qiime2_epoch }}.*
+    - q2-quality-control {{ qiime2_epoch }}.*
+    - samtools
+    - seqtk
+    - tqdm
+    - xmltodict
+    - pyhmmer
 
 test:
   requires:
     - coverage
-    - pytest-cov
+    - parameterized
   imports:
     - q2_moshpit
     - qiime2.plugins.moshpit
   commands:
-    - pytest --cov q2_moshpit --pyargs q2_moshpit
+    - coverage run --rcfile ./repo/.coveragerc -m pytest && coverage xml -o coverage.xml
 
 about:
   home: https://github.com/bokulich-lab/q2-moshpit

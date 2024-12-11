@@ -12,8 +12,7 @@ test: all
 	py.test
 
 test-cov: all
-	coverage run -m pytest
-	coverage xml
+	python -m coverage run -m pytest && coverage xml -o coverage.xml
 
 install: all
 	$(PYTHON) setup.py install

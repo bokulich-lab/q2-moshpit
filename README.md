@@ -1,7 +1,6 @@
 # q2-moshpit
-![CI](https://github.com/bokulich-lab/q2-moshpit/actions/workflows/ci.yml/badge.svg)
-[![codecov](https://codecov.io/gh/bokulich-lab/q2-moshpit/branch/main/graph/badge.svg?token=PSCAYJUP01)](https://codecov.io/gh/bokulich-lab/q2-moshpit)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![CI](https://github.com/bokulich-lab/q2-moshpit/actions/workflows/ci.yaml/badge.svg)
+[![codecov](https://codecov.io/gh/bokulich-lab/q2-moshpit/graph/badge.svg?token=PSCAYJUP01)](https://codecov.io/gh/bokulich-lab/q2-moshpit)
 
 **MO**dular **SH**otgun metagenome **P**ipelines with **I**ntegrated provenance **T**racking
 QIIME 2 plugin for functional annotation and taxonomic classification of shotgun metagenomes.

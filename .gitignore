@@ -25,7 +25,6 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -130,3 +129,15 @@ dmypy.json
 
 # PyCharm configuration
 .idea/
+
+# Mac OS
+.DS_Store
+
+# VS code settings
+.vscode
+
+# Ignore notebooks
+**/*.ipynb
+
+# Ignore parsl dir
+runinfo

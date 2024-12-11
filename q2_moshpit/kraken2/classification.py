@@ -10,6 +10,7 @@ import subprocess
 from copy import deepcopy
 from typing import Union, Optional
 
+
 import pandas as pd
 from q2_types.per_sample_sequences import (
     SequencesWithQuality,
@@ -29,6 +30,8 @@ from q2_types.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat,
     Kraken2DBDirectoryFormat,
+    Kraken2ReportFormat,
+    Kraken2OutputFormat
 )
 
 
@@ -207,4 +210,57 @@ def classify_kraken2_helper(
             "stdout and stderr to learn more."
         )
 
+    _abundance_filter(kraken2_reports_dir=kraken2_reports_dir,
+                      kraken2_outputs_dir=kraken2_outputs_dir)
+
     return kraken2_reports_dir, kraken2_outputs_dir
+
+
+def _abundance_filter(kraken2_reports_dir, kraken2_outputs_dir,
+                      abundance_threshold=0):
+    def get_sample_id(fn, type):
+        return str(fn).rsplit(f'.{type}', maxsplit=1)[0]
+
+    # Cacheing output file name and format for access later
+    output_views = list(kraken2_outputs_dir.reports.iter_views(
+        Kraken2OutputFormat))
+
+    for report_fn, report in kraken2_reports_dir.reports.iter_views(
+        Kraken2ReportFormat
+    ):
+        report_df = report.view(pd.DataFrame)
+        filtered_report_df = report_df[
+            report_df['perc_frags_covered'] >= abundance_threshold]
+        ids_to_filter = report_df.index.difference(filtered_report_df.index)
+        taxon_ids = report_df.loc[ids_to_filter, 'taxon_id']
+        taxa_to_filter = taxon_ids.values
+        filtered_report_df.to_csv(kraken2_reports_dir.path / report_fn,
+                                  sep='\t', header=None, index=None)
+        # Need to access the output file for the same sample
+        sample_id = get_sample_id(report_fn, "report")
+
+        filtered_output_views = [
+            view for view in output_views
+            if sample_id == get_sample_id(view[0], "output")
+        ]
+
+        if len(filtered_output_views) != 1:
+            raise AssertionError("0/2 or more matching sample ids found."
+                                 f" {sample_id} was found"
+                                 f" {len(filtered_output_views)} times.")
+        output_view = filtered_output_views[0]
+        output_fn, output = output_view
+        output_df = output.view(pd.DataFrame)
+
+        # Need to filter any reads (lines in an output file) that are
+        # in taxon_to_yeet
+        filtered_output_df = output_df[
+            ~output_df['taxon_id'].isin(taxa_to_filter)]
+
+        if filtered_report_df.empty or filtered_output_df.empty:
+            raise ValueError("All Taxonomic bins were filtered by the"
+                             f" abundance threshold in {sample_id}. Consider"
+                             " lowering the abundance threshold.")
+        # Then write new output file to disk :)
+        filtered_output_df.to_csv(kraken2_outputs_dir.path / output_fn,
+                                  sep='\t', header=None, index=None)

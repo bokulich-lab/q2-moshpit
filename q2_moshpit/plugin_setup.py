@@ -1785,18 +1785,20 @@ plugin.pipelines.register_function(
     citations=[]
 )
 
-TM = TypeMatch([Kraken2Reports % Properties('reads'), 
-                Kraken2Reports % Properties('contigs')])
+TMR = TypeMatch([Kraken2Reports % Properties('reads'),
+                 Kraken2Reports % Properties('contigs')])
+TMO = TypeMatch([Kraken2Outputs % Properties('reads'),
+                 Kraken2Outputs % Properties('contigs')])
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.classification.filter_kraken2_classifications,
     inputs={
-        'reports': SampleData[TM],
-        'outputs': SampleData[TM]
+        'reports': SampleData[TMR],
+        'outputs': SampleData[TMO]
     },
     parameters={
         'abundance_threshold': Float % Range(0, 100, inclusive_end=True)},
-    outputs=[('filtered_reports', SampleData[TM]),
-             ('filtered_outputs', SampleData[TM])],
+    outputs=[('filtered_reports', SampleData[TMR]),
+             ('filtered_outputs', SampleData[TMO])],
     input_descriptions={},
     parameter_descriptions={},
     output_descriptions={},

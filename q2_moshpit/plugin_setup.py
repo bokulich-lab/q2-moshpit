@@ -36,7 +36,7 @@ from q2_types.feature_map import FeatureMap, MAGtoContigs
 from qiime2.core.type import (
     Bool, Range, Int, Str, Float, List, Choices, Visualization
 )
-from qiime2.core.type import (Properties, TypeMap)
+from qiime2.core.type import (Properties, TypeMap, TypeMatch)
 from qiime2.plugin import (Plugin, Citations)
 import q2_moshpit._examples as ex
 import q2_moshpit
@@ -1785,16 +1785,17 @@ plugin.pipelines.register_function(
     citations=[]
 )
 
+TM = TypeMatch([Properties('reads', 'contigs')])
 plugin.methods.register_function(
     function=q2_moshpit.kraken2.classification.filter_kraken2_classifications,
     inputs={
-        'reports': SampleData[Kraken2Reports],
-        'outputs': SampleData[Kraken2Outputs]
+        'reports': SampleData[Kraken2Reports % TM],
+        'outputs': SampleData[Kraken2Outputs % TM]
     },
     parameters={
         'abundance_threshold': Float % Range(0, 100, inclusive_end=True)},
-    outputs=[('filtered_reports', SampleData[Kraken2Reports]),
-             ('filtered_outputs', SampleData[Kraken2Outputs])],
+    outputs=[('filtered_reports', SampleData[Kraken2Reports % TM]),
+             ('filtered_outputs', SampleData[Kraken2Outputs % TM])],
     input_descriptions={},
     parameter_descriptions={},
     output_descriptions={},

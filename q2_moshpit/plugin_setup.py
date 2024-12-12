@@ -460,7 +460,7 @@ plugin.methods.register_function(
                 'If there are MAGs with identical values, the longer one is '
                 'chosen. For example an artifact of type BUSCOResults can be '
                 'passed as metadata, and the dereplication can be done by '
-                'highest "completness".',
+                'highest "completeness".',
     citations=[]
 )
 

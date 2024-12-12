@@ -3,14 +3,14 @@
 [![codecov](https://codecov.io/gh/bokulich-lab/q2-moshpit/graph/badge.svg?token=PSCAYJUP01)](https://codecov.io/gh/bokulich-lab/q2-moshpit)
 
 **MO**dular **SH**otgun metagenome **P**ipelines with **I**ntegrated provenance **T**racking
+
 QIIME 2 plugin for functional annotation and taxonomic classification of shotgun metagenomes.
 
 ## Installation
 _q2-moshpit_ is available as part of the QIIME 2 metagenome distribution. For installation and usage instructions please consult the official [QIIME 2 documentation](https://www.docs.qiime2.org). 
 
 ## Functionality
-This QIIME 2 plugin contains actions used to annotate and classify (meta)genomes.
-Below you will find an overview of actions available in the plugin.
+This QIIME 2 plugin contains actions used to annotate and classify (meta)genomes:
 
 | Action               | Description                                                | Underlying tool                                                    |
 |----------------------|------------------------------------------------------------|--------------------------------------------------------------------|

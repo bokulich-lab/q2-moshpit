@@ -45,7 +45,7 @@ def _eggnog_diamond_search(
             runner_args=['diamond', '--dmnd_db', str(db_fp)]
         )
         result, ft, loci = _eggnog_search(sequences, search_runner,
-                                    str(output_loc))
+                                          str(output_loc))
     return result, ft, loci
 
 

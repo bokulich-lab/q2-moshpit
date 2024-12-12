@@ -7,7 +7,6 @@
 # ----------------------------------------------------------------------------
 import glob
 import os
-import shutil
 import subprocess
 from typing import List
 
@@ -17,7 +16,8 @@ from qiime2.sdk import Context
 
 from q2_types.feature_data import FeatureData
 from q2_types.feature_data_mag import MAG, MAGSequencesDirFmt
-from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt, LociDirectoryFormat
+from q2_types.genome_data import (SeedOrthologDirFmt, OrthologFileFmt,
+                                  LociDirectoryFormat)
 from q2_types.per_sample_sequences import (
     Contigs, MAGs, ContigSequencesDirFmt, MultiMAGSequencesDirFmt
 )
@@ -40,6 +40,7 @@ def _create_symlinks(
                 os.path.join(str(src), filename),
                 os.path.join(target_dir, filename)
             )
+
 
 def _run_eggnog_search_pipeline(
         ctx: Context,
@@ -123,7 +124,6 @@ def _search_runner(
         into memory.
     - runner_args: Additional arguments to pass to the eggNOG-mapper command.
     """
-    #output_loc = os.path.join("/home","dgrabocka", "q2_moshpit_enh", "trial")
     cmd = [
         'emapper.py', '-i', str(input_path), '-o', sample_label,
         '-m', *runner_args, '--genepred', 'prodigal',

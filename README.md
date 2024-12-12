@@ -6,21 +6,7 @@
 QIIME 2 plugin for functional annotation and taxonomic classification of shotgun metagenomes.
 
 ## Installation
-To install _q2-moshpit_, follow the installation steps described below.
-
-```shell
-mamba create -yn q2-shotgun \
-  -c https://packages.qiime2.org/qiime2/2023.5/tested \
-  -c bioconda -c conda-forge -c default q2-moshpit q2cli
-
-conda activate q2-shotgun
-```
-
-Refresh cache and check that everything worked:
-```shell
-qiime dev refresh-cache
-qiime info
-```
+_q2-moshpit_ is available as part of the QIIME 2 metagenome distribution. For installation and usage instructions please consult the official [QIIME 2 documentation](https://www.docs.qiime2.org). 
 
 ## Functionality
 This QIIME 2 plugin contains actions used to annotate and classify (meta)genomes.
@@ -29,14 +15,32 @@ Below you will find an overview of actions available in the plugin.
 | Action               | Description                                                | Underlying tool                                                    |
 |----------------------|------------------------------------------------------------|--------------------------------------------------------------------|
 | bin-contigs-metabat  | Bin contigs into MAGs using MetaBat 2.                     | [MetaBat 2](https://bitbucket.org/berkeleylab/metabat/src/master/) |
+| build-custom-diamond-db | Create a DIAMOND reference database from a FASTA input file. | [Diamond](https://github.com/bbuchfink/diamond) |
+| build-eggnog-diamond-db | Create a DIAMOND reference database for the specified taxon. | [Diamond](https://github.com/bbuchfink/diamond) |
 | build-kraken-db      | Fetch an existing or build a custom Kraken 2 database.     | [Kraken 2](https://ccb.jhu.edu/software/kraken2/)                  |
-| classify-kraken      | Classify reads/MAGs using Kraken 2.                        | [Kraken 2](https://ccb.jhu.edu/software/kraken2/)                  |
-| classify-kraken-bracken      | Classify reads using Kraken 2 and re-estimate abundances with Bracken.  | [Bracken](https://ccb.jhu.edu/software/bracken/index.shtml) |
-
-
-## Dev environment
-This repository follows the _black_ code style. To make the development slightly easier
-there are a couple of pre-commit hooks included here that will ensure that your changes
-follow that formatting style. Before you start working on the code, please
-install the hooks by executing `make dev` in your conda environment. From then on,
-they will be run automatically every time you commit any changes.
+| classify-kaiju | Classify reads using Kaiju. | [Kaiju](https://bioinformatics-centre.github.io/kaiju/) |
+| classify-kraken2      | Classify reads/MAGs using Kraken 2.                        | [Kraken 2](https://ccb.jhu.edu/software/kraken2/)                  |
+| dereplicate-mags | Dereplicate MAGs from multiple samples. | - |
+| eggnog-annotate          | Annotate orthologs against eggNOG database. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
+| eggnog-diamond-search    | Run eggNOG search using diamond aligner. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
+| eggnog-hmmer-search      | Run eggNOG search using HMMER aligner. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
+| estimate-bracken         | Perform read abundance re-estimation using Bracken. | [Kraken 2](https://ccb.jhu.edu/software/bracken/) |
+| estimate-mag-abundance   | Estimate MAG abundance. | - | 
+| evaluate-busco           | Evaluate quality of the generated MAGs using BUSCO. | [BUSCO](https://busco.ezlab.org) |
+| extract-annotations      | Extract annotation frequencies from all annotations. | - |
+| fetch-busco-db           | Download BUSCO database. | [BUSCO](https://busco.ezlab.org) |
+| fetch-diamond-db         | Fetch the complete Diamond database necessary to run the eggnog-diamond-search action. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
+| fetch-eggnog-db          | Fetch the databases necessary to run the eggnog-annotate action. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
+| fetch-eggnog-hmmer-db    | Fetch the taxon specific database necessary to run the eggnog-hmmer-search action. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
+| fetch-eggnog-proteins    | Fetch the databases necessary to run the build-eggnog-diamond-db action. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
+| fetch-kaiju-db           | Fetch Kaiju database. | [Kaiju](https://bioinformatics-centre.github.io/kaiju/) |
+| fetch-ncbi-taxonomy      | Fetch NCBI reference taxonomy. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
+| filter-derep-mags        | Filter dereplicated MAGs. | - |
+| filter-mags              | Filter MAGs. | - |
+| filter-reads-pangenome   | Remove contaminating human reads. | [Bowtie 2](https://bowtie-bio.sourceforge.net/bowtie2/index.shtml) |
+| get-feature-lengths      | Get feature lengths. | - |
+| inspect-kraken2-db       | Inspect a Kraken 2 database. |
+| kraken2-to-features      | Select downstream features from Kraken 2. | - |
+| kraken2-to-mag-features  | Select downstream MAG features from Kraken 2. | - |
+| multiply-tables          | Multiply two feature tables. | - |
+| predict-genes-prodigal   | Predict gene sequences from MAGs using Prodigal. | [Prodigal](https://github.com/hyattpd/Prodigal) |

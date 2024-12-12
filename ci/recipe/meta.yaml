@@ -42,13 +42,12 @@ requirements:
 
 test:
   requires:
-    - coverage
     - parameterized
   imports:
     - q2_moshpit
     - qiime2.plugins.moshpit
   commands:
-    - coverage run --rcfile ./repo/.coveragerc -m pytest && coverage xml -o coverage.xml
+    - pytest --pyargs q2_moshpit
 
 about:
   home: https://github.com/bokulich-lab/q2-moshpit

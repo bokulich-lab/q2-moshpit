@@ -11,12 +11,13 @@ import os
 import unittest
 
 import pandas as pd
+import qiime2
 import skbio
 
 from q2_moshpit.dereplication.derep import (
     _find_similar_bins_fcluster, _get_bin_lengths, _remap_bins,
     _reassign_bins_to_samples, _write_unique_bins, _generate_pa_table,
-    dereplicate_mags
+    dereplicate_mags, _get_representatives
 )
 from q2_types.feature_data_mag import MAGSequencesDirFmt
 from q2_types.per_sample_sequences import MultiMAGSequencesDirFmt
@@ -72,6 +73,13 @@ class TestDereplication(TestPluginBase):
                 '24dee6fe-9b84-45bb-8145-de7b092533a1': 0
             }
         }
+        self.busco_results = pd.read_csv(
+            filepath_or_buffer=self.get_data_path("busco_results.tsv"),
+            sep='\t',
+            index_col=0,
+            dtype='str'
+        )
+        self.busco_results.index.name = 'id'
 
     def test_find_clusters_fcluster_similar(self):
         obs = _find_similar_bins_fcluster(self.dist_matrix_df, 0.99)
@@ -138,7 +146,8 @@ class TestDereplication(TestPluginBase):
     def test_dereplicate_mags(self):
         mags = MultiMAGSequencesDirFmt(self.get_data_path('mags'), mode='r')
 
-        obs_mags, obs_pa = dereplicate_mags(mags, self.dist_matrix, 0.99)
+        obs_mags, obs_pa = dereplicate_mags(mags, self.dist_matrix,
+                                            threshold=0.99)
         exp_mags = MAGSequencesDirFmt(
             self.get_data_path('mags-unique'), mode='r'
         )
@@ -156,6 +165,71 @@ class TestDereplication(TestPluginBase):
 
         # assert correct PA table was generated
         pd.testing.assert_frame_equal(exp_pa, obs_pa)
+
+    def test_get_representatives_metadata_max_value(self):
+        obs = _get_representatives(
+            mags=self.bins,
+            metadata=qiime2.Metadata(self.busco_results),
+            column="complete",
+            bin_clusters=self.clusters_99,
+            find_max=True
+        )
+        exp = [
+            '24dee6fe-9b84-45bb-8145-de7b092533a1',
+            'fa4d7420-d0a4-455a-b4d7-4fa66e54c9bf',
+            'd65a71fa-4279-4588-b937-0747ed5d604d'
+        ]
+        self.assertListEqual(exp, obs)
+
+    def test_get_representatives_metadata_min_value(self):
+        obs = _get_representatives(
+            mags=self.bins,
+            metadata=qiime2.Metadata(self.busco_results),
+            column="complete",
+            bin_clusters=self.clusters_99,
+            find_max=False
+        )
+        exp = [
+            '24dee6fe-9b84-45bb-8145-de7b092533a1',
+            'ca7012fc-ba65-40c3-84f5-05aa478a7585',
+            'fb0bc871-04f6-486b-a10e-8e0cb66f8de3'
+        ]
+        self.assertListEqual(exp, obs)
+
+    def test_get_representatives_length(self):
+        obs = _get_representatives(
+            mags=self.bins,
+            metadata=None,
+            column=None,
+            bin_clusters=self.clusters_99,
+            find_max=True
+        )
+        exp = [
+            '24dee6fe-9b84-45bb-8145-de7b092533a1',
+            'ca7012fc-ba65-40c3-84f5-05aa478a7585',
+            'd65a71fa-4279-4588-b937-0747ed5d604d'
+        ]
+        self.assertListEqual(exp, obs)
+
+    def test_get_representatives_key_error(self):
+        with self.assertRaisesRegex(KeyError, "version"):
+            _get_representatives(
+                mags=self.bins,
+                metadata=qiime2.Metadata(self.busco_results),
+                column="version",
+                bin_clusters=self.clusters_99,
+                find_max=True
+            )
+
+    def test_get_representatives_value_error(self):
+        with self.assertRaisesRegex(ValueError, "numerical"):
+            _get_representatives(
+                mags=self.bins,
+                metadata=qiime2.Metadata(self.busco_results),
+                column="dataset",
+                bin_clusters=self.clusters_99,
+                find_max=True
+            )
 
 
 if __name__ == '__main__':

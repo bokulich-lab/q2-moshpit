@@ -170,7 +170,7 @@ class TestDereplication(TestPluginBase):
         obs = _get_representatives(
             mags=self.bins,
             metadata=qiime2.Metadata(self.busco_results),
-            column_name="complete",
+            column="complete",
             bin_clusters=self.clusters_99,
             find_max=True
         )
@@ -185,7 +185,7 @@ class TestDereplication(TestPluginBase):
         obs = _get_representatives(
             mags=self.bins,
             metadata=qiime2.Metadata(self.busco_results),
-            column_name="complete",
+            column="complete",
             bin_clusters=self.clusters_99,
             find_max=False
         )
@@ -200,7 +200,7 @@ class TestDereplication(TestPluginBase):
         obs = _get_representatives(
             mags=self.bins,
             metadata=None,
-            column_name=None,
+            column=None,
             bin_clusters=self.clusters_99,
             find_max=True
         )
@@ -216,7 +216,7 @@ class TestDereplication(TestPluginBase):
             _get_representatives(
                 mags=self.bins,
                 metadata=qiime2.Metadata(self.busco_results),
-                column_name="version",
+                column="version",
                 bin_clusters=self.clusters_99,
                 find_max=True
             )
@@ -226,7 +226,7 @@ class TestDereplication(TestPluginBase):
             _get_representatives(
                 mags=self.bins,
                 metadata=qiime2.Metadata(self.busco_results),
-                column_name="dataset",
+                column="dataset",
                 bin_clusters=self.clusters_99,
                 find_max=True
             )

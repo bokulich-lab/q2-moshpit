@@ -16,7 +16,8 @@ from qiime2.sdk import Context
 
 from q2_types.feature_data import FeatureData
 from q2_types.feature_data_mag import MAG, MAGSequencesDirFmt
-from q2_types.genome_data import SeedOrthologDirFmt, OrthologFileFmt
+from q2_types.genome_data import (SeedOrthologDirFmt, OrthologFileFmt,
+                                  LociDirectoryFormat)
 from q2_types.per_sample_sequences import (
     Contigs, MAGs, ContigSequencesDirFmt, MultiMAGSequencesDirFmt
 )
@@ -86,16 +87,20 @@ def _run_eggnog_search_pipeline(
     _eggnog_search = ctx.get_action("moshpit", search_action)
     collate_hits = ctx.get_action("types", "collate_orthologs")
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
+    collate_loci = ctx.get_action("types", "collate_loci")
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
 
     hits = []
+    loci = []
     for seq in partitioned_sequences.values():
-        (hit, _) = _eggnog_search(seq, *db, num_cpus, db_in_memory)
+        (hit, _, loci_dir) = _eggnog_search(seq, *db, num_cpus, db_in_memory)
         hits.append(hit)
+        loci.append(loci_dir)
 
     (collated_hits,) = collate_hits(hits)
     (collated_tables,) = _eggnog_feature_table(collated_hits)
-    return collated_hits, collated_tables
+    (collated_loci,) = collate_loci(loci)
+    return collated_hits, collated_tables, collated_loci
 
 
 def _search_runner(
@@ -152,6 +157,19 @@ def _eggnog_search(
             for mag_id, mag_fp in mags.items():
                 search_runner(input_path=mag_fp, sample_label=mag_id)
 
+    # iterate over the gff files and move them to the correct location
+    loci_dir = LociDirectoryFormat()
+    gff_fp = [
+        os.path.basename(x) for x
+        in glob.glob(f'{output_loc}/*.emapper.genepred.gff')
+    ]
+    for fn in gff_fp:
+        new_fn = fn.replace('.emapper.genepred.gff', '.gff')
+        qiime2.util.duplicate(
+            os.path.join(output_loc, fn),
+            os.path.join(loci_dir.path, new_fn)
+        )
+
     result = SeedOrthologDirFmt()
     ortholog_fps = [
         os.path.basename(x) for x
@@ -164,7 +182,7 @@ def _eggnog_search(
         )
 
     ft = _eggnog_feature_table(result)
-    return result, ft
+    return result, ft, loci_dir
 
 
 def _eggnog_feature_table(seed_orthologs: SeedOrthologDirFmt) -> pd.DataFrame:

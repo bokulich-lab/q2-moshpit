@@ -12,6 +12,7 @@ from typing import List, Dict
 import pandas as pd
 import skbio
 from q2_types.feature_data import DNAFASTAFormat
+from qiime2 import Metadata
 from scipy.cluster.hierarchy import ward, fcluster
 
 from q2_types.feature_data_mag import MAGSequencesDirFmt
@@ -119,7 +120,7 @@ def _get_bin_lengths(mags: MultiMAGSequencesDirFmt) -> pd.Series:
 
 def _remap_bins(
     bin_clusters: List[List[str]],
-    longest_bins: List[str],
+    representative_bins: List[str],
     distances: pd.DataFrame
 ) -> Dict[str, str]:
     """
@@ -129,7 +130,7 @@ def _remap_bins(
     Args:
         bin_clusters (list): A list of lists, where each inner list contains
                                 the IDs of similar bins.
-        longest_bins (str): A list of longest bin for each cluster.
+        representative_bins (str): A list of longest bin for each cluster.
         distances (pd.DataFrame): The original bin distance matrix.
 
     Returns:
@@ -153,7 +154,7 @@ def _remap_bins(
     final_bins = {}
     for i, similar_bins in enumerate(bin_clusters):
         for bin in similar_bins:
-            final_bins[bin] = longest_bins[i]
+            final_bins[bin] = representative_bins[i]
     for bin in distances.index:
         if bin not in final_bins:
             final_bins[bin] = bin
@@ -257,22 +258,80 @@ def _generate_pa_table(
     return presence_absence
 
 
+def _get_representatives(mags, metadata, column, bin_clusters, find_max):
+    """
+    This function identifies the representative bin for each cluster of bins.
+    If metadata is provided, the selection is based on a numerical metadata
+    column. In case of a tie, the longest bin is chosen. If metadata is not
+    provided, the longest bin is selected by default.
+
+    Args:
+        mags: A MultiMAGSequencesDirFmt object containing all bins.
+        metadata: Qiime metadata.
+        column: Name of a column in metadata.
+        bin_clusters: A list of lists where each inner list contains the IDs
+                      of bins grouped by similarity.
+        find_max: Boolean, if true the bin with the highest value in the
+                  metadata column will be chosen, if false the lowest value
+                  is chosen.
+
+    Returns:
+        A list of representative bin IDs, one for each cluster.
+    """
+    bin_lengths = _get_bin_lengths(mags)
+    method = pd.Series.max if find_max else pd.Series.min
+
+    # Choose by metadata
+    if metadata is not None:
+        try:
+            metadata_col = metadata.to_dataframe()[column].astype(float)
+        except KeyError:
+            raise KeyError(f'The column "{column}" does not exist '
+                           f'in the metadata.')
+        except ValueError:
+            raise ValueError('The specified metadata column has to be '
+                             'numerical.')
+
+        representative_bins = []
+        for bins in bin_clusters:
+            # Get bin IDs with the max or min column values in cluster
+            values = metadata_col[bins]
+            selected_bins = values[values == method(values)].index
+
+            # If there's a tie, resolve by selecting the longest bin
+            if len(selected_bins) > 1:
+                representative_bins.append(bin_lengths[selected_bins].idxmax())
+            else:
+                representative_bins.append(selected_bins[0])
+
+    # Choose by length
+    else:
+        representative_bins = \
+            [bin_lengths[ids].idxmax() for ids in bin_clusters]
+
+    return representative_bins
+
+
 def dereplicate_mags(
     mags: MultiMAGSequencesDirFmt,
     distance_matrix: skbio.DistanceMatrix,
     threshold: float = 0.99,
+    metadata: Metadata = None,
+    metadata_column: str = "complete",
+    find_max: bool = True,
 ) -> (MAGSequencesDirFmt, pd.DataFrame):
     distances = distance_matrix.to_data_frame()
 
     # find similar bins, according to the threshold
     bin_clusters = _find_similar_bins_fcluster(distances, threshold)
 
-    # find the longest bin in each cluster
-    bin_lengths = _get_bin_lengths(mags)
-    longest_bins = [bin_lengths[ids].idxmax() for ids in bin_clusters]
+    # select one representative bin per cluster by metadata and length
+    representative_bins = _get_representatives(
+        mags, metadata, metadata_column, bin_clusters, find_max
+    )
 
     # generate a map between the original bins and the dereplicated bins
-    final_bins = _remap_bins(bin_clusters, longest_bins, distances)
+    final_bins = _remap_bins(bin_clusters, representative_bins, distances)
 
     # generate dereplicated bin sequences
     unique_bin_seqs = _write_unique_bins(mags, final_bins)

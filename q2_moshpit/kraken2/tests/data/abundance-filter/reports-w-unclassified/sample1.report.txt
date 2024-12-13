@@ -1,3 +1,4 @@
+10.16	370334	0	U	0	unclassified
 100.00	474294	0	R	1	root
 100.00	474294	0	R1	131567	  cellular organisms
 100.00	474294	0	D	2	    Bacteria

@@ -1,3 +1,4 @@
+10.16	370334	0	U	0	unclassified
 100.00	474294	0	R	1	root
 100.00	474294	0	R1	131567	  cellular organisms
 100.00	474294	0	D	2	    Bacteria
@@ -17,4 +18,4 @@
 51.04	242098	242098	S	1389713	                  Mycobacterium paragordonae
 0.03	160	0	G1	77643	                  Mycobacterium tuberculosis complex
 0.03	160	160	S	1773	                    Mycobacterium tuberculosis
-0.01	70	70	S	1778	                  Mycobacterium gordonae
+0.00	35	35	S	1778	                  Mycobacterium gordonae

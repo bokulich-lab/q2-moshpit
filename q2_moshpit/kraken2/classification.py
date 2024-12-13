@@ -232,8 +232,23 @@ def filter_kraken2_classifications(
         Kraken2ReportFormat
     ):
         report_df = report.view(pd.DataFrame)
+
+        if (len(report_df) == 1):
+            raise ValueError("Kraken2 abundance filtering can not be preformed"
+                             " on data that is 100% unclassified")
+        if (report_df.loc[0]['name'] == "unclassified" and
+           report_df.loc[1]['name'] == "root"):
+            total_reads = (report_df.loc[0]['n_frags_covered'] +
+                           report_df.loc[1]['n_frags_covered'])
+        if (report_df.loc[0]['name'] != "unclassified" and
+           report_df.loc[0]['name'] == "root"):
+            total_reads = (report_df.loc[0]['n_frags_covered'])
+
         filtered_report_df = report_df[
-            report_df['perc_frags_covered'] >= abundance_threshold]
+            (report_df['n_frags_covered'] / total_reads * 100) >=
+            abundance_threshold
+        ]
+
         ids_to_filter = report_df.index.difference(filtered_report_df.index)
         taxon_ids = report_df.loc[ids_to_filter, 'taxon_id']
         taxa_to_filter = taxon_ids.values

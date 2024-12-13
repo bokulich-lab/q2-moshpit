@@ -86,8 +86,8 @@ def _run_eggnog_search_pipeline(
     partition_method = ctx.get_action(plugin, action_name)
     _eggnog_search = ctx.get_action("moshpit", search_action)
     collate_hits = ctx.get_action("types", "collate_orthologs")
-    collate_loci = ctx.get_action("types", "collate_loci")
     _eggnog_feature_table = ctx.get_action("moshpit", "_eggnog_feature_table")
+    collate_loci = ctx.get_action("types", "collate_loci")
     (partitioned_sequences,) = partition_method(sequences, num_partitions)
 
     hits = []

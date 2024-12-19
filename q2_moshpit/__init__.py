@@ -9,7 +9,6 @@ from . import abundance
 from . import busco
 from . import eggnog
 from . import prodigal
-from ._version import get_versions
 from .dereplication import dereplicate_mags
 from .filtering import filter_derep_mags, filter_mags, filter_reads_pangenome
 from .kaiju import classification as kaiju_class, database as kaiju_db
@@ -24,8 +23,10 @@ from ._utils import (
     _multiply_tables_pa, _multiply_tables_relative
 )
 
-__version__ = get_versions()['version']
-del get_versions
+try:
+    from ._version import __version__
+except ModuleNotFoundError:
+    __version__ = '0.0.0+notfound'
 
 __all__ = [
     'metabat2', 'bracken', 'kraken_class', 'kraken_db',

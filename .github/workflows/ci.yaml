@@ -59,8 +59,8 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: "3.10"
-          mamba-version: 1.5.10
-          miniconda-version: "24.9.2"
+#           mamba-version: 1.5.10
+#           miniconda-version: "24.9.2"
           channels: conda-forge,defaults
           channel-priority: true
           activate-environment: conda-env

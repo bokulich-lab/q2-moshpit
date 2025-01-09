@@ -7,7 +7,7 @@
 QIIME 2 plugin for functional annotation and taxonomic classification of shotgun metagenomes.
 
 ## Installation
-_q2-moshpit_ is available as part of the QIIME 2 metagenome distribution. For installation and usage instructions please consult the official [QIIME 2 documentation](https://docs.qiime2.org). 
+_q2-moshpit_ is available as part of the QIIME 2 moshpit distribution. For installation and usage instructions please consult the official [QIIME 2 documentation](https://docs.qiime2.org).
 
 ## Functionality
 This QIIME 2 plugin contains actions used to annotate and classify (meta)genomes:
@@ -25,7 +25,7 @@ This QIIME 2 plugin contains actions used to annotate and classify (meta)genomes
 | eggnog-diamond-search    | Run eggNOG search using diamond aligner. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
 | eggnog-hmmer-search      | Run eggNOG search using HMMER aligner. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
 | estimate-bracken         | Perform read abundance re-estimation using Bracken. | [Kraken 2](https://ccb.jhu.edu/software/bracken/) |
-| estimate-mag-abundance   | Estimate MAG abundance. | - | 
+| estimate-mag-abundance   | Estimate MAG abundance. | - |
 | evaluate-busco           | Evaluate quality of the generated MAGs using BUSCO. | [BUSCO](https://busco.ezlab.org) |
 | extract-annotations      | Extract annotation frequencies from all annotations. | - |
 | fetch-busco-db           | Download BUSCO database. | [BUSCO](https://busco.ezlab.org) |

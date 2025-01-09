@@ -132,6 +132,16 @@ class BuscoDatabaseDirFmt(model.DirectoryFormat):
         r'busco_downloads\/lineages\/.+refseq_db\.faa\.gz',
         format=BuscoGenericBinaryFileFmt
     )
+    information = model.FileCollection(
+        r'busco_downloads\/information\/.+\.txt$',
+        format=BuscoGenericTextFileFmt,
+        optional=True
+    )
+    missing_parasitic = model.File(
+        r'busco_downloads\/lineages\/fungi_odb10\/missing_in_parasitic\.txt$',
+        format=BuscoGenericTextFileFmt,
+        optional=True
+    )
 
     def _path_maker(self, name):
         return str(name)

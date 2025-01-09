@@ -60,7 +60,6 @@ jobs:
         with:
           python-version: "3.10"
           mamba-version: "*"
-#           miniconda-version: "24.9.2"
           channels: conda-forge,defaults
           channel-priority: true
           activate-environment: conda-env

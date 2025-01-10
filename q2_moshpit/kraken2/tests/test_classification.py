@@ -22,10 +22,11 @@ from q2_types.feature_data_mag import MAGSequencesDirFmt
 from q2_types.kraken2 import (
     Kraken2ReportDirectoryFormat,
     Kraken2OutputDirectoryFormat, Kraken2DBDirectoryFormat,
+    Kraken2ReportFormat, Kraken2OutputFormat
 )
 from q2_moshpit.kraken2.classification import (
     _get_seq_paths, _construct_output_paths, _classify_kraken2,
-    classify_kraken2_helper
+    classify_kraken2_helper, filter_kraken2_classifications
 )
 
 from qiime2 import Artifact
@@ -91,6 +92,256 @@ class TestClassifyKraken2Helpers(TestPluginBase):
         )
         self.assertEqual(obs_rep_fp, exp_rep_fp)
         self.assertEqual(obs_out_fp, exp_out_fp)
+
+    def get_abundance_filter_data(self):
+        reports_art = Artifact.import_data(
+            'SampleData[Kraken2Report]',
+            self.get_data_path("abundance-filter/reports/"))
+        reports_format = reports_art.view(Kraken2ReportDirectoryFormat)
+
+        outputs_art = Artifact.import_data(
+            'SampleData[Kraken2Output]',
+            self.get_data_path("abundance-filter/outputs/")
+           )
+        outputs_format = outputs_art.view(Kraken2OutputDirectoryFormat)
+
+        return reports_format, outputs_format
+
+    def test_filter_kraken2_classifications_defaults(self):
+        reports_format, outputs_format = self.get_abundance_filter_data()
+
+        exp_reports = {}
+        exp_outputs = {}
+        for sample, report in reports_format.reports.iter_views(
+            Kraken2ReportFormat
+        ):
+            exp_reports[sample] = report.view(pd.DataFrame)
+        for sample, output in outputs_format.reports.iter_views(
+            Kraken2OutputFormat
+        ):
+            exp_outputs[sample] = output.view(pd.DataFrame)
+
+        reports_format, outputs_format = filter_kraken2_classifications(
+            reports=reports_format,
+            outputs=outputs_format
+        )
+
+        obs_reports = {}
+        obs_outputs = {}
+        for sample, report in reports_format.reports.iter_views(
+            Kraken2ReportFormat
+        ):
+            obs_reports[sample] = report.view(pd.DataFrame)
+        for sample, output in outputs_format.reports.iter_views(
+            Kraken2OutputFormat
+        ):
+            obs_outputs[sample] = output.view(pd.DataFrame)
+
+        for sample in exp_reports:
+            pd.testing.assert_frame_equal(obs_reports[sample],
+                                          exp_reports[sample])
+
+        for sample in exp_outputs:
+            pd.testing.assert_frame_equal(obs_outputs[sample],
+                                          exp_outputs[sample])
+
+    def test_filter_kraken2_classifications(self):
+        reports_format, outputs_format = self.get_abundance_filter_data()
+
+        reports_format, outputs_format = filter_kraken2_classifications(
+            reports=reports_format,
+            outputs=outputs_format,
+            abundance_threshold=0.01)
+
+        obs_reports = {}
+        obs_outputs = {}
+        for sample, report in reports_format.reports.iter_views(
+            Kraken2ReportFormat
+        ):
+            sample_id = str(sample).split('.report.')[0]
+            obs_reports[sample_id] = report.view(pd.DataFrame)
+        for sample, output in outputs_format.reports.iter_views(
+            Kraken2OutputFormat
+        ):
+
+            sample_id = str(sample).split('.output.')[0]
+            obs_outputs[sample_id] = output.view(pd.DataFrame)
+
+        # Sample 1 Report
+        self.assertIn(1764, list(obs_reports['sample1']['taxon_id']))
+        self.assertIn(1778, list(obs_reports['sample1']['taxon_id']))
+        self.assertNotIn(339268, list(obs_reports['sample1']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_reports['sample1']['taxon_id']))
+        self.assertEqual(len(obs_reports['sample1']), 18)
+
+        # Sample 1 Output
+        self.assertIn(1764, list(obs_outputs['sample1']['taxon_id']))
+        self.assertIn(1778, list(obs_outputs['sample1']['taxon_id']))
+        self.assertNotIn(339268, list(obs_outputs['sample1']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_outputs['sample1']['taxon_id']))
+        self.assertEqual(len(obs_outputs['sample1']), 18)
+
+        # Sample 2 Report
+        self.assertIn(1764, list(obs_reports['sample2']['taxon_id']))
+        self.assertNotIn(1778, list(obs_reports['sample2']['taxon_id']))
+        self.assertNotIn(339268, list(obs_reports['sample2']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_reports['sample2']['taxon_id']))
+        self.assertEqual(len(obs_reports['sample2']), 17)
+
+        # Sample 2 Output
+        self.assertIn(1764, list(obs_outputs['sample2']['taxon_id']))
+        self.assertNotIn(1778, list(obs_outputs['sample2']['taxon_id']))
+        self.assertNotIn(339268, list(obs_outputs['sample2']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_outputs['sample2']['taxon_id']))
+        self.assertEqual(len(obs_outputs['sample2']), 15)
+
+    def test_filter_kraken2_classifications_empty_results(self):
+        reports_format, outputs_format = self.get_abundance_filter_data()
+
+        with self.assertRaisesRegex(ValueError, ".*sample1.*abundance"
+                                    " threshold."):
+            filter_kraken2_classifications(reports=reports_format,
+                                           outputs=outputs_format,
+                                           abundance_threshold=101)
+
+    def test_filter_kraken2_classifications_low_abundance(self):
+        reports_format, outputs_format = self.get_abundance_filter_data()
+
+        low_abundance_threshold = 0.0015  # filter out 2775496
+        reports_format, outputs_format = filter_kraken2_classifications(
+            reports=reports_format,
+            outputs=outputs_format,
+            abundance_threshold=low_abundance_threshold)
+
+        obs_reports = {}
+        obs_outputs = {}
+        for sample, report in reports_format.reports.iter_views(
+            Kraken2ReportFormat
+        ):
+            sample_id = str(sample).split('.report.')[0]
+            obs_reports[sample_id] = report.view(pd.DataFrame)
+        for sample, output in outputs_format.reports.iter_views(
+            Kraken2OutputFormat
+        ):
+
+            sample_id = str(sample).split('.output.')[0]
+            obs_outputs[sample_id] = output.view(pd.DataFrame)
+
+        # Sample 1 Report
+        self.assertIn(1764, list(obs_reports['sample1']['taxon_id']))
+        self.assertIn(1778, list(obs_reports['sample1']['taxon_id']))
+        self.assertIn(339268, list(obs_reports['sample1']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_reports['sample1']['taxon_id']))
+        self.assertEqual(len(obs_reports['sample1']), 19)
+
+        # Sample 1 Output
+        self.assertIn(1764, list(obs_outputs['sample1']['taxon_id']))
+        self.assertIn(1778, list(obs_outputs['sample1']['taxon_id']))
+        self.assertIn(339268, list(obs_outputs['sample1']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_outputs['sample1']['taxon_id']))
+        self.assertEqual(len(obs_outputs['sample1']), 19)
+
+        # Sample 2 Report
+        self.assertIn(1764, list(obs_reports['sample2']['taxon_id']))
+        self.assertIn(1778, list(obs_reports['sample2']['taxon_id']))
+        self.assertIn(339268, list(obs_reports['sample2']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_reports['sample2']['taxon_id']))
+        self.assertEqual(len(obs_reports['sample2']), 19)
+
+        # Sample 2 Output
+        self.assertIn(1764, list(obs_outputs['sample2']['taxon_id']))
+        self.assertIn(1778, list(obs_outputs['sample2']['taxon_id']))
+        self.assertIn(339268, list(obs_outputs['sample2']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_outputs['sample2']['taxon_id']))
+        self.assertEqual(len(obs_outputs['sample2']), 17)
+
+    def get_abundance_filter_data_with_unclassified(self):
+        reports_art = Artifact.import_data(
+            'SampleData[Kraken2Report]',
+            self.get_data_path("abundance-filter/reports-w-unclassified/"))
+        reports_format = reports_art.view(Kraken2ReportDirectoryFormat)
+
+        outputs_art = Artifact.import_data(
+            'SampleData[Kraken2Output]',
+            self.get_data_path("abundance-filter/outputs/")
+           )
+        outputs_format = outputs_art.view(Kraken2OutputDirectoryFormat)
+
+        return reports_format, outputs_format
+
+    def test_filter_kraken2_classifications_with_unclassified(self):
+        reports_format, outputs_format = \
+            self.get_abundance_filter_data_with_unclassified()
+
+        reports_format, outputs_format = filter_kraken2_classifications(
+            reports=reports_format,
+            outputs=outputs_format,
+            abundance_threshold=0.01)
+
+        obs_reports = {}
+        obs_outputs = {}
+        for sample, report in reports_format.reports.iter_views(
+            Kraken2ReportFormat
+        ):
+            sample_id = str(sample).split('.report.')[0]
+            obs_reports[sample_id] = report.view(pd.DataFrame)
+        for sample, output in outputs_format.reports.iter_views(
+            Kraken2OutputFormat
+        ):
+            sample_id = str(sample).split('.output.')[0]
+            obs_outputs[sample_id] = output.view(pd.DataFrame)
+
+        # Sample 1 Report
+        self.assertNotIn(1764, list(obs_reports['sample1']['taxon_id']))
+        self.assertNotIn(1778, list(obs_reports['sample1']['taxon_id']))
+        self.assertNotIn(339268, list(obs_reports['sample1']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_reports['sample1']['taxon_id']))
+        self.assertEqual(len(obs_reports['sample1']), 17)
+
+        # Sample 1 Output
+        self.assertNotIn(1764, list(obs_outputs['sample1']['taxon_id']))
+        self.assertNotIn(1778, list(obs_outputs['sample1']['taxon_id']))
+        self.assertNotIn(339268, list(obs_outputs['sample1']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_outputs['sample1']['taxon_id']))
+        self.assertEqual(len(obs_outputs['sample1']), 16)
+
+        # Sample 2 Report
+        self.assertNotIn(1764, list(obs_reports['sample2']['taxon_id']))
+        self.assertNotIn(1778, list(obs_reports['sample2']['taxon_id']))
+        self.assertNotIn(339268, list(obs_reports['sample2']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_reports['sample2']['taxon_id']))
+        self.assertEqual(len(obs_reports['sample2']), 17)
+
+        # Sample 2 Output
+        self.assertNotIn(1764, list(obs_outputs['sample2']['taxon_id']))
+        self.assertNotIn(1778, list(obs_outputs['sample2']['taxon_id']))
+        self.assertNotIn(339268, list(obs_outputs['sample2']['taxon_id']))
+        self.assertNotIn(2775496, list(obs_outputs['sample2']['taxon_id']))
+        self.assertEqual(len(obs_outputs['sample2']), 14)
+
+    def get_abundance_filter_data_only_unclassified(self):
+        reports_art = Artifact.import_data(
+            'SampleData[Kraken2Report]',
+            self.get_data_path("abundance-filter/reports-only-unclassified/"))
+        reports_format = reports_art.view(Kraken2ReportDirectoryFormat)
+
+        outputs_art = Artifact.import_data(
+            'SampleData[Kraken2Output]',
+            self.get_data_path("abundance-filter/outputs-only-unclassified/")
+           )
+        outputs_format = outputs_art.view(Kraken2OutputDirectoryFormat)
+
+        return reports_format, outputs_format
+
+    def test_filter_kraken2_classifications_only_unclassified(self):
+        reports_format, outputs_format = \
+            self.get_abundance_filter_data_only_unclassified()
+
+        with self.assertRaisesRegex(ValueError, ".* on data that is 100%"
+                                    " unclassified"):
+            filter_kraken2_classifications(reports=reports_format,
+                                           outputs=outputs_format,
+                                           abundance_threshold=101)
 
 
 class TestClassifyKraken2HasCorrectCalls(TestPluginBase):

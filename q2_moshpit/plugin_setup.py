@@ -36,7 +36,7 @@ from q2_types.feature_map import FeatureMap, MAGtoContigs
 from qiime2.core.type import (
     Bool, Range, Int, Str, Float, List, Choices, Visualization
 )
-from qiime2.core.type import (Properties, TypeMap)
+from qiime2.core.type import (Properties, TypeMap, TypeMatch)
 from qiime2.plugin import (Plugin, Citations)
 import q2_moshpit._examples as ex
 import q2_moshpit
@@ -1799,6 +1799,28 @@ plugin.pipelines.register_function(
                 '2 has shape (N x P), the resulting table will have shape '
                 '(M x P). Note that the tables must be identical in the N '
                 'dimension.',
+    citations=[]
+)
+
+TMR = TypeMatch([Kraken2Reports % Properties('reads'),
+                 Kraken2Reports % Properties('contigs')])
+TMO = TypeMatch([Kraken2Outputs % Properties('reads'),
+                 Kraken2Outputs % Properties('contigs')])
+plugin.methods.register_function(
+    function=q2_moshpit.kraken2.classification.filter_kraken2_classifications,
+    inputs={
+        'reports': SampleData[TMR],
+        'outputs': SampleData[TMO]
+    },
+    parameters={
+        'abundance_threshold': Float % Range(0, 100, inclusive_end=True)},
+    outputs=[('filtered_reports', SampleData[TMR]),
+             ('filtered_outputs', SampleData[TMO])],
+    input_descriptions={},
+    parameter_descriptions={},
+    output_descriptions={},
+    name='Filter Kraken2 Classifications by Abundance',
+    description='...',
     citations=[]
 )
 

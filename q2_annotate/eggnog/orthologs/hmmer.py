@@ -58,7 +58,7 @@ def _eggnog_hmmer_search(
     return result, ft
 
 
-def eggnog_hmmer_search(
+def search_orthologs_hmmer(
     ctx, sequences, pressed_hmm_db, idmap, seed_alignments,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):

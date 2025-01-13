@@ -37,7 +37,7 @@ class TestAnnotate(TestPluginBase):
             self.get_data_path('eggnog_db/')
         )
         self.eggnog_annotate = \
-            self.plugin.pipelines["eggnog_annotate"]
+            self.plugin.pipelines["map_eggnog"]
         self._eggnog_annotate = \
             self.plugin.methods["_eggnog_annotate"]
 

@@ -10,15 +10,15 @@ from .common import (
     _eggnog_feature_table
 )
 from .diamond import (
-    _eggnog_diamond_search, eggnog_diamond_search
+    _eggnog_diamond_search, search_orthologs_diamond
 )
 from .hmmer import (
-    _eggnog_hmmer_search, eggnog_hmmer_search
+    _eggnog_hmmer_search, search_orthologs_hmmer
 )
 
 
 __all__ = [
     '_run_eggnog_search_pipeline', '_eggnog_search', '_search_runner',
-    '_eggnog_diamond_search', 'eggnog_diamond_search',
-    '_eggnog_hmmer_search', 'eggnog_hmmer_search', '_eggnog_feature_table',
+    '_eggnog_diamond_search', 'search_orthologs_diamond',
+    '_eggnog_hmmer_search', 'search_orthologs_hmmer', '_eggnog_feature_table',
 ]

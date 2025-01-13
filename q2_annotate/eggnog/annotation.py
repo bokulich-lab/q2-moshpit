@@ -59,7 +59,7 @@ def _eggnog_annotate(
     return result
 
 
-def eggnog_annotate(
+def map_eggnog(
         ctx,
         eggnog_hits,
         eggnog_db,

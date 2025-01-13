@@ -16,7 +16,7 @@ import qiime2
 from qiime2.plugin.testing import TestPluginBase
 
 from q2_annotate.eggnog import (
-    _eggnog_diamond_search, eggnog_hmmer_search, _eggnog_hmmer_search
+    _eggnog_diamond_search, search_orthologs_hmmer, _eggnog_hmmer_search
 )
 from q2_annotate.eggnog.orthologs.common import (
     _eggnog_search, _search_runner, _create_symlinks
@@ -64,7 +64,7 @@ class TestHMMER(TestPluginBase):
         self.mags = self.mags_artifact.view(MultiMAGSequencesDirFmt)
 
         self.eggnog_hmmer_search = \
-            self.plugin.pipelines["eggnog_hmmer_search"]
+            self.plugin.pipelines["search_orthologs_hmmer"]
         self._eggnog_hmmer_search = \
             self.plugin.methods["_eggnog_hmmer_search"]
         self._eggnog_annotate = \
@@ -78,7 +78,7 @@ class TestHMMER(TestPluginBase):
             lambda collated_hits: ("collated_tables",),
         ])
         mock_ctx = MagicMock(get_action=mock_action)
-        obs = eggnog_hmmer_search(
+        obs = search_orthologs_hmmer(
             ctx=mock_ctx,
             sequences=self.mags_artifact,
             pressed_hmm_db=self.pressed_hmm_artifact,
@@ -206,7 +206,7 @@ class TestDiamond(TestPluginBase):
         self.diamond_db = self.diamond_db_artifact.view(DiamondDatabaseDirFmt)
 
         self.eggnog_diamond_search = \
-            self.plugin.pipelines["eggnog_diamond_search"]
+            self.plugin.pipelines["search_orthologs_diamond"]
         self._eggnog_diamond_search = \
             self.plugin.methods["_eggnog_diamond_search"]
         self._eggnog_annotate = \

@@ -680,7 +680,7 @@ plugin.methods.register_function(
 )
 
 plugin.pipelines.register_function(
-    function=q2_annotate.eggnog.eggnog_diamond_search,
+    function=q2_annotate.eggnog.search_orthologs_diamond,
     inputs={
         'sequences':
             SampleData[Contigs] | SampleData[MAGs] | FeatureData[MAG],
@@ -721,7 +721,7 @@ plugin.pipelines.register_function(
 )
 
 plugin.pipelines.register_function(
-    function=q2_annotate.eggnog.eggnog_hmmer_search,
+    function=q2_annotate.eggnog.search_orthologs_hmmer,
     inputs={
         'sequences': SampleData[Contigs | MAGs] | FeatureData[MAG],
         'pressed_hmm_db': ProfileHMM[PressedProtein],
@@ -875,7 +875,7 @@ plugin.methods.register_function(
 )
 
 plugin.pipelines.register_function(
-    function=q2_annotate.eggnog.eggnog_annotate,
+    function=q2_annotate.eggnog.map_eggnog,
     inputs={
         'eggnog_hits': SampleData[Orthologs],
         'eggnog_db': ReferenceDB[Eggnog],

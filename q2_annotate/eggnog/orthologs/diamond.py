@@ -48,7 +48,7 @@ def _eggnog_diamond_search(
     return result, ft
 
 
-def eggnog_diamond_search(
+def search_orthologs_diamond(
     ctx, sequences, diamond_db,
     num_cpus=1, db_in_memory=False, num_partitions=None
 ):

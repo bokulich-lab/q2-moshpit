@@ -1,5 +1,5 @@
 package:
-  name: q2-moshpit
+  name: q2-annotate
   version: {{ PLUGIN_VERSION }}
 source:
   path: ..
@@ -41,11 +41,11 @@ test:
   requires:
   - parameterized
   imports:
-  - q2_moshpit
-  - qiime2.plugins.moshpit
+  - q2_annotate
+  - qiime2.plugins.annotate
   commands:
-  - pytest --pyargs q2_moshpit
+  - pytest --pyargs q2_annotate
 about:
-  home: https://github.com/bokulich-lab/q2-moshpit
+  home: https://github.com/bokulich-lab/q2-annotate
   license: BSD-3-Clause
   license_family: BSD

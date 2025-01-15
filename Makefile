@@ -12,10 +12,10 @@ test: all
 	py.test
 
 test-cov: all
-	python -m pytest --cov q2_moshpit --cov-report xml:coverage.xml
+	python -m coverage run -m pytest && coverage xml -o coverage.xml
 
 install: all
-	$(PYTHON) setup.py install
+	$(PYTHON) -m pip install -v .
 
 dev: all
 	pip install -e .

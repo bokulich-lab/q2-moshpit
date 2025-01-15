@@ -418,10 +418,13 @@ plugin.methods.register_function(
     function=q2_moshpit.dereplication.dereplicate_mags,
     inputs={
         "mags": SampleData[MAGs],
-        "distance_matrix": DistanceMatrix
+        "distance_matrix": DistanceMatrix,
     },
     parameters={
-        "threshold": Float % Range(0, 1, inclusive_end=True)
+        "threshold": Float % Range(0, 1, inclusive_end=True),
+        "metadata": Metadata,
+        "metadata_column": Str,
+        "find_max": Bool
     },
     outputs=[
         ('dereplicated_mags', FeatureData[MAG]),
@@ -429,11 +432,18 @@ plugin.methods.register_function(
     ],
     input_descriptions={
         "mags": "MAGs to be dereplicated.",
-        "distance_matrix": "Matrix of distances between MAGs."
+        "distance_matrix": "Matrix of distances between MAGs.",
     },
     parameter_descriptions={
         "threshold": "Similarity threshold required to consider "
-                     "two bins identical."
+                     "two bins identical.",
+        "metadata": "Metadata table.",
+        "metadata_column": "Name of the metadata column used to choose the "
+                           "most representative bins.",
+        "find_max": "Set to True to choose the bin with the highest value in "
+                    "the metadata column. Set to False to choose the bin "
+                    "with the lowest value.",
+
     },
     output_descriptions={
         "dereplicated_mags": "Dereplicated MAGs.",
@@ -443,7 +453,14 @@ plugin.methods.register_function(
     description='This method dereplicates MAGs from multiple samples '
                 'using distances between them found in the provided '
                 'distance matrix. For each cluster of similar MAGs, '
-                'the longest one will be selected as the representative.',
+                'the longest one will be selected as the representative. If '
+                'metadata is given as input, the MAG with the '
+                'highest or lowest value in the specified metadata column '
+                'is chosen, depending on the parameter "find-max". '
+                'If there are MAGs with identical values, the longer one is '
+                'chosen. For example an artifact of type BUSCOResults can be '
+                'passed as metadata, and the dereplication can be done by '
+                'highest "completeness".',
     citations=[]
 )
 
@@ -1141,10 +1158,7 @@ plugin.methods.register_function(
     },
     input_descriptions={
         "bins": "MAGs to be analyzed.",
-        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
-                    "mode. If not provided a BUSCO database "
-                    "will be downloaded to a temporary location and then "
-                    "deleted."
+        "busco_db": "BUSCO database."
     },
     parameter_descriptions=busco_param_descriptions,
     output_descriptions={
@@ -1171,10 +1185,7 @@ plugin.pipelines.register_function(
     },
     input_descriptions={
         "bins": "MAGs to be analyzed.",
-        "busco_db": "BUSCO database. If provided BUSCO will run in offline "
-                    "mode. If not provided a BUSCO database "
-                    "will be downloaded to a temporary location and then "
-                    "deleted."
+        "busco_db": "BUSCO database."
     },
     parameter_descriptions={
         **busco_param_descriptions, **partition_param_descriptions

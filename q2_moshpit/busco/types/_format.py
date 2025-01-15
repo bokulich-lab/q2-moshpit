@@ -142,6 +142,11 @@ class BuscoDatabaseDirFmt(model.DirectoryFormat):
         format=BuscoGenericTextFileFmt,
         optional=True
     )
+    no_hits = model.File(
+        r'busco_downloads\/lineages\/pectobacteriaceae_odb12\/no_hits$',
+        format=BuscoGenericTextFileFmt,
+        optional=True
+    )
 
     def _path_maker(self, name):
         return str(name)

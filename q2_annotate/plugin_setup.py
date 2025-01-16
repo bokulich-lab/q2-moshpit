@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import importlib
+import platform
 
 from q2_quality_control.plugin_setup import (
     filter_parameters, filter_parameter_descriptions
@@ -284,46 +285,47 @@ plugin.methods.register_function(
     description="Collates kraken2 outputs"
 )
 
-plugin.methods.register_function(
-    function=q2_annotate.kraken2.bracken.estimate_bracken,
-    inputs={
-        "kraken_reports": SampleData[Kraken2Reports % Properties('reads')],
-        "bracken_db": BrackenDB
-    },
-    parameters={
-        'threshold': Int % Range(0, None),
-        'read_len': Int % Range(0, None),
-        'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S']),
-        'include_unclassified': Bool
-    },
-    outputs=[
-        ('reports', SampleData[Kraken2Reports % Properties('bracken')]),
-        ('taxonomy', FeatureData[Taxonomy]),
-        ('table', FeatureTable[Frequency])
-    ],
-    input_descriptions={
-        "kraken_reports": "Reports produced by Kraken2.",
-        "bracken_db": "Bracken database."
-    },
-    parameter_descriptions={
-        'threshold': 'Bracken: number of reads required PRIOR to abundance '
-                     'estimation to perform re-estimation.',
-        'read_len': ('Bracken: read length to get all classifications for. '
-                     'For paired end data (e.g., 2x150) this should be set '
-                     'to the length of the single-end reads (e.g., 150).'),
-        'level': 'Bracken: taxonomic level to estimate abundance at.',
-        'include_unclassified': 'Bracken does not include the unclassified '
-                                'read counts in the feature table. Set this '
-                                'to True to include those regardless.'
-    },
-    output_descriptions={
-        'reports': 'Reports modified by Bracken.',
-    },
-    name='Perform read abundance re-estimation using Bracken.',
-    description='This method uses Bracken to re-estimate read abundances. '
-                'Only available on Linux platforms.',
-    citations=[citations["wood2019"]]
-)
+if platform.system() != "Darwin":
+    plugin.methods.register_function(
+        function=q2_annotate.kraken2.bracken.estimate_bracken,
+        inputs={
+            "kraken_reports": SampleData[Kraken2Reports % Properties('reads')],
+            "bracken_db": BrackenDB
+        },
+        parameters={
+            'threshold': Int % Range(0, None),
+            'read_len': Int % Range(0, None),
+            'level': Str % Choices(['D', 'P', 'C', 'O', 'F', 'G', 'S']),
+            'include_unclassified': Bool
+        },
+        outputs=[
+            ('reports', SampleData[Kraken2Reports % Properties('bracken')]),
+            ('taxonomy', FeatureData[Taxonomy]),
+            ('table', FeatureTable[Frequency])
+        ],
+        input_descriptions={
+            "kraken_reports": "Reports produced by Kraken2.",
+            "bracken_db": "Bracken database."
+        },
+        parameter_descriptions={
+            'threshold': 'Bracken: number of reads required PRIOR to abundance '
+                        'estimation to perform re-estimation.',
+            'read_len': ('Bracken: read length to get all classifications for. '
+                        'For paired end data (e.g., 2x150) this should be set '
+                        'to the length of the single-end reads (e.g., 150).'),
+            'level': 'Bracken: taxonomic level to estimate abundance at.',
+            'include_unclassified': 'Bracken does not include the unclassified '
+                                    'read counts in the feature table. Set this '
+                                    'to True to include those regardless.'
+        },
+        output_descriptions={
+            'reports': 'Reports modified by Bracken.',
+        },
+        name='Perform read abundance re-estimation using Bracken.',
+        description='This method uses Bracken to re-estimate read abundances. '
+                    'Only available on Linux platforms.',
+        citations=[citations["wood2019"]]
+    )
 
 plugin.methods.register_function(
     function=q2_annotate.kraken2.build_kraken_db,

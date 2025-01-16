@@ -10,7 +10,7 @@ import shutil
 import tempfile
 import unittest
 from subprocess import CalledProcessError
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 from pandas._testing import assert_frame_equal
@@ -164,9 +164,10 @@ class TestBracken(TestPluginBase):
         assert_frame_equal(obs_table, exp_table)
         self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
 
+    @patch('platform.system', return_value='Linux')
     @patch('q2_annotate.kraken2.bracken._assert_read_lens_available')
     @patch('q2_annotate.kraken2.bracken._estimate_bracken')
-    def test_estimate_bracken_with_unclassified(self, p1, p2):
+    def test_estimate_bracken_with_unclassified(self, p1, p2, p3):
         kraken_reports = Kraken2ReportDirectoryFormat(
             self.get_data_path('bracken-report-with-unclassified/'
                                'kraken-reports'), 'r'
@@ -203,6 +204,48 @@ class TestBracken(TestPluginBase):
         assert_frame_equal(obs_table, exp_table)
         assert_frame_equal(obs_taxonomy, exp_taxonomy)
         self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
+    
+    @patch('platform.system', return_value='Darwin')
+    def test_estimate_bracken_osx(self, mock_platform):
+        with self.assertRaisesRegex(
+            RuntimeError, 
+            "The estimate_bracken action is currently not supported on macOS"
+            ):
+            estimate_bracken(
+                kraken_reports=MagicMock(),
+                bracken_db=MagicMock(),
+            )
+  
+    @patch('platform.system', return_value='Linux')
+    @patch('q2_annotate.kraken2.bracken._run_bracken_one_sample')
+    def test_estimate_bracken_linux(self, p1, p2):
+        try:
+            kraken_reports = Kraken2ReportDirectoryFormat(
+                self.get_data_path('reports-mags'), 'r'
+            )
+            bracken_db = BrackenDBDirectoryFormat()
+
+            tables = [
+                pd.read_csv(
+                    self.get_data_path('bracken-report/sample1.table.csv'),
+                    index_col=0
+                ),
+                pd.read_csv(
+                    self.get_data_path('bracken-report/sample2.table.csv'),
+                    index_col=0
+                )
+            ]
+            p1.side_effect = tables
+
+            _estimate_bracken(
+                kraken_reports=kraken_reports,
+                bracken_db=bracken_db,
+                threshold=self.kwargs['threshold'],
+                read_len=self.kwargs['read_len'],
+                level=self.kwargs['level'],
+            )
+        except RuntimeError:
+            self.fail("evaluate_busco raised RuntimeError unexpectedly on Linux")
 
 
 if __name__ == "__main__":

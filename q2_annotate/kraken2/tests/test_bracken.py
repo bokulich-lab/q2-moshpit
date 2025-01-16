@@ -11,7 +11,7 @@ import shutil
 import tempfile
 import unittest
 from subprocess import CalledProcessError
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pandas as pd
 from pandas._testing import assert_frame_equal
@@ -205,7 +205,7 @@ class TestBracken(TestPluginBase):
         assert_frame_equal(obs_table, exp_table)
         assert_frame_equal(obs_taxonomy, exp_taxonomy)
         self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
-  
+
     def test_estimate_bracken_linux_vs_osx(self):
         from qiime2.plugins import annotate
         try:

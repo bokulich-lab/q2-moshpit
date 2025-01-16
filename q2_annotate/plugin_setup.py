@@ -309,10 +309,10 @@ if platform.system() != "Darwin":
         },
         parameter_descriptions={
             'threshold': 'Bracken: number of reads required PRIOR to abundance '
-                        'estimation to perform re-estimation.',
+                         'estimation to perform re-estimation.',
             'read_len': ('Bracken: read length to get all classifications for. '
-                        'For paired end data (e.g., 2x150) this should be set '
-                        'to the length of the single-end reads (e.g., 150).'),
+                         'For paired end data (e.g., 2x150) this should be set '
+                         'to the length of the single-end reads (e.g., 150).'),
             'level': 'Bracken: taxonomic level to estimate abundance at.',
             'include_unclassified': 'Bracken does not include the unclassified '
                                     'read counts in the feature table. Set this '

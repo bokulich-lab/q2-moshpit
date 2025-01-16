@@ -320,7 +320,8 @@ plugin.methods.register_function(
         'reports': 'Reports modified by Bracken.',
     },
     name='Perform read abundance re-estimation using Bracken.',
-    description='This method uses Bracken to re-estimate read abundances.',
+    description='This method uses Bracken to re-estimate read abundances. '
+                'Only available on Linux platforms.',
     citations=[citations["wood2019"]]
 )
 

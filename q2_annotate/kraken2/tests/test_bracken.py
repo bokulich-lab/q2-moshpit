@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+import platform
 import shutil
 import tempfile
 import unittest
@@ -164,9 +165,10 @@ class TestBracken(TestPluginBase):
         assert_frame_equal(obs_table, exp_table)
         self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
 
+    @patch('platform.system', return_value='Linux')
     @patch('q2_annotate.kraken2.bracken._assert_read_lens_available')
     @patch('q2_annotate.kraken2.bracken._estimate_bracken')
-    def test_estimate_bracken_with_unclassified(self, p1, p2):
+    def test_estimate_bracken_with_unclassified(self, p1, p2, p3):
         kraken_reports = Kraken2ReportDirectoryFormat(
             self.get_data_path('bracken-report-with-unclassified/'
                                'kraken-reports'), 'r'
@@ -203,6 +205,16 @@ class TestBracken(TestPluginBase):
         assert_frame_equal(obs_table, exp_table)
         assert_frame_equal(obs_taxonomy, exp_taxonomy)
         self.assertIsInstance(obs_reports, Kraken2ReportDirectoryFormat)
+
+    def test_estimate_bracken_linux_vs_osx(self):
+        from qiime2.plugins import annotate
+        try:
+            annotate.methods.estimate_bracken
+        except AttributeError:
+            if platform.system() == "Darwin":
+                pass
+            else:
+                raise
 
 
 if __name__ == "__main__":

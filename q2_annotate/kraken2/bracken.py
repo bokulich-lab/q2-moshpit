@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
+import platform
 import re
 import subprocess
 import tempfile
@@ -167,6 +168,14 @@ def estimate_bracken(
     level: str = 'S',
     include_unclassified: bool = True
 ) -> (Kraken2ReportDirectoryFormat, pd.DataFrame, pd.DataFrame):
+
+    # Check for macOS and raise an error if detected
+    if platform.system() == "Darwin":
+        raise RuntimeError(
+            "The estimate_bracken action is currently not supported on macOS "
+            "due to the unavailability of the Bracken package. Please try it on Linux."
+        )
+
     _assert_read_lens_available(bracken_db, read_len)
 
     table, reports = _estimate_bracken(

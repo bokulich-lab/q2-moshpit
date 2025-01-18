@@ -334,10 +334,10 @@ plugin.methods.register_function(
     },
     parameters={
         'collection': Str % Choices(
-            ['viral', 'minusb', 'standard', 'standard8',
-             'standard16', 'pluspf', 'pluspf8', 'pluspf16',
-             'pluspfp', 'pluspfp8', 'pluspfp16', 'eupathdb',
-             'nt', 'greengenes', 'rdp', 'silva132', 'silva138'],
+            ['viral', 'minusb', 'standard', 'standard8', 'standard16',
+             'pluspf', 'pluspf8', 'pluspf16', 'pluspfp', 'pluspfp8',
+             'pluspfp16', 'eupathdb', 'nt', 'corent', 'greengenes',
+             'rdp', 'silva132', 'silva138'],
         ),
         'threads': Int % Range(1, None),
         'kmer_len': Int % Range(1, None),

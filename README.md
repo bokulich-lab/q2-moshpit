@@ -44,7 +44,10 @@ This QIIME 2 plugin contains actions used to annotate and classify (meta)genomes
 
 The registered `estimate-tfa` usage example includes a simulated dataset with
 60 samples (30 paired subjects), 13 taxon IDs, 14 functions, and 58 observed
-taxon/function pairs. Export its inputs from an installed plugin:
+taxon/function pairs. Ten taxa have complete domain-to-species lineages, including class, order,
+and family. T010 stops at genus (Segatella), T012 at family (Rikenellaceae),
+and T013 is Unclassified. See the [taxonomy sources](q2_annotate/data/tfa-demo/README.md)
+for verified names and NCBI records. Export its inputs from an installed plugin:
 
 ```bash
 qiime annotate estimate-tfa --example-data tfa-example

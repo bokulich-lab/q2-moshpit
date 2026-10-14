@@ -22,6 +22,10 @@ from ._mapping import _align_gene_taxonomy
 
 
 def _taxon_labels(pairs: list[tuple[str, str]], taxonomy: pd.DataFrame):
+    """Return full-lineage and terminal labels keyed by taxon ID.
+
+    Append IDs to duplicate labels so different taxa remain distinguishable.
+    """
     ids = list(dict.fromkeys(taxon_id for taxon_id, _ in pairs))
     full = {}
     for taxon_id in ids:
@@ -44,6 +48,11 @@ def _taxon_labels(pairs: list[tuple[str, str]], taxonomy: pd.DataFrame):
 
 
 def _sample_summaries(values: np.ndarray, sample_count: int) -> dict:
+    """Summarize sparse, nonnegative loads across all samples.
+
+    Values are stored entries; sample_count also includes implicit zeros,
+    which contribute to the mean and median without a dense sample array.
+    """
     total = float(values.sum())
     if not sample_count:
         return {"total": total, "mean": 0.0, "median": 0.0}
@@ -67,6 +76,11 @@ def _visualization_data(
     gene_taxonomy: pd.DataFrame,
     metadata: Metadata | None,
 ) -> dict:
+    """Build the explorer's samples, pair annotations, sparse loads, and groups.
+
+    Loads are [pair index, sample index, value] triplets. Categorical metadata
+    is aligned to the table's sample order, with missing values labeled.
+    """
     sample_ids = list(feature_load.ids(axis="sample"))
     matrix = feature_load.matrix_data.tocsr()
     mapping = _align_gene_taxonomy(feature_load, gene_taxonomy)
@@ -120,7 +134,7 @@ def _explore_tfa(
     gene_taxonomy: pd.DataFrame,
     metadata: Metadata | None = None,
 ) -> None:
-    """Write a TFA explorer using mapping labels and optional sample groups."""
+    """Write the explorer assets and data.json for a TFA visualization."""
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     assets = resources.files("q2_annotate") / "assets" / "tfa_explore"

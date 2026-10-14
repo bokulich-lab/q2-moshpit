@@ -19,20 +19,24 @@ def _table_from_example(filename):
 
 
 def factory_contig_abundance():
+    """Load the synthetic contig-by-sample abundance table."""
     return _table_from_example("contig-abundance.tsv")
 
 
 def factory_feature_inventory():
+    """Load the synthetic gene-by-contig count table."""
     return _table_from_example("gene-inventory.tsv")
 
 
 def factory_taxonomy():
+    """Load the example taxon labels, including unresolved assignments."""
     with (_EXAMPLE_DATA / "taxonomy.tsv").open() as source:
         taxonomy = pd.read_csv(source, sep="\t", index_col=0, dtype=str)
     return Artifact.import_data("FeatureData[Taxonomy]", taxonomy)
 
 
 def factory_taxonomy_map():
+    """Load the example mapping from taxon IDs to their contigs."""
     with (_EXAMPLE_DATA / "taxon-to-contigs.tsv").open() as source:
         assignments = pd.read_csv(source, sep="\t", dtype=str)
     mapping = assignments.groupby("Taxon ID")["Contig ID"].apply(list).to_dict()
@@ -40,6 +44,7 @@ def factory_taxonomy_map():
 
 
 def factory_sample_metadata():
+    """Load subject, treatment, visit, and other sample annotations."""
     with resources.as_file(_EXAMPLE_DATA / "sample-metadata.tsv") as path:
         return Metadata.load(path)
 

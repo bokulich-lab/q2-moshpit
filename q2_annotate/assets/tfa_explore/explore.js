@@ -1,5 +1,7 @@
 "use strict";
 
+// Browser controls and Vega plots; taxonomy aggregation lives in taxonomy.js.
+// data.json stores nonzero loads as [pair index, sample index, load] triplets.
 let tfa;
 const showUnclassified = document.getElementById("show-unclassified");
 const levelSelect = document.getElementById("level");
@@ -28,12 +30,14 @@ function addOptions(select, labels, firstLabel) {
   }
 }
 
+// Keep the original data in tfa and the selected taxonomy level in current.
 let current;
 let loadsByPair = [];
 const controls = [showUnclassified, levelSelect, taxonSearch, taxonSelect,
                   functionSelect, groupSelect, metricSelect, limitSelect];
 for (const control of controls) control.disabled = true;
 
+/** Load data and populate controls before drawing the first plots. */
 async function initializeExplorer() {
   const response = await fetch("data.json");
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -61,6 +65,7 @@ function pairLabel(pair) {
   return pair.taxon_label || latestTaxonLabel(pair.lineage || [], pair.taxon_id);
 }
 
+/** Rebuild the taxon list from search and function filters, keeping valid selections. */
 function refreshTaxa() {
   const previous = taxonSelect.value;
   const query = taxonSearch.value.trim().toLocaleLowerCase();
@@ -93,6 +98,7 @@ function showSelectedTaxonomy() {
     : taxonSearch.value.trim() ? "Search filters the taxon list. Select a taxon to filter the plots." : "";
 }
 
+/** Collapse to the chosen level and index sparse loads for repeated filtering. */
 function changeLevel() {
   current = collapseTaxonomy(tfa, Number(levelSelect.value));
   loadsByPair = current.pairs.map(() => []);
@@ -101,6 +107,7 @@ function changeLevel() {
   refreshTaxa();
 }
 
+/** Find pair indices matching the current taxon, function, and visibility choices. */
 function matchedPairs() {
   const indices = [];
   current.pairs.forEach((pair, index) => {
@@ -112,6 +119,7 @@ function matchedPairs() {
   return indices;
 }
 
+/** Sum selected pairs per sample, retaining zero loads and metadata groups. */
 function sampleValues(pairIndices) {
   const values = new Float64Array(tfa.samples.length);
   for (const pairIndex of pairIndices) {
@@ -132,6 +140,7 @@ function plotWidth(id) {
   return Math.max(240, document.getElementById(id).parentElement.clientWidth - gutter);
 }
 
+/** Rank links by the chosen metric and build a Vega-Lite heatmap specification. */
 function heatmapSpec(indices) {
   const field = {sum: "total", mean: "mean", median: "median"}[metricSelect.value];
   const label = {sum: "Sum", mean: "Mean", median: "Median"}[metricSelect.value];
@@ -141,6 +150,7 @@ function heatmapSpec(indices) {
     .slice(0, Number(limitSelect.value));
   const taxaOrder = [...new Set(top.map(pair => pair.taxon))];
   const functionOrder = [...new Set(top.map(pair => pair.function))];
+  // Full lineages identify rows; short labels must not merge taxa with identical names.
   const axisLabels = Object.fromEntries(top.map(pair => [pair.taxon, pairLabel(pair)]));
   return {
     $schema: schema,
@@ -212,6 +222,7 @@ function sampleSpec(samples) {
   };
 }
 
+/** Dispose of old Vega views and redraw all three plots for the current selection. */
 async function draw() {
   for (const view of activeViews) view.finalize();
   activeViews = [];
@@ -268,11 +279,13 @@ async function draw() {
 function update() {
   if (!tfa) return;
   showSelectedTaxonomy();
+  // Serialize asynchronous redraws so an older render cannot overwrite a newer one.
   renderQueue = renderQueue.then(draw).catch(error => {
     status.textContent = `Could not draw the plots: ${error.message}`;
   });
 }
 
+// Rebuild the taxon choices whenever a control changes which taxa are available.
 showUnclassified.addEventListener("change", () => {
   refreshTaxa();
   update();

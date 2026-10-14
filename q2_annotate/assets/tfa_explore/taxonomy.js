@@ -1,5 +1,7 @@
 "use strict";
 
+// Pure helpers shared by the browser explorer and its Node.js tests.
+
 // Ignore empty rank prefixes and unassigned terminal ranks when choosing a label.
 function latestTaxonLabel(lineage, fallback) {
   return [...lineage].reverse().find(label =>
@@ -16,7 +18,9 @@ function isUnclassifiedTaxon(pair, level) {
     /^(?:[a-z]__)?(?:unclassified|unassigned|unknown)?$/i.test(label.trim());
 }
 
-// Sum within each sample before calculating summaries across samples.
+/** Collapse pairs by lineage prefix and function, summing within each sample.
+ * Level 0 preserves the original taxa. Output loads remain sparse triplets.
+ */
 function collapseTaxonomy(data, level) {
   if (level === 0) return data;
   const groups = new Map();
@@ -25,6 +29,7 @@ function collapseTaxonomy(data, level) {
     const lineage = pair.lineage.slice(0, level);
     while (lineage.length < level) lineage.push("");
     const known = lineage.some(label => label && !/^[a-z]__$/i.test(label));
+    // Include ancestry in the key; keep completely unassigned taxon IDs distinct.
     const key = JSON.stringify([lineage, known ? null : pair.taxon_id]);
     if (!groups.has(key)) {
       const labels = lineage.map((label, index) =>
@@ -39,6 +44,7 @@ function collapseTaxonomy(data, level) {
     }
     groupByPair.push(group.functions.get(pair.function));
   }
+  // Each original pair points to its collapsed function's sample-to-load map.
   for (const [pair, sample, load] of data.loads) {
     const values = groupByPair[pair];
     values.set(sample, (values.get(sample) || 0) + load);
@@ -52,6 +58,7 @@ function collapseTaxonomy(data, level) {
     for (const [func, values] of group.functions) {
       const stored = [...values.values()].filter(value => value !== 0).sort((a, b) => a - b);
       const total = stored.reduce((sum, value) => sum + value, 0);
+      // Nonnegative loads place implicit zeros first, avoiding a dense sample array.
       const zeros = data.samples.length - stored.length;
       const middle = [(data.samples.length - 1) >> 1, data.samples.length >> 1];
       const median = data.samples.length
@@ -77,4 +84,5 @@ function collapseTaxonomy(data, level) {
   return {...data, pairs, loads};
 }
 
+// Export for Node.js tests; browser scripts use these functions directly.
 if (typeof module !== "undefined") module.exports = {collapseTaxonomy, latestTaxonLabel, isUnclassifiedTaxon};

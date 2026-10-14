@@ -38,3 +38,30 @@ This QIIME 2 plugin contains actions used to annotate and classify (meta)genomes
 | predict-genes-prodigal    | Predict gene sequences from MAGs using Prodigal.                                       | [Prodigal](https://github.com/hyattpd/Prodigal) |
 | search-orthologs-diamond  | Run eggNOG search using Diamond aligner.                                               | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
 | search-orthologs-hmmer    | Run eggNOG search using HMMER aligner.                                                 | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
+
+
+## Run the TFA example
+
+The registered `estimate-tfa` usage example includes a simulated dataset with
+60 samples (30 paired subjects), 13 taxon IDs, 14 functions, and 58 observed
+taxon/function pairs. Export its inputs from an installed plugin:
+
+```bash
+qiime annotate estimate-tfa --example-data tfa-example
+
+qiime annotate estimate-tfa \
+  --i-contig-abundance tfa-example/tfa-demo/contig-abundance.qza \
+  --i-feature-inventory tfa-example/tfa-demo/feature-inventory.qza \
+  --i-taxonomy tfa-example/tfa-demo/taxonomy.qza \
+  --i-taxon-to-contig-map tfa-example/tfa-demo/taxon-to-contig-map.qza \
+  --m-metadata-file tfa-example/tfa-demo/sample-metadata.tsv \
+  --o-tfa tfa.qza \
+  --o-gene-taxonomy gene-taxonomy.qza \
+  --o-visualization tfa-explorer.qzv
+
+qiime tools view tfa-explorer.qzv
+```
+
+Select `treatment_visit` in the visualization to compare baseline and day 14
+samples in the two synthetic treatment groups. The input TSVs are bundled in
+`q2_annotate/data/tfa-demo`; the data are illustrative, not biological findings.

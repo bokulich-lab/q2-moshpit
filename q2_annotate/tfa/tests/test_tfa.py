@@ -278,8 +278,10 @@ class TestTFA(TestPluginBase):
                     "FeatureData[Taxonomy % Properties('tfa')]",
                 )
                 pd.testing.assert_frame_equal(
-                    result.tfa.view(biom.Table).to_dataframe(dense=True)
-                    .rename_axis("Feature ID"), self.expected_tfa
+                    result.tfa.view(biom.Table)
+                    .to_dataframe(dense=True)
+                    .rename_axis("Feature ID"),
+                    self.expected_tfa,
                 )
                 pd.testing.assert_frame_equal(
                     result.gene_taxonomy.view(pd.DataFrame), self.expected_gene_taxonomy
@@ -287,9 +289,11 @@ class TestTFA(TestPluginBase):
                 self.assertIsInstance(result.visualization, qiime2.Visualization)
                 result.visualization.export_data(self.temp_dir.name)
                 html = (Path(self.temp_dir.name) / "index.html").read_text()
-                payload = json.loads(html.split(
-                    '<script id="tfa-data" type="application/json">'
-                )[1].split("</script>")[0])
+                payload = json.loads(
+                    html.split('<script id="tfa-data" type="application/json">')[
+                        1
+                    ].split("</script>")[0]
+                )
                 self.assertEqual(payload["samples"], ["S1", "S2", "S3"])
                 self.assertEqual(bool(payload["groups"]), grouping is not None)
 
@@ -300,7 +304,8 @@ class TestTFA(TestPluginBase):
         inputs["contig_abundance"] = qiime2.Artifact.import_data(
             "FeatureTable[Frequency]",
             biom.Table(
-                sp.csr_matrix(table.shape), table.ids(axis="observation"),
+                sp.csr_matrix(table.shape),
+                table.ids(axis="observation"),
                 table.ids(axis="sample"),
             ),
         )

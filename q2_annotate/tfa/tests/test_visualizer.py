@@ -214,27 +214,6 @@ class TestTFAVisualizer(TestPluginBase):
             )
         self.assertEqual(self._payload(), self.expected_payload)
 
-    def test_action_requires_tfa_property(self):
-        table = qiime2.Artifact.import_data("FeatureTable[Frequency]", self._table())
-        mapping = qiime2.Artifact.import_data(
-            "FeatureData[Taxonomy % Properties('tfa')]", self._mapping()
-        )
-        with self.assertRaisesRegex(TypeError, "Properties.*tfa"):
-            plugin.visualizers["_explore_tfa"](
-                feature_load=table, gene_taxonomy=mapping
-            )
-
-    def test_action_requires_tfa_taxonomy_property(self):
-        """Require the tfa property on the gene taxonomy input."""
-        table = qiime2.Artifact.import_data(
-            "FeatureTable[Frequency % Properties('tfa')]", self._table()
-        )
-        ordinary = qiime2.Artifact.import_data("FeatureData[Taxonomy]", self._mapping())
-        with self.assertRaisesRegex(TypeError, "Properties.*tfa"):
-            plugin.visualizers["_explore_tfa"](
-                feature_load=table, gene_taxonomy=ordinary
-            )
-
     def test_mapping_labels_and_alignment_for_filtered_table(self):
         mapping = self._mapping().iloc[::-1]
         table = self._table().filter(

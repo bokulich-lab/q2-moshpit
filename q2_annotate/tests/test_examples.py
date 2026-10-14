@@ -62,7 +62,7 @@ class TestUsageExample(TestPluginBase):
         taxonomy = factory_taxonomy().view(pd.DataFrame)["Taxon"]
         observed = {}
         for identifier, label in taxonomy.items():
-            unclassified = label == "Unclassified"
+            unclassified = label == "d__Unclassified"
             ranks = (
                 []
                 if unclassified

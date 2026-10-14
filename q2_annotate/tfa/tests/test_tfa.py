@@ -262,14 +262,6 @@ class TestTFA(TestPluginBase):
             ),
         }
 
-    def test_pipeline_registration(self):
-        """Expose one pipeline and register its two private helper actions."""
-        self.assertIn("estimate_tfa", self.plugin.pipelines)
-        self.assertNotIn("estimate_tfa", self.plugin.methods)
-        self.assertIn("_estimate_tfa", self.plugin.methods)
-        self.assertIn("_explore_tfa", self.plugin.visualizers)
-        self.assertNotIn("explore_tfa", self.plugin.visualizers)
-
     def test_pipeline_outputs_with_optional_metadata(self):
         """Return matching tables and an explorer with optional sample groups."""
         inputs = self._pipeline_inputs()

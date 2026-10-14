@@ -26,6 +26,6 @@ Names and lineages were checked against NCBI Taxonomy on 2026-10-14.
 Ten taxa are resolved to species; `T010` is deliberately resolved only to genus
 (*Segatella*) and `T012` only to family (Rikenellaceae). Their linked species
 records document the known ancestral lineage, not a species assignment in the
-example. `T013` is explicitly `Unclassified`. These cases demonstrate rank
+example. `T013` is explicitly `d__Unclassified`. These cases demonstrate rank
 fallback labels and the Show unclassified taxa control. IDs, sample metadata,
 gene inventory, and abundance values are unchanged.

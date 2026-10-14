@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 import json
-import re
 from pathlib import Path
 
 import biom
@@ -22,6 +21,12 @@ from q2_annotate.tfa.visualizer import _explore_tfa
 
 class TestTFAVisualizer(TestPluginBase):
     package = "q2_annotate.tfa.tests"
+
+    def setUp(self):
+        super().setUp()
+        self.expected_payload = json.loads(
+            Path(self.get_data_path("expected-explorer-data.json")).read_text()
+        )
 
     def _table(self):
         data = pd.read_csv(
@@ -48,14 +53,10 @@ class TestTFAVisualizer(TestPluginBase):
             keep_default_na=False,
         )
 
-    def _payload(self, html):
-        match = re.search(
-            r'<script id="tfa-data" type="application/json">(.*?)</script>',
-            html,
-            re.DOTALL,
+    def _payload(self):
+        return json.loads(
+            (Path(self.temp_dir.name) / "data.json").read_text(encoding="utf-8")
         )
-        self.assertIsNotNone(match)
-        return json.loads(match.group(1))
 
     def test_sparse_payload_and_metadata_groups(self):
         metadata = qiime2.Metadata.load(self.get_data_path("sample-metadata.tsv"))
@@ -64,31 +65,20 @@ class TestTFAVisualizer(TestPluginBase):
         )
         output = Path(self.temp_dir.name)
         html = (output / "index.html").read_text(encoding="utf-8")
-        payload = self._payload(html)
-        self.assertEqual(payload["samples"], ["S1", "S2", "S3"])
-        self.assertEqual([pair["total"] for pair in payload["pairs"]], [8, 4.25, 16])
-        self.assertEqual(
-            [pair["mean"] for pair in payload["pairs"]], [8 / 3, 4.25 / 3, 16 / 3]
-        )
-        self.assertEqual([pair["median"] for pair in payload["pairs"]], [3, 1.25, 4])
-        self.assertEqual(len(payload["loads"]), 6)
-        self.assertEqual(payload["loads"][0], [0, 0, 5.0])
-        self.assertEqual(
-            payload["groups"],
-            {
-                "group": ["case", "control", "case"],
-                "batch": ["B1", "B2", "B1"],
-            },
-        )
+        self.expected_payload["groups"] = {
+            "group": ["case", "control", "case"],
+            "batch": ["B1", "B2", "B1"],
+        }
+        self.assertEqual(self._payload(), self.expected_payload)
         self.assertIn('aria-label="Explorer controls"', html)
         self.assertNotIn("<header>", html)
-        self.assertTrue((output / "explore.js").is_file())
-        self.assertTrue((output / "style.css").is_file())
-        self.assertTrue((output / "taxonomy.js").is_file())
-        self.assertIn('id="level"', html)
+        self.assertNotIn('id="tfa-data"', html)
+        self.assertNotIn("__TFA_DATA__", html)
         self.assertEqual(
-            payload["pairs"][0]["lineage"], ["Bacteria", "Escherichia coli"]
+            {file.name for file in output.iterdir()},
+            {"index.html", "data.json", "explore.js", "style.css", "taxonomy.js"},
         )
+        self.assertIn('id="level"', html)
 
     def test_estimated_zero_load_pairs_are_absent_from_explorer(self):
         """Show only taxon-gene pairs with a load in the explorer."""
@@ -107,12 +97,26 @@ class TestTFAVisualizer(TestPluginBase):
             abundance, inventory, taxonomy, {"T1": ["C1"], "T2": ["C2"]}
         )
         _explore_tfa(self.temp_dir.name, table, mapping)
-        html = (Path(self.temp_dir.name) / "index.html").read_text(encoding="utf-8")
-        pairs = self._payload(html)["pairs"]
-        self.assertEqual(len(pairs), 1)
-        self.assertEqual((pairs[0]["taxon_id"], pairs[0]["function"]), ("T1", "geneA"))
+        expected = {
+            "samples": ["S1", "S2"],
+            "pairs": [
+                {
+                    "taxon": "Taxon A",
+                    "taxon_short": "Taxon A",
+                    "taxon_id": "T1",
+                    "lineage": ["Taxon A"],
+                    "function": "geneA",
+                    "total": 2,
+                    "mean": 1,
+                    "median": 1,
+                }
+            ],
+            "loads": [[0, 0, 2]],
+            "groups": {},
+        }
+        self.assertEqual(self._payload(), expected)
 
-    def test_optional_metadata_and_html_escaping(self):
+    def test_optional_metadata_and_labels_are_separate_from_html(self):
         table = biom.Table(
             sp.csr_matrix([[2]]),
             observation_ids=[_gene_taxonomy_id("T<script>", "gene")],
@@ -121,16 +125,36 @@ class TestTFAVisualizer(TestPluginBase):
         _explore_tfa(self.temp_dir.name, table, self._mapping("gene-taxonomy-html.tsv"))
         html = (Path(self.temp_dir.name) / "index.html").read_text(encoding="utf-8")
         self.assertNotIn("T<script>", html)
-        self.assertEqual(self._payload(html)["pairs"][0]["taxon"], "T<script>")
-        self.assertEqual(self._payload(html)["groups"], {})
+        expected = {
+            "samples": ["S1"],
+            "pairs": [
+                {
+                    "taxon": "T<script>",
+                    "taxon_short": "T<script>",
+                    "taxon_id": "T<script>",
+                    "lineage": ["T<script>"],
+                    "function": "gene",
+                    "total": 2,
+                    "mean": 2,
+                    "median": 2,
+                }
+            ],
+            "loads": [[0, 0, 2]],
+            "groups": {},
+        }
+        self.assertEqual(self._payload(), expected)
 
     def test_even_sample_medians_include_sparse_zeros(self):
         table = self._table().filter(["S1", "S2"], axis="sample", inplace=False)
         _explore_tfa(self.temp_dir.name, table, self._mapping())
-        html = (Path(self.temp_dir.name) / "index.html").read_text(encoding="utf-8")
-        self.assertEqual(
-            [pair["median"] for pair in self._payload(html)["pairs"]], [4, 2.125, 6]
-        )
+        self.expected_payload["samples"] = ["S1", "S2"]
+        self.expected_payload["loads"] = self.expected_payload["loads"][:-1]
+        for pair, summary in zip(
+            self.expected_payload["pairs"],
+            [(8, 4, 4), (4.25, 2.125, 2.125), (12, 6, 6)],
+        ):
+            pair.update(zip(("total", "mean", "median"), summary))
+        self.assertEqual(self._payload(), self.expected_payload)
 
     def test_mostly_absent_pairs_have_zero_median(self):
         original = self._table()
@@ -140,10 +164,12 @@ class TestTFAVisualizer(TestPluginBase):
             sample_ids=["S1", "S2", "S3", "S4", "S5", "S6"],
         )
         _explore_tfa(self.temp_dir.name, table, self._mapping())
-        html = (Path(self.temp_dir.name) / "index.html").read_text(encoding="utf-8")
-        pairs = self._payload(html)["pairs"]
-        self.assertEqual([pair["median"] for pair in pairs], [0, 0, 0])
-        self.assertEqual([pair["mean"] for pair in pairs], [8 / 6, 4.25 / 6, 16 / 6])
+        self.expected_payload["samples"] = ["S1", "S2", "S3", "S4", "S5", "S6"]
+        for pair, mean in zip(
+            self.expected_payload["pairs"], [8 / 6, 4.25 / 6, 16 / 6]
+        ):
+            pair.update(mean=mean, median=0)
+        self.assertEqual(self._payload(), self.expected_payload)
 
     def test_samples_missing_from_metadata_remain_grouped(self):
         metadata = qiime2.Metadata.load(
@@ -152,11 +178,8 @@ class TestTFAVisualizer(TestPluginBase):
         _explore_tfa(
             self.temp_dir.name, self._table(), self._mapping(), metadata=metadata
         )
-        html = (Path(self.temp_dir.name) / "index.html").read_text(encoding="utf-8")
-        self.assertEqual(
-            self._payload(html)["groups"]["group"],
-            ["case", "control", "(missing)"],
-        )
+        self.expected_payload["groups"] = {"group": ["case", "control", "(missing)"]}
+        self.assertEqual(self._payload(), self.expected_payload)
 
     def test_action_registration_and_execution(self):
         self.assertIn("_explore_tfa", plugin.visualizers)
@@ -183,13 +206,13 @@ class TestTFAVisualizer(TestPluginBase):
             "d__Bacteria; g__Bacteroides; s__fragilis"
         )
         _explore_tfa(self.temp_dir.name, self._table(), mapping)
-        html = (Path(self.temp_dir.name) / "index.html").read_text(encoding="utf-8")
-        pairs = self._payload(html)["pairs"]
-        self.assertEqual(pairs[0]["taxon_id"], "T1")
-        self.assertEqual(pairs[0]["taxon"], "d__Bacteria; g__Bacteroides; s__fragilis")
-        self.assertEqual(pairs[0]["taxon_short"], "s__fragilis")
-        self.assertEqual(pairs[2]["taxon"], "Bacteria; Klebsiella pneumoniae")
-        self.assertEqual(pairs[2]["taxon_short"], "Klebsiella pneumoniae")
+        for pair in self.expected_payload["pairs"][:2]:
+            pair.update(
+                taxon="d__Bacteria; g__Bacteroides; s__fragilis",
+                taxon_short="s__fragilis",
+                lineage=["d__Bacteria", "g__Bacteroides", "s__fragilis"],
+            )
+        self.assertEqual(self._payload(), self.expected_payload)
 
     def test_action_requires_tfa_property(self):
         table = qiime2.Artifact.import_data("FeatureTable[Frequency]", self._table())
@@ -218,12 +241,9 @@ class TestTFAVisualizer(TestPluginBase):
             [_gene_taxonomy_id("T1", "geneA")], axis="observation", inplace=False
         )
         _explore_tfa(self.temp_dir.name, table, mapping)
-        html = (Path(self.temp_dir.name) / "index.html").read_text(encoding="utf-8")
-        pairs = self._payload(html)["pairs"]
-        self.assertEqual(len(pairs), 1)
-        self.assertEqual(pairs[0]["taxon"], "Bacteria; Escherichia coli")
-        self.assertEqual(pairs[0]["function"], "geneA")
-        self.assertEqual(pairs[0]["total"], 8)
+        self.expected_payload["pairs"] = self.expected_payload["pairs"][:1]
+        self.expected_payload["loads"] = [[0, 0, 5], [0, 1, 3]]
+        self.assertEqual(self._payload(), self.expected_payload)
 
     def test_missing_mapping_reports_feature_id(self):
         with self.assertRaisesRegex(

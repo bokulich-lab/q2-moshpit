@@ -1,6 +1,6 @@
 "use strict";
 
-const tfa = JSON.parse(document.getElementById("tfa-data").textContent);
+let tfa;
 const showUnclassified = document.getElementById("show-unclassified");
 const levelSelect = document.getElementById("level");
 const taxonSearch = document.getElementById("taxon-search");
@@ -28,15 +28,30 @@ function addOptions(select, labels, firstLabel) {
   }
 }
 
-let current = tfa;
-const functions = [...new Set(tfa.pairs.map(pair => pair.function))].sort();
+let current;
 let loadsByPair = [];
-const depth = tfa.pairs.reduce((depth, pair) => Math.max(depth, pair.lineage.length), 0);
-levelSelect.add(new Option("Full taxonomy", "0"));
-for (let level = 1; level <= depth; level++) {
-  levelSelect.add(new Option(`Level ${level}`, String(level)));
+const controls = [showUnclassified, levelSelect, taxonSearch, taxonSelect,
+                  functionSelect, groupSelect, metricSelect, limitSelect];
+for (const control of controls) control.disabled = true;
+
+async function initializeExplorer() {
+  const response = await fetch("data.json");
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  tfa = await response.json();
+  const functions = [...new Set(tfa.pairs.map(pair => pair.function))].sort();
+  const depth = tfa.pairs.reduce((depth, pair) => Math.max(depth, pair.lineage.length), 0);
+  levelSelect.add(new Option("Full taxonomy", "0"));
+  for (let level = 1; level <= depth; level++) {
+    levelSelect.add(new Option(`Level ${level}`, String(level)));
+  }
+  levelSelect.value = "0";
+  addOptions(functionSelect, functions, "All functions");
+  addOptions(groupSelect, Object.keys(tfa.groups), "All samples");
+  changeLevel();
+  for (const control of controls) control.disabled = false;
+  update();
+  await renderQueue;
 }
-levelSelect.value = "0";
 
 function pairVisible(pair) {
   return showUnclassified.checked || !isUnclassifiedTaxon(pair, Number(levelSelect.value));
@@ -85,9 +100,6 @@ function changeLevel() {
   taxonSelect.value = "";
   refreshTaxa();
 }
-changeLevel();
-addOptions(functionSelect, functions, "All functions");
-addOptions(groupSelect, Object.keys(tfa.groups), "All samples");
 
 function matchedPairs() {
   const indices = [];
@@ -254,6 +266,7 @@ async function draw() {
 }
 
 function update() {
+  if (!tfa) return;
   showSelectedTaxonomy();
   renderQueue = renderQueue.then(draw).catch(error => {
     status.textContent = `Could not draw the plots: ${error.message}`;
@@ -284,4 +297,6 @@ window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(update, 150);
 });
-update();
+const initialization = initializeExplorer().catch(error => {
+  status.textContent = `Could not load TFA data: ${error.message}`;
+});

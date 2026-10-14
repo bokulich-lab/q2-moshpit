@@ -130,13 +130,7 @@ def _explore_tfa(
         allow_nan=False,
         separators=(",", ":"),
     )
-    # JSON inside a script element must not contain literal HTML delimiters.
-    payload = (
-        payload.replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
-    )
-    html = (assets / "index.html").read_text(encoding="utf-8")
-    (output / "index.html").write_text(
-        html.replace("__TFA_DATA__", payload), encoding="utf-8"
-    )
+    (output / "data.json").write_text(payload, encoding="utf-8")
+    shutil.copyfile(assets / "index.html", output / "index.html")
     for filename in ("explore.js", "taxonomy.js", "style.css"):
         shutil.copyfile(assets / filename, output / filename)

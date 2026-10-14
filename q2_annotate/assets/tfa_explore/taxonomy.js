@@ -1,5 +1,21 @@
 "use strict";
 
+// Ignore empty rank prefixes and unassigned terminal ranks when choosing a label.
+function latestTaxonLabel(lineage, fallback) {
+  return [...lineage].reverse().find(label =>
+    label.trim() && !/^(?:[a-z]__)?(?:unclassified|unassigned|unknown)?$/i.test(label.trim())) || fallback;
+}
+
+// At a selected level, taxa lacking that rank are unclassified even when
+// the heatmap falls back to an available ancestor's name.
+function isUnclassifiedTaxon(pair, level) {
+  if (pair.unclassified !== undefined) return pair.unclassified;
+  const lineage = pair.lineage || [];
+  const label = level ? lineage[level - 1] : lineage.at(-1);
+  return !label || label === pair.taxon_id ||
+    /^(?:[a-z]__)?(?:unclassified|unassigned|unknown)?$/i.test(label.trim());
+}
+
 // Sum within each sample before calculating summaries across samples.
 function collapseTaxonomy(data, level) {
   if (level === 0) return data;
@@ -14,7 +30,7 @@ function collapseTaxonomy(data, level) {
       const labels = lineage.map((label, index) =>
         label && !/^[a-z]__$/i.test(label) ? label : `Unclassified (level ${index + 1})`);
       const label = labels.join("; ") + (known ? "" : ` [${pair.taxon_id}]`);
-      groups.set(key, {taxon: label, taxon_short: labels.at(-1), ids: new Set(), functions: new Map()});
+      groups.set(key, {taxon: label, unclassified: isUnclassifiedTaxon(pair, level), taxon_label: latestTaxonLabel(lineage, pair.taxon_id), taxon_short: labels.at(-1), ids: new Set(), functions: new Map()});
     }
     const group = groups.get(key);
     group.ids.add(pair.taxon_id);
@@ -44,6 +60,8 @@ function collapseTaxonomy(data, level) {
       const index = pairs.length;
       pairs.push({
         taxon: group.taxon,
+        unclassified: group.unclassified,
+        taxon_label: group.taxon_label,
         taxon_short: shortCounts.get(group.taxon_short) > 1 ? group.taxon : group.taxon_short,
         taxon_id: [...group.ids].join(", "),
         function: func,
@@ -59,4 +77,4 @@ function collapseTaxonomy(data, level) {
   return {...data, pairs, loads};
 }
 
-if (typeof module !== "undefined") module.exports = {collapseTaxonomy};
+if (typeof module !== "undefined") module.exports = {collapseTaxonomy, latestTaxonLabel, isUnclassifiedTaxon};

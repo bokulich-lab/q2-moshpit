@@ -114,7 +114,7 @@ def _visualization_data(
     return {"samples": sample_ids, "pairs": pairs, "loads": loads, "groups": groups}
 
 
-def explore_tfa(
+def _explore_tfa(
     output_dir: str,
     feature_load: biom.Table,
     gene_taxonomy: pd.DataFrame,

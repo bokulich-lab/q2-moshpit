@@ -24,8 +24,8 @@ from q2_types.feature_data import (
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 
 from q2_annotate.examples import estimate_tfa_example
-from q2_annotate.tfa.tfa import estimate_tfa
-from q2_annotate.tfa.visualizer import explore_tfa
+from q2_annotate.tfa.tfa import _estimate_tfa, estimate_tfa
+from q2_annotate.tfa.visualizer import _explore_tfa
 from q2_types.per_sample_sequences import (
     SequencesWithQuality,
     PairedEndSequencesWithQuality,
@@ -1764,7 +1764,7 @@ tfa_input_descriptions = {
 }
 
 plugin.methods.register_function(
-    function=estimate_tfa,
+    function=_estimate_tfa,
     inputs=tfa_inputs,
     parameters={},
     outputs=[
@@ -1789,12 +1789,11 @@ plugin.methods.register_function(
         "contigs shared by both input tables and assigned to a taxon with "
         "taxonomy are included."
     ),
-    examples={"tfa_demo": estimate_tfa_example},
     citations=[],
 )
 
 plugin.visualizers.register_function(
-    function=explore_tfa,
+    function=_explore_tfa,
     inputs={
         "feature_load": FeatureTable[Frequency % Properties("tfa")],
         "gene_taxonomy": FeatureData[Taxonomy % Properties("tfa")],
@@ -1815,6 +1814,43 @@ plugin.visualizers.register_function(
         "Interactively browse taxon/function links and compare their loads "
         "across samples or categorical sample groups."
     ),
+    citations=[],
+)
+
+plugin.pipelines.register_function(
+    function=estimate_tfa,
+    inputs=tfa_inputs,
+    parameters={"metadata": Metadata},
+    outputs=[
+        ("tfa", FeatureTable[Frequency % Properties("tfa")]),
+        ("gene_taxonomy", FeatureData[Taxonomy % Properties("tfa")]),
+        ("visualization", Visualization),
+    ],
+    input_descriptions=tfa_input_descriptions,
+    parameter_descriptions={
+        "metadata": "Optional sample metadata for grouping samples in the explorer."
+    },
+    output_descriptions={
+        "visualization": (
+            "Interactive exploration of taxon/function loads across samples."
+        ),
+        "tfa": (
+            "Sparse abundance-weighted loads for taxon/function pairs "
+            "across the original samples."
+        ),
+        "gene_taxonomy": (
+            "Map feature IDs to their taxon IDs, gene IDs, and taxonomy labels."
+        ),
+    },
+    name="Estimate Taxonomic Functional Attribution (TFA).",
+    description=(
+        "Estimate sample-resolved functional loads for taxon/function pairs "
+        "as a sparse frequency table and a gene taxonomy mapping. Only "
+        "contigs shared by both input tables and assigned to a taxon with "
+        "taxonomy are included. The explorer uses optional sample metadata "
+        "for grouping."
+    ),
+    examples={"tfa_demo": estimate_tfa_example},
     citations=[],
 )
 

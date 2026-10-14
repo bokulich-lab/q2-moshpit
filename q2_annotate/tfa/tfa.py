@@ -101,7 +101,7 @@ def _calculate_taxon_gene_loads(
     return matrix, pairs
 
 
-def estimate_tfa(
+def _estimate_tfa(
     contig_abundance: biom.Table,
     feature_inventory: biom.Table,
     taxonomy: pd.DataFrame,
@@ -140,3 +140,26 @@ def estimate_tfa(
         ),
         gene_taxonomy,
     )
+
+
+def estimate_tfa(
+    ctx,
+    contig_abundance,
+    feature_inventory,
+    taxonomy,
+    taxon_to_contig_map,
+    metadata=None,
+):
+    """Estimate sample-resolved TFA and visualize it with optional metadata."""
+    estimate = ctx.get_action("annotate", "_estimate_tfa")
+    explore = ctx.get_action("annotate", "_explore_tfa")
+    tfa, gene_taxonomy = estimate(
+        contig_abundance=contig_abundance,
+        feature_inventory=feature_inventory,
+        taxonomy=taxonomy,
+        taxon_to_contig_map=taxon_to_contig_map,
+    )
+    (visualization,) = explore(
+        feature_load=tfa, gene_taxonomy=gene_taxonomy, metadata=metadata
+    )
+    return tfa, gene_taxonomy, visualization

@@ -1,7 +1,10 @@
 "use strict";
 
 const tfa = JSON.parse(document.getElementById("tfa-data").textContent);
+const showUnclassified = document.getElementById("show-unclassified");
 const levelSelect = document.getElementById("level");
+const taxonSearch = document.getElementById("taxon-search");
+const selectedTaxonomy = document.getElementById("selected-taxonomy");
 const taxonSelect = document.getElementById("taxon");
 const functionSelect = document.getElementById("function");
 const groupSelect = document.getElementById("group");
@@ -29,22 +32,58 @@ let current = tfa;
 const functions = [...new Set(tfa.pairs.map(pair => pair.function))].sort();
 let loadsByPair = [];
 const depth = tfa.pairs.reduce((depth, pair) => Math.max(depth, pair.lineage.length), 0);
-levelSelect.add(new Option("Original taxa", "0"));
-const rankNames = {d: "Domain", k: "Kingdom", p: "Phylum", c: "Class", o: "Order", f: "Family", g: "Genus", s: "Species"};
+levelSelect.add(new Option("Full taxonomy", "0"));
 for (let level = 1; level <= depth; level++) {
-  const prefixes = new Set(tfa.pairs.map(pair => {
-    const match = (pair.lineage[level - 1] || "").match(/^([a-z])__/i);
-    return match ? rankNames[match[1].toLowerCase()] : null;
-  }).filter(Boolean));
-  const rank = prefixes.size === 1 ? ` (${[...prefixes][0]})` : "";
-  levelSelect.add(new Option(`Level ${level}${rank}`, String(level)));
+  levelSelect.add(new Option(`Level ${level}`, String(level)));
 }
+levelSelect.value = "0";
+
+function pairVisible(pair) {
+  return showUnclassified.checked || !isUnclassifiedTaxon(pair, Number(levelSelect.value));
+}
+
+function pairLabel(pair) {
+  return pair.taxon_label || latestTaxonLabel(pair.lineage || [], pair.taxon_id);
+}
+
+function refreshTaxa() {
+  const previous = taxonSelect.value;
+  const query = taxonSearch.value.trim().toLocaleLowerCase();
+  const taxa = [...new Set(current.pairs
+    .filter(pairVisible)
+    .filter(pair => !functionSelect.value || pair.function === functionSelect.value)
+    .map(pair => pair.taxon))]
+    .filter(taxon => taxon.toLocaleLowerCase().includes(query)).sort();
+  taxonSelect.replaceChildren();
+  addOptions(taxonSelect, taxa, query ? "Select a matching taxon" : "All taxa");
+  const labelByTaxon = new Map(current.pairs.map(pair => [pair.taxon, pairLabel(pair)]));
+  const terminal = taxon => labelByTaxon.get(taxon);
+  const counts = new Map();
+  for (const taxon of taxa) counts.set(terminal(taxon), (counts.get(terminal(taxon)) || 0) + 1);
+  for (const option of taxonSelect.options) {
+    if (!option.value) continue;
+    const label = terminal(option.value);
+    const parent = option.value.split(";").slice(0, -1).join("; ").trim();
+    option.textContent = levelSelect.value === "0" ? option.value : counts.get(label) > 1 ? `${label} [${parent}]` : label;
+    option.title = option.value;
+  }
+  taxonSelect.value = taxa.includes(previous) ? previous : "";
+  showSelectedTaxonomy();
+}
+
+function showSelectedTaxonomy() {
+  taxonSelect.title = taxonSelect.value || "All taxa";
+  selectedTaxonomy.textContent = taxonSelect.value
+    ? `Selected lineage: ${taxonSelect.value}`
+    : taxonSearch.value.trim() ? "Search filters the taxon list. Select a taxon to filter the plots." : "";
+}
+
 function changeLevel() {
   current = collapseTaxonomy(tfa, Number(levelSelect.value));
   loadsByPair = current.pairs.map(() => []);
   for (const load of current.loads) loadsByPair[load[0]].push(load);
-  taxonSelect.replaceChildren();
-  addOptions(taxonSelect, [...new Set(current.pairs.map(pair => pair.taxon))].sort(), "All taxa");
+  taxonSelect.value = "";
+  refreshTaxa();
 }
 changeLevel();
 addOptions(functionSelect, functions, "All functions");
@@ -53,7 +92,7 @@ addOptions(groupSelect, Object.keys(tfa.groups), "All samples");
 function matchedPairs() {
   const indices = [];
   current.pairs.forEach((pair, index) => {
-    if ((!taxonSelect.value || pair.taxon === taxonSelect.value) &&
+    if (pairVisible(pair) && (!taxonSelect.value || pair.taxon === taxonSelect.value) &&
         (!functionSelect.value || pair.function === functionSelect.value)) {
       indices.push(index);
     }
@@ -88,17 +127,21 @@ function heatmapSpec(indices) {
     .map(index => current.pairs[index])
     .sort((a, b) => b[field] - a[field])
     .slice(0, Number(limitSelect.value));
-  const taxaOrder = [...new Set(top.map(pair => pair.taxon_short))];
+  const taxaOrder = [...new Set(top.map(pair => pair.taxon))];
   const functionOrder = [...new Set(top.map(pair => pair.function))];
+  const axisLabels = Object.fromEntries(top.map(pair => [pair.taxon, pairLabel(pair)]));
   return {
     $schema: schema,
     data: {values: top},
     width: Math.min(plotWidth("heatmap"), Math.max(300, functionOrder.length * 52)),
-    height: Math.max(100, Math.min(560, taxaOrder.length * 29)),
+    height: {step: 29},
     mark: {type: "rect", cursor: "pointer", stroke: "white", strokeWidth: 1},
     encoding: {
       x: {field: "function", type: "nominal", sort: functionOrder, title: "Function"},
-      y: {field: "taxon_short", type: "nominal", sort: taxaOrder, title: "Taxon"},
+      y: {
+        field: "taxon", type: "nominal", sort: taxaOrder, title: "Taxon",
+        axis: {labelLimit: 0, labelExpr: `${JSON.stringify(axisLabels)}[datum.label]`}
+      },
       color: {field, type: "quantitative", title: `${label} load`, scale: {scheme: "blues", zero: true}},
       tooltip: [
         {field: "taxon", type: "nominal", title: "Taxon"},
@@ -111,6 +154,14 @@ function heatmapSpec(indices) {
   };
 }
 
+function sampleGroupColor(samples) {
+  // Use every sample, including categories absent from the top 100 bars.
+  return {
+    field: "group", type: "nominal", legend: null,
+    scale: {domain: [...new Set(samples.map(sample => sample.group))].sort(), scheme: "tableau10"}
+  };
+}
+
 function boxplotSpec(samples) {
   return {
     $schema: schema,
@@ -119,9 +170,9 @@ function boxplotSpec(samples) {
     height: 300,
     mark: {type: "boxplot", extent: 1.5},
     encoding: {
-      x: {field: "group", type: "nominal", title: groupSelect.value || "Samples"},
+      x: {field: "group", type: "nominal", sort: sampleGroupColor(samples).scale.domain, title: groupSelect.value || "Samples"},
       y: {field: "load", type: "quantitative", title: "TFA load", scale: {zero: true}},
-      color: {field: "group", type: "nominal", legend: null}
+      color: sampleGroupColor(samples)
     },
     config: {view: {stroke: null}}
   };
@@ -138,7 +189,7 @@ function sampleSpec(samples) {
     encoding: {
       x: {field: "sample", type: "nominal", sort: "-y", title: "Sample", axis: {labels: top.length <= 30}},
       y: {field: "load", type: "quantitative", title: "TFA load", scale: {zero: true}},
-      color: {field: "group", type: "nominal", title: groupSelect.value || "Group", legend: groupSelect.value ? {} : null},
+      color: sampleGroupColor(samples),
       tooltip: [
         {field: "sample", type: "nominal", title: "Sample"},
         {field: "group", type: "nominal", title: groupSelect.value || "Group"},
@@ -163,7 +214,7 @@ async function draw() {
     : "One box summarizes all samples. Add categorical metadata to compare groups.";
 
   if (!indices.length || !samples.length) {
-    for (const id of ["heatmap", "boxplot", "samples"]) {
+    for (const id of ["heatmap-plot", "boxplot", "samples"]) {
       document.getElementById(id).textContent = "No values to plot for this selection.";
     }
     return;
@@ -173,9 +224,16 @@ async function draw() {
     return;
   }
   try {
+    const heatmapContainer = document.getElementById("heatmap");
+    heatmapContainer.scrollTop = 0;
+    heatmapContainer.scrollLeft = 0;
+    // Use fresh targets so a previous Vega view cannot hide the next render.
+    for (const id of ["heatmap-plot", "boxplot", "samples"]) {
+      document.getElementById(id).replaceChildren();
+    }
     const options = {actions: false, renderer: "svg"};
     const [heatmap, boxplot, samplePlot] = await Promise.all([
-      vegaEmbed("#heatmap", heatmapSpec(indices), options),
+      vegaEmbed("#heatmap-plot", heatmapSpec(indices), options),
       vegaEmbed("#boxplot", boxplotSpec(samples), options),
       vegaEmbed("#samples", sampleSpec(samples), options)
     ]);
@@ -183,8 +241,10 @@ async function draw() {
     heatmap.view.addEventListener("click", (_, item) => {
       const pair = item && item.datum;
       if (pair && pair.taxon && pair.function) {
-        taxonSelect.value = pair.taxon;
+        taxonSearch.value = "";
         functionSelect.value = pair.function;
+        refreshTaxa();
+        taxonSelect.value = pair.taxon;
         update();
       }
     });
@@ -194,16 +254,29 @@ async function draw() {
 }
 
 function update() {
+  showSelectedTaxonomy();
   renderQueue = renderQueue.then(draw).catch(error => {
     status.textContent = `Could not draw the plots: ${error.message}`;
   });
 }
 
+showUnclassified.addEventListener("change", () => {
+  refreshTaxa();
+  update();
+});
 levelSelect.addEventListener("change", () => {
   changeLevel();
   update();
 });
-for (const select of [taxonSelect, functionSelect, groupSelect, metricSelect, limitSelect]) {
+taxonSearch.addEventListener("input", () => {
+  refreshTaxa();
+  update();
+});
+functionSelect.addEventListener("change", () => {
+  refreshTaxa();
+  update();
+});
+for (const select of [taxonSelect, groupSelect, metricSelect, limitSelect]) {
   select.addEventListener("change", update);
 }
 let resizeTimer;

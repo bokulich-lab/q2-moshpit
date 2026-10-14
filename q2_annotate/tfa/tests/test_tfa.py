@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import json
+from pathlib import Path
+import qiime2
 import biom
 import numpy as np
 import pandas as pd
@@ -16,7 +18,7 @@ from ..tfa import (
     _align_contig_matrices,
     _gene_taxonomy_id,
     _map_contigs_to_taxa,
-    estimate_tfa,
+    _estimate_tfa,
 )
 
 
@@ -53,7 +55,7 @@ class TestTFA(TestPluginBase):
         taxonomy = self.taxonomy if taxonomy is None else taxonomy
         mapping = self.mapping if mapping is None else mapping
         abundance, inventory = abundance.T, inventory.T
-        return estimate_tfa(
+        return _estimate_tfa(
             biom.Table(
                 abundance.values,
                 observation_ids=abundance.index,
@@ -229,3 +231,80 @@ class TestTFA(TestPluginBase):
         ]
         self.assertEqual(observed, list(cases["Feature ID"]))
         self.assertEqual(len(observed), len(set(observed)))
+
+    def _pipeline_inputs(self):
+        """Import the same readable fixtures used for estimator tests."""
+        abundance, inventory = self.abundance.T, self.inventory.T
+        return {
+            "contig_abundance": qiime2.Artifact.import_data(
+                "FeatureTable[Frequency]",
+                biom.Table(abundance.values, abundance.index, abundance.columns),
+            ),
+            "feature_inventory": qiime2.Artifact.import_data(
+                "FeatureTable[Frequency]",
+                biom.Table(inventory.values, inventory.index, inventory.columns),
+            ),
+            "taxonomy": qiime2.Artifact.import_data(
+                "FeatureData[Taxonomy]", self.taxonomy
+            ),
+            "taxon_to_contig_map": qiime2.Artifact.import_data(
+                "FeatureMap[TaxonomyToContigs]", self.mapping
+            ),
+        }
+
+    def test_pipeline_registration(self):
+        """Expose one pipeline and register its two private helper actions."""
+        self.assertIn("estimate_tfa", self.plugin.pipelines)
+        self.assertNotIn("estimate_tfa", self.plugin.methods)
+        self.assertIn("_estimate_tfa", self.plugin.methods)
+        self.assertIn("_explore_tfa", self.plugin.visualizers)
+        self.assertNotIn("explore_tfa", self.plugin.visualizers)
+
+    def test_pipeline_outputs_with_optional_metadata(self):
+        """Return matching tables and an explorer with optional sample groups."""
+        inputs = self._pipeline_inputs()
+        metadata = qiime2.Metadata.load(self.get_data_path("sample-metadata.tsv"))
+        for grouping in (None, metadata):
+            with self.subTest(metadata=grouping is not None):
+                result = self.plugin.pipelines["estimate_tfa"](
+                    **inputs, metadata=grouping
+                )
+                self.assertEqual(len(result), 3)
+                self.assertEqual(
+                    str(result.tfa.type), "FeatureTable[Frequency % Properties('tfa')]"
+                )
+                self.assertEqual(
+                    str(result.gene_taxonomy.type),
+                    "FeatureData[Taxonomy % Properties('tfa')]",
+                )
+                pd.testing.assert_frame_equal(
+                    result.tfa.view(biom.Table).to_dataframe(dense=True)
+                    .rename_axis("Feature ID"), self.expected_tfa
+                )
+                pd.testing.assert_frame_equal(
+                    result.gene_taxonomy.view(pd.DataFrame), self.expected_gene_taxonomy
+                )
+                self.assertIsInstance(result.visualization, qiime2.Visualization)
+                result.visualization.export_data(self.temp_dir.name)
+                html = (Path(self.temp_dir.name) / "index.html").read_text()
+                payload = json.loads(html.split(
+                    '<script id="tfa-data" type="application/json">'
+                )[1].split("</script>")[0])
+                self.assertEqual(payload["samples"], ["S1", "S2", "S3"])
+                self.assertEqual(bool(payload["groups"]), grouping is not None)
+
+    def test_pipeline_rejects_unobserved_pairs(self):
+        """Propagate the estimator error when all sample loads are zero."""
+        inputs = self._pipeline_inputs()
+        table = inputs["contig_abundance"].view(biom.Table)
+        inputs["contig_abundance"] = qiime2.Artifact.import_data(
+            "FeatureTable[Frequency]",
+            biom.Table(
+                sp.csr_matrix(table.shape), table.ids(axis="observation"),
+                table.ids(axis="sample"),
+            ),
+        )
+        with self.assertRaisesRegex(
+            ValueError, "No taxon/gene pairs have nonzero loads"
+        ):
+            self.plugin.pipelines["estimate_tfa"](**inputs)

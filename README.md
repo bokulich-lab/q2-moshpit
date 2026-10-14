@@ -7,12 +7,17 @@ QIIME 2 plugin for functional annotation and taxonomic classification of shotgun
 
 ## Taxonomic functional attribution
 
-`estimate-tfa` returns two artifacts:
+`estimate-tfa` is a pipeline returning two artifacts and a visualization:
 
 - `tfa`: a sparse `FeatureTable[Frequency % Properties("tfa")]` with the original sample
   IDs as columns and one feature per observed taxon/gene pair.
 - `gene_taxonomy`: `FeatureData[Taxonomy % Properties("tfa")]`, a standard
   taxonomy TSV with `Feature ID` and `Taxon` followed by `Taxon ID` and `Gene ID`.
+
+- `visualization`: an interactive explorer of the estimated taxon/function loads.
+
+The pipeline accepts the estimator inputs and optional sample metadata. It
+calls the private `_estimate_tfa` method and `_explore_tfa` visualizer.
 
 Feature IDs concatenate the taxon and gene IDs with `|`, for example
 `T1|bla_TEM`. Each component is percent-encoded, so a literal `|` becomes
@@ -37,13 +42,17 @@ following the `FeatureTable[Frequency]` convention used by `q2-mag
 estimate-abundance` for RPKM/TPM. Both outputs must be retained to interpret
 the table's feature IDs.
 
-`explore-tfa` accepts the frequency table and its required gene-taxonomy
+The pipeline explorer uses the estimated frequency table and gene-taxonomy
 mapping. Taxonomy labels from the mapping appear in the taxon selector and
 heatmap. Choose a taxonomy level to collapse taxa sharing that lineage
 prefix. Loads are summed within each sample before the heatmap statistic is
 computed; the taxon dropdown and all plots use the collapsed groups. Missing
-ranks appear as Unclassified under their known lineage. Original taxa keeps
-the uncollapsed view.
+ranks retain their last classified name on the heatmap. Full taxonomy is
+selected initially and preserves the original taxa and full dropdown labels. Search taxa by typing a name or lineage; selecting a
+function restricts the taxon list to taxa with that function. The selected
+full lineage appears below the controls. Uncheck Show unclassified taxa to
+hide taxa missing the selected rank from the list and all plots. In Full
+taxonomy mode, this hides ID-only and unassigned terminal labels.
 The full lineage appears in the selector and heatmap tooltip, while the
 heatmap axis shows the terminal taxon name. Its heatmap ranks and colors
 taxon/function links by the selected sum, mean, or median load across all
@@ -52,7 +61,7 @@ loads as a boxplot and a sample bar chart. Select a taxon or function alone
 to sum its matching pairs within each sample. Optional sample metadata adds
 categorical columns to the grouping control, so the boxplot can compare
 sample groups. Samples with zero load and samples missing
-metadata remain in the comparison. The heatmap displays up to 100 links, and
+metadata remain in the comparison. The heatmap can show 20, 50, 100, 200, 500, 1000, or all links, and
 the bar chart shows the 100 highest-load samples; the boxplot uses all samples.
 The Vega plots use
 the same CDN scripts as the existing Kraken 2 visualizer, so viewing them
@@ -82,7 +91,6 @@ This QIIME 2 plugin contains actions used to annotate and classify (meta)genomes
 | construct-pangenome-index | Construct the human pangenome Bowtie 2 index.                                          | [Bowtie 2](https://bowtie-bio.sourceforge.net/bowtie2/index.shtml) |
 | estimate-bracken          | Perform read abundance re-estimation using Bracken.                                    | [Kraken 2](https://ccb.jhu.edu/software/bracken/) |
 | estimate-tfa              | Estimate a sparse load table and gene taxonomy mapping. | - |
-| explore-tfa               | Explore TFA links and compare sample groups interactively. | [Vega-Lite](https://vega.github.io/vega-lite/) |
 | extract-annotations       | Extract annotation frequencies from all annotations.                                   | - |
 | fetch-diamond-db          | Fetch the complete Diamond database necessary to run the eggnog-diamond-search action. | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |
 | fetch-eggnog-db           | Fetch the databases necessary to run the eggnog-annotate action.                       | [EggNOG mapper](https://github.com/eggnogdb/eggnog-mapper) |

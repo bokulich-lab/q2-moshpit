@@ -72,7 +72,7 @@ def estimate_tfa_example(use):
     taxonomy = use.init_artifact("taxonomy", factory_taxonomy)
     taxon_to_contig_map = use.init_artifact("taxon_to_contig_map", factory_taxonomy_map)
 
-    tfa, gene_taxonomy = use.action(
+    tfa, gene_taxonomy, visualization = use.action(
         use.UsageAction(plugin_id="annotate", action_id="estimate_tfa"),
         use.UsageInputs(
             contig_abundance=contig_abundance,
@@ -80,8 +80,11 @@ def estimate_tfa_example(use):
             taxonomy=taxonomy,
             taxon_to_contig_map=taxon_to_contig_map,
         ),
-        use.UsageOutputNames(tfa="tfa", gene_taxonomy="gene_taxonomy"),
+        use.UsageOutputNames(
+            tfa="tfa", gene_taxonomy="gene_taxonomy", visualization="visualization"
+        ),
     )
 
     tfa.assert_output_type("FeatureTable[Frequency % Properties('tfa')]")
     gene_taxonomy.assert_output_type("FeatureData[Taxonomy % Properties('tfa')]")
+    visualization.assert_output_type("Visualization")

@@ -12,6 +12,7 @@ const functionSelect = document.getElementById("function");
 const groupSelect = document.getElementById("group");
 const metricSelect = document.getElementById("metric");
 const limitSelect = document.getElementById("limit");
+const clearSelections = document.getElementById("clear-selections");
 const status = document.getElementById("status");
 const schema = "https://vega.github.io/schema/vega-lite/v5.json";
 let activeViews = [];
@@ -34,7 +35,7 @@ function addOptions(select, labels, firstLabel) {
 let current;
 let loadsByPair = [];
 const controls = [showUnclassified, levelSelect, taxonSearch, taxonSelect,
-                  functionSelect, groupSelect, metricSelect, limitSelect];
+                  functionSelect, groupSelect, metricSelect, limitSelect, clearSelections];
 for (const control of controls) control.disabled = true;
 
 /** Load data and populate controls before drawing the first plots. */
@@ -48,13 +49,24 @@ async function initializeExplorer() {
   for (let level = 1; level <= depth; level++) {
     levelSelect.add(new Option(`Level ${level}`, String(level)));
   }
-  levelSelect.value = "0";
   addOptions(functionSelect, functions, "All functions");
   addOptions(groupSelect, Object.keys(tfa.groups), "All samples");
-  changeLevel();
   for (const control of controls) control.disabled = false;
-  update();
+  resetSelections();
   await renderQueue;
+}
+
+/** Restore the same control values and plots used on first load. */
+function resetSelections() {
+  levelSelect.value = "0";
+  taxonSearch.value = "";
+  functionSelect.value = "";
+  groupSelect.value = "";
+  metricSelect.value = "sum";
+  limitSelect.value = "20";
+  showUnclassified.checked = true;
+  changeLevel();
+  update();
 }
 
 function pairVisible(pair) {
@@ -159,7 +171,10 @@ function heatmapSpec(indices) {
     height: {step: 29},
     mark: {type: "rect", cursor: "pointer", stroke: "white", strokeWidth: 1},
     encoding: {
-      x: {field: "function", type: "nominal", sort: functionOrder, title: "Function"},
+      x: {
+        field: "function", type: "nominal", sort: functionOrder, title: "Function",
+        axis: {labels: functionOrder.length <= 30}
+      },
       y: {
         field: "taxon", type: "nominal", sort: taxaOrder, title: "Taxon",
         axis: {labelLimit: 0, labelExpr: `${JSON.stringify(axisLabels)}[datum.label]`}
@@ -285,6 +300,7 @@ function update() {
   });
 }
 
+clearSelections.addEventListener("click", resetSelections);
 // Rebuild the taxon choices whenever a control changes which taxa are available.
 showUnclassified.addEventListener("change", () => {
   refreshTaxa();

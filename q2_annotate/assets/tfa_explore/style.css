@@ -45,7 +45,8 @@ p {
 }
 
 select,
-input[type="search"] {
+input[type="search"],
+button {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #b6cbd5;
@@ -56,7 +57,8 @@ input[type="search"] {
 }
 
 select:focus,
-input[type="search"]:focus {
+input[type="search"]:focus,
+button:focus-visible {
   outline: 3px solid #aed8e8;
   outline-offset: 2px;
 }
@@ -157,4 +159,21 @@ footer {
   width: 18px;
   height: 18px;
   margin: 0;
+}
+
+#clear-selections {
+  width: auto;
+  min-height: 42px;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+#clear-selections:hover:enabled {
+  background: #eaf3f8;
+}
+
+#clear-selections:disabled {
+  opacity: .6;
+  cursor: default;
 }

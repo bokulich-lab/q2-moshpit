@@ -59,6 +59,17 @@ test("changing the level refreshes the dropdown and every plot, including heatma
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../../assets/tfa_explore/explore.js"), "utf8"), context);
   await vm.runInContext("initialization", context);
+  const viewState = () => plain({
+    controls: Object.fromEntries(["level", "taxon-search", "taxon", "function", "group", "metric", "limit"]
+      .map(id => [id, element(id).value])),
+    showUnclassified: element("show-unclassified").checked,
+    resetDisabled: element("clear-selections").disabled,
+    taxa: element("taxon").options,
+    text: Object.fromEntries(["selected-taxonomy", "status", "heatmap-caption", "group-caption"]
+      .map(id => [id, element(id).textContent])),
+    plots: Object.fromEntries(specs)
+  });
+  const initialView = viewState();
   assert.deepEqual(element("level").options.map(option => [option.textContent, option.value]), [
     ["Full taxonomy", "0"], ["Level 1", "1"], ["Level 2", "2"], ["Level 3", "3"], ["Level 4", "4"]
   ]);
@@ -190,6 +201,44 @@ test("changing the level refreshes the dropdown and every plot, including heatma
   assert.deepEqual(limited.bars.data.values, Array.from({length:100}, (_, index) => ({
     sample:String(index), group:"Visible", load:101-index
   })));
+
+  // Reset filters and display settings together, including a selected taxon.
+  element("function").value = "geneA";
+  element("function").listeners.change();
+  element("taxon-search").value = "bacteria";
+  element("taxon-search").listeners.input();
+  element("taxon").value = "d__Bacteria";
+  element("taxon").listeners.change();
+  element("show-unclassified").checked = false;
+  element("show-unclassified").listeners.change();
+  await vm.runInContext("renderQueue", context);
+  assert.notDeepEqual(viewState(), initialView);
+  element("clear-selections").listeners.click();
+  await vm.runInContext("renderQueue", context);
+  assert.deepEqual(viewState(), initialView);
+
+  // Count displayed functions, rather than pairs, when hiding crowded labels.
+  const heatmapAxes = plain(vm.runInContext(`(() => {
+    const original = current;
+    const originalLimit = limitSelect.value;
+    try {
+      return [[30, "Infinity"], [31, "Infinity"], [31, "20"]].map(([count, limit]) => {
+        current = {pairs: Array.from({length:count * 2}, (_, index) => ({
+          ...original.pairs[0], taxon: "taxon" + index % 2,
+          function: "gene" + Math.floor(index / 2), total: count - Math.floor(index / 2)
+        }))};
+        limitSelect.value = limit;
+        return heatmapSpec(current.pairs.map((_, index) => index)).encoding.x;
+      });
+    } finally {
+      current = original;
+      limitSelect.value = originalLimit;
+    }
+  })()`, context));
+  assert.deepEqual(heatmapAxes, [30, 31, 10].map(count => ({
+    field:"function", type:"nominal", sort:Array.from({length:count}, (_, index) => "gene" + index),
+    title:"Function", axis:{labels:count <= 30}
+  })));
 });
 
 
@@ -235,6 +284,11 @@ test("JSON loading failures show a message and keep controls disabled", async ()
     vm.runInContext(source, context);
     await vm.runInContext("initialization", context);
     assert.equal(getElementById("status").textContent, `Could not load TFA data: ${message}`);
-    assert.equal(getElementById("taxon").disabled, true);
+    assert.deepEqual(Object.fromEntries([
+      "show-unclassified", "level", "taxon-search", "taxon", "function", "group", "metric", "limit", "clear-selections"
+    ].map(id => [id, getElementById(id).disabled])), {
+      "show-unclassified":true, level:true, "taxon-search":true, taxon:true,
+      function:true, group:true, metric:true, limit:true, "clear-selections":true
+    });
   }
 });

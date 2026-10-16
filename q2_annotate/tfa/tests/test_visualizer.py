@@ -16,7 +16,7 @@ from qiime2.plugin.testing import TestPluginBase
 
 from q2_annotate.plugin_setup import plugin
 from q2_annotate.tfa.tfa import _gene_taxonomy_id, _estimate_tfa
-from q2_annotate.tfa.visualizer import _explore_tfa
+from q2_annotate.tfa.visualizer import _visualize_tfa
 
 
 class TestTFAVisualizer(TestPluginBase):
@@ -60,7 +60,7 @@ class TestTFAVisualizer(TestPluginBase):
 
     def test_sparse_payload_and_metadata_groups(self):
         metadata = qiime2.Metadata.load(self.get_data_path("sample-metadata.tsv"))
-        _explore_tfa(
+        _visualize_tfa(
             self.temp_dir.name, self._table(), self._mapping(), metadata=metadata
         )
         output = Path(self.temp_dir.name)
@@ -96,7 +96,7 @@ class TestTFAVisualizer(TestPluginBase):
         table, mapping = _estimate_tfa(
             abundance, inventory, taxonomy, {"T1": ["C1"], "T2": ["C2"]}
         )
-        _explore_tfa(self.temp_dir.name, table, mapping)
+        _visualize_tfa(self.temp_dir.name, table, mapping)
         expected = {
             "samples": ["S1", "S2"],
             "pairs": [
@@ -122,7 +122,9 @@ class TestTFAVisualizer(TestPluginBase):
             observation_ids=[_gene_taxonomy_id("T<script>", "gene")],
             sample_ids=["S1"],
         )
-        _explore_tfa(self.temp_dir.name, table, self._mapping("gene-taxonomy-html.tsv"))
+        _visualize_tfa(
+            self.temp_dir.name, table, self._mapping("gene-taxonomy-html.tsv")
+        )
         html = (Path(self.temp_dir.name) / "index.html").read_text(encoding="utf-8")
         self.assertNotIn("T<script>", html)
         expected = {
@@ -146,7 +148,7 @@ class TestTFAVisualizer(TestPluginBase):
 
     def test_even_sample_medians_include_sparse_zeros(self):
         table = self._table().filter(["S1", "S2"], axis="sample", inplace=False)
-        _explore_tfa(self.temp_dir.name, table, self._mapping())
+        _visualize_tfa(self.temp_dir.name, table, self._mapping())
         self.expected_payload["samples"] = ["S1", "S2"]
         self.expected_payload["loads"] = self.expected_payload["loads"][:-1]
         for pair, summary in zip(
@@ -163,7 +165,7 @@ class TestTFAVisualizer(TestPluginBase):
             observation_ids=original.ids(axis="observation"),
             sample_ids=["S1", "S2", "S3", "S4", "S5", "S6"],
         )
-        _explore_tfa(self.temp_dir.name, table, self._mapping())
+        _visualize_tfa(self.temp_dir.name, table, self._mapping())
         self.expected_payload["samples"] = ["S1", "S2", "S3", "S4", "S5", "S6"]
         for pair, mean in zip(
             self.expected_payload["pairs"], [8 / 6, 4.25 / 6, 16 / 6]
@@ -175,14 +177,14 @@ class TestTFAVisualizer(TestPluginBase):
         metadata = qiime2.Metadata.load(
             self.get_data_path("sample-metadata-partial.tsv")
         )
-        _explore_tfa(
+        _visualize_tfa(
             self.temp_dir.name, self._table(), self._mapping(), metadata=metadata
         )
         self.expected_payload["groups"] = {"group": ["case", "control", "(missing)"]}
         self.assertEqual(self._payload(), self.expected_payload)
 
     def test_action_registration_and_execution(self):
-        self.assertIn("_explore_tfa", plugin.visualizers)
+        self.assertIn("_visualize_tfa", plugin.visualizers)
         artifact = qiime2.Artifact.import_data(
             "FeatureTable[Frequency % Properties('tfa')]", self._table()
         )
@@ -190,11 +192,11 @@ class TestTFAVisualizer(TestPluginBase):
             "FeatureData[Taxonomy % Properties('tfa')]", self._mapping()
         )
         metadata = qiime2.Metadata.load(self.get_data_path("sample-metadata.tsv"))
-        result = plugin.visualizers["_explore_tfa"](
+        result = plugin.visualizers["_visualize_tfa"](
             feature_load=artifact, gene_taxonomy=mapping, metadata=metadata
         )
         self.assertIsInstance(result.visualization, qiime2.Visualization)
-        without_metadata = plugin.visualizers["_explore_tfa"](
+        without_metadata = plugin.visualizers["_visualize_tfa"](
             feature_load=artifact, gene_taxonomy=mapping
         )
         self.assertIsInstance(without_metadata.visualization, qiime2.Visualization)
@@ -205,7 +207,7 @@ class TestTFAVisualizer(TestPluginBase):
         mapping.loc[mapping["Taxon ID"] == "T1", "Taxon"] = (
             "d__Bacteria; g__Bacteroides; s__fragilis"
         )
-        _explore_tfa(self.temp_dir.name, self._table(), mapping)
+        _visualize_tfa(self.temp_dir.name, self._table(), mapping)
         for pair in self.expected_payload["pairs"][:2]:
             pair.update(
                 taxon="d__Bacteria; g__Bacteroides; s__fragilis",
@@ -219,7 +221,7 @@ class TestTFAVisualizer(TestPluginBase):
         table = self._table().filter(
             [_gene_taxonomy_id("T1", "geneA")], axis="observation", inplace=False
         )
-        _explore_tfa(self.temp_dir.name, table, mapping)
+        _visualize_tfa(self.temp_dir.name, table, mapping)
         self.expected_payload["pairs"] = self.expected_payload["pairs"][:1]
         self.expected_payload["loads"] = [[0, 0, 5], [0, 1, 3]]
         self.assertEqual(self._payload(), self.expected_payload)
@@ -228,4 +230,4 @@ class TestTFAVisualizer(TestPluginBase):
         with self.assertRaisesRegex(
             ValueError, "Missing gene taxonomy mappings.*T1\\|gene%20B"
         ):
-            _explore_tfa(self.temp_dir.name, self._table(), self._mapping().iloc[:1])
+            _visualize_tfa(self.temp_dir.name, self._table(), self._mapping().iloc[:1])

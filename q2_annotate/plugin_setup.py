@@ -24,8 +24,8 @@ from q2_types.feature_data import (
 from q2_types.feature_table import FeatureTable, Frequency, PresenceAbsence
 
 from q2_annotate.examples import estimate_tfa_example
-from q2_annotate.tfa.tfa import _estimate_tfa, estimate_tfa
-from q2_annotate.tfa.visualizer import _explore_tfa
+from q2_annotate.tfa.tfa import estimate_tfa
+from q2_annotate.tfa.visualizer import _visualize_tfa
 from q2_types.per_sample_sequences import (
     SequencesWithQuality,
     PairedEndSequencesWithQuality,
@@ -1740,60 +1740,8 @@ plugin.pipelines.register_function(
 
 importlib.import_module("q2_annotate.tfa.types._validators")
 
-tfa_inputs = {
-    "contig_abundance": FeatureTable[Frequency],
-    "feature_inventory": FeatureTable[Frequency],
-    "taxonomy": FeatureData[Taxonomy],
-    "taxon_to_contig_map": FeatureMap[TaxonomyToContigs],
-}
-tfa_input_descriptions = {
-    "contig_abundance": (
-        "Nonnegative contig abundances across samples, with contig IDs "
-        "as feature IDs."
-    ),
-    "feature_inventory": (
-        "Counts of each functional feature on each contig, with contig "
-        "IDs as sample IDs."
-    ),
-    "taxonomy": (
-        "Taxonomic assignments indexed by the taxon IDs in `taxon_to_contig_map`."
-    ),
-    "taxon_to_contig_map": (
-        "Mapping of taxon IDs to the contig IDs assigned to each taxon."
-    ),
-}
-
-plugin.methods.register_function(
-    function=_estimate_tfa,
-    inputs=tfa_inputs,
-    parameters={},
-    outputs=[
-        ("tfa", FeatureTable[Frequency % Properties("tfa")]),
-        ("gene_taxonomy", FeatureData[Taxonomy % Properties("tfa")]),
-    ],
-    input_descriptions=tfa_input_descriptions,
-    parameter_descriptions={},
-    output_descriptions={
-        "tfa": (
-            "Sparse abundance-weighted loads for taxon/function pairs "
-            "across the original samples."
-        ),
-        "gene_taxonomy": (
-            "Map feature IDs to their taxon IDs, gene IDs, and taxonomy labels."
-        ),
-    },
-    name="Estimate Taxonomic Functional Attribution (TFA).",
-    description=(
-        "Estimate sample-resolved functional loads for taxon/function pairs "
-        "as a sparse frequency table and a gene taxonomy mapping. Only "
-        "contigs shared by both input tables and assigned to a taxon with "
-        "taxonomy are included."
-    ),
-    citations=[],
-)
-
 plugin.visualizers.register_function(
-    function=_explore_tfa,
+    function=_visualize_tfa,
     inputs={
         "feature_load": FeatureTable[Frequency % Properties("tfa")],
         "gene_taxonomy": FeatureData[Taxonomy % Properties("tfa")],
@@ -1819,14 +1767,34 @@ plugin.visualizers.register_function(
 
 plugin.pipelines.register_function(
     function=estimate_tfa,
-    inputs=tfa_inputs,
+    inputs={
+        "contig_abundance": FeatureTable[Frequency],
+        "feature_inventory": FeatureTable[Frequency],
+        "taxonomy": FeatureData[Taxonomy],
+        "taxon_to_contig_map": FeatureMap[TaxonomyToContigs],
+    },
     parameters={"metadata": Metadata},
     outputs=[
         ("tfa", FeatureTable[Frequency % Properties("tfa")]),
         ("gene_taxonomy", FeatureData[Taxonomy % Properties("tfa")]),
         ("visualization", Visualization),
     ],
-    input_descriptions=tfa_input_descriptions,
+    input_descriptions={
+        "contig_abundance": (
+            "Nonnegative contig abundances across samples, with contig IDs "
+            "as feature IDs."
+        ),
+        "feature_inventory": (
+            "Counts of each functional feature on each contig, with contig "
+            "IDs as sample IDs."
+        ),
+        "taxonomy": (
+            "Taxonomic assignments indexed by the taxon IDs in `taxon_to_contig_map`."
+        ),
+        "taxon_to_contig_map": (
+            "Mapping of taxon IDs to the contig IDs assigned to each taxon."
+        ),
+    },
     parameter_descriptions={
         "metadata": "Optional sample metadata for grouping samples in the explorer."
     },

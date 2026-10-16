@@ -151,15 +151,20 @@ def estimate_tfa(
     metadata=None,
 ):
     """Estimate sample-resolved TFA and visualize it with optional metadata."""
-    estimate = ctx.get_action("annotate", "_estimate_tfa")
-    explore = ctx.get_action("annotate", "_explore_tfa")
-    tfa, gene_taxonomy = estimate(
-        contig_abundance=contig_abundance,
-        feature_inventory=feature_inventory,
-        taxonomy=taxonomy,
-        taxon_to_contig_map=taxon_to_contig_map,
+    tfa, gene_taxonomy = _estimate_tfa(
+        contig_abundance=contig_abundance.view(biom.Table),
+        feature_inventory=feature_inventory.view(biom.Table),
+        taxonomy=taxonomy.view(pd.DataFrame),
+        taxon_to_contig_map=taxon_to_contig_map.view(dict),
     )
-    (visualization,) = explore(
+
+    tfa = ctx.make_artifact("FeatureTable[Frequency % Properties('tfa')]", tfa)
+    gene_taxonomy = ctx.make_artifact(
+        "FeatureData[Taxonomy % Properties('tfa')]", gene_taxonomy
+    )
+
+    visualize = ctx.get_action("annotate", "_visualize_tfa")
+    (visualization,) = visualize(
         feature_load=tfa, gene_taxonomy=gene_taxonomy, metadata=metadata
     )
     return tfa, gene_taxonomy, visualization

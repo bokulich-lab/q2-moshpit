@@ -70,10 +70,22 @@ test("changing the level refreshes the dropdown and every plot, including heatma
     plots: Object.fromEntries(specs)
   });
   const initialView = viewState();
-  assert.deepEqual(element("level").options.map(option => [option.textContent, option.value]), [
-    ["Full taxonomy", "0"], ["Level 1", "1"], ["Level 2", "2"], ["Level 3", "3"], ["Level 4", "4"]
-  ]);
-  assert.equal(element("level").value, "0");
+  assert.deepEqual(plain({
+    levels:element("level").options.map(option => [option.textContent, option.value]),
+    selected:element("level").value,
+    showUnclassified:element("show-unclassified").checked,
+    labels:element("taxon").options.map(option => option.textContent),
+    heatmap:specs.get("#heatmap-plot").data.values.map(pair => ({taxon:pair.taxon_label, function:pair.function, total:pair.total}))
+  }), {
+    levels:[["Level 1", "1"], ["Level 2", "2"], ["Level 3", "3"], ["Level 4", "4"]],
+    selected:"4", showUnclassified:false,
+    labels:["All taxa", "s__one", "s__two"],
+    heatmap:[
+      {taxon:"s__two", function:"geneA", total:5},
+      {taxon:"s__one", function:"geneA", total:3},
+      {taxon:"s__one", function:"geneB", total:2}
+    ]
+  });
   element("level").value = "3";
   element("level").listeners.change();
   await vm.runInContext("renderQueue", context);
@@ -81,6 +93,9 @@ test("changing the level refreshes the dropdown and every plot, including heatma
     "d__Bacteria; p__A; Unclassified (level 3)", "d__Bacteria; p__A; g__Shared",
     "d__Bacteria; p__B; Unclassified (level 3)", "d__Bacteria; p__B; g__Shared"
   ]];
+  element("show-unclassified").checked = true;
+  element("show-unclassified").listeners.change();
+  await vm.runInContext("renderQueue", context);
   assert.deepEqual(element("taxon").options.map(option => option.value), expectedTaxa);
   element("show-unclassified").checked = false;
   element("show-unclassified").listeners.change();
@@ -209,7 +224,7 @@ test("changing the level refreshes the dropdown and every plot, including heatma
   element("taxon-search").listeners.input();
   element("taxon").value = "d__Bacteria";
   element("taxon").listeners.change();
-  element("show-unclassified").checked = false;
+  element("show-unclassified").checked = true;
   element("show-unclassified").listeners.change();
   await vm.runInContext("renderQueue", context);
   assert.notDeepEqual(viewState(), initialView);
@@ -251,8 +266,25 @@ test("deep levels use the last classified rank as the heatmap label", () => {
   ]);
   assert.deepEqual([
     latestTaxonLabel(["d__Bacteria", "g__", "s__unclassified"], "ID"),
-    latestTaxonLabel(["", "g__"], "ID")
-  ], ["d__Bacteria", "ID"]);
+    latestTaxonLabel(["", "g__"], "ID"),
+    latestTaxonLabel(["d__Unclassified", "", ""], "ID"),
+    latestTaxonLabel(["Unclassified"], "ID"),
+    latestTaxonLabel(["ID"], "ID")
+  ], ["d__Bacteria", "Unclassified", "d__Unclassified", "Unclassified", "Unclassified"]);
+});
+
+
+test("unclassified taxonomy keeps its label when collapsed to a deeper level", () => {
+  const unclassified = require("./data/unclassified-taxonomy.json");
+  assert.deepEqual(collapseTaxonomy(unclassified, 3), {
+    samples:["S1", "S2"], groups:{},
+    pairs:[{
+      taxon:"d__Unclassified; Unclassified (level 2); Unclassified (level 3)",
+      unclassified:true, taxon_label:"d__Unclassified", taxon_short:"Unclassified (level 3)",
+      taxon_id:"T013", function:"geneA", total:3, mean:1.5, median:1.5
+    }],
+    loads:[[0, 0, 3]]
+  });
 });
 
 

@@ -34,6 +34,7 @@ function addOptions(select, labels, firstLabel) {
 // Keep the original data in tfa and the selected taxonomy level in current.
 let current;
 let loadsByPair = [];
+let deepestLevel = 1;
 const controls = [showUnclassified, levelSelect, taxonSearch, taxonSelect,
                   functionSelect, groupSelect, metricSelect, limitSelect, clearSelections];
 for (const control of controls) control.disabled = true;
@@ -44,9 +45,8 @@ async function initializeExplorer() {
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   tfa = await response.json();
   const functions = [...new Set(tfa.pairs.map(pair => pair.function))].sort();
-  const depth = tfa.pairs.reduce((depth, pair) => Math.max(depth, pair.lineage.length), 0);
-  levelSelect.add(new Option("Full taxonomy", "0"));
-  for (let level = 1; level <= depth; level++) {
+  deepestLevel = tfa.pairs.reduce((depth, pair) => Math.max(depth, pair.lineage.length), 1);
+  for (let level = 1; level <= deepestLevel; level++) {
     levelSelect.add(new Option(`Level ${level}`, String(level)));
   }
   addOptions(functionSelect, functions, "All functions");
@@ -58,13 +58,13 @@ async function initializeExplorer() {
 
 /** Restore the same control values and plots used on first load. */
 function resetSelections() {
-  levelSelect.value = "0";
+  levelSelect.value = String(deepestLevel);
   taxonSearch.value = "";
   functionSelect.value = "";
   groupSelect.value = "";
   metricSelect.value = "sum";
   limitSelect.value = "20";
-  showUnclassified.checked = true;
+  showUnclassified.checked = false;
   changeLevel();
   update();
 }
@@ -96,7 +96,7 @@ function refreshTaxa() {
     if (!option.value) continue;
     const label = terminal(option.value);
     const parent = option.value.split(";").slice(0, -1).join("; ").trim();
-    option.textContent = levelSelect.value === "0" ? option.value : counts.get(label) > 1 ? `${label} [${parent}]` : label;
+    option.textContent = counts.get(label) > 1 ? `${label} [${parent}]` : label;
     option.title = option.value;
   }
   taxonSelect.value = taxa.includes(previous) ? previous : "";

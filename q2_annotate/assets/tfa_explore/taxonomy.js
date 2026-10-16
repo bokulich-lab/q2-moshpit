@@ -2,10 +2,12 @@
 
 // Pure helpers shared by the browser explorer and its Node.js tests.
 
-// Ignore empty rank prefixes and unassigned terminal ranks when choosing a label.
-function latestTaxonLabel(lineage, fallback) {
-  return [...lineage].reverse().find(label =>
-    label.trim() && !/^(?:[a-z]__)?(?:unclassified|unassigned|unknown)?$/i.test(label.trim())) || fallback;
+// Prefer a classified rank, then an unclassified label, without displaying an ID.
+function latestTaxonLabel(lineage, taxonId) {
+  const labels = [...lineage].reverse().map(label => label.trim())
+    .filter(label => label && !/^[a-z]__$/i.test(label) && label !== taxonId);
+  return labels.find(label =>
+    !/^(?:[a-z]__)?(?:unclassified|unassigned|unknown)$/i.test(label)) || labels[0] || "Unclassified";
 }
 
 // At a selected level, taxa lacking that rank are unclassified even when

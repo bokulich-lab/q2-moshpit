@@ -205,14 +205,14 @@ function heatmapSpec(indices) {
       },
       color: {
         condition: [
-          {test: "!datum.present", value: "#e0e0e0"},
+          {test: "!datum.present", value: "#f3f3f3"},
           {test: `datum.${field} === 0`, value: "#ffffff"}
         ],
         field, type: "quantitative", title: `${label} load`,
         scale: {scheme: "blues", zero: true}
       },
-      stroke: {condition: {test: "datum.top_link", value: "#333333"}, value: "#bdbdbd"},
-      strokeWidth: {condition: {test: "datum.top_link", value: 2}, value: 0.5},
+      stroke: {condition: {test: "datum.top_link", value: "#800000"}, value: "#bdbdbd"},
+      strokeWidth: {condition: {test: "datum.top_link", value: 1}, value: 0.5},
       tooltip: [
         {field: "taxon", type: "nominal", title: "Taxon"},
         {field: "taxon_id", type: "nominal", title: "Taxon ID"},

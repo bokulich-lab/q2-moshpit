@@ -193,7 +193,20 @@ function heatmapSpec(indices) {
     width: Math.min(plotWidth("heatmap"), Math.max(300, functionOrder.length * 52)),
     height: {step: 29},
     // Keep absent pairs visible even though their numeric summaries are missing.
-    mark: {type: "rect", cursor: "pointer", invalid: null},
+    mark: {
+      type: "rect", cursor: "pointer", invalid: null,
+      tooltip: {
+        expr: `datum.present ? {
+          'Taxon': datum.taxon,
+          'Taxon ID': datum.taxon_id,
+          'Function': datum.function,
+          ${JSON.stringify(`${label} load`)}: datum.${field},
+          'Top-ranked link': datum.top_link,
+          'Total load': datum.total,
+          'Samples with nonzero load': datum.nonzero_samples
+        } : 'No data available'`
+      }
+    },
     encoding: {
       x: {
         field: "function", type: "nominal", sort: functionOrder, title: "Function",
@@ -213,18 +226,6 @@ function heatmapSpec(indices) {
       },
       stroke: {condition: {test: "datum.top_link", value: "#800000"}, value: "#bdbdbd"},
       strokeWidth: {condition: {test: "datum.top_link", value: 1}, value: 0.5},
-      tooltip: [
-        {field: "taxon", type: "nominal", title: "Taxon"},
-        {field: "taxon_id", type: "nominal", title: "Taxon ID"},
-        {field: "function", type: "nominal", title: "Function"},
-        {field, type: "quantitative", title: `${label} load`, format: ".4g"},
-        {field: "state", type: "nominal", title: "Cell"},
-        {field: "top_link", type: "nominal", title: "Top-ranked link"},
-        ...(field === "total" ? [] : [
-          {field: "total", type: "quantitative", title: "Total load", format: ".4g"}
-        ]),
-        {field: "nonzero_samples", type: "quantitative", title: "Samples with nonzero load"}
-      ]
     },
     config: {view: {stroke: null}}
   };

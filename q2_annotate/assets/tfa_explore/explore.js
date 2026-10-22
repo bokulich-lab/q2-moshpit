@@ -156,20 +156,44 @@ function plotWidth(id) {
 function heatmapSpec(indices) {
   const field = {sum: "total", mean: "mean", median: "median"}[metricSelect.value];
   const label = {sum: "Sum", mean: "Mean", median: "Median"}[metricSelect.value];
-  const top = indices
-    .map(index => current.pairs[index])
-    .sort((a, b) => b[field] - a[field])
-    .slice(0, Number(limitSelect.value));
+  const ranked = [...indices].sort((a, b) => current.pairs[b][field] - current.pairs[a][field]);
+  const topIndices = new Set(ranked.slice(0, Number(limitSelect.value)));
+  const top = [...topIndices].map(index => current.pairs[index]);
   const taxaOrder = [...new Set(top.map(pair => pair.taxon))];
   const functionOrder = [...new Set(top.map(pair => pair.function))];
   // Full lineages identify rows; short labels must not merge taxa with identical names.
   const axisLabels = Object.fromEntries(top.map(pair => [pair.taxon, pairLabel(pair)]));
+  const taxa = new Set(taxaOrder);
+  const functions = new Set(functionOrder);
+  const seen = new Map(taxaOrder.map(taxon => [taxon, new Set()]));
+  const cells = [];
+  for (const index of ranked) {
+    const pair = current.pairs[index];
+    if (!taxa.has(pair.taxon) || !functions.has(pair.function)) continue;
+    seen.get(pair.taxon).add(pair.function);
+    cells.push({
+      ...pair,
+      present: true,
+      top_link: topIndices.has(index),
+      state: pair[field] === 0 ? "Zero summary" : "Positive summary",
+      nonzero_samples: (loadsByPair[index] || []).filter(load => load[2] > 0).length
+    });
+  }
+  for (const taxon of taxaOrder) {
+    for (const func of functionOrder) {
+      if (!seen.get(taxon).has(func)) {
+        cells.push({taxon, function: func, present: false, top_link: false,
+                    state: "No estimated load"});
+      }
+    }
+  }
   return {
     $schema: schema,
-    data: {values: top},
+    data: {values: cells},
     width: Math.min(plotWidth("heatmap"), Math.max(300, functionOrder.length * 52)),
     height: {step: 29},
-    mark: {type: "rect", cursor: "pointer", stroke: "white", strokeWidth: 1},
+    // Keep absent pairs visible even though their numeric summaries are missing.
+    mark: {type: "rect", cursor: "pointer", invalid: null},
     encoding: {
       x: {
         field: "function", type: "nominal", sort: functionOrder, title: "Function",
@@ -179,12 +203,27 @@ function heatmapSpec(indices) {
         field: "taxon", type: "nominal", sort: taxaOrder, title: "Taxon",
         axis: {labelLimit: 0, labelExpr: `${JSON.stringify(axisLabels)}[datum.label]`}
       },
-      color: {field, type: "quantitative", title: `${label} load`, scale: {scheme: "blues", zero: true}},
+      color: {
+        condition: [
+          {test: "!datum.present", value: "#e0e0e0"},
+          {test: `datum.${field} === 0`, value: "#ffffff"}
+        ],
+        field, type: "quantitative", title: `${label} load`,
+        scale: {scheme: "blues", zero: true}
+      },
+      stroke: {condition: {test: "datum.top_link", value: "#333333"}, value: "#bdbdbd"},
+      strokeWidth: {condition: {test: "datum.top_link", value: 2}, value: 0.5},
       tooltip: [
         {field: "taxon", type: "nominal", title: "Taxon"},
         {field: "taxon_id", type: "nominal", title: "Taxon ID"},
         {field: "function", type: "nominal", title: "Function"},
-        {field, type: "quantitative", title: `${label} load`, format: ".4g"}
+        {field, type: "quantitative", title: `${label} load`, format: ".4g"},
+        {field: "state", type: "nominal", title: "Cell"},
+        {field: "top_link", type: "nominal", title: "Top-ranked link"},
+        ...(field === "total" ? [] : [
+          {field: "total", type: "quantitative", title: "Total load", format: ".4g"}
+        ]),
+        {field: "nonzero_samples", type: "quantitative", title: "Samples with nonzero load"}
       ]
     },
     config: {view: {stroke: null}}
@@ -246,7 +285,7 @@ async function draw() {
   const method = metricSelect.value;
   status.textContent = `${indices.length} matching taxon–function pairs · ${samples.length} samples`;
   document.getElementById("heatmap-caption").textContent =
-    `Each square is one pair at the selected taxonomy level; color shows its ${{sum: "sum", mean: "mean", median: "median"}[method]} load across all samples, including zeros. Links are ranked by this metric. Taxa are summed within each sample before this summary. Click a square to inspect that pair.`;
+    `Each square is one pair at the selected taxonomy level; color shows its ${{sum: "sum", mean: "mean", median: "median"}[method]} load across all samples, including zeros. The top links by this metric select the axes; all intersections are shown. Dark borders mark the top links, white cells have a zero summary, and gray cells have no estimated load in the TFA table. Taxa are summed within each sample before this summary. Click a square to inspect that pair.`;
   document.getElementById("group-caption").textContent = groupSelect.value
     ? `Each box compares sample loads for one ${groupSelect.value} category. Zeros are included.`
     : "One box summarizes all samples. Add categorical metadata to compare groups.";
@@ -278,7 +317,7 @@ async function draw() {
     activeViews = [heatmap.view, boxplot.view, samplePlot.view];
     heatmap.view.addEventListener("click", (_, item) => {
       const pair = item && item.datum;
-      if (pair && pair.taxon && pair.function) {
+      if (pair && pair.present && pair.taxon && pair.function) {
         taxonSearch.value = "";
         functionSelect.value = pair.function;
         refreshTaxa();

@@ -5,6 +5,10 @@ const {collapseTaxonomy, latestTaxonLabel, isUnclassifiedTaxon} = require("../..
 const data = require("./data/taxonomy-collapse.json");
 // Normalize structures returned from the isolated browser context.
 const plain = value => JSON.parse(JSON.stringify(value));
+// Compare original pair summaries independently of heatmap display annotations.
+const originalPairs = values => plain(values.filter(pair => pair.present).map(
+  ({present, top_link, state, nonzero_samples, ...pair}) => pair
+));
 const expectedCollapse = require("./data/expected-taxonomy-collapse.json");
 
 test("original taxa preserve the input data", () => {
@@ -75,7 +79,7 @@ test("changing the level refreshes the dropdown and every plot, including heatma
     selected:element("level").value,
     showUnclassified:element("show-unclassified").checked,
     labels:element("taxon").options.map(option => option.textContent),
-    heatmap:specs.get("#heatmap-plot").data.values.map(pair => ({taxon:pair.taxon_label, function:pair.function, total:pair.total}))
+    heatmap:specs.get("#heatmap-plot").data.values.filter(pair => pair.present).map(pair => ({taxon:pair.taxon_label, function:pair.function, total:pair.total}))
   }), {
     levels:[["Level 1", "1"], ["Level 2", "2"], ["Level 3", "3"], ["Level 4", "4"]],
     selected:"4", showUnclassified:false,
@@ -86,6 +90,23 @@ test("changing the level refreshes the dropdown and every plot, including heatma
       {taxon:"s__one", function:"geneB", total:2}
     ]
   });
+  // Top links select axes, while below-cutoff values remain visible and clickable.
+  const fullHeatmap = specs.get("#heatmap-plot");
+  assert.equal(fullHeatmap.data.values.length, 4);
+  const absent = fullHeatmap.data.values.find(pair => !pair.present);
+  assert.equal(absent.state, "No estimated load");
+  clicks.get("#heatmap-plot")({}, {datum: absent});
+  assert.equal(element("taxon").value, "");
+  assert.equal(element("function").value, "");
+  element("limit").value = "2";
+  element("limit").listeners.change();
+  await vm.runInContext("renderQueue", context);
+  // The two highest links both use geneA, so geneB is outside the chosen axes.
+  assert.equal(specs.get("#heatmap-plot").data.values.length, 2);
+  element("limit").value = "20";
+  element("limit").listeners.change();
+  await vm.runInContext("renderQueue", context);
+
   element("level").value = "3";
   element("level").listeners.change();
   await vm.runInContext("renderQueue", context);
@@ -103,7 +124,7 @@ test("changing the level refreshes the dropdown and every plot, including heatma
   assert.deepEqual(element("taxon").options.map(option => option.value), [
     "", "d__Bacteria; p__A; g__Shared", "d__Bacteria; p__B; g__Shared"
   ]);
-  assert.deepEqual(plain(specs.get("#heatmap-plot").data.values), [
+  assert.deepEqual(originalPairs(specs.get("#heatmap-plot").data.values), [
     expectedCollapse["3"].pairs[0], expectedCollapse["3"].pairs[2], expectedCollapse["3"].pairs[1]
   ]);
   assert.deepEqual(JSON.parse(JSON.stringify(specs.get("#boxplot").data.values)), [
@@ -164,13 +185,14 @@ test("changing the level refreshes the dropdown and every plot, including heatma
   element("metric").listeners.change();
   await vm.runInContext("renderQueue", context);
   assert.deepEqual(JSON.parse(JSON.stringify(specs.get("#heatmap-plot").encoding.color)), {
+    condition:[{test:"!datum.present", value:"#e0e0e0"}, {test:"datum.median === 0", value:"#ffffff"}],
     field:"median", type:"quantitative", title:"Median load", scale:{scheme:"blues", zero:true}
   });
-  assert.deepEqual(plain(specs.get("#heatmap-plot").data.values), [expectedCollapse["3"].pairs[0]]);
+  assert.deepEqual(originalPairs(specs.get("#heatmap-plot").data.values), [expectedCollapse["3"].pairs[0]]);
   element("function").value = "";
   element("function").listeners.change();
   await vm.runInContext("renderQueue", context);
-  assert.deepEqual(plain(specs.get("#heatmap-plot").data.values), expectedCollapse["3"].pairs.slice(0,2));
+  assert.deepEqual(originalPairs(specs.get("#heatmap-plot").data.values), expectedCollapse["3"].pairs.slice(0,2));
   element("level").value = "1";
   element("level").listeners.change();
   await vm.runInContext("renderQueue", context);
@@ -180,7 +202,7 @@ test("changing the level refreshes the dropdown and every plot, including heatma
   element("limit").value = "Infinity";
   element("limit").listeners.change();
   await vm.runInContext("renderQueue", context);
-  assert.deepEqual(plain(specs.get("#heatmap-plot").data.values), expectedCollapse["1"].pairs);
+  assert.deepEqual(originalPairs(specs.get("#heatmap-plot").data.values), expectedCollapse["1"].pairs);
   assert.deepEqual(JSON.parse(JSON.stringify(specs.get("#boxplot").data.values)), [
     {sample:"S1", group:"All samples", load:11},
     {sample:"S2", group:"All samples", load:9},
@@ -231,6 +253,52 @@ test("changing the level refreshes the dropdown and every plot, including heatma
   element("clear-selections").listeners.click();
   await vm.runInContext("renderQueue", context);
   assert.deepEqual(viewState(), initialView);
+
+  // A diagonal top two must retain the third (off-diagonal) positive pair.
+  const matrix = plain(vm.runInContext(`(() => {
+    const original = current, originalLoads = loadsByPair;
+    const originalMetric = metricSelect.value, originalLimit = limitSelect.value;
+    try {
+      current = {pairs: [
+        {taxon: "A", taxon_label: "A", function: "X", total: 10, mean: 10/3, median: 0},
+        {taxon: "B", taxon_label: "B", function: "Y", total: 9, mean: 3, median: 2},
+        {taxon: "A", taxon_label: "A", function: "Y", total: 2, mean: 2/3, median: 0},
+        {taxon: "C", taxon_label: "C", function: "Z", total: 1, mean: 1/3, median: 0}
+      ]};
+      loadsByPair = [[[0, 0, 10]], [[1, 0, 7], [1, 1, 2]], [[2, 0, 2]], [[3, 0, 1]]];
+      limitSelect.value = "2";
+      metricSelect.value = "sum";
+      const sum = heatmapSpec([0, 1, 2, 3]);
+      metricSelect.value = "median";
+      const median = heatmapSpec([0, 1, 2, 3]);
+      const filtered = heatmapSpec([2]);
+      limitSelect.value = "Infinity";
+      const all = heatmapSpec([0, 1, 2, 3]);
+      return {sum, median, filtered, all};
+    } finally {
+      current = original; loadsByPair = originalLoads;
+      metricSelect.value = originalMetric; limitSelect.value = originalLimit;
+    }
+  })()`, context));
+  const cell = (spec, taxon, func) => spec.data.values.find(
+    pair => pair.taxon === taxon && pair.function === func
+  );
+  assert.equal(matrix.sum.data.values.length, 4);
+  assert.equal(cell(matrix.sum, "A", "Y").total, 2);
+  assert.equal(cell(matrix.sum, "A", "Y").top_link, false);
+  assert.equal(cell(matrix.sum, "A", "Y").nonzero_samples, 1);
+  assert.equal(cell(matrix.sum, "B", "X").present, false);
+  assert.equal(cell(matrix.sum, "B", "X").total, undefined);
+  assert.equal(cell(matrix.sum, "C", "Z"), undefined);
+  assert.deepEqual(matrix.sum.data.values.filter(pair => pair.top_link).map(
+    pair => [pair.taxon, pair.function]), [["A", "X"], ["B", "Y"]]);
+  assert.equal(cell(matrix.median, "A", "X").state, "Zero summary");
+  assert.equal(cell(matrix.median, "A", "X").total, 10);
+  assert.equal(cell(matrix.median, "A", "X").nonzero_samples, 1);
+  assert.equal(matrix.filtered.data.values.length, 1);
+  assert.equal(cell(matrix.filtered, "A", "Y").present, true);
+  assert.equal(matrix.all.data.values.length, 9);
+  assert.equal(matrix.all.data.values.filter(pair => pair.top_link).length, 4);
 
   // Count displayed functions, rather than pairs, when hiding crowded labels.
   const heatmapAxes = plain(vm.runInContext(`(() => {
